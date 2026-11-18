@@ -1,0 +1,80 @@
+rules_version = '2';
+
+// DRAFT — not deployed. Mirrors the access checks in
+// src/lib/backend/local/index.ts. Test against the emulator
+// (`firebase emulators:start`) before the first deploy; see docs/PLAN.md.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function coachLinked(coachId, athleteId) {
+      return exists(/databases/$(database)/documents/coachLinks/$(coachId + '_' + athleteId));
+    }
+
+    function canReadAthlete(athleteId) {
+      return isSelf(athleteId) || (signedIn() && coachLinked(request.auth.uid, athleteId));
+    }
+
+    // Profiles: readable by the owner and by either side of a coach link.
+    match /users/{uid} {
+      allow read: if canReadAthlete(uid)
+                  || (signedIn() && coachLinked(uid, request.auth.uid));
+      allow create: if isSelf(uid)
+                    && request.resource.data.role in ['athlete', 'coach']
+                    && request.resource.data.email == request.auth.token.email;
+      // Role and email are fixed after sign-up.
+      allow update: if isSelf(uid)
+                    && request.resource.data.role == resource.data.role
+                    && request.resource.data.email == resource.data.email;
+      allow delete: if false; // Account deletion runs in a Cloud Function.
+
+      // Sessions: written by the athlete's app, read by them and linked coaches.
+      match /sessions/{sessionId} {
+        allow read: if canReadAthlete(uid);
+        allow create: if isSelf(uid) && request.resource.data.athleteId == uid;
+        // After upload, only the note may change.
+        allow update: if isSelf(uid)
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['note']);
+        allow delete: if isSelf(uid);
+      }
+    }
+
+    // Coach links: created only by the redeemInvite Cloud Function (Admin SDK
+    // bypasses rules). Either party can see the link; the athlete can revoke.
+    match /coachLinks/{linkId} {
+      allow read: if signedIn()
+                  && (resource.data.coachId == request.auth.uid
+                      || resource.data.athleteId == request.auth.uid);
+      allow delete: if signedIn() && resource.data.athleteId == request.auth.uid;
+      allow create, update: if false;
+    }
+
+    // Invites: athletes create their own; nobody reads them client-side —
+    // redemption goes through the Cloud Function.
+    match /invites/{code} {
+      allow create: if signedIn()
+                    && request.resource.data.athleteId == request.auth.uid
+                    && request.resource.data.keys().hasOnly(['code', 'athleteId', 'expiresAt']);
+      allow read, update, delete: if false;
+    }
+
+    // Waitlist: anyone may add themselves; nobody can read the list from a client.
+    match /waitlist/{entryId} {
+      allow create: if request.resource.data.keys().hasOnly(['email', 'source', 'createdAt'])
+                    && request.resource.data.email is string
+                    && request.resource.data.email.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$')
+                    && request.resource.data.email.size() <= 254
+                    && request.resource.data.source is string
+                    && request.resource.data.source.size() <= 32;
+      allow read, update, delete: if false;
+    }
+  }
+}

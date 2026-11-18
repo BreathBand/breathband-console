@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "default": "breathband-dev",
+    "dev": "breathband-dev",
+    "prod": "breathband-prod"
+  }
+}
