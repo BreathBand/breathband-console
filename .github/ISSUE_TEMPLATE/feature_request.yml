@@ -1,0 +1,23 @@
+name: Feature request
+description: Suggest a change to the website or the BreathCloud console
+labels: [enhancement]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Public site (/), BreathCloud console (/cloud)]
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What the user is trying to do and what gets in the way.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you'd like to happen, and which docs/PLAN.md phase it belongs to if you know.
