@@ -13,12 +13,44 @@ cp .env.example .env.local
 npm run dev        # http://localhost:3000
 ```
 
-Open <http://localhost:3000/cloud/> and sign in with a demo account (password `breathband`):
+Open <http://localhost:3000/cloud/> and sign in with a demo account (password `breathband`, or use the one-click buttons on the sign-in page):
 
-- `athlete@demo.local`: an athlete with 8 weeks of sessions
-- `coach@demo.local`: a coach linked to that athlete
+- `coach@demo.local` (Lena Vos): a coach with three athletes. Lands on the roster.
+- `athlete@demo.local` (Alex Morgan): 8 weeks of sessions, the oldest scored the legacy 0–100% way. Lands on their overview.
+- `sam@demo.local` and `priya@demo.local`: the coach's other athletes (one with a score drop, one who hasn't trained for a week).
 
-Demo data lives in your browser's localStorage. Use **Reset demo data** in the banner to start over.
+Demo data lives in your browser's localStorage. Use **Reset** in the top bar to start over.
+
+### What's in the console
+
+The look is the **Coach Console** design direction (graphite top bar, IBM Plex, dense panes; tokens in `src/app/globals.css`, layout in `src/app/cloud/console.css`).
+
+| Route | Who | What |
+| --- | --- | --- |
+| `/`, `/coaches/` | Anyone | Public site with its own identity ("Carbon & Breath": warm carbon and bone, Funnel Display/Sans and Geist Mono; the only colour is the breath, red in and blue out). One concise home page (live breathing instrument, why it's different, a session in three steps, the score, who it's for, BreathCloud, where Breathband is today, FAQ) and a BreathCloud page for coaches. The waitlist asks who's joining (athlete, coach, investor or partner) and stores it in `source`. Code in `src/app/(site)/`; set `NEXT_PUBLIC_SITE_URL` for canonical and Open Graph links |
+| `/cloud/` | Signed out | BreathCloud landing page: what it is, athletes and coaches, how the app syncs, sharing controls |
+| `/cloud/login/`, `/cloud/signup/`, `/cloud/reset/` | Signed out | Sign in (with demo accounts locally), create an account (athlete or coach), password reset. `?next=` returns people to the page they asked for |
+| `/cloud/` | Coach | Dashboard: team numbers, "Needs a look" (replies owed, score drops, practice behind, missed days), sessions not yet opened, a 14-day training grid, practice due, recent notes and comments |
+| `/cloud/athletes/` | Coach | Roster with search, filters and sorting: latest score, trend, practice progress, flags; redeem an invite code |
+| `/cloud/` | Athlete | Their own workspace (as below, without Notes) |
+| `/cloud/sessions/?athlete=&tab=` | Both | Athlete workspace. Tabs: **Overview** (headline numbers, trends, practice, latest comments), **Sessions** (filterable table, CSV export), **Plan** (coach assigns practice; athlete sees it as "From your coach"), **Notes** (coach's private notes) |
+| `/cloud/session/?athlete=&id=` | Both | Session review: scores, waveform vs pacer (zoom, scrub), per-breath deviations, note, comment thread, kudos, the practice it counts toward, print/PDF. Opening it marks it reviewed for the coach |
+| `/cloud/sessions/?athlete=&tab=trends` | Both | **Trends**: 7 d / 30 d / 90 d / 6 mo charts (score per session against the target, timing vs depth, breathing rate against its range, sessions per day or week), an automatic plain-words summary against the previous period, and the coach's **targets** (editable by the coach, visible to the athlete) |
+| `/cloud/trends/` | Coach | **Compare**: up to six athletes week by week on one chart (score, sessions or breathing rate), pick by squad, and a side-by-side table |
+| `/cloud/report/?athlete=&days=` | Both | Printable **progress report** for a period: summary, charts, practice and every session |
+| `/cloud/join/?code=` | Athlete | Accept a coach's invite: shows exactly what the coach will see, choose scores only or scores and curves |
+| `/cloud/group/` | Coach | Start a live **group session** (pick 2–30 athletes, pacer 5-5 or 2-2, length) and see earlier ones with their group average |
+| `/cloud/group/live/?id=` | Coach (host) | Lobby (who has joined), then the live room: the shared pacer, each athlete's breathing in a grid or **lined up on one time axis**, pacer switching, markers, end for everyone; afterwards the results and a replay of everyone lined up in time |
+| `/cloud/sharing/` | Athlete | Create invite codes; per coach, choose **scores and curves** or **scores only**, or stop sharing |
+| `/cloud/account/` | Both | Name, email, account type, sign out |
+
+Practice ("assignments") counts a session when its mode, pacer and length match inside the assignment's window (`src/lib/domain/coaching.ts`), so the app doesn't have to tag sessions. A coach whose link is **scores only** can't load waveforms; the review shows a locked panel instead.
+
+**Coach tools adapted from HeartCloud** (a remote-monitoring service the client pointed to): trend charts by period with automatic summaries; per-athlete **targets** with out-of-target sessions marked (diamonds) and flagged; **alert rules** the coach tunes under Account → "What needs a look" (missed days, score drop, under target, trending down, rate out of range, practice behind); **squads** to group athletes (roster, dashboard and group-session filters); a multi-athlete **comparison** chart; **coach-to-athlete invites** by text or email with consent on the athlete's side; and a printable **progress report**. Billing, prescribing, EMR and telehealth parts don't apply to a wellness product and were left out. Chart colours for athletes are validated for colour-blind separation and leave out red and blue (inhale and exhale).
+
+Group sessions follow the "Group, live" mode in the product docs. Each athlete's app streams its band over a realtime channel (draft rules in `firebase/database.rules.json`) and saves an ordinary paced session with `groupSessionId` when the host ends it. The view lines athletes up in time but deliberately computes no synchrony score (patent figure 332, 16 Nov). Locally, `src/lib/backend/local/live.ts` stands in for the channel and the athletes' apps: athletes join the lobby after a few seconds, one drops out briefly, and everyone's breathing follows the pacer about as well as their recent scores. Scores-only athletes' live curves stay private.
+
+Sessions carry legacy 0–100% scores (`legacy-v1`) or the 1–10 per-transition scores (`transition-v1`, `TransitionScores` in `src/lib/domain/types.ts`); the console shows whichever a session has.
 
 ## Scripts
 

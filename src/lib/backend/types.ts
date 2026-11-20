@@ -1,7 +1,16 @@
 import type {
+  AlertRules,
+  Assignment,
+  AthleteTargets,
+  CoachInvite,
   CoachLink,
+  GroupSession,
+  PacerHalfCycle,
   Invite,
+  SessionComment,
   SessionSummary,
+  ShareScope,
+  Squad,
   UserProfile,
   WaitlistEntry,
   Waveform,
@@ -46,12 +55,41 @@ export interface ListSessionsOptions {
   before?: string;
 }
 
+export type NewAssignment = Pick<
+  Assignment,
+  "athleteId" | "mode" | "pacerHalfCycleSec" | "durationSec" | "target" | "dueAt" | "note"
+>;
+
+export type NewGroupSession = Pick<GroupSession, "title" | "athleteIds" | "pacerHalfCycleSec" | "durationSec">;
+
+/** Where an invited athlete is: still to answer, in the session, briefly lost, or gone. */
+export type Presence = "invited" | "joined" | "reconnecting" | "left";
+
+/**
+ * One tick of the live channel. `t` is seconds since the session started;
+ * each sample is the athlete's breath on the pacer's scale (−1 fully out,
+ * 1 fully in), or null when it isn't available: not joined, reconnecting,
+ * or an athlete who shares scores only (their curve stays private).
+ */
+export interface LiveFrame {
+  t: number;
+  samples: Record<string, number | null>;
+}
+
+export interface GroupLiveHandlers {
+  onPresence(presence: Record<string, Presence>): void;
+  onFrame(frame: LiveFrame): void;
+}
+
 export interface DataService {
   getProfile(uid: string): Promise<UserProfile | null>;
+  /** Own profile only. Role and email are fixed. */
+  updateProfile(uid: string, changes: Pick<UserProfile, "displayName">): Promise<UserProfile>;
 
   /** Newest first. Throws BackendError("permission-denied") if the caller can't read this athlete. */
   listSessions(athleteId: string, options?: ListSessionsOptions): Promise<SessionSummary[]>;
   getSession(athleteId: string, sessionId: string): Promise<SessionSummary | null>;
+  /** The athlete, or a coach whose link has the "curves" scope. */
   getWaveform(session: SessionSummary): Promise<Waveform>;
   /** Athletes only, on their own sessions. */
   updateSessionNote(athleteId: string, sessionId: string, note: string): Promise<void>;
@@ -60,9 +98,96 @@ export interface DataService {
   listAthletes(coachId: string): Promise<UserProfile[]>;
   /** Coaches linked to the signed-in athlete. */
   listCoaches(athleteId: string): Promise<UserProfile[]>;
-  createInvite(athleteId: string): Promise<Invite>;
+  /** The link between a coach and an athlete, readable by either of them. Null if there isn't one. */
+  getCoachLink(coachId: string, athleteId: string): Promise<CoachLink | null>;
+  /** Athletes only: change what a linked coach can see. */
+  setCoachScope(athleteId: string, coachId: string, scope: ShareScope): Promise<void>;
+  createInvite(athleteId: string, scope?: ShareScope): Promise<Invite>;
   redeemInvite(coachId: string, code: string): Promise<CoachLink>;
   revokeCoach(athleteId: string, coachId: string): Promise<void>;
+
+  /** Practice set for an athlete, newest first. The athlete and linked coaches can read them. */
+  listAssignments(athleteId: string): Promise<Assignment[]>;
+  /** Linked coaches only. */
+  createAssignment(coachId: string, input: NewAssignment): Promise<Assignment>;
+  /** The coach who set it only. */
+  cancelAssignment(athleteId: string, assignmentId: string): Promise<void>;
+
+  /**
+   * Comments and kudos on an athlete's sessions, oldest first. Pass a session
+   * id for one thread; leave it out for every thread (dashboards, counts).
+   */
+  listComments(athleteId: string, sessionId?: string): Promise<SessionComment[]>;
+  /** The athlete or a linked coach. A second kudos from the same person is a no-op. */
+  addComment(
+    athleteId: string,
+    sessionId: string,
+    input: Pick<SessionComment, "kind" | "text">,
+  ): Promise<SessionComment>;
+  /** Authors only. */
+  deleteComment(athleteId: string, sessionId: string, commentId: string): Promise<void>;
+
+  /** Coaches only: sessions this coach has opened, as "athleteId/sessionId" keys. */
+  listSeenSessions(coachId: string): Promise<string[]>;
+  markSessionSeen(coachId: string, athleteId: string, sessionId: string): Promise<void>;
+  /** A coach's private notes about one athlete. The athlete can't read them. */
+  getCoachNote(coachId: string, athleteId: string): Promise<string>;
+  saveCoachNote(coachId: string, athleteId: string, text: string): Promise<void>;
+
+  /** Coaches only: set this coach's targets for a linked athlete. */
+  setTargets(coachId: string, athleteId: string, targets: AthleteTargets): Promise<void>;
+
+  /** The coach's squads, by name. */
+  listSquads(coachId: string): Promise<Squad[]>;
+  /** Creates (no id) or replaces a squad. Only linked athletes can be in it. */
+  saveSquad(coachId: string, squad: Pick<Squad, "name" | "athleteIds"> & { id?: string }): Promise<Squad>;
+  deleteSquad(coachId: string, squadId: string): Promise<void>;
+
+  /** The coach's "Needs a look" rules; DEFAULT_ALERTS until they change them. */
+  getAlertRules(coachId: string): Promise<AlertRules>;
+  saveAlertRules(coachId: string, rules: AlertRules): Promise<void>;
+
+  /** Coaches only: a link to send an athlete, valid for 14 days. */
+  createCoachInvite(coachId: string, input: Pick<CoachInvite, "athleteName" | "contact">): Promise<CoachInvite>;
+  /** The coach's invites, newest first. */
+  listCoachInvites(coachId: string): Promise<CoachInvite[]>;
+  revokeCoachInvite(coachId: string, code: string): Promise<void>;
+  /**
+   * What an athlete sees when they open the link: who's asking, and whether
+   * it can still be accepted. Leaves out the contact details.
+   */
+  getCoachInvite(code: string): Promise<Pick<CoachInvite, "code" | "coachId" | "coachName" | "expiresAt" | "status"> | null>;
+  /** Athletes only: accept (choosing what to share) or decline. Accepting creates the CoachLink. */
+  respondToCoachInvite(
+    athleteId: string,
+    code: string,
+    answer: { accept: true; scope: ShareScope } | { accept: false },
+  ): Promise<CoachLink | null>;
+
+  /** Coaches only, for athletes linked to them. Opens in the lobby. */
+  createGroupSession(hostId: string, input: NewGroupSession): Promise<GroupSession>;
+  /** The host and invited athletes. */
+  getGroupSession(id: string): Promise<GroupSession | null>;
+  /** Group sessions the user hosted or was invited to, newest first. */
+  listGroupSessions(uid: string): Promise<GroupSession[]>;
+  /** Host only. Lobby → live. */
+  startGroupSession(id: string): Promise<GroupSession>;
+  /** Host only, while live: switch everyone's pacer from now on. */
+  setGroupPacer(id: string, pacerHalfCycleSec: PacerHalfCycle): Promise<GroupSession>;
+  /** Host only, while live: mark this moment on everyone's session. */
+  addGroupMarker(id: string): Promise<GroupSession>;
+  /**
+   * Host only. Live → ended. Each athlete who took part saves a paced session
+   * with `groupSessionId` set; sessions under 30 s are discarded.
+   */
+  endGroupSession(id: string): Promise<GroupSession>;
+  /** Host only, from the lobby. */
+  cancelGroupSession(id: string): Promise<void>;
+  /**
+   * Host only: presence and live breathing for every athlete in the session,
+   * about ten frames a second while it's live. Returns an unsubscribe function.
+   */
+  watchGroupLive(id: string, handlers: GroupLiveHandlers): () => void;
 
   joinWaitlist(entry: WaitlistEntry): Promise<void>;
 }
@@ -83,6 +208,7 @@ export type BackendErrorCode =
   | "permission-denied"
   | "not-found"
   | "invite-invalid"
+  | "invalid-input"
   | "unavailable";
 
 export class BackendError extends Error {

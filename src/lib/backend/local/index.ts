@@ -1,4 +1,18 @@
-import type { CoachLink, Invite, UserProfile } from "@/lib/domain/types";
+import { GROUP_SIZE, pacerAt } from "@/lib/domain/group";
+import { isTransitionScores } from "@/lib/domain/scores";
+import {
+  DEFAULT_ALERTS,
+  type Assignment,
+  type CoachInvite,
+  type CoachLink,
+  type GroupSession,
+  type Invite,
+  type SessionComment,
+  type SessionSummary,
+  type Squad,
+  type UserProfile,
+  type Waveform,
+} from "@/lib/domain/types";
 import {
   BackendError,
   type AuthService,
@@ -7,6 +21,7 @@ import {
   type DataService,
 } from "../types";
 import { browserStore, type DbStore, type LocalDb } from "./db";
+import { joinOffset, LIVE_HZ, liveProfile, liveSample, presenceAt, recordGroupSession } from "./live";
 import { generateWaveform } from "./seed";
 
 // Local adapter: behaves like the Firebase setup will — including the access
@@ -15,6 +30,7 @@ import { generateWaveform } from "./seed";
 
 const LATENCY_MS = 150;
 const INVITE_TTL_MS = 7 * 86_400_000;
+const COACH_INVITE_TTL_MS = 14 * 86_400_000;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface LocalBackendOptions {
@@ -62,8 +78,9 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
     return user;
   };
 
-  const isLinked = (db: LocalDb, coachId: string, athleteId: string) =>
-    db.coachLinks.some((l) => l.coachId === coachId && l.athleteId === athleteId);
+  const findLink = (db: LocalDb, coachId: string, athleteId: string) =>
+    db.coachLinks.find((l) => l.coachId === coachId && l.athleteId === athleteId);
+  const isLinked = (db: LocalDb, coachId: string, athleteId: string) => Boolean(findLink(db, coachId, athleteId));
 
   // Mirrors `canReadAthlete` in firebase/firestore.rules.
   const assertCanRead = (athleteId: string) => {
@@ -75,6 +92,38 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
 
   const assertIsSelf = (uid: string) => {
     if (requireUser().uid !== uid) throw new BackendError("permission-denied");
+  };
+
+  const profileOf = (uid: string) => {
+    const profile = store.read().accounts[uid]?.profile;
+    if (!profile) throw new BackendError("not-found");
+    return profile;
+  };
+
+  const newId = (prefix: string) => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
+
+  // Bumped on every group-session write, so live watchers re-read only when something changed.
+  let groupVersion = 0;
+
+  /** Seconds since a group session started, capped at its planned length. */
+  const elapsed = (g: GroupSession) =>
+    g.startedAt ? Math.min(g.durationSec, Math.max(0, (now().getTime() - Date.parse(g.startedAt)) / 1000)) : 0;
+
+  /** Host-only change to a group session in one of the allowed states. Mirrors firestore.rules. */
+  const changeGroup = (id: string, from: GroupSession["status"][], fn: (g: GroupSession, db: LocalDb) => void) => {
+    const user = requireUser();
+    const existing = store.read().groupSessions.find((g) => g.id === id);
+    if (!existing) throw new BackendError("not-found");
+    if (existing.hostId !== user.uid) throw new BackendError("permission-denied");
+    if (!from.includes(existing.status)) throw new BackendError("invalid-input");
+    let updated = existing;
+    mutate((db) => {
+      const g = db.groupSessions.find((x) => x.id === id)!;
+      fn(g, db);
+      updated = g;
+    });
+    groupVersion++;
+    return updated;
   };
 
   const auth: AuthService = {
@@ -151,6 +200,19 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       return db.accounts[uid]?.profile ?? null;
     },
 
+    async updateProfile(uid, { displayName }) {
+      await delay();
+      assertIsSelf(uid);
+      const name = displayName.trim();
+      if (!name) throw new BackendError("invalid-input");
+      mutate((db) => {
+        db.accounts[uid].profile.displayName = name.slice(0, 80);
+      });
+      const profile = profileOf(uid);
+      emit();
+      return profile;
+    },
+
     async listSessions(athleteId, { limit = 50, before } = {}) {
       await delay();
       assertCanRead(athleteId);
@@ -164,10 +226,15 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       return (store.read().sessions[athleteId] ?? []).find((s) => s.id === sessionId) ?? null;
     },
 
+    // Mirrors storage.rules: coaches need the "curves" scope for the signal.
     async getWaveform(session) {
       await delay();
       assertCanRead(session.athleteId);
-      return generateWaveform(session);
+      const user = requireUser();
+      if (user.uid !== session.athleteId && findLink(store.read(), user.uid, session.athleteId)?.scope !== "curves") {
+        throw new BackendError("permission-denied");
+      }
+      return store.read().recordedWaveforms[session.waveformPath] ?? generateWaveform(session);
     },
 
     async updateSessionNote(athleteId, sessionId, note) {
@@ -204,12 +271,34 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
         .filter((p): p is UserProfile => Boolean(p));
     },
 
-    async createInvite(athleteId) {
+    async getCoachLink(coachId, athleteId) {
+      await delay();
+      const user = requireUser();
+      if (user.uid !== coachId && user.uid !== athleteId) throw new BackendError("permission-denied");
+      return findLink(store.read(), coachId, athleteId) ?? null;
+    },
+
+    async setCoachScope(athleteId, coachId, scope) {
+      await delay();
+      assertIsSelf(athleteId);
+      let found = false;
+      mutate((db) => {
+        const link = findLink(db, coachId, athleteId);
+        if (link) {
+          link.scope = scope;
+          found = true;
+        }
+      });
+      if (!found) throw new BackendError("not-found");
+    },
+
+    async createInvite(athleteId, scope = "curves") {
       await delay();
       assertIsSelf(athleteId);
       const invite: Invite = {
         code: inviteCode(),
         athleteId,
+        scope,
         expiresAt: new Date(now().getTime() + INVITE_TTL_MS).toISOString(),
       };
       mutate((db) => {
@@ -232,6 +321,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       const link: CoachLink = {
         coachId,
         athleteId: invite.athleteId,
+        scope: invite.scope,
         createdAt: now().toISOString(),
       };
       mutate((d) => {
@@ -249,6 +339,456 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
           (l) => !(l.athleteId === athleteId && l.coachId === coachId),
         );
       });
+    },
+
+    async listAssignments(athleteId) {
+      await delay();
+      assertCanRead(athleteId);
+      return store.read().assignments[athleteId] ?? [];
+    },
+
+    async createAssignment(coachId, input) {
+      await delay();
+      assertIsSelf(coachId);
+      if (!isLinked(store.read(), coachId, input.athleteId)) throw new BackendError("permission-denied");
+      if (
+        !Number.isInteger(input.target) ||
+        input.target < 1 ||
+        input.target > 30 ||
+        input.durationSec < 60 ||
+        (input.mode === "paced") !== (input.pacerHalfCycleSec !== null) ||
+        input.dueAt <= now().toISOString()
+      ) {
+        throw new BackendError("invalid-input");
+      }
+      const assignment: Assignment = {
+        ...input,
+        note: input.note.trim().slice(0, 500),
+        id: newId("a"),
+        coachId,
+        createdAt: now().toISOString(),
+        cancelled: false,
+      };
+      mutate((db) => {
+        db.assignments[input.athleteId] = [assignment, ...(db.assignments[input.athleteId] ?? [])];
+      });
+      return assignment;
+    },
+
+    async cancelAssignment(athleteId, assignmentId) {
+      await delay();
+      const user = requireUser();
+      const existing = store.read().assignments[athleteId]?.find((a) => a.id === assignmentId);
+      if (!existing) throw new BackendError("not-found");
+      if (existing.coachId !== user.uid) throw new BackendError("permission-denied");
+      mutate((db) => {
+        db.assignments[athleteId].find((a) => a.id === assignmentId)!.cancelled = true;
+      });
+    },
+
+    async listComments(athleteId, sessionId) {
+      await delay();
+      assertCanRead(athleteId);
+      const all = store.read().comments[athleteId] ?? [];
+      return sessionId ? all.filter((c) => c.sessionId === sessionId) : all;
+    },
+
+    async addComment(athleteId, sessionId, { kind, text }) {
+      await delay();
+      assertCanRead(athleteId);
+      const author = profileOf(requireUser().uid);
+      const db = store.read();
+      if (!db.sessions[athleteId]?.some((s) => s.id === sessionId)) throw new BackendError("not-found");
+      const body = kind === "kudos" ? "" : text.trim().slice(0, 1000);
+      if (kind === "comment" && !body) throw new BackendError("invalid-input");
+      if (kind === "kudos") {
+        const existing = (db.comments[athleteId] ?? []).find(
+          (c) => c.sessionId === sessionId && c.kind === "kudos" && c.authorId === author.uid,
+        );
+        if (existing) return existing;
+      }
+      const comment: SessionComment = {
+        id: newId("c"),
+        athleteId,
+        sessionId,
+        authorId: author.uid,
+        authorName: author.displayName,
+        authorRole: author.role,
+        kind,
+        text: body,
+        createdAt: now().toISOString(),
+      };
+      mutate((d) => {
+        d.comments[athleteId] = [...(d.comments[athleteId] ?? []), comment];
+      });
+      return comment;
+    },
+
+    async deleteComment(athleteId, sessionId, commentId) {
+      await delay();
+      const user = requireUser();
+      const existing = store.read().comments[athleteId]?.find((c) => c.id === commentId && c.sessionId === sessionId);
+      if (!existing) throw new BackendError("not-found");
+      if (existing.authorId !== user.uid) throw new BackendError("permission-denied");
+      mutate((db) => {
+        db.comments[athleteId] = db.comments[athleteId].filter((c) => c.id !== commentId);
+      });
+    },
+
+    async listSeenSessions(coachId) {
+      await delay();
+      assertIsSelf(coachId);
+      return store.read().seen[coachId] ?? [];
+    },
+
+    async markSessionSeen(coachId, athleteId, sessionId) {
+      // No artificial delay: this runs in the background when a review opens.
+      assertIsSelf(coachId);
+      const key = `${athleteId}/${sessionId}`;
+      if (store.read().seen[coachId]?.includes(key)) return;
+      mutate((db) => {
+        db.seen[coachId] = [...(db.seen[coachId] ?? []), key];
+      });
+    },
+
+    async getCoachNote(coachId, athleteId) {
+      await delay();
+      assertIsSelf(coachId);
+      return store.read().coachNotes[`${coachId}_${athleteId}`] ?? "";
+    },
+
+    async saveCoachNote(coachId, athleteId, text) {
+      await delay();
+      assertIsSelf(coachId);
+      if (!isLinked(store.read(), coachId, athleteId)) throw new BackendError("permission-denied");
+      mutate((db) => {
+        db.coachNotes[`${coachId}_${athleteId}`] = text.slice(0, 5000);
+      });
+    },
+
+    async setTargets(coachId, athleteId, targets) {
+      await delay();
+      assertIsSelf(coachId);
+      const { score, rateLow, rateHigh, sessionsPerWeek } = targets;
+      if (
+        !(score >= 1 && score <= 10) ||
+        !(rateLow >= 4 && rateHigh <= 40 && rateLow < rateHigh) ||
+        !Number.isInteger(sessionsPerWeek) ||
+        sessionsPerWeek < 1 ||
+        sessionsPerWeek > 21
+      ) {
+        throw new BackendError("invalid-input");
+      }
+      let found = false;
+      mutate((db) => {
+        const link = findLink(db, coachId, athleteId);
+        if (link) {
+          link.targets = { score, rateLow, rateHigh, sessionsPerWeek };
+          found = true;
+        }
+      });
+      if (!found) throw new BackendError("permission-denied");
+    },
+
+    async listSquads(coachId) {
+      await delay();
+      assertIsSelf(coachId);
+      return [...(store.read().squads[coachId] ?? [])].sort((a, b) => a.name.localeCompare(b.name));
+    },
+
+    async saveSquad(coachId, { id, name, athleteIds }) {
+      await delay();
+      assertIsSelf(coachId);
+      const db = store.read();
+      const clean = name.trim().slice(0, 40);
+      const members = [...new Set(athleteIds)];
+      if (!clean) throw new BackendError("invalid-input");
+      if (members.some((a) => !isLinked(db, coachId, a))) throw new BackendError("permission-denied");
+      const existing = id ? db.squads[coachId]?.find((s) => s.id === id) : undefined;
+      if (id && !existing) throw new BackendError("not-found");
+      const squad: Squad = {
+        id: existing?.id ?? newId("q"),
+        name: clean,
+        athleteIds: members,
+        createdAt: existing?.createdAt ?? now().toISOString(),
+      };
+      mutate((d) => {
+        d.squads[coachId] = [...(d.squads[coachId] ?? []).filter((s) => s.id !== squad.id), squad];
+      });
+      return squad;
+    },
+
+    async deleteSquad(coachId, squadId) {
+      await delay();
+      assertIsSelf(coachId);
+      mutate((db) => {
+        db.squads[coachId] = (db.squads[coachId] ?? []).filter((s) => s.id !== squadId);
+      });
+    },
+
+    async getAlertRules(coachId) {
+      await delay();
+      assertIsSelf(coachId);
+      return store.read().alertRules[coachId] ?? DEFAULT_ALERTS;
+    },
+
+    async saveAlertRules(coachId, rules) {
+      await delay();
+      assertIsSelf(coachId);
+      const positive = (n: number | null, max: number) => n === null || (n > 0 && n <= max);
+      if (!positive(rules.missedDays, 60) || !positive(rules.scoreDrop, 9) || !positive(rules.belowTarget, 5)) {
+        throw new BackendError("invalid-input");
+      }
+      mutate((db) => {
+        db.alertRules[coachId] = { ...rules };
+      });
+    },
+
+    async createCoachInvite(coachId, { athleteName, contact }) {
+      await delay();
+      assertIsSelf(coachId);
+      const coach = profileOf(coachId);
+      if (coach.role !== "coach") throw new BackendError("permission-denied");
+      const name = athleteName.trim().slice(0, 80);
+      const to = contact.trim().slice(0, 120);
+      if (!name || !(EMAIL_PATTERN.test(to) || /^\+?[\d\s()-]{7,}$/.test(to))) throw new BackendError("invalid-input");
+      const invite: CoachInvite = {
+        code: inviteCode(),
+        coachId,
+        coachName: coach.displayName,
+        athleteName: name,
+        contact: to,
+        createdAt: now().toISOString(),
+        expiresAt: new Date(now().getTime() + COACH_INVITE_TTL_MS).toISOString(),
+        status: "pending",
+        athleteId: null,
+      };
+      mutate((db) => {
+        db.coachInvites = [invite, ...db.coachInvites];
+      });
+      return invite;
+    },
+
+    async listCoachInvites(coachId) {
+      await delay();
+      assertIsSelf(coachId);
+      return store.read().coachInvites.filter((i) => i.coachId === coachId);
+    },
+
+    async revokeCoachInvite(coachId, code) {
+      await delay();
+      assertIsSelf(coachId);
+      mutate((db) => {
+        const invite = db.coachInvites.find((i) => i.code === code && i.coachId === coachId);
+        if (invite?.status === "pending") invite.status = "revoked";
+      });
+    },
+
+    async getCoachInvite(code) {
+      await delay();
+      requireUser();
+      const invite = store.read().coachInvites.find((i) => i.code === code.trim().toUpperCase());
+      if (!invite) return null;
+      const { coachId, coachName, expiresAt, status } = invite;
+      return { code: invite.code, coachId, coachName, expiresAt, status };
+    },
+
+    // In production this runs in a Cloud Function, like redeemInvite.
+    async respondToCoachInvite(athleteId, code, answer) {
+      await delay();
+      assertIsSelf(athleteId);
+      if (profileOf(athleteId).role !== "athlete") throw new BackendError("permission-denied");
+      const normalized = code.trim().toUpperCase();
+      const invite = store.read().coachInvites.find((i) => i.code === normalized);
+      if (!invite || invite.status !== "pending" || invite.expiresAt < now().toISOString()) {
+        throw new BackendError("invite-invalid");
+      }
+      if (!answer.accept) {
+        mutate((db) => {
+          db.coachInvites.find((i) => i.code === normalized)!.status = "declined";
+        });
+        return null;
+      }
+      const link: CoachLink = {
+        coachId: invite.coachId,
+        athleteId,
+        scope: answer.scope,
+        createdAt: now().toISOString(),
+      };
+      mutate((db) => {
+        const i = db.coachInvites.find((x) => x.code === normalized)!;
+        i.status = "accepted";
+        i.athleteId = athleteId;
+        const existing = findLink(db, invite.coachId, athleteId);
+        if (existing) existing.scope = answer.scope;
+        else db.coachLinks.push(link);
+      });
+      return findLink(store.read(), invite.coachId, athleteId) ?? link;
+    },
+
+    async createGroupSession(hostId, { title, athleteIds, pacerHalfCycleSec, durationSec }) {
+      await delay();
+      assertIsSelf(hostId);
+      const host = profileOf(hostId);
+      const db = store.read();
+      const ids = [...new Set(athleteIds)];
+      if (host.role !== "coach") throw new BackendError("permission-denied");
+      if (ids.some((id) => !isLinked(db, hostId, id))) throw new BackendError("permission-denied");
+      if (
+        ids.length < GROUP_SIZE.min ||
+        ids.length > GROUP_SIZE.max ||
+        ![2, 5].includes(pacerHalfCycleSec) ||
+        durationSec < 60 ||
+        durationSec > 1800
+      ) {
+        throw new BackendError("invalid-input");
+      }
+      const group: GroupSession = {
+        id: newId("g"),
+        hostId,
+        hostName: host.displayName,
+        title: title.trim().slice(0, 80) || "Group session",
+        athleteIds: ids,
+        pacerHalfCycleSec,
+        durationSec,
+        status: "lobby",
+        createdAt: now().toISOString(),
+        startedAt: null,
+        endedAt: null,
+        pacerChanges: [],
+        markers: [],
+        results: {},
+        groupAverage: null,
+      };
+      mutate((d) => {
+        d.groupSessions = [group, ...d.groupSessions];
+      });
+      return group;
+    },
+
+    async getGroupSession(id) {
+      await delay();
+      const user = requireUser();
+      const group = store.read().groupSessions.find((g) => g.id === id);
+      if (!group) return null;
+      if (group.hostId !== user.uid && !group.athleteIds.includes(user.uid)) throw new BackendError("permission-denied");
+      return group;
+    },
+
+    async listGroupSessions(uid) {
+      await delay();
+      assertIsSelf(uid);
+      return store.read().groupSessions.filter((g) => g.hostId === uid || g.athleteIds.includes(uid));
+    },
+
+    async startGroupSession(id) {
+      await delay();
+      return changeGroup(id, ["lobby"], (g) => {
+        g.status = "live";
+        g.startedAt = now().toISOString();
+      });
+    },
+
+    async setGroupPacer(id, pacerHalfCycleSec) {
+      await delay();
+      return changeGroup(id, ["live"], (g) => {
+        if (pacerAt(g, elapsed(g)) !== pacerHalfCycleSec) {
+          g.pacerChanges.push({ atSec: Math.round(elapsed(g) * 10) / 10, pacerHalfCycleSec });
+        }
+      });
+    },
+
+    async addGroupMarker(id) {
+      await delay();
+      return changeGroup(id, ["live"], (g) => {
+        g.markers.push(Math.round(elapsed(g) * 10) / 10);
+      });
+    },
+
+    // In production each athlete's app saves its own session and a Cloud
+    // Function fills in `results` and `groupAverage`; here we play all parts.
+    async endGroupSession(id) {
+      await delay();
+      const db = store.read();
+      const current = db.groupSessions.find((g) => g.id === id);
+      const recorded: { summary: SessionSummary; waveform: Waveform }[] = [];
+      if (current?.status === "live") {
+        const length = elapsed(current);
+        for (const athleteId of current.athleteIds) {
+          const profile = liveProfile(current, athleteId, db.sessions[athleteId] ?? []);
+          if (joinOffset(profile, current) >= length) continue; // never joined
+          const saved = recordGroupSession(profile, current, length, newId("s"));
+          if (saved) recorded.push(saved);
+        }
+      }
+      return changeGroup(id, ["live"], (g, d) => {
+        g.status = "ended";
+        g.endedAt = now().toISOString();
+        for (const { summary, waveform } of recorded) {
+          d.sessions[summary.athleteId] = [summary, ...(d.sessions[summary.athleteId] ?? [])];
+          d.recordedWaveforms[summary.waveformPath] = waveform;
+          g.results[summary.athleteId] = summary.id;
+        }
+        const totals = recorded.flatMap(({ summary }) => (isTransitionScores(summary.scores) ? [summary.scores.total] : []));
+        g.groupAverage = totals.length ? Math.round((totals.reduce((a, b) => a + b, 0) / totals.length) * 10) / 10 : null;
+      });
+    },
+
+    async cancelGroupSession(id) {
+      await delay();
+      await changeGroup(id, ["lobby"], (g) => {
+        g.status = "cancelled";
+        g.endedAt = now().toISOString();
+      });
+    },
+
+    watchGroupLive(id, handlers) {
+      const user = requireUser();
+      const read = () => store.read().groupSessions.find((g) => g.id === id);
+      let group = read();
+      if (!group) throw new BackendError("not-found");
+      if (group.hostId !== user.uid) throw new BackendError("permission-denied");
+
+      const db = store.read();
+      const profiles = group.athleteIds.map((a) => liveProfile(group!, a, db.sessions[a] ?? []));
+      // Athletes who share scores only keep their curve private, live too.
+      const hidden = new Set(group.athleteIds.filter((a) => findLink(db, user.uid, a)?.scope !== "curves"));
+      let seenVersion = groupVersion;
+      let lastPresence = "";
+      let lastIndex = -1;
+
+      const tick = () => {
+        if (seenVersion !== groupVersion) {
+          seenVersion = groupVersion;
+          group = read() ?? group;
+        }
+        const g = group!;
+        const nowMs = now().getTime();
+        const presence = Object.fromEntries(profiles.map((p) => [p.athleteId, presenceAt(p, g, nowMs)]));
+        const key = JSON.stringify(presence);
+        if (key !== lastPresence) {
+          lastPresence = key;
+          handlers.onPresence(presence);
+        }
+        if (g.status !== "live" || !g.startedAt) return;
+
+        const start = Date.parse(g.startedAt);
+        const upTo = Math.floor(Math.min(g.durationSec, (nowMs - start) / 1000) * LIVE_HZ);
+        // Catch up on frames missed while the tab was throttled, up to 40 s.
+        for (let i = Math.max(lastIndex + 1, upTo - 40 * LIVE_HZ); i <= upTo; i++) {
+          const t = i / LIVE_HZ;
+          const samples: Record<string, number | null> = {};
+          for (const p of profiles) {
+            samples[p.athleteId] =
+              !hidden.has(p.athleteId) && presenceAt(p, g, start + t * 1000) === "joined" ? liveSample(p, g, t) : null;
+          }
+          handlers.onFrame({ t, samples });
+        }
+        lastIndex = Math.max(lastIndex, upTo);
+      };
+      tick();
+      const timer = setInterval(tick, 1000 / LIVE_HZ);
+      return () => clearInterval(timer);
     },
 
     async joinWaitlist({ email, source }) {

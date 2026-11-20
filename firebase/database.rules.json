@@ -1,0 +1,21 @@
+{
+  "//": "DRAFT, not deployed. Live channel for group sessions: each athlete's app writes its own downsampled breath (about 5-10 Hz) and presence under live/{groupId}/{uid}; the host reads the whole group. Access mirrors groupSessions/{groupId} in Firestore, copied into live/{groupId}/meta by the createGroupSession Cloud Function. Athletes who share scores only write presence and derived status, not samples.",
+  "rules": {
+    "live": {
+      "$groupId": {
+        "meta": {
+          ".read": "auth != null && (data.child('hostId').val() === auth.uid || data.child('athletes').child(auth.uid).exists())",
+          ".write": false
+        },
+        "pacer": {
+          ".read": "auth != null && (root.child('live').child($groupId).child('meta/hostId').val() === auth.uid || root.child('live').child($groupId).child('meta/athletes').child(auth.uid).exists())",
+          ".write": "auth != null && root.child('live').child($groupId).child('meta/hostId').val() === auth.uid"
+        },
+        "$uid": {
+          ".read": "auth != null && (auth.uid === $uid || root.child('live').child($groupId).child('meta/hostId').val() === auth.uid)",
+          ".write": "auth != null && auth.uid === $uid && root.child('live').child($groupId).child('meta/athletes').child($uid).exists()"
+        }
+      }
+    }
+  }
+}

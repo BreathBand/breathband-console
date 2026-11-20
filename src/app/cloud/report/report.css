@@ -1,0 +1,596 @@
+/*
+ * Progress report (/cloud/report/): on screen a document on a sheet, with the
+ * period and print controls above it; on paper a plain A4 document with the
+ * console chrome and controls gone. Colours and type come from globals.css.
+ */
+
+.rp {
+  max-width: 1040px;
+}
+
+.rp-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-5);
+}
+
+.rp-bar > .link {
+  margin-left: -4px;
+}
+
+.rp-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+/* The document: a white sheet with sections divided by rules. */
+.rp-doc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-7);
+  padding: var(--s-8) var(--s-9) var(--s-7);
+  background: var(--c-pane);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+}
+
+.rp-head {
+  display: grid;
+  gap: var(--s-2);
+  padding-bottom: var(--s-6);
+  border-bottom: 2px solid var(--c-ink);
+}
+
+.rp-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+  font: 600 var(--t-15) / 1 var(--f-sans);
+  color: var(--c-ink);
+}
+
+.rp-brand sup {
+  font-size: 0.6em;
+  font-weight: 500;
+}
+
+.rp-brand-sub {
+  font: 400 var(--t-15) / 1 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+.rp-head h1 {
+  font: 600 var(--t-28) / 1.1 var(--f-sans);
+  letter-spacing: -0.015em;
+}
+
+.rp-who {
+  font: 500 var(--t-20) / 1.25 var(--f-sans);
+  color: var(--c-ink);
+}
+
+.rp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-8);
+  margin-top: var(--s-4);
+}
+
+.rp-meta dt {
+  font: 400 var(--t-12) / 1.3 var(--f-cond);
+  color: var(--c-ink-2);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.rp-meta dd {
+  margin: 2px 0 0;
+  font: 500 var(--t-15) / 1.35 var(--f-sans);
+}
+
+.rp-dim {
+  font: 400 var(--t-13) / 1.35 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+.rp-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.rp-section h2 {
+  font: 600 var(--t-17) / 1.25 var(--f-sans);
+}
+
+.rp-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-1) var(--s-4);
+}
+
+.rp-summary {
+  font: 400 var(--t-17) / 1.55 var(--f-sans);
+  max-width: 78ch;
+  text-wrap: pretty;
+}
+
+.rp-note {
+  font: 400 var(--t-13) / 1.4 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+/* KPI tiles */
+.rp-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+}
+
+.rp-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--s-4);
+  min-width: 0;
+}
+
+.rp-kpi + .rp-kpi {
+  border-left: 1px solid var(--c-rule);
+}
+
+.rp-kpi-l {
+  font: 500 var(--t-12) / 1.25 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+.rp-kpi-n {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 var(--s-2);
+  font: 600 var(--t-28) / 1.1 var(--f-sans);
+  letter-spacing: -0.02em;
+}
+
+.rp-kpi-n small {
+  font: 400 var(--t-15) / 1 var(--f-cond);
+  color: var(--c-ink-2);
+  letter-spacing: 0;
+}
+
+.rp-kpi-w {
+  display: inline-flex;
+  align-items: center;
+  font: 600 var(--t-13) / 1 var(--f-sans);
+  letter-spacing: 0;
+}
+
+.rp-kpi-d {
+  font: 400 var(--t-12) / 1.35 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+/* Legend swatch for points outside the target: the amber diamond the charts draw. */
+.rp-key-out {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin: 0 3px 0 1px;
+  background: var(--c-low);
+  transform: rotate(45deg);
+  vertical-align: 0;
+}
+
+.rp-pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-7) var(--s-8);
+}
+
+/* One chart per box; the print copy only appears on paper. */
+.rp-print {
+  display: none;
+}
+
+.rp-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--s-2) var(--s-5);
+}
+
+.rp-facts dt {
+  font: 400 var(--t-13) / 1.4 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+.rp-facts dd {
+  margin: 0;
+}
+
+.rp-plans {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rp-plans > li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--c-rule-soft);
+}
+
+.rp-plans > li:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.rp-plan-top,
+.rp-plan-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-4);
+}
+
+.rp-plan-top b {
+  font-weight: 600;
+}
+
+.rp-plan-note {
+  font: 400 var(--t-13) / 1.4 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.rp-table td,
+.rp-table td.sub {
+  font-size: var(--t-13);
+  height: 36px;
+}
+
+.rp-table th .dir,
+.rp-table th svg {
+  vertical-align: -1px;
+}
+
+.rp-note-cell {
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--c-ink-2);
+}
+
+.rp-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-rule);
+  font: 400 var(--t-12) / 1.4 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+.rp-people li {
+  padding: var(--s-3) var(--s-5);
+  justify-content: space-between;
+}
+
+.rp-people li svg {
+  color: var(--c-ink-2);
+}
+
+@media (max-width: 960px) {
+  /* Three tiles over two. */
+  .rp-kpis {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .rp-kpi {
+    grid-column: span 2;
+  }
+  .rp-kpi:nth-child(n + 4) {
+    grid-column: span 3;
+    border-top: 1px solid var(--c-rule);
+  }
+  .rp-kpi:nth-child(4) {
+    border-left: 0;
+  }
+  .rp-pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .rp-doc {
+    padding: var(--s-6) var(--s-5);
+    gap: var(--s-6);
+  }
+  .rp-head h1 {
+    font-size: var(--t-24);
+  }
+  .rp-meta {
+    gap: var(--s-3) var(--s-6);
+  }
+  .rp-summary {
+    font-size: var(--t-15);
+  }
+  .rp-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .rp-kpi:nth-child(n) {
+    grid-column: auto;
+    border-left: 0;
+    border-top: 1px solid var(--c-rule);
+  }
+  .rp-kpi:nth-child(-n + 2) {
+    border-top: 0;
+  }
+  .rp-kpi:nth-child(even) {
+    border-left: 1px solid var(--c-rule);
+  }
+  .rp-kpi:last-child {
+    grid-column: 1 / -1;
+    border-left: 0;
+  }
+  .rp-controls,
+  .rp-controls .seg {
+    width: 100%;
+  }
+  .rp-controls .seg > * {
+    padding: 0 var(--s-2);
+  }
+  .rp-controls .button {
+    width: 100%;
+  }
+}
+
+/* ================================================================ paper */
+
+@page report {
+  size: A4 portrait;
+  margin: 14mm 14mm 15mm;
+}
+
+/*
+ * The whole printout uses the report's A4 page. Named outside @media print:
+ * Chrome settles the first page's size before print styles apply. `page`
+ * does nothing on screen.
+ */
+:root:has(.rp) body {
+  page: report;
+}
+
+@media print {
+  /* Paper is white whatever the screen's colour scheme: light tokens while the report is on the page. */
+  :root:has(.rp) {
+    color-scheme: light;
+    --c-ground: #ffffff;
+    --c-pane: #ffffff;
+    --c-rule: #c9ced4;
+    --c-rule-soft: #e2e5e8;
+    --c-well: #f5f6f8;
+    --c-ink: #16191d;
+    --c-ink-2: #4f5761;
+    --c-ink-inverse: #ffffff;
+    --c-action: #0f6e78;
+    --c-action-ink: #ffffff;
+    --c-action-tint: #e1eff0;
+    --c-ok: #2e8b57;
+    --c-ok-strong: #1f6b43;
+    --c-ok-tint: #e2f1e8;
+    --c-mid: #8a939d;
+    --c-low: #b7701a;
+    --c-notice: #fdf3e1;
+    --c-notice-ink: #6b4510;
+    --c-in: #d0283e;
+    --c-out: #1e63d0;
+    --c-pacer: #8c96a1;
+    --c-band: #eef0f2;
+    --c-bar: #9aa3ad;
+  }
+
+  :root:has(.rp) body,
+  :root:has(.rp) .app,
+  :root:has(.rp) .app-main {
+    background: #ffffff;
+    min-height: 0;
+  }
+
+  .rp .no-print,
+  .rp-bar,
+  .rp-screen {
+    display: none !important;
+  }
+
+  .rp-print {
+    display: block;
+  }
+
+  .rp.container {
+    max-width: none;
+    padding: 0;
+  }
+
+  .rp-doc {
+    padding: 0;
+    gap: 18px;
+    border: 0;
+    border-radius: 0;
+    font-size: 12px;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .rp-head {
+    gap: 2px;
+    padding-bottom: 12px;
+  }
+
+  .rp-brand {
+    margin-bottom: 8px;
+  }
+
+  .rp-head h1 {
+    font-size: 22px;
+  }
+
+  .rp-who {
+    font-size: 16px;
+  }
+
+  .rp-meta {
+    gap: 4px 28px;
+    margin-top: 8px;
+  }
+
+  .rp-meta dt {
+    font-size: 9px;
+  }
+
+  .rp-meta dd {
+    font-size: 12px;
+  }
+
+  .rp-section {
+    gap: 6px;
+    break-inside: avoid;
+  }
+
+  .rp-section h2 {
+    font-size: 14px;
+    break-after: avoid;
+  }
+
+  .rp-dim,
+  .rp-note {
+    font-size: 10.5px;
+  }
+
+  .rp-summary {
+    font-size: 12.5px;
+    line-height: 1.5;
+    max-width: none;
+  }
+
+  .rp-kpis {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .rp-kpi,
+  .rp-kpi:nth-child(n) {
+    grid-column: auto;
+    padding: 8px 10px;
+  }
+
+  .rp-kpi + .rp-kpi {
+    border-left: 1px solid var(--c-rule);
+    border-top: 0;
+  }
+
+  .rp-kpi-n {
+    font-size: 22px;
+  }
+
+  .rp-kpi-n small,
+  .rp-kpi-w {
+    font-size: 11px;
+  }
+
+  .rp-kpi-l,
+  .rp-kpi-d {
+    font-size: 9.5px;
+  }
+
+  .rp-pair {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 18px 20px;
+  }
+
+  /* Hover marks and tooltips have no place on paper. */
+  .rp .viz-tip,
+  .rp .viz-cross,
+  .rp .viz-hover-col {
+    display: none;
+  }
+
+  .rp-facts {
+    gap: 3px 14px;
+    font-size: 12px;
+  }
+
+  .rp-facts dt {
+    font-size: 11px;
+  }
+
+  .rp-plans > li {
+    padding: 6px 0;
+    gap: 3px;
+    break-inside: avoid;
+  }
+
+  .rp-plan-note {
+    font-size: 11px;
+  }
+
+  /* The session table may run over pages: rows stay whole, the header repeats. */
+  .rp-sessions {
+    break-inside: auto;
+  }
+
+  .rp-sessions .table-scroll {
+    overflow: visible;
+  }
+
+  .rp-table thead {
+    display: table-header-group;
+  }
+
+  .rp-table tr {
+    break-inside: avoid;
+  }
+
+  .rp-table th {
+    font-size: 9.5px;
+    padding: 0 8px 4px 0;
+  }
+
+  .rp-table td,
+  .rp-table td.sub {
+    font-size: 10.5px;
+    height: 22px;
+    padding-right: 8px;
+  }
+
+  .rp-table .score-n {
+    font-size: 10.5px;
+  }
+
+  .rp-note-cell {
+    max-width: 190px;
+    white-space: normal !important;
+    line-height: 1.3;
+  }
+
+  .rp-table a.plain {
+    color: inherit;
+  }
+
+  .rp-foot {
+    break-inside: avoid;
+    font-size: 9.5px;
+    padding-top: 8px;
+  }
+}

@@ -30,9 +30,11 @@ Already done in this repo:
   - `/cloud/session/?athlete=&id=`
 - **Draft access rules** in `firebase/firestore.rules` and `firebase/storage.rules`, matching what the local adapter enforces.
 - **Deployment targets, ready but unused**: `firebase.json` (Hosting + emulators) and `Dockerfile` + `nginx.conf` (Cloud Run).
-- **Tests and CI**: 11 Vitest tests define the behaviour every adapter must have. GitHub Actions runs lint, typecheck, tests and build.
+- **Tests and CI**: Vitest tests define the behaviour every adapter must have, plus the domain helpers (scores, activity flags, breath analysis). GitHub Actions runs lint, typecheck, tests and build.
 
-Demo logins (local only): `athlete@demo.local` / `coach@demo.local`, password `breathband`.
+- **Console styled in the Coach Console direction** (Phase 1 tokens and much of Phase 3 on the local adapter): coach dashboard, roster with search and flags, athlete workspace (overview, sessions table with CSV export, practice plans, private coach notes), session review with waveform, deviation strip, breath table, comments and kudos, sharing scope (scores only, or scores and curves), and an account page. See the README for the routes. Practice plans, comments, kudos and sharing scope are the console side of the v1.1 coaching features in the app's requirements (F22); the app still has to show them (Phase 5). **Live group sessions** (`/cloud/group/`) run on a local simulation of the realtime channel. Going live for real needs the Realtime Database (or another realtime channel), the `createGroupSession` Cloud Function, and the app's join and stream flow (the v2 "Group, live" mode).
+
+Demo logins (local only): `coach@demo.local`, `athlete@demo.local`, `sam@demo.local`, `priya@demo.local`, password `breathband`.
 
 ---
 
@@ -70,7 +72,7 @@ Anything per-user happens in Client Components after load. If a future feature n
 | # | Question | Blocks | Suggested default |
 | --- | --- | --- | --- |
 | D1 | **Domain name** and registrar | Phase 2 launch | Cloudflare Registrar or Porkbun |
-| D2 | **Brand direction**: which of the five client UI directions (or a new one) the web adopts | Phase 1 | Match whatever the app ships with |
+| D2 | **Brand direction**: which of the five client UI directions (or a new one) the web adopts | Phase 1 | The console uses **Coach Console** (Nov 2026). The public site still needs a decision; match whatever the app ships with |
 | D3 | **Who can create a web account?** Only people who already set up the app, or anyone (e.g. coaches first)? | Phase 3.2 | Anyone, with role chosen at sign-up. Athletes see an empty state until the app uploads. |
 | D4 | **Scoring display**: legacy 0–100% scores, or the 1–10 per-transition method in the metrics spec | Phase 3.4 | Show whatever `scoringVersion` the session has. Build the display for both. |
 | D5 | Coach access: invite codes (above) vs the spec's second password | Phase 3.5, 5 | Invite codes |

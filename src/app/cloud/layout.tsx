@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { BackendProvider } from "@/lib/backend/BackendProvider";
 import { CloudShell } from "./CloudShell";
+import "./console.css";
 
 export const metadata: Metadata = {
   title: "BreathCloud",

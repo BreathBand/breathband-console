@@ -1,18 +1,20 @@
 "use client";
 
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
-import { useLoad } from "@/lib/useLoad";
-import { SessionList } from "../SessionList";
+import { useAuth } from "@/lib/backend/BackendProvider";
+import { AthleteWorkspace } from "../AthleteWorkspace";
+import type { AthleteTab } from "../links";
 
-// /cloud/sessions/?athlete=<uid> — a coach viewing one athlete's history.
-// A query string instead of /cloud/athletes/[id] because static export
-// can't prerender per-user dynamic routes.
+const TABS: AthleteTab[] = ["overview", "trends", "sessions", "plan", "notes"];
+
+// /cloud/sessions/?athlete=<uid>[&tab=sessions|plan|notes][&assign=1] — one
+// athlete's workspace. A query string instead of /cloud/athletes/[id] because
+// static export can't prerender per-user dynamic routes. Without `athlete`,
+// athletes get their own.
 export default function SessionsPage() {
   return (
-    <Suspense fallback={<p className="muted">Loading…</p>}>
+    <Suspense fallback={null}>
       <AthleteSessions />
     </Suspense>
   );
@@ -20,22 +22,11 @@ export default function SessionsPage() {
 
 function AthleteSessions() {
   const auth = useAuth();
-  const backend = useBackend();
   const params = useSearchParams();
   const self = auth.status === "signed-in" ? auth.user.uid : null;
-  const athleteId = params.get("athlete") ?? self;
-  const profile = useLoad(athleteId && `profile:${athleteId}`, () =>
-    backend.data.getProfile(athleteId!),
-  );
-
+  const athleteId = params.get("athlete") || self;
   if (!athleteId) return null;
-  const name = profile.status === "ready" ? profile.data?.displayName : null;
+  const tab = TABS.find((t) => t === params.get("tab")) ?? "overview";
 
-  return (
-    <div className="stack">
-      <Link href="/cloud/">← Back</Link>
-      <h1>{athleteId === self ? "Your sessions" : (name ?? "Athlete")}</h1>
-      <SessionList athleteId={athleteId} />
-    </div>
-  );
+  return <AthleteWorkspace key={athleteId} athleteId={athleteId} tab={tab} assign={params.get("assign") === "1"} />;
 }

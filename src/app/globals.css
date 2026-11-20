@@ -1,48 +1,156 @@
 /*
- * Scaffold styles only. The real visual direction is decided in
- * docs/PLAN.md (Phase 1: Brand and design system); until then, everything
- * reads from these tokens so restyling is a token swap, not a rewrite.
+ * Design tokens: the "Coach Console" direction (breathband-docs,
+ * site/design-directions/directions/04-coach-console). Graphite chrome, a cool
+ * light ground, white panes divided by rules rather than shadows, one teal
+ * action colour, and red/blue for inhale/exhale. Token names match the
+ * direction so they map 1:1 onto the app's theme extension.
+ *
+ * Everything reads from these tokens: change a colour here, not in a component.
  */
 
 :root {
-  --bg: #fafaf9;
-  --surface: #ffffff;
-  --text: #1c1917;
-  --text-muted: #57534e;
-  --border: #e7e5e4;
-  --accent: #0f766e;
-  --accent-text: #ffffff;
-  --danger: #b91c1c;
-  --notice-bg: #fef3c7;
-  --notice-text: #78350f;
+  /* chrome (top bar) */
+  --c-chrome: #1d2228;
+  --c-chrome-2: #272d34;
+  --c-chrome-rule: #353c45;
+  --c-chrome-ink: #eef0f2;
+  --c-chrome-ink-2: #a6afb9;
+  --c-live: #4fc387;
 
-  --radius: 10px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --max-width: 960px;
+  /* surfaces */
+  --c-ground: #eef0f2;
+  --c-pane: #ffffff;
+  --c-rule: #d9dde2;
+  --c-rule-soft: #e7eaed;
+  --c-well: #f5f6f8;
 
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* ink */
+  --c-ink: #16191d;
+  --c-ink-2: #5a626c;
+  --c-ink-inverse: #ffffff;
+
+  /* action + status */
+  --c-action: #0f6e78;
+  --c-action-ink: #ffffff;
+  --c-action-tint: #e1eff0;
+  --c-action-pressed: #0b5860;
+  --c-ok: #2e8b57;
+  --c-ok-strong: #1f6b43;
+  --c-ok-tint: #e2f1e8;
+  --c-mid: #8a939d;
+  --c-low: #b7701a;
+  --c-danger: #b3261e;
+  --c-notice: #fdf3e1;
+  --c-notice-ink: #6b4510;
+
+  /* breath */
+  --c-in: #d0283e;
+  --c-in-tint: #fbe7ea;
+  --c-out: #1e63d0;
+  --c-out-tint: #e4ecfa;
+  --c-pacer: #8c96a1;
+  --c-band: #f1f3f5;
+  --c-bar: #b7bec6;
+
+  /*
+   * Athletes in comparison charts, in this order (validated with the dataviz
+   * checks: adjacent CVD ΔE ≥ 9, normal-vision ΔE ≥ 19 in both modes). Blue and
+   * red are left out because they mean exhale and inhale. Some fall under 3:1
+   * on white, so these charts always carry direct labels and a table view.
+   */
+  --c-series-1: #eb6834;
+  --c-series-2: #1baf7a;
+  --c-series-3: #6250d6;
+  --c-series-4: #eda100;
+  --c-series-5: #e87ba4;
+  --c-series-6: #008300;
+
+  /* type */
+  --f-sans: var(--font-plex), "IBM Plex Sans", system-ui, sans-serif;
+  --f-cond: var(--font-plex-condensed), "IBM Plex Sans Condensed", var(--f-sans);
+  --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --t-12: 12px;
+  --t-13: 13px;
+  --t-15: 15px;
+  --t-17: 17px;
+  --t-20: 20px;
+  --t-24: 24px;
+  --t-28: 28px;
+  --t-40: 40px;
+
+  /* shape + space */
+  --r-1: 4px;
+  --r-2: 6px;
+  --r-sheet: 12px;
+  --s-1: 4px;
+  --s-2: 6px;
+  --s-3: 8px;
+  --s-4: 12px;
+  --s-5: 16px;
+  --s-6: 20px;
+  --s-7: 24px;
+  --s-8: 32px;
+  --s-9: 48px;
+  --page-max: 1240px;
+  --rail: 300px;
+
+  /* elevation: only what floats */
+  --shadow-float: 0 10px 30px rgba(22, 25, 29, 0.22), 0 1px 3px rgba(22, 25, 29, 0.14);
+
+  /* motion: near zero */
+  --dur-fast: 120ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+
+  color-scheme: light;
 }
 
+/* Dark: the chrome stays graphite; panes drop to near-black and the accents lift. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0c0a09;
-    --surface: #1c1917;
-    --text: #f5f5f4;
-    --text-muted: #a8a29e;
-    --border: #292524;
-    --accent: #2dd4bf;
-    --accent-text: #042f2e;
-    --danger: #f87171;
-    --notice-bg: #422006;
-    --notice-text: #fde68a;
-  }
-  html {
+    --c-chrome: #14181c;
+    --c-chrome-2: #1f252b;
+    --c-chrome-rule: #2e353d;
+
+    --c-ground: #0f1215;
+    --c-pane: #181c21;
+    --c-rule: #2e353d;
+    --c-rule-soft: #242a31;
+    --c-well: #1e2329;
+
+    --c-ink: #e9ecef;
+    --c-ink-2: #9ba4ae;
+    --c-ink-inverse: #0f1215;
+
+    --c-action: #47b3bd;
+    --c-action-ink: #061a1c;
+    --c-action-tint: #12363a;
+    --c-action-pressed: #3a99a2;
+    --c-ok: #4fc387;
+    --c-ok-strong: #72d4a1;
+    --c-ok-tint: #173326;
+    --c-mid: #8a939d;
+    --c-low: #e0a050;
+    --c-danger: #f2817a;
+    --c-notice: #3a2a12;
+    --c-notice-ink: #f3d39c;
+
+    --c-in: #f06478;
+    --c-in-tint: #3a1c22;
+    --c-out: #6c9ef2;
+    --c-out-tint: #1a2740;
+    --c-pacer: #7e8893;
+    --c-band: #1e2329;
+    --c-bar: #4a535d;
+
+    --c-series-1: #d95926;
+    --c-series-2: #199e70;
+    --c-series-3: #9085e9;
+    --c-series-4: #c98500;
+    --c-series-5: #d55181;
+    --c-series-6: #008300;
+
+    --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+
     color-scheme: dark;
   }
 }
@@ -56,68 +164,167 @@
 
 body {
   min-height: 100dvh;
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-sans);
-  line-height: 1.5;
+  background: var(--c-ground);
+  color: var(--c-ink);
+  font: 400 var(--t-15) / 1.45 var(--f-sans);
+  font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
 }
 
-a {
-  color: var(--accent);
+::selection {
+  background: var(--c-action-tint);
+  color: var(--c-ink);
 }
+
+a {
+  color: var(--c-action);
+  text-underline-offset: 2px;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--c-action);
+  outline-offset: 2px;
+}
+
+h1 {
+  font: 600 var(--t-24) / 1.15 var(--f-sans);
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  font: 600 var(--t-15) / 1.3 var(--f-sans);
+}
+
+code {
+  font-family: var(--f-mono);
+  font-size: 0.9em;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------- layout */
 
 .container {
   width: 100%;
-  max-width: var(--max-width);
+  max-width: var(--page-max);
   margin: 0 auto;
-  padding: var(--space-6) var(--space-4);
+  padding: var(--s-7) var(--s-5);
 }
 
 .stack {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--s-4);
 }
 
 .row {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--s-4);
   flex-wrap: wrap;
 }
 
-.muted {
-  color: var(--text-muted);
+.cond {
+  font-family: var(--f-cond);
 }
 
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-4);
+.muted {
+  color: var(--c-ink-2);
 }
+
+.label {
+  font: 400 var(--t-12) / 1.3 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+/* ---------------------------------------------------------------- panes */
+
+.pane,
+.card {
+  background: var(--c-pane);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+}
+
+.pane-pad,
+.card {
+  padding: var(--s-4) var(--s-5);
+}
+
+.pane-h {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.pane-h .meta {
+  font: 400 var(--t-13) / 1.3 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+/* ---------------------------------------------------------------- controls */
 
 .button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: var(--s-3);
   min-height: 44px;
-  padding: 0 var(--space-4);
-  border: 0;
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: var(--accent-text);
-  font: inherit;
-  font-weight: 600;
+  padding: 0 var(--s-5);
+  border: 1px solid var(--c-action);
+  border-radius: var(--r-2);
+  background: var(--c-action);
+  color: var(--c-action-ink);
+  font: 600 var(--t-15) / 1.15 var(--f-sans);
   text-decoration: none;
   cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.button:active {
+  background: var(--c-action-pressed);
 }
 
 .button[data-variant="ghost"] {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border);
+  background: var(--c-pane);
+  border-color: var(--c-rule);
+  color: var(--c-ink);
+}
+
+.button[data-variant="ghost"]:active {
+  background: var(--c-well);
+}
+
+.button[data-variant="danger"] {
+  background: var(--c-pane);
+  border-color: var(--c-rule);
+  color: var(--c-danger);
+}
+
+.button[data-size="small"] {
+  min-height: 36px;
+  padding: 0 var(--s-4);
+  font-size: var(--t-13);
 }
 
 .button:disabled {
@@ -125,34 +332,106 @@ a {
   cursor: progress;
 }
 
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  border: 0;
+  background: none;
+  padding: 0;
+  font: 500 var(--t-15) / 1.2 var(--f-sans);
+  color: var(--c-action);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
 .field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
-  font-weight: 500;
+  gap: var(--s-2);
+  font: 500 var(--t-13) / 1.2 var(--f-cond);
+  color: var(--c-ink-2);
 }
 
 .field input,
-.field select {
+.field select,
+.field textarea {
   min-height: 44px;
-  padding: 0 var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
+  padding: 0 var(--s-4);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+  background: var(--c-pane);
+  color: var(--c-ink);
+  font: 400 var(--t-15) / 1.3 var(--f-sans);
 }
 
+.field textarea {
+  padding: var(--s-3) var(--s-4);
+  resize: vertical;
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline: 2px solid var(--c-action);
+  outline-offset: 0;
+  border-color: var(--c-action);
+}
+
+/* Segmented control: aria-pressed (buttons) or aria-current (links) marks the selected option. */
+.seg {
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+  overflow: hidden;
+  background: var(--c-pane);
+}
+
+.seg > * {
+  display: grid;
+  place-items: center;
+  min-height: 36px;
+  padding: 0 var(--s-4);
+  border: 0;
+  background: none;
+  font: 500 var(--t-13) / 1 var(--f-cond);
+  color: var(--c-ink-2);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.seg > * + * {
+  border-left: 1px solid var(--c-rule);
+}
+
+.seg > [aria-pressed="true"],
+.seg > [aria-current] {
+  background: var(--c-ink);
+  color: var(--c-ink-inverse);
+}
+
+.seg > :focus-visible {
+  outline-offset: -2px;
+}
+
+/* ---------------------------------------------------------------- feedback */
+
 .error {
-  color: var(--danger);
+  color: var(--c-danger);
 }
 
 .notice {
-  background: var(--notice-bg);
-  color: var(--notice-text);
-  padding: var(--space-2) var(--space-4);
-  font-size: 0.875rem;
-  text-align: center;
+  background: var(--c-notice);
+  color: var(--c-notice-ink);
+  padding: var(--s-3) var(--s-5);
+  font: 400 var(--t-13) / 1.4 var(--f-cond);
 }
 
 .list {
@@ -160,5 +439,52 @@ a {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--s-3);
+}
+
+/* ---------------------------------------------------------------- tables */
+
+.table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table th {
+  font: 400 var(--t-12) / 1.2 var(--f-cond);
+  color: var(--c-ink-2);
+  text-align: left;
+  padding: 0 var(--s-4) var(--s-2) 0;
+  white-space: nowrap;
+}
+
+.table td {
+  font: 400 var(--t-15) / 1.2 var(--f-sans);
+  padding: 0 var(--s-4) 0 0;
+  height: 40px;
+  border-top: 1px solid var(--c-rule-soft);
+  white-space: nowrap;
+}
+
+.table th:last-child,
+.table td:last-child {
+  padding-right: 0;
+}
+
+.table .num {
+  text-align: right;
+}
+
+.table td.sub {
+  font: 400 var(--t-13) / 1.2 var(--f-cond);
+  color: var(--c-ink-2);
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }
