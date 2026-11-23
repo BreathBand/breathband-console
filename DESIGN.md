@@ -334,12 +334,12 @@ No file defines breakpoint tokens. Each stylesheet writes its own media queries.
 | `StatusChip` (`Progress.tsx`) | Assignment status as a chip | `status` | `.chip[data-status]` |
 | `Score` (`Score.tsx`) | "7 ● Good": number, colour dot and word, so colour is never the only cue | `value`, `compact = false` (word becomes screen-reader only) | `.score`, `.score-n`, `.score-w` |
 | `HeadlineScore` (`Score.tsx`) | A session's headline: 1–10 score, legacy %, or breathing rate | `headline` (`kind`: `transition` / `legacy` / rate), `compact` | same |
-| `Dot` (`Score.tsx`) | Score band dot | `band` | `.dot[data-band]` (`ok`, `low`, default `--c-mid`) |
+| `Dot` (`Score.tsx`) | Score band dot | `band` | `.dot[data-band]` in `src/app/cloud/console.css` (`ok`, `low`, default `--c-mid`) |
 | `Arrow`, `DirHead` (`Score.tsx`) | ▲ inhale / ▼ exhale glyph and "Inhale"/"Exhale" header | `dir: "in" \| "out"`, `size = 10`, `suffix?` | inline ``fill={`var(--c-${dir})`}``; `.dir` |
 | `TransitionTable` (`Score.tsx`) | Timing, depth (and smoothness) for inhale and exhale | `scores: TransitionScores` | `.table.sc`, `tr.secondary` |
 | `ScaleStrip` (`Score.tsx`) | The 10…1 scale with the session's sub-scores highlighted | `hits` | `.scale`, `.scale i.hit`, `.scale-ends` |
 | `Skeleton` (`States.tsx`) | Grey placeholder bars while loading | `lines = 3`, `label = "Loading…"` | `.skeleton`; bar widths set inline |
-| `EmptyState` (`States.tsx`) | Empty pane with a title | `title`, `children` | `.empty` (dashed `--c-rule` border) |
+| `EmptyState` (`States.tsx`) | Empty pane with a title | `title`, `children` | `.empty` in `src/app/cloud/console.css` (dashed `--c-rule` border) |
 | `ErrorState` (`States.tsx`) | Load failure, worded for permission errors, with a retry | `error`, `what`, `onRetry?` | `.empty`, ghost small `.button` |
 
 ### CSS building blocks: `src/app/globals.css`
@@ -407,14 +407,14 @@ These are facts about the current code. Nothing here is a request to change it.
 ### Where the site and the console differ
 
 - **Token sets.** The console uses `--c-*`, `--t-*`, `--s-*`, `--r-*` and `--f-*` from `src/app/globals.css`. The site uses its own unprefixed names on `.site` in `src/app/(site)/site.css` (`--carbon`, `--bone`, `--in`, `--radius`, …). The two sets share no tokens.
-- **Fonts.** Console: IBM Plex Sans and IBM Plex Sans Condensed (`src/app/layout.tsx`), with a system monospace stack for `--f-mono`. Site: Funnel Display, Funnel Sans and Geist Mono (`src/app/(site)/layout.tsx`).
+- **Fonts.** Console: IBM Plex Sans and IBM Plex Sans Condensed (`src/app/layout.tsx`), with a system monospace stack for `--f-mono` (`src/app/globals.css`). Site: Funnel Display, Funnel Sans and Geist Mono (`src/app/(site)/layout.tsx`).
 - **Base text.** Console `body` is `400 var(--t-15) / 1.45 var(--f-sans)` (15px). Site `.site` is `400 17px/1.55 var(--ui)` (17px).
 - **Colour scheme.** The console has light and dark values via `prefers-color-scheme`. The site is dark only (`color-scheme: dark` in `site.css`, `colorScheme: "dark"` in `(site)/layout.tsx`), with light `.s-light` bands. It has no `prefers-color-scheme` query.
 - **Breath colours.** Console inhale/exhale are `--c-in` `#d0283e` / `--c-out` `#1e63d0` (light) and `#f06478` / `#6c9ef2` (dark). Site inhale/exhale are `--in` `#e8644f` / `--out` `#6f97e0` on carbon and `--in-ink` `#b33f2c` / `--out-ink` `#2f5bb0` on light.
 - **Low-score amber.** Console `--c-low` is `#b7701a` (light) / `#e0a050` (dark). Site `--amber` is `#d99a3a`.
 - **Action colour.** The console has one teal action colour (`--c-action`). The site has none: primary buttons are bone (`--bone`) pills with carbon text.
 - **Shape.** Console radii are `--r-1` `4px`, `--r-2` `6px`, `--r-sheet` `12px`, and buttons are `--r-2` rectangles with `min-height: 44px`. Site radii are `--radius` `8px` and `--radius-lg` `16px`, plus `999px` pills for buttons, inputs and nav links, and `22px` for `.h-inst` and `.h-card`. The site's primary button is `min-height: 48px`.
-- **Focus.** Console: `outline: 2px solid var(--c-action)` (`globals.css`). Site: `outline: 2px solid var(--focus)`, where `--focus` is `#b9cdf3`, or `#2f5bb0` inside `.s-light`.
+- **Focus.** Console: `outline: 2px solid var(--c-action)` (`globals.css`). Site: `outline: 2px solid var(--focus)`, where `--focus` is `#b9cdf3`, or `#2f5bb0` inside `.s-light` (`src/app/(site)/site.css`).
 - **Same name, different value.** `--ease-out` is `cubic-bezier(0.2, 0, 0, 1)` in `globals.css` and `cubic-bezier(0.23, 1, 0.32, 1)` on `.site` in `site.css`. Inside `.site` the site value applies.
 - **Same value, separate tokens.** The content width is `1240px` on both surfaces, as `--page-max` (`globals.css`) and `--wrap` (`site.css`). The site gutter (`--gutter`) is `16px`, widening to `32px` at 720px; the console uses `--s-5` (`16px`) for side padding.
 - **Shared base stylesheet.** `src/app/layout.tsx` imports `globals.css` for every route, so its element rules (`body`, `h1`, `h2`, `a`, `:focus-visible`, form controls) and its `prefers-reduced-motion: reduce` transition reset also apply inside `.site`. `site.css` restyles those elements with `.site`-scoped rules and classes.
@@ -447,8 +447,8 @@ These are facts about the current code. Nothing here is a request to change it.
 | `src/app/cloud/auth.css` | `.bc-tag` | `border-radius: 999px` |
 | `src/app/cloud/auth.css` | `.bc-section` | `padding: 72px 0`, `56px 0` below 720px |
 | `src/app/cloud/auth.css` | `.bc-form-error` | `background: color-mix(in srgb, var(--c-danger) 7%, var(--c-pane))` (mixed from tokens, not a token itself) |
-| `src/app/cloud/group/group.css` | `.live-badge` | `border-radius: 12px` (same value as `--r-sheet`); `color` and `font` set with `!important` |
-| `src/app/cloud/group/group.css` | `.timeline`, `.timeline-fill` | `border-radius: 4px` (same value as `--r-1`) |
+| `src/app/cloud/group/group.css` | `.live-badge` | `border-radius: 12px` (same value as `--r-sheet` in `src/app/globals.css`); `color` and `font` set with `!important` |
+| `src/app/cloud/group/group.css` | `.timeline`, `.timeline-fill` | `border-radius: 4px` (same value as `--r-1` in `src/app/globals.css`) |
 | `src/app/cloud/report/report.css` | `@media print` `:root:has(.rp) body, .app, .app-main` | `background: #ffffff` |
 | `src/app/cloud/report/report.css` | `@media print` text | literal sizes such as `9.5px`, `10.5px`, `11px`, `12.5px`, `22px` |
 
