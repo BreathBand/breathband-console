@@ -19,3 +19,9 @@ project:
   security-contact: https://github.com/BreathBand/breathband-console/security/advisories/new
 quality:
   no-new-comments: true
+
+proof:
+  start: npm run dev
+  ready_timeout: 180
+  auth:
+    script: .rivetari/proof-auth.mjs
