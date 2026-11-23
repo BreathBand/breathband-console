@@ -25,3 +25,5 @@ proof:
   ready_timeout: 180
   auth:
     script: .rivetari/proof-auth.mjs
+
+floorplan: true
