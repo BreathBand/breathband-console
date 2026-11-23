@@ -1,6 +1,6 @@
 # CONSTRAINTS.md
 
-<!-- Seeded by `factory init`. The judge's review blocks a change that breaks a rule
+<!-- Seeded by `rivetari init`. The judge's review blocks a change that breaks a rule
 here, so keep every rule concrete enough to check against a diff. Add this codebase's
 rules below; delete any of these that don't fit. -->
 
