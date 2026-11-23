@@ -1,0 +1,37 @@
+id: T-0005
+title: Keep the Compare page's Measure buttons inside the pane on phones
+type: fix
+source: prompt
+description: 'On /cloud/trends/ at phone width the "Measure" segmented control
+  overflows its pane and the page scrolls sideways. .seg
+  (src/app/globals.css:386-407) is an inline-grid with grid-auto-columns: 1fr
+  and nowrap buttons with padding 0 var(--s-4), so each button is as wide as the
+  widest label ("Total Breath Score"): about 390px for three buttons against
+  about 309px of room at 375px. .compare-controls
+  (src/app/cloud/console.css:2588-2600) has no mobile rule, while the same
+  <=640px block already fixes this for the assign form (console.css:2140-2143:
+  .assign-form .seg { display: grid; width: 100%; }). In the @media (max-width:
+  640px) block, make .compare-controls .seg a full-width grid and let its
+  buttons wrap their label with enough vertical padding. CSS only.'
+acceptance:
+  - id: A1
+    text: at 375px on /cloud/trends/, document.documentElement.scrollWidth is 375
+      and all three Measure buttons sit fully inside the "What to compare" pane
+      (use 360px if the before shot at 375px doesn't overflow)
+    verify: screenshot
+  - id: A2
+    text: the buttons keep at least 36px height and the selected state stays readable
+    verify: screenshot
+  - id: A3
+    text: before and after screenshots at 768px and 1280px show the controls
+      unchanged
+    verify: screenshot
+out_of_scope: []
+touches:
+  - src/app/cloud/console.css
+pages:
+  - /cloud/trends/
+constraints: []
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-23
