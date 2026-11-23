@@ -1,0 +1,35 @@
+id: T-0001
+title: Normalise Rivetari state line endings and drop the old .factory leftover
+type: chore
+source: prompt
+description: "Two pieces of repo hygiene left over from initialising and moving
+  this repo to Rivetari. F2: on a Windows checkout with core.autocrlf, files
+  under .rivetari/ are checked out with CRLF line endings, and the autonomy
+  ledger's rendered view then fails Rivetari's verification as if edited by
+  hand. Add a .gitattributes at the repo root with the line '.rivetari/** text
+  eol=lf' so those files always check out with LF. Bug 17: the move to Rivetari
+  (PR #4) deleted .factory/.gitignore and committed the stray
+  .factory/skills.state.json it had been ignoring; nothing reads .factory/ any
+  more. Remove .factory/skills.state.json from the repository so .factory/ no
+  longer exists. No other file changes."
+acceptance:
+  - id: A1
+    text: .gitattributes exists at the repo root and contains the line '.rivetari/**
+      text eol=lf'
+    verify: review
+  - id: A2
+    text: .factory/skills.state.json is no longer in the repository and no other
+      file under .factory/ is tracked
+    verify: review
+  - id: A3
+    text: no file other than .gitattributes and .factory/skills.state.json changes
+    verify: review
+out_of_scope: []
+touches:
+  - .gitattributes
+  - .factory/skills.state.json
+pages: []
+constraints: []
+risk: medium
+owner: arynbht@gmail.com
+created: 2026-11-23
