@@ -8,6 +8,7 @@
 - 2026-11-23 18:20 intake: intake confirmed; card sha256 296ea07c7725a39e0742b4557708f5a3b8987c5cd0dfea7f93a897262fd02872 (rivetari runtime (autonomy review-at-pr, for arynbht@gmail.com))
 - 2026-11-23 18:20 route: assembly proposed; sha256 2317472010973d8388244eaccadc8f5a846e3c548755345ac6c7d6f4a0342658; skills none; proof test-run; awaiting approval (rivetari router (for arynbht@gmail.com))
 - 2026-11-23 18:20 route: assembly proposed; sha256 2317472010973d8388244eaccadc8f5a846e3c548755345ac6c7d6f4a0342658; skills none; proof test-run; awaiting approval (rivetari router (for arynbht@gmail.com))
+- 2026-11-23 18:20 route: route approved; assembly sha256 2317472010973d8388244eaccadc8f5a846e3c548755345ac6c7d6f4a0342658 (arynbht@gmail.com (--yes))
 
 ## Decisions
 
