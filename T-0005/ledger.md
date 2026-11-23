@@ -14,6 +14,8 @@
 - 2026-11-23 21:23 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 21:24 judge: judge passed · round 1 · head 33145de8561a · record sha256 2f22ce7ccc502f9cd1aaa5d5fe362386c143c85e1bb88902832da51940a25d0b (rivetari judge (for arynbht@gmail.com))
 - 2026-11-23 21:24 ship: draft PR opened: #10 https://github.com/BreathBand/breathband-console/pull/10 · fix/t-0005 at 33145de8561a → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:26 close: worktree removed · branch fix/t-0005 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:26 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -48,3 +50,7 @@
 - 2026-11-23 21:24 acceptance A2: unverified — No screenshot is attached, and a 36px height floor isn't enforced in the rule. The selected-state styling isn't touched.
 - 2026-11-23 21:24 acceptance A3: unverified — The rules are scoped to max-width: 640px, so 768px and 1280px should be unaffected. No before or after screenshots are attached.
 - 2026-11-23 21:24 judge review posted: https://github.com/BreathBand/breathband-console/pull/10#pullrequestreview-6029763533
+
+## Outcome
+
+- 2026-11-23 21:26 PR #10 merged by arynbht 2026-11-23 21:25 · 35m · 303k tokens · $0.43
