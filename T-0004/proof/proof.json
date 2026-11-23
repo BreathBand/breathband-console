@@ -1,0 +1,62 @@
+{
+  "task": "T-0004",
+  "kind": "ui-screenshots",
+  "passed": true,
+  "lines": [
+    "screenshots: / at sm/md/lg, before and after (6 images) on the evidence branch: T-0004/",
+    "axe: 0 serious or critical violations",
+    "visual diff: not automated yet; the before/after images are the comparison",
+    "signed in: .rivetari/proof-auth.mjs ran on each side before its shots"
+  ],
+  "shots": [
+    {
+      "page": "/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0004\\proof\\before-1-home-sm.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0004/before-1-home-sm.png?raw=true"
+    },
+    {
+      "page": "/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0004\\proof\\before-1-home-md.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0004/before-1-home-md.png?raw=true"
+    },
+    {
+      "page": "/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0004\\proof\\before-1-home-lg.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0004/before-1-home-lg.png?raw=true"
+    },
+    {
+      "page": "/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0004\\proof\\after-1-home-sm.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0004/after-1-home-sm.png?raw=true"
+    },
+    {
+      "page": "/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0004\\proof\\after-1-home-md.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0004/after-1-home-md.png?raw=true"
+    },
+    {
+      "page": "/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0004\\proof\\after-1-home-lg.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0004/after-1-home-lg.png?raw=true"
+    }
+  ],
+  "violations": []
+}

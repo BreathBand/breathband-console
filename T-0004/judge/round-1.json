@@ -1,0 +1,154 @@
+{
+  "task": "T-0004",
+  "round": 1,
+  "verdict": "passed",
+  "head": "5fde1a26554a10ab9263c11d47ee34ae8f834550",
+  "base": "4106bb1ac52440cb4073e18eab7b2315df3222f9",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: unverified — The button, the breathband-compare-<slug(period)>.csv filename, the shared rows (so the order matches), blank nulls and RFC 4180 quoting are all in place. It's a manual criterion with no proof attached, and whether the values match the table depends on how the table formats numbers.\n- A2: met — The button has disabled={rows.length === 0}, and rows only holds picked athletes.\n- A3: met — compare-csv.test.ts covers the header, null average/change/rate/weakest becoming blank cells, quoting of commas and quotes, and row order.\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- CSV writes raw numbers where the table may show formatted ones `src/lib/domain/csv.ts:72` — Round each value in compareCsv the same way CompareRow does, or build the CSV from the same formatted strings the table renders.\n- Athlete names that start with =, +, - or @ go into the CSV unguarded `src/lib/domain/csv.ts:72` — In field(), put a ' in front of string values that start with =, +, -, @, tab or CR, and add a test for it.\n- compareRows types chosen as Map<string, number> `src/app/cloud/trends/page.tsx:247` — Type the parameter as { has(uid: string): boolean }.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/lib/domain/csv.ts",
+        "line": 72,
+        "acceptance_id": "A1",
+        "title": "CSV writes raw numbers where the table may show formatted ones",
+        "detail": "The page formats the average with formatScore, and likely rounds a-week and rate for display. compareCsv writes stats.average, stats.perWeek and stats.rateAverage as raw numbers. If periodStats doesn't round them, the CSV will show values like 2.857142857142857 where the table shows 2.9. That would break A1's \"with the table's values\". I couldn't check this from the diff alone, so it isn't blocking.",
+        "repro": "Pick an athlete with 12 sessions on a 30-day period, so perWeek = 12/30*7 = 2.8 (or 2.7999999999999998 in floating point). Download the CSV and compare its A week and Average cells with the table.",
+        "fix": "Round each value in compareCsv the same way CompareRow does, or build the CSV from the same formatted strings the table renders.",
+        "pattern": "d45226f1e851"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/domain/csv.ts",
+        "line": 72,
+        "acceptance_id": null,
+        "title": "Athlete names that start with =, +, - or @ go into the CSV unguarded",
+        "detail": "displayName is set by the user and ends up in a file coaches open in Excel or Sheets. field() only quotes values per RFC 4180, so a name like =HYPERLINK(...) is read as a formula. sessionsCsv already has the same gap, which makes this a shared-helper hardening job rather than something this diff introduced.",
+        "repro": "Set an athlete's displayName to =HYPERLINK(\"http://x\",\"a\"), pick them on Compare, download the CSV and open it in Excel.",
+        "fix": "In field(), put a ' in front of string values that start with =, +, -, @, tab or CR, and add a test for it.",
+        "pattern": "af33857fd899"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/trends/page.tsx",
+        "line": 247,
+        "acceptance_id": null,
+        "title": "compareRows types chosen as Map<string, number>",
+        "detail": "If chosen is declared as a Set elsewhere in Compare, this signature won't typecheck. The deterministic typecheck will catch that. ReadonlyMap<string, unknown> or Pick<Set<string>, \"has\"> would only ask for what compareRows actually uses.",
+        "repro": "Run npm run typecheck against the base, where chosen is declared.",
+        "fix": "Type the parameter as { has(uid: string): boolean }.",
+        "pattern": "db7b3497cd0e"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "unverified",
+        "note": "The button, the breathband-compare-<slug(period)>.csv filename, the shared rows (so the order matches), blank nulls and RFC 4180 quoting are all in place. It's a manual criterion with no proof attached, and whether the values match the table depends on how the table formats numbers."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "The button has disabled={rows.length === 0}, and rows only holds picked athletes."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "compare-csv.test.ts covers the header, null average/change/rate/weakest becoming blank cells, quoting of commas and quotes, and row order."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 12429,
+      "costUsd": 0.11444800000000001
+    }
+  }
+}

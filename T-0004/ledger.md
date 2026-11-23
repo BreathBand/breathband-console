@@ -11,6 +11,9 @@
 - 2026-11-23 20:21 isolate: worktree .worktrees/T-0004 · branch feature/t-0004 from origin/main (4106bb1ac524) · port 5176 · db breathband_console_t0004 · env sha256 4f0fd8b1bfcbe20edc29b9efe2ef367b49d87afe9fc9f8cb516594d381210df8 (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 20:21 build: build started · skills spine only · budget 8 steps / 15k ctx · ~10647 prompt tokens · 7 repo file(s) in context · 164482 tokens · $0.28 · 8 turns (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 20:23 build: build done · commit 5fde1a26554a · 3 file(s) this round · 1117022 tokens · $0.75 · 33 turns · The Compare page's "Side by side" header now has a "CSV of this table" button, and the new unit tests pass. I didn't check it in a browser, though, so A1 and A2 are still unconfirmed. The dev server s (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:23 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:24 judge: judge passed · round 1 · head 5fde1a26554a · record sha256 c76da9c7a6d12bbbe7873e28dd43cc591320aea3fc13d10f8a1c232e184a1337 (rivetari judge (for arynbht@gmail.com))
+- 2026-11-23 21:24 ship: draft PR opened: #9 https://github.com/BreathBand/breathband-console/pull/9 · feature/t-0004 at 5fde1a26554a → main (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -30,3 +33,19 @@
 - 2026-11-23 20:20 data: no vendored skill covers it; the agent works from the spine
 - 2026-11-23 20:20 a11y: no vendored skill covers it; the agent works from the spine
 - 2026-11-23 20:20 legal: no vendored skill covers it; the agent works from the spine
+
+## Proof
+
+- 2026-11-23 21:23 screenshots: / at sm/md/lg, before and after (6 images) on the evidence branch: T-0004/
+- 2026-11-23 21:23 axe: 0 serious or critical violations
+- 2026-11-23 21:23 visual diff: not automated yet; the before/after images are the comparison
+- 2026-11-23 21:23 signed in: .rivetari/proof-auth.mjs ran on each side before its shots
+
+## Judge
+
+- 2026-11-23 21:23 tier 1 round 1: pass · 7/8 pass · 1 pre-existing
+- 2026-11-23 21:24 review round 1: approve; 0 blocking, 3 suggestion(s) (claude-opus-5-5) · 12429 tokens · $0.11
+- 2026-11-23 21:24 acceptance A1: unverified — The button, the breathband-compare-<slug(period)>.csv filename, the shared rows (so the order matches), blank nulls and RFC 4180 quoting are all in place. It's a manual criterion with no proof attache…
+- 2026-11-23 21:24 acceptance A2: met — The button has disabled={rows.length === 0}, and rows only holds picked athletes.
+- 2026-11-23 21:24 acceptance A3: met — compare-csv.test.ts covers the header, null average/change/rate/weakest becoming blank cells, quoting of commas and quotes, and row order.
+- 2026-11-23 21:24 judge review posted: https://github.com/BreathBand/breathband-console/pull/9#pullrequestreview-6029759093
