@@ -1,5 +1,6 @@
 import { describeMode } from "./format";
 import { isLegacyScores, isTransitionScores } from "./scores";
+import type { PeriodStats } from "./trends";
 import type { SessionSummary } from "./types";
 
 /** Quotes a CSV field when it needs it (RFC 4180). */
@@ -47,4 +48,38 @@ export function sessionsCsv(sessions: SessionSummary[]): string {
     ];
   });
   return [header, ...rows].map((r) => r.map(field).join(",")).join("\r\n") + "\r\n";
+}
+
+export interface CompareCsvRow {
+  name: string;
+  stats: PeriodStats;
+  change: number | null;
+}
+
+export function compareCsv(rows: CompareCsvRow[]): string {
+  const header = [
+    "Athlete",
+    "Sessions",
+    "A week",
+    "Average score",
+    "Change",
+    "On target",
+    "Scored",
+    "Breathing rate (br/min)",
+    "Weakest part",
+    "Weakest part score",
+  ];
+  const body = rows.map(({ name, stats, change }) => [
+    name,
+    stats.count,
+    stats.perWeek,
+    stats.average,
+    change,
+    stats.onTarget,
+    stats.scoredCount,
+    stats.rateAverage,
+    stats.weakest?.label ?? null,
+    stats.weakest?.value ?? null,
+  ]);
+  return [header, ...body].map((r) => r.map(field).join(",")).join("\r\n") + "\r\n";
 }

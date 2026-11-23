@@ -2,13 +2,16 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Icon } from "@/components/Icon";
 import { Measured } from "@/components/Measured";
 import { Score } from "@/components/Score";
 import { EmptyState, ErrorState, Skeleton } from "@/components/States";
 import { CompareChart, SeriesKey, type CompareSeries } from "@/components/trendCharts";
 import { useAuth } from "@/lib/backend/BackendProvider";
+import { compareCsv } from "@/lib/domain/csv";
 import { formatScore } from "@/lib/domain/scores";
-import { bucketAverage, bucketRate, buckets, inPeriod, periodStats } from "@/lib/domain/trends";
+import { bucketAverage, bucketRate, buckets, inPeriod, periodStats, type PeriodStats } from "@/lib/domain/trends";
+import { downloadText, slug } from "@/lib/download";
 import { athleteHref } from "../links";
 import { useTeam, type TeamMember } from "../useTeam";
 
@@ -104,6 +107,13 @@ function Compare({ coachId }: { coachId: string }) {
         : { yMin: 0, yMax: Math.max(4, Math.ceil(Math.max(0, ...all)) + 1) };
   const ticks = niceTicks(scale.yMin, scale.yMax);
   const info = METRICS.find((m) => m.id === metric)!;
+  const periodLabel = PERIODS.find((p) => p.days === days)?.label ?? `${days} days`;
+  const rows = compareRows(members, chosen, now, days);
+  const downloadCsv = () =>
+    downloadText(
+      `breathband-compare-${slug(periodLabel)}.csv`,
+      compareCsv(rows.map((r) => ({ name: r.m.profile.displayName, stats: r.cur, change: r.change }))),
+    );
 
   return (
     <div className="container review">
@@ -189,7 +199,18 @@ function Compare({ coachId }: { coachId: string }) {
       <section className="pane pane-pad" aria-labelledby="compare-table-h">
         <div className="pane-h">
           <h2 id="compare-table-h">Side by side</h2>
-          <span className="meta">Over the last {PERIODS.find((p) => p.days === days)?.label}, against each athlete&apos;s own targets</span>
+          <span className="meta">Over the last {periodLabel}, against each athlete&apos;s own targets</span>
+          <button
+            type="button"
+            className="button toolbar-end"
+            data-variant="ghost"
+            data-size="small"
+            disabled={rows.length === 0}
+            onClick={downloadCsv}
+          >
+            <Icon name="download" size={16} />
+            CSV of this table
+          </button>
         </div>
         <div className="table-scroll">
           <table className="table">
@@ -206,11 +227,9 @@ function Compare({ coachId }: { coachId: string }) {
               </tr>
             </thead>
             <tbody>
-              {members
-                .filter((m) => chosen.has(m.profile.uid))
-                .map((m) => (
-                  <CompareRow key={m.profile.uid} m={m} now={now} days={days} />
-                ))}
+              {rows.map((row) => (
+                <CompareRow key={row.m.profile.uid} {...row} />
+              ))}
             </tbody>
           </table>
         </div>
@@ -219,10 +238,24 @@ function Compare({ coachId }: { coachId: string }) {
   );
 }
 
-function CompareRow({ m, now, days }: { m: TeamMember; now: Date; days: number }) {
-  const cur = periodStats(inPeriod(m.sessions, now, days), days, m.targets);
-  const prev = periodStats(inPeriod(m.sessions, now, days, 1), days, m.targets);
-  const change = cur.average !== null && prev.average !== null ? Math.round((cur.average - prev.average) * 10) / 10 : null;
+interface CompareRowData {
+  m: TeamMember;
+  cur: PeriodStats;
+  change: number | null;
+}
+
+function compareRows(members: TeamMember[], chosen: Map<string, number>, now: Date, days: number): CompareRowData[] {
+  return members
+    .filter((m) => chosen.has(m.profile.uid))
+    .map((m) => {
+      const cur = periodStats(inPeriod(m.sessions, now, days), days, m.targets);
+      const prev = periodStats(inPeriod(m.sessions, now, days, 1), days, m.targets);
+      const change = cur.average !== null && prev.average !== null ? Math.round((cur.average - prev.average) * 10) / 10 : null;
+      return { m, cur, change };
+    });
+}
+
+function CompareRow({ m, cur, change }: CompareRowData) {
   return (
     <tr>
       <td>
