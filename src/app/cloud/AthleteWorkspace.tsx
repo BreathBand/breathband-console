@@ -9,7 +9,8 @@ import { activity } from "@/lib/domain/activity";
 import { assignmentProgress, isOpen, type AssignmentProgress } from "@/lib/domain/coaching";
 import { sessionsCsv } from "@/lib/domain/csv";
 import { formatLongDay, initials } from "@/lib/domain/format";
-import { DEFAULT_ALERTS, DEFAULT_TARGETS, type AlertRules, type CoachLink, type SessionComment } from "@/lib/domain/types";
+import { targetsFor } from "@/lib/domain/targets";
+import { DEFAULT_ALERTS, type AlertRules, type AthleteTargets, type CoachLink, type SessionComment } from "@/lib/domain/types";
 import { downloadText, slug } from "@/lib/download";
 import { useLoad } from "@/lib/useLoad";
 import type { ConsoleContext } from "./AthleteConsole";
@@ -32,6 +33,8 @@ export interface Workspace extends ConsoleContext {
   comments: SessionComment[];
   /** The coach's alert rules; defaults for athletes. */
   rules: AlertRules;
+  targets: AthleteTargets;
+  coachName?: string;
   now: Date;
   tabHref: (tab: AthleteTab, assign?: boolean) => string;
   reload: () => void;
@@ -50,15 +53,20 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
   const self = viewerId === athleteId;
 
   const data = useLoad(`workspace:${athleteId}`, async () => {
-    const [sessions, profile, assignments, comments, link, rules] = await Promise.all([
+    const firstCoach = async () => {
+      const [coach] = await backend.data.listCoaches(athleteId);
+      return coach ? { name: coach.displayName, link: await backend.data.getCoachLink(coach.uid, athleteId) } : null;
+    };
+    const [sessions, profile, assignments, comments, link, rules, coach] = await Promise.all([
       backend.data.listSessions(athleteId, { limit: 200 }),
       self ? null : backend.data.getProfile(athleteId),
       backend.data.listAssignments(athleteId),
       backend.data.listComments(athleteId),
       self ? null : backend.data.getCoachLink(viewerId, athleteId),
       self ? DEFAULT_ALERTS : backend.data.getAlertRules(viewerId),
+      self ? firstCoach() : null,
     ]);
-    return { sessions, profile, assignments, comments, link, rules };
+    return { sessions, profile, assignments, comments, link, rules, coach };
   });
 
   if (data.status === "loading") {
@@ -76,7 +84,7 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
     );
   }
 
-  const { sessions, profile, assignments, comments, link, rules } = data.data;
+  const { sessions, profile, assignments, comments, link, rules, coach } = data.data;
   const name = (self ? auth.status === "signed-in" && auth.profile?.displayName : profile?.displayName) || "Athlete";
   const tabHref = (t: AthleteTab, open = false) =>
     self ? (t === "overview" && !open ? "/cloud/" : `/cloud/sessions/?tab=${t}${open ? "&assign=1" : ""}`) : athleteHref(athleteId, t, open);
@@ -93,6 +101,8 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
     plans: assignments.map((a) => assignmentProgress(a, sessions, now)),
     comments,
     rules,
+    targets: targetsFor(self ? coach?.link : link),
+    coachName: coach?.name,
     now,
     tabHref,
     reload: data.retry,
@@ -143,7 +153,7 @@ function TabBody({ children }: { children: ReactNode }) {
 
 function Header({ ws }: { ws: Workspace }) {
   const { sessions, self, name, link } = ws;
-  const a = activity(sessions, ws.now, ws.rules, link?.targets ?? DEFAULT_TARGETS);
+  const a = activity(sessions, ws.now, ws.rules, ws.targets);
   const oldest = sessions[sessions.length - 1];
 
   const meta: ReactNode[] = [];

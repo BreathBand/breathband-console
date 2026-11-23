@@ -10,7 +10,6 @@ import { describeMode, formatDay } from "@/lib/domain/format";
 import { formatScore, isTransitionScores } from "@/lib/domain/scores";
 import { buckets, inPeriod, RANGES, summarize, type RangeDays } from "@/lib/domain/trends";
 import { DEFAULT_TARGETS, type AthleteTargets } from "@/lib/domain/types";
-import { useLoad } from "@/lib/useLoad";
 import type { Workspace } from "./AthleteWorkspace";
 
 const DAY_MS = 86_400_000;
@@ -21,16 +20,8 @@ const mean = (v: number[]) => (v.length ? Math.round((v.reduce((a, b) => a + b, 
  * summary on top. Coaches set the targets here; athletes see them.
  */
 export function TrendsTab({ ws }: { ws: Workspace }) {
-  const backend = useBackend();
   const [days, setDays] = useState<RangeDays>(30);
-  // Athletes see the targets their (first) coach set for them.
-  const coachTargets = useLoad(ws.self ? `my-targets:${ws.athleteId}` : null, async () => {
-    const [coach] = await backend.data.listCoaches(ws.athleteId);
-    return coach ? { coach: coach.displayName, link: await backend.data.getCoachLink(coach.uid, ws.athleteId) } : null;
-  });
-  const targets: AthleteTargets = ws.self
-    ? (coachTargets.status === "ready" && coachTargets.data?.link?.targets) || DEFAULT_TARGETS
-    : (ws.link?.targets ?? DEFAULT_TARGETS);
+  const targets = ws.targets;
 
   const now = ws.now;
   const t1 = now.getTime();
@@ -140,7 +131,7 @@ export function TrendsTab({ ws }: { ws: Workspace }) {
             </div>
           </div>
         </section>
-        <Targets ws={ws} targets={targets} coachName={coachTargets.status === "ready" ? coachTargets.data?.coach : undefined} />
+        <Targets ws={ws} targets={targets} coachName={ws.coachName} />
       </div>
 
       <div className="trend-grid">

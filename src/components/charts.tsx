@@ -61,26 +61,37 @@ export function TrendChart({ points, width, height = 128 }: { points: TrendPoint
   );
 }
 
-/** Breathing rate per open session, against the typical 12–16 br/min band. */
-export function RateBars({ points, width, height = 128 }: { points: TrendPoint[]; width: number; height?: number }) {
+export function RateBars({
+  points,
+  lo,
+  hi,
+  width,
+  height = 128,
+}: {
+  points: TrendPoint[];
+  lo: number;
+  hi: number;
+  width: number;
+  height?: number;
+}) {
   const pad = { l: 24, r: 4, t: 8, b: 20 };
   const w = width - pad.l - pad.r;
   const h = height - pad.t - pad.b;
-  const hi = Math.max(20, Math.ceil(Math.max(...points.map((p) => p.value)) / 4) * 4 + 4);
-  const Y = (v: number) => r1(pad.t + ((hi - v) / hi) * h);
+  const top = Math.max(20, hi + 4, Math.ceil(Math.max(...points.map((p) => p.value)) / 4) * 4 + 4);
+  const Y = (v: number) => r1(pad.t + ((top - v) / top) * h);
   const slot = w / points.length;
   const bar = Math.min(14, slot * 0.6);
 
   return (
     <svg className="chart" width={width} height={height} role="img" aria-label={`Breathing rate per open session: ${points.map((p) => p.title).join("; ")}`}>
-      <rect className="band" x={pad.l} y={Y(16)} width={w} height={Y(12) - Y(16)} />
-      <line className="band-edge" x1={pad.l} x2={pad.l + w} y1={Y(16)} y2={Y(16)} />
-      <line className="band-edge" x1={pad.l} x2={pad.l + w} y1={Y(12)} y2={Y(12)} />
-      <text x={0} y={Y(16) + 4}>
-        16
+      <rect className="band" x={pad.l} y={Y(hi)} width={w} height={Y(lo) - Y(hi)} />
+      <line className="band-edge" x1={pad.l} x2={pad.l + w} y1={Y(hi)} y2={Y(hi)} />
+      <line className="band-edge" x1={pad.l} x2={pad.l + w} y1={Y(lo)} y2={Y(lo)} />
+      <text x={0} y={Y(hi) + 4}>
+        {hi}
       </text>
-      <text x={0} y={Y(12) + 4}>
-        12
+      <text x={0} y={Y(lo) + 4}>
+        {lo}
       </text>
       <line className="baseline" x1={pad.l} x2={pad.l + w} y1={Y(0)} y2={Y(0)} />
       {points.map((p, i) => {
