@@ -1,0 +1,750 @@
+{
+  "version": 1,
+  "generatedAt": "2026-11-23T02:17:38.576Z",
+  "summary": {
+    "pass": 21,
+    "fail": 46,
+    "needsEvidence": 23,
+    "waived": 0,
+    "skip": 9,
+    "na": 6,
+    "total": 105
+  },
+  "controls": [
+    {
+      "id": "a11y.ci.automated-checks",
+      "status": "fail",
+      "lane": "accessibility",
+      "phase": "build",
+      "severity": "medium"
+    },
+    {
+      "id": "a11y.contrast.enforced",
+      "status": "needs-evidence",
+      "lane": "accessibility",
+      "phase": "design",
+      "severity": "medium"
+    },
+    {
+      "id": "a11y.keyboard.manual-pass",
+      "status": "needs-evidence",
+      "lane": "accessibility",
+      "phase": "build",
+      "severity": "high"
+    },
+    {
+      "id": "a11y.screen-reader.pass",
+      "status": "needs-evidence",
+      "lane": "accessibility",
+      "phase": "build",
+      "severity": "high"
+    },
+    {
+      "id": "a11y.statement.published",
+      "status": "fail",
+      "lane": "accessibility",
+      "phase": "launch",
+      "severity": "low"
+    },
+    {
+      "id": "a11y.target.stated",
+      "status": "pass",
+      "lane": "accessibility",
+      "phase": "design",
+      "severity": "medium"
+    },
+    {
+      "id": "ci.actions-pinned-sha",
+      "status": "fail",
+      "lane": "cicd",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "ci.changelog-automated",
+      "status": "fail",
+      "lane": "cicd",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "ci.concurrency",
+      "status": "fail",
+      "lane": "cicd",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "ci.dependency-caching",
+      "status": "pass",
+      "lane": "cicd",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "ci.runs-on-pr",
+      "status": "pass",
+      "lane": "cicd",
+      "phase": "scaffold",
+      "severity": "high"
+    },
+    {
+      "id": "ci.runs-on-push",
+      "status": "pass",
+      "lane": "cicd",
+      "phase": "scaffold",
+      "severity": "medium"
+    },
+    {
+      "id": "ci.workflow-permissions",
+      "status": "fail",
+      "lane": "cicd",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "ci.workflow.present",
+      "status": "pass",
+      "lane": "cicd",
+      "phase": "scaffold",
+      "severity": "high"
+    },
+    {
+      "id": "cloud.backups-restore-tested",
+      "status": "needs-evidence",
+      "lane": "cloud",
+      "phase": "harden",
+      "severity": "high"
+    },
+    {
+      "id": "cloud.cost-budget-alert",
+      "status": "needs-evidence",
+      "lane": "cloud",
+      "phase": "operate",
+      "severity": "low"
+    },
+    {
+      "id": "cloud.iac-plan-in-ci",
+      "status": "n/a",
+      "lane": "cloud",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "cloud.iac-present",
+      "status": "fail",
+      "lane": "cloud",
+      "phase": "architecture",
+      "severity": "medium"
+    },
+    {
+      "id": "cloud.least-privilege-iam",
+      "status": "needs-evidence",
+      "lane": "cloud",
+      "phase": "harden",
+      "severity": "high"
+    },
+    {
+      "id": "cloud.policy-as-code",
+      "status": "n/a",
+      "lane": "cloud",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "cloud.rpo-rto-documented",
+      "status": "fail",
+      "lane": "cloud",
+      "phase": "architecture",
+      "severity": "medium"
+    },
+    {
+      "id": "data.analytics-taxonomy",
+      "status": "fail",
+      "lane": "data",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "data.backup-restore-drill",
+      "status": "needs-evidence",
+      "lane": "data",
+      "phase": "operate",
+      "severity": "high"
+    },
+    {
+      "id": "data.encryption-verified",
+      "status": "needs-evidence",
+      "lane": "data",
+      "phase": "harden",
+      "severity": "high"
+    },
+    {
+      "id": "data.migrations-versioned",
+      "status": "fail",
+      "lane": "data",
+      "phase": "build",
+      "severity": "high"
+    },
+    {
+      "id": "data.pii-classified",
+      "status": "needs-evidence",
+      "lane": "data",
+      "phase": "architecture",
+      "severity": "high"
+    },
+    {
+      "id": "data.retention-jobs",
+      "status": "needs-evidence",
+      "lane": "data",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "dev.code-review-required",
+      "status": "skip",
+      "lane": "development",
+      "phase": "build",
+      "severity": "high"
+    },
+    {
+      "id": "dev.conventional-commits",
+      "status": "fail",
+      "lane": "development",
+      "phase": "scaffold",
+      "severity": "low"
+    },
+    {
+      "id": "dev.env-example",
+      "status": "pass",
+      "lane": "development",
+      "phase": "scaffold",
+      "severity": "low"
+    },
+    {
+      "id": "dev.formatter.configured",
+      "status": "fail",
+      "lane": "development",
+      "phase": "scaffold",
+      "severity": "low"
+    },
+    {
+      "id": "dev.linter.configured",
+      "status": "pass",
+      "lane": "development",
+      "phase": "scaffold",
+      "severity": "medium"
+    },
+    {
+      "id": "dev.linter.in-ci",
+      "status": "pass",
+      "lane": "development",
+      "phase": "build",
+      "severity": "medium"
+    },
+    {
+      "id": "dev.precommit-hooks",
+      "status": "fail",
+      "lane": "development",
+      "phase": "scaffold",
+      "severity": "medium"
+    },
+    {
+      "id": "dev.typecheck.strict",
+      "status": "pass",
+      "lane": "development",
+      "phase": "scaffold",
+      "severity": "medium"
+    },
+    {
+      "id": "docs.adr-log",
+      "status": "fail",
+      "lane": "documentation",
+      "phase": "architecture",
+      "severity": "medium"
+    },
+    {
+      "id": "docs.c4-diagrams",
+      "status": "fail",
+      "lane": "documentation",
+      "phase": "architecture",
+      "severity": "low"
+    },
+    {
+      "id": "docs.changelog-present",
+      "status": "fail",
+      "lane": "documentation",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "docs.diataxis-layout",
+      "status": "pass",
+      "lane": "documentation",
+      "phase": "scaffold",
+      "severity": "low"
+    },
+    {
+      "id": "docs.onboarding-guide",
+      "status": "fail",
+      "lane": "documentation",
+      "phase": "scaffold",
+      "severity": "low"
+    },
+    {
+      "id": "docs.runbooks-dir",
+      "status": "fail",
+      "lane": "documentation",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "repo.branch-protection",
+      "status": "skip",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "high"
+    },
+    {
+      "id": "repo.codeowners.present",
+      "status": "fail",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "low"
+    },
+    {
+      "id": "repo.contributing.present",
+      "status": "fail",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "low"
+    },
+    {
+      "id": "repo.dependency-update-bot",
+      "status": "fail",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "medium"
+    },
+    {
+      "id": "repo.editorconfig.present",
+      "status": "fail",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "low"
+    },
+    {
+      "id": "repo.license.present",
+      "status": "fail",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "high"
+    },
+    {
+      "id": "repo.lockfile.present",
+      "status": "pass",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "medium"
+    },
+    {
+      "id": "repo.readme.present",
+      "status": "pass",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "medium"
+    },
+    {
+      "id": "repo.security-policy.present",
+      "status": "fail",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "medium"
+    },
+    {
+      "id": "repo.toolchain-pinned",
+      "status": "pass",
+      "lane": "hygiene",
+      "phase": "scaffold",
+      "severity": "low"
+    },
+    {
+      "id": "legal.cookie.consent",
+      "status": "n/a",
+      "lane": "legal",
+      "phase": "launch",
+      "severity": "medium"
+    },
+    {
+      "id": "legal.data.inventory",
+      "status": "needs-evidence",
+      "lane": "legal",
+      "phase": "requirements",
+      "severity": "high"
+    },
+    {
+      "id": "legal.data.retention",
+      "status": "needs-evidence",
+      "lane": "legal",
+      "phase": "requirements",
+      "severity": "high"
+    },
+    {
+      "id": "legal.dsar.process",
+      "status": "needs-evidence",
+      "lane": "legal",
+      "phase": "requirements",
+      "severity": "medium"
+    },
+    {
+      "id": "legal.license-summary",
+      "status": "n/a",
+      "lane": "legal",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "legal.privacy.policy",
+      "status": "pass",
+      "lane": "legal",
+      "phase": "launch",
+      "severity": "high"
+    },
+    {
+      "id": "legal.terms.published",
+      "status": "fail",
+      "lane": "legal",
+      "phase": "launch",
+      "severity": "medium"
+    },
+    {
+      "id": "ops.dashboards-golden-signals",
+      "status": "needs-evidence",
+      "lane": "observability",
+      "phase": "operate",
+      "severity": "low"
+    },
+    {
+      "id": "ops.oncall-rotation",
+      "status": "needs-evidence",
+      "lane": "observability",
+      "phase": "operate",
+      "severity": "medium"
+    },
+    {
+      "id": "ops.postmortem-template",
+      "status": "fail",
+      "lane": "observability",
+      "phase": "operate",
+      "severity": "low"
+    },
+    {
+      "id": "ops.runbook-per-alert",
+      "status": "fail",
+      "lane": "observability",
+      "phase": "operate",
+      "severity": "medium"
+    },
+    {
+      "id": "ops.slos-defined",
+      "status": "fail",
+      "lane": "observability",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "ops.telemetry-exported",
+      "status": "needs-evidence",
+      "lane": "observability",
+      "phase": "harden",
+      "severity": "high"
+    },
+    {
+      "id": "perf.budgets-defined",
+      "status": "fail",
+      "lane": "performance",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "perf.bundle-size-budget",
+      "status": "fail",
+      "lane": "performance",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "perf.caching-strategy",
+      "status": "pass",
+      "lane": "performance",
+      "phase": "harden",
+      "severity": "low"
+    },
+    {
+      "id": "perf.lighthouse-ci",
+      "status": "fail",
+      "lane": "performance",
+      "phase": "harden",
+      "severity": "low"
+    },
+    {
+      "id": "perf.load-test-before-launch",
+      "status": "needs-evidence",
+      "lane": "performance",
+      "phase": "launch",
+      "severity": "medium"
+    },
+    {
+      "id": "perf.n-plus-one-detection",
+      "status": "needs-evidence",
+      "lane": "performance",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "product.discovery.brief",
+      "status": "fail",
+      "lane": "product",
+      "phase": "discovery",
+      "severity": "medium"
+    },
+    {
+      "id": "product.launch.checklist",
+      "status": "fail",
+      "lane": "product",
+      "phase": "launch",
+      "severity": "medium"
+    },
+    {
+      "id": "product.requirements.nfrs",
+      "status": "pass",
+      "lane": "product",
+      "phase": "requirements",
+      "severity": "medium"
+    },
+    {
+      "id": "product.risk.register",
+      "status": "fail",
+      "lane": "product",
+      "phase": "discovery",
+      "severity": "low"
+    },
+    {
+      "id": "product.scope.out-of-scope",
+      "status": "fail",
+      "lane": "product",
+      "phase": "requirements",
+      "severity": "low"
+    },
+    {
+      "id": "product.stories.acceptance",
+      "status": "fail",
+      "lane": "product",
+      "phase": "requirements",
+      "severity": "medium"
+    },
+    {
+      "id": "product.survey.build-vs-buy",
+      "status": "needs-evidence",
+      "lane": "product",
+      "phase": "discovery",
+      "severity": "low"
+    },
+    {
+      "id": "quality.boundaries.clean",
+      "status": "n/a",
+      "lane": "quality",
+      "phase": "build",
+      "severity": "high"
+    },
+    {
+      "id": "quality.coverage.floor",
+      "status": "skip",
+      "lane": "quality",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "quality.lint.clean",
+      "status": "skip",
+      "lane": "quality",
+      "phase": "build",
+      "severity": "high"
+    },
+    {
+      "id": "quality.required-checks.named",
+      "status": "skip",
+      "lane": "quality",
+      "phase": "build",
+      "severity": "high"
+    },
+    {
+      "id": "quality.tests.pass",
+      "status": "skip",
+      "lane": "quality",
+      "phase": "build",
+      "severity": "critical"
+    },
+    {
+      "id": "quality.typecheck.clean",
+      "status": "skip",
+      "lane": "quality",
+      "phase": "build",
+      "severity": "high"
+    },
+    {
+      "id": "sec.dependabot-security-updates",
+      "status": "pass",
+      "lane": "security",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "sec.dependency-scan.ci",
+      "status": "fail",
+      "lane": "security",
+      "phase": "harden",
+      "severity": "high"
+    },
+    {
+      "id": "sec.push-protection",
+      "status": "skip",
+      "lane": "security",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "sec.sast.ci",
+      "status": "fail",
+      "lane": "security",
+      "phase": "harden",
+      "severity": "high"
+    },
+    {
+      "id": "sec.sbom.ci",
+      "status": "fail",
+      "lane": "security",
+      "phase": "harden",
+      "severity": "low"
+    },
+    {
+      "id": "sec.scorecard.score",
+      "status": "skip",
+      "lane": "security",
+      "phase": "harden",
+      "severity": "low"
+    },
+    {
+      "id": "sec.secret-scanning.ci",
+      "status": "fail",
+      "lane": "security",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "sec.secret-scanning.pre-commit",
+      "status": "fail",
+      "lane": "security",
+      "phase": "scaffold",
+      "severity": "high"
+    },
+    {
+      "id": "sec.threat-model",
+      "status": "needs-evidence",
+      "lane": "security",
+      "phase": "harden",
+      "severity": "high"
+    },
+    {
+      "id": "sec.vulnerability-alerts",
+      "status": "pass",
+      "lane": "security",
+      "phase": "harden",
+      "severity": "medium"
+    },
+    {
+      "id": "test.coverage-config",
+      "status": "fail",
+      "lane": "testing",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "test.data.factories",
+      "status": "fail",
+      "lane": "testing",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "test.e2e.present",
+      "status": "fail",
+      "lane": "testing",
+      "phase": "build",
+      "severity": "low"
+    },
+    {
+      "id": "test.integration.db",
+      "status": "n/a",
+      "lane": "testing",
+      "phase": "build",
+      "severity": "medium"
+    },
+    {
+      "id": "test.runner.configured",
+      "status": "pass",
+      "lane": "testing",
+      "phase": "build",
+      "severity": "medium"
+    },
+    {
+      "id": "test.runner.in-ci",
+      "status": "pass",
+      "lane": "testing",
+      "phase": "build",
+      "severity": "medium"
+    },
+    {
+      "id": "ux.copy.guidelines",
+      "status": "fail",
+      "lane": "ux",
+      "phase": "design",
+      "severity": "low"
+    },
+    {
+      "id": "ux.design-system.adopted",
+      "status": "fail",
+      "lane": "ux",
+      "phase": "design",
+      "severity": "low"
+    },
+    {
+      "id": "ux.feedback.channel",
+      "status": "needs-evidence",
+      "lane": "ux",
+      "phase": "operate",
+      "severity": "low"
+    },
+    {
+      "id": "ux.flows.wireframes",
+      "status": "needs-evidence",
+      "lane": "ux",
+      "phase": "design",
+      "severity": "low"
+    },
+    {
+      "id": "ux.responsive.breakpoints",
+      "status": "pass",
+      "lane": "ux",
+      "phase": "design",
+      "severity": "low"
+    },
+    {
+      "id": "ux.states.designed",
+      "status": "needs-evidence",
+      "lane": "ux",
+      "phase": "design",
+      "severity": "medium"
+    }
+  ]
+}
