@@ -12,6 +12,9 @@
 - 2026-11-23 18:26 isolate: worktree .worktrees/T-0002 · branch chore/t-0002 from origin/main (4106bb1ac524) · port 5174 · db breathband_console_t0002 · env sha256 2ecd7925611deb4b79bf1d162cfd95dda27829dbcbecc0c1b6531123c504390f (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 18:26 build: build started · skills spine only · budget 12 steps / 60k ctx · 1 repo file(s) in context · 166410 tokens · $0.21 · 6 turns (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 18:34 build: build done · commit 2d4ffb45ee7b · 1 file(s) this round · 5383260 tokens · $3.34 · 84 turns · I wrote `DESIGN.md` at the repo root, and it's the only file changed. Lint and typecheck pass, and running them left nothing else in the tree. It touches no code, so there were no related tests to run (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:06 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:21 judge: judge passed · round 1 · head 2d4ffb45ee7b · record sha256 bbf55b805aaed6b3c811f8faa2e980eaf4c2aab469849bfd955a1ca845dbdf36 (rivetari judge (for arynbht@gmail.com))
+- 2026-11-23 21:21 ship: draft PR opened: #8 https://github.com/BreathBand/breathband-console/pull/8 · chore/t-0002 at 2d4ffb45ee7b → main (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -41,3 +44,20 @@
 - 2026-11-23 18:25 frontend-design matched but isn't available (not locked, not synced, or blocked at sync)
 - 2026-11-23 18:25 native-writing matched but isn't available (not locked, not synced, or blocked at sync)
 - 2026-11-23 18:25 a11y: no vendored skill covers it; the agent works from the spine
+
+## Proof
+
+- 2026-11-23 21:06 screenshots: / at sm/md/lg, before and after (6 images) in .rivetari/tasks/T-0002/proof/ (not pushed: upload failed: Something went wrong on our side and we cannot service your request. Sorry about that. Please try resubmitting your request and contact us if the problem persists.)
+- 2026-11-23 21:06 axe: 0 serious or critical violations
+- 2026-11-23 21:06 visual diff: not automated yet; the before/after images are the comparison
+- 2026-11-23 21:06 signed in: .rivetari/proof-auth.mjs ran on each side before its shots
+
+## Judge
+
+- 2026-11-23 21:08 tier 1 round 1: pass · 7/8 pass · 1 pre-existing
+- 2026-11-23 21:21 review round 1: approve; 0 blocking, 3 suggestion(s) (claude-opus-5-5) · 293217 tokens · $3.68
+- 2026-11-23 21:21 acceptance A1: met — DESIGN.md is new at the repo root. It has sections for colour tokens, typography, spacing and radius, elevation, breakpoints and shared components, and each section names its source files.
+- 2026-11-23 21:21 acceptance A2: unverified — No source files were available, so cited names and values could not be checked against the named files. The doc is internally consistent.
+- 2026-11-23 21:21 acceptance A3: met — Differences and hard-coded values are under Observations, which says "Nothing here is a request to change it". No recommendations or redesigns appear anywhere.
+- 2026-11-23 21:21 acceptance A4: met — The diff adds only DESIGN.md.
+- 2026-11-23 21:21 judge review posted: https://github.com/BreathBand/breathband-console/pull/8#pullrequestreview-6029728212
