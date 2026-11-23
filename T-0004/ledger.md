@@ -14,6 +14,8 @@
 - 2026-11-23 21:23 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 21:24 judge: judge passed · round 1 · head 5fde1a26554a · record sha256 c76da9c7a6d12bbbe7873e28dd43cc591320aea3fc13d10f8a1c232e184a1337 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-23 21:24 ship: draft PR opened: #9 https://github.com/BreathBand/breathband-console/pull/9 · feature/t-0004 at 5fde1a26554a → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:26 close: worktree C:\Users\arynb\Documents\Projects\breathband-console\.worktrees\T-0004 kept: it couldn't be removed; remove it by hand · branch feature/t-0004 kept (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:26 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -49,3 +51,7 @@
 - 2026-11-23 21:24 acceptance A2: met — The button has disabled={rows.length === 0}, and rows only holds picked athletes.
 - 2026-11-23 21:24 acceptance A3: met — compare-csv.test.ts covers the header, null average/change/rate/weakest becoming blank cells, quoting of commas and quotes, and row order.
 - 2026-11-23 21:24 judge review posted: https://github.com/BreathBand/breathband-console/pull/9#pullrequestreview-6029759093
+
+## Outcome
+
+- 2026-11-23 21:26 PR #9 merged by arynbht 2026-11-23 21:25 · 1h06m · 1294k tokens · $1.14
