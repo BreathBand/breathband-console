@@ -27,8 +27,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      # Pin to a commit SHA for supply-chain safety; @v1 shown for readability.
-      - uses: arynbht/software-factory/packages/action@v1
+      # Pinned to a commit SHA for supply-chain safety (software-factory main, #183).
+      - uses: arynbht/software-factory/packages/action@cf4293abf9db8155d2ea303a8c5795e5a7d6ec6f
         with:
           gate: build
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -42,7 +42,7 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@v4
-      - uses: arynbht/software-factory/packages/action@v1
+      - uses: arynbht/software-factory/packages/action@cf4293abf9db8155d2ea303a8c5795e5a7d6ec6f
         with:
           gate: build
           token: ${{ secrets.GITHUB_TOKEN }}
