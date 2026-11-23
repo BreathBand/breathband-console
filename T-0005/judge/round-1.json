@@ -1,0 +1,132 @@
+{
+  "task": "T-0005",
+  "round": 1,
+  "verdict": "passed",
+  "head": "33145de8561a0b76edd2620202e971ffdb7c3319",
+  "base": "d13c1f297e4eb43b188c96762dc24455b04990db",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: unverified — The CSS mirrors the assign-form fix (full-width grid, wrapping labels) and should remove the overflow. No screenshot or scrollWidth measurement is part of this change.\n- A2: unverified — No screenshot is attached, and a 36px height floor isn't enforced in the rule. The selected-state styling isn't touched.\n- A3: unverified — The rules are scoped to max-width: 640px, so 768px and 1280px should be unaffected. No before or after screenshots are attached.\n\n<details><summary>1 suggestion(s), non-blocking</summary>\n\n- 36px minimum button height isn't guaranteed by the rule `src/app/cloud/console.css:2592` — Add `min-height: 36px;` to `.compare-controls .seg > *`.\n\n</details>\n\n_claude-sonnet-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-sonnet-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/console.css",
+        "line": 2592,
+        "acceptance_id": null,
+        "title": "36px minimum button height isn't guaranteed by the rule",
+        "detail": "The padding is var(--s-2) with line-height 1.2. A single-line label may come out under 36px unless .seg buttons already set a min-height or height. Only a screenshot can confirm this. The diff doesn't set a floor, and A2 requires one.",
+        "repro": "Measure button height at 375px with an unwrapped label, e.g. \"Peak\", and compare it to 36px.",
+        "fix": "Add `min-height: 36px;` to `.compare-controls .seg > *`.",
+        "pattern": "8b9c1b19c8d1"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "unverified",
+        "note": "The CSS mirrors the assign-form fix (full-width grid, wrapping labels) and should remove the overflow. No screenshot or scrollWidth measurement is part of this change."
+      },
+      {
+        "id": "A2",
+        "status": "unverified",
+        "note": "No screenshot is attached, and a 36px height floor isn't enforced in the rule. The selected-state styling isn't touched."
+      },
+      {
+        "id": "A3",
+        "status": "unverified",
+        "note": "The rules are scoped to max-width: 640px, so 768px and 1280px should be unaffected. No before or after screenshots are attached."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 7468,
+      "costUsd": 0.0341058
+    }
+  }
+}

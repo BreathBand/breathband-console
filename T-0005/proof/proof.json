@@ -1,0 +1,56 @@
+{
+  "task": "T-0005",
+  "kind": "ui-screenshots",
+  "passed": true,
+  "lines": [
+    "screenshots: /cloud/trends/ at sm/md/lg, before and after (6 images) in .rivetari/tasks/T-0005/proof/ (not pushed: upload failed: …nUZR42PKQFksBr9QKVXCPusD3OiA/RkQ5kP8qV/Jl1WywAp/6+dcmPM2zL1UrUahe4JqfnWWKXIul3uUbfP8njAFLW1OFr3gdFtZ72cNH+PtQT7/brW+NXqJAHh0y9V8/U/A1U7AfwIMAD7mS3pCbuWJAAAAAElFTkSuQmCC\" /> </a> </div> </body> </html>)",
+    "axe: 0 serious or critical violations",
+    "visual diff: not automated yet; the before/after images are the comparison",
+    "signed in: .rivetari/proof-auth.mjs ran on each side before its shots"
+  ],
+  "shots": [
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0005\\proof\\before-1-cloud-trends-sm.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0005\\proof\\before-1-cloud-trends-md.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0005\\proof\\before-1-cloud-trends-lg.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0005\\proof\\after-1-cloud-trends-sm.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0005\\proof\\after-1-cloud-trends-md.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0005\\proof\\after-1-cloud-trends-lg.png",
+      "status": 200,
+      "side": "after"
+    }
+  ],
+  "violations": []
+}
