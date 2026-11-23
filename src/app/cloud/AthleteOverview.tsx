@@ -17,7 +17,7 @@ const TREND_LENGTH = 12;
 
 /** Headline numbers, trends, current practice and the latest conversation for one athlete. */
 export function AthleteOverview({ ws }: { ws: Workspace }) {
-  const { sessions, self, name, now } = ws;
+  const { sessions, self, name, now, targets } = ws;
 
   if (sessions.length === 0) {
     return self ? (
@@ -39,7 +39,7 @@ export function AthleteOverview({ ws }: { ws: Workspace }) {
     );
   }
 
-  const a = activity(sessions, now);
+  const a = activity(sessions, now, ws.rules, targets);
   const [latest, previous] = a.scored;
   const recent = a.scored.slice(0, 5);
   const average = recent.reduce((sum, s) => sum + s.scores.total, 0) / (recent.length || 1);
@@ -135,10 +135,14 @@ export function AthleteOverview({ ws }: { ws: Workspace }) {
           <div>
             <div className="pane-h">
               <h2>Open · breathing rate</h2>
-              <span className="meta">br/min, shaded 12–16</span>
+              <span className="meta">
+                br/min, shaded {targets.rateLow}–{targets.rateHigh}
+              </span>
             </div>
             {openPoints.length > 0 ? (
-              <Measured height={128}>{(width) => <RateBars points={openPoints} width={width} />}</Measured>
+              <Measured height={128}>
+                {(width) => <RateBars points={openPoints} lo={targets.rateLow} hi={targets.rateHigh} width={width} />}
+              </Measured>
             ) : (
               <p className="muted chart-empty">No open sessions yet.</p>
             )}
