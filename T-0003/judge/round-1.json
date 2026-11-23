@@ -1,0 +1,165 @@
+{
+  "task": "T-0003",
+  "round": 1,
+  "verdict": "passed",
+  "head": "5d4e2f3b91f930e49bd1623636b29e403a47090c",
+  "base": "4106bb1ac52440cb4073e18eab7b2315df3222f9",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: unverified — The code now gives Overview's activity() the coach link's targets for the athlete (targetsFor(coach?.link)), the same value TrendsTab uses. No manual proof is attached.\n- A2: unverified — The caption and RateBars band read targets.rateLow and targets.rateHigh in both views. There are no screenshots showing 10–14.\n- A3: met — targets.test.ts covers link targets present, targets null/undefined/missing, and link null/undefined.\n\n<details><summary>4 suggestion(s), non-blocking</summary>\n\n- Check that useBackend, DEFAULT_TARGETS and AthleteTargets are still used `src/app/cloud/TrendsTab.tsx:10` — Drop any import that is no longer referenced.\n- RateBars lost its doc comment, and lo/hi are now required `src/components/charts.tsx:64` — Restore the comment, e.g. `/** Breathing rate per open session, against the lo–hi br/min target band. */`, and confirm there are no other callers.\n- Document the new Workspace fields `src/app/cloud/AthleteWorkspace.tsx:36` — Add `/** The coach link's targets (the first coach's for athletes); defaults when unset. */` and `/** The athlete's first coach; only set in the athlete's own view. */`.\n- An athlete's coach lookup failing now fails the whole workspace `src/app/cloud/AthleteWorkspace.tsx:56` — Keep as is, or catch inside firstCoach and fall back to null with a visible notice.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/TrendsTab.tsx",
+        "line": 10,
+        "acceptance_id": null,
+        "title": "Check that useBackend, DEFAULT_TARGETS and AthleteTargets are still used",
+        "detail": "The diff removed the only visible uses of `backend` and the local `targets: AthleteTargets` annotation in TrendsTab, but kept the `useBackend` and `DEFAULT_TARGETS, type AthleteTargets` imports. If the Targets component in this file doesn't use them, lint reports unused imports, and CONSTRAINTS.md requires no new warnings. I can't tell from the diff.",
+        "repro": "Run `npm run lint` on the branch and look for unused-import warnings in TrendsTab.tsx.",
+        "fix": "Drop any import that is no longer referenced.",
+        "pattern": "ed011ac7db9f"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/components/charts.tsx",
+        "line": 64,
+        "acceptance_id": null,
+        "title": "RateBars lost its doc comment, and lo/hi are now required",
+        "detail": "The JSDoc above RateBars was deleted instead of updated, while neighbouring components keep theirs. Making `lo`/`hi` required breaks any other RateBars caller not shown in this diff; typecheck would catch it.",
+        "repro": "Run `npm run typecheck`, or grep for `<RateBars` outside AthleteOverview.tsx.",
+        "fix": "Restore the comment, e.g. `/** Breathing rate per open session, against the lo–hi br/min target band. */`, and confirm there are no other callers.",
+        "pattern": "537348bce0b9"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/AthleteWorkspace.tsx",
+        "line": 36,
+        "acceptance_id": null,
+        "title": "Document the new Workspace fields",
+        "detail": "Every neighbouring field has a one-line doc comment (e.g. rules: \"The coach's alert rules; defaults for athletes.\"). `targets` and `coachName` have none, and coachName is only set in the athlete's own view.",
+        "repro": "n/a",
+        "fix": "Add `/** The coach link's targets (the first coach's for athletes); defaults when unset. */` and `/** The athlete's first coach; only set in the athlete's own view. */`.",
+        "pattern": "99036106d370"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/AthleteWorkspace.tsx",
+        "line": 56,
+        "acceptance_id": null,
+        "title": "An athlete's coach lookup failing now fails the whole workspace",
+        "detail": "Before, a failed listCoaches/getCoachLink in TrendsTab only meant default targets. Now it rejects the workspace Promise.all, and the athlete sees the sessions ErrorState instead of their data. Surfacing the error matches CONSTRAINTS.md; this is noted only as a behaviour change.",
+        "repro": "In the athlete's own view, make backend.data.listCoaches reject.",
+        "fix": "Keep as is, or catch inside firstCoach and fall back to null with a visible notice.",
+        "pattern": "ec8be04b9ccb"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "unverified",
+        "note": "The code now gives Overview's activity() the coach link's targets for the athlete (targetsFor(coach?.link)), the same value TrendsTab uses. No manual proof is attached."
+      },
+      {
+        "id": "A2",
+        "status": "unverified",
+        "note": "The caption and RateBars band read targets.rateLow and targets.rateHigh in both views. There are no screenshots showing 10–14."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "targets.test.ts covers link targets present, targets null/undefined/missing, and link null/undefined."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 15164,
+      "costUsd": 0.143936
+    }
+  }
+}

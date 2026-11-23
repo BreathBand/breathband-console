@@ -11,6 +11,9 @@
 - 2026-11-23 20:20 isolate: worktree .worktrees/T-0003 · branch fix/t-0003 from origin/main (4106bb1ac524) · port 5175 · db breathband_console_t0003 · env sha256 790c9945aeba100d15f5f136127a03e8f523b2f11f7dce971f999ea7ea001dcf (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 20:21 build: build started · skills spine only · budget 8 steps / 15k ctx · ~16719 prompt tokens · 8 repo file(s) in context · 158357 tokens · $0.51 · 5 turns (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 20:23 build: build done · commit 5d4e2f3b91f9 · 6 file(s) this round · 1150380 tokens · $0.99 · 31 turns · I've made the athlete Overview use the coach's targets. Lint, typecheck and the domain tests pass. I couldn't check the static export build: `npm run build` fails in this worktree, and my changes don' (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:06 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:08 judge: judge passed · round 1 · head 5d4e2f3b91f9 · record sha256 ceb72dbf33a2034a25926beb41797964d9c225912f2d60c698fd1813b8f2e2d5 (rivetari judge (for arynbht@gmail.com))
+- 2026-11-23 21:08 ship: draft PR opened: #7 https://github.com/BreathBand/breathband-console/pull/7 · fix/t-0003 at 5d4e2f3b91f9 → main (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -35,3 +38,19 @@
 - 2026-11-23 20:20 accessibility-lead left out: it requires a11y-core, which isn't available
 - 2026-11-23 20:20 frontend-design matched but isn't available (not locked, not synced, or blocked at sync)
 - 2026-11-23 20:20 a11y: no vendored skill covers it; the agent works from the spine
+
+## Proof
+
+- 2026-11-23 21:06 screenshots: / at sm/md/lg, before and after (6 images) in .rivetari/tasks/T-0003/proof/ (not pushed: upload failed: is at a9d20de0161fd9d0f9d7f82e680d2f9a8b1eaabc but expected b61b2bce67d93dbf6368175f4f97d8b4b60de246 - https://docs.github.com/rest/repos/contents#create-or-update-file-contents)
+- 2026-11-23 21:06 axe: 0 serious or critical violations
+- 2026-11-23 21:06 visual diff: not automated yet; the before/after images are the comparison
+- 2026-11-23 21:06 signed in: .rivetari/proof-auth.mjs ran on each side before its shots
+
+## Judge
+
+- 2026-11-23 21:07 tier 1 round 1: pass · 7/8 pass · 1 pre-existing
+- 2026-11-23 21:08 review round 1: approve; 0 blocking, 4 suggestion(s) (claude-opus-5-5) · 15164 tokens · $0.14
+- 2026-11-23 21:08 acceptance A1: unverified — The code now gives Overview's activity() the coach link's targets for the athlete (targetsFor(coach?.link)), the same value TrendsTab uses. No manual proof is attached.
+- 2026-11-23 21:08 acceptance A2: unverified — The caption and RateBars band read targets.rateLow and targets.rateHigh in both views. There are no screenshots showing 10–14.
+- 2026-11-23 21:08 acceptance A3: met — targets.test.ts covers link targets present, targets null/undefined/missing, and link null/undefined.
+- 2026-11-23 21:08 judge review posted: https://github.com/BreathBand/breathband-console/pull/7#pullrequestreview-6029549327
