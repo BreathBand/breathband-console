@@ -1,0 +1,103 @@
+{
+  "syncedAt": "2026-11-23T02:19:19.212Z",
+  "lock": "ff0d3b17ae03b23b706a1c53391fb39ddc53a67188dc293647dccb88c8c52caf",
+  "skills": [
+    {
+      "name": "code-review-and-quality",
+      "pin": "301b02b12bff98e4688e6984af6556802322bbde",
+      "hash": "sha256:99c1241d837e786f5fd10230e73a21911bb6abd2671914a38b98f948fa2c04f0",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "constraint-driven-development",
+      "pin": "301b02b12bff98e4688e6984af6556802322bbde",
+      "hash": "sha256:5c2dcebe5a2359afc54d3efbdb481c7afd7521c6cb20e4af596cbd6da5d94227",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "differential-review",
+      "pin": "e4dd0bb5b15535f7c5a0834187dffba6ac37e4ff",
+      "hash": "sha256:9c15c845af144f21626c3c3cd94a886ec0b033a5df42300e20a1eae4673ddaa0",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "fp-check",
+      "pin": "e4dd0bb5b15535f7c5a0834187dffba6ac37e4ff",
+      "hash": "sha256:7200d10aa80a3c3fc859720eaddc22d72e35f6378a01eb5625ce9ea8450fd661",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "incremental-implementation",
+      "pin": "301b02b12bff98e4688e6984af6556802322bbde",
+      "hash": "sha256:b6a791172452145768a86a16b78253153a1b47e04687e2a16eb9260f874e73ab",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "planning-and-task-breakdown",
+      "pin": "301b02b12bff98e4688e6984af6556802322bbde",
+      "hash": "sha256:3db676a1bf0dfe4233768f541c8364022e88fb62e70ad4aab3aba8fac7de1dfc",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "playwright-cli",
+      "pin": "ce9b41b619c588c7dc0e89217d3469a70374acdd",
+      "hash": "sha256:f4be5508fdcec8f3a4cf6698c861088e2bb2af57a8c8a6d3ee0f2604e9105110",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "shipping-and-launch",
+      "pin": "301b02b12bff98e4688e6984af6556802322bbde",
+      "hash": "sha256:38142bf94e2d52377b1c0c1c62efd132303cfcdbc34a8aead14d658e2223cdbb",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "skill-creator",
+      "pin": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "hash": "sha256:ad4f350be137206c6cb509aaaccf80960fd216db6ad6ef8e6f1d8920acb860b6",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "spec-driven-development",
+      "pin": "301b02b12bff98e4688e6984af6556802322bbde",
+      "hash": "sha256:962752b58f16f8fe1fcc7d638385b8cd7261595113a903e0233544807301a42f",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "test-driven-development",
+      "pin": "301b02b12bff98e4688e6984af6556802322bbde",
+      "hash": "sha256:7c8229bdd75758eddb1cec1988d3fe34612d6270f93531ee01eb52a2071b18a3",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    },
+    {
+      "name": "webapp-testing",
+      "pin": "2c5958ecac7cee2b583967a2c4981d0f4a75c579",
+      "hash": "sha256:564acfdb5fc84463905a3c4e2562cb325ae6ffaf2a4bac92d93777373363501f",
+      "scope": "always",
+      "installed": true,
+      "from": "cache"
+    }
+  ],
+  "blocked": []
+}
