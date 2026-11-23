@@ -15,6 +15,8 @@
 - 2026-11-23 21:06 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 21:21 judge: judge passed · round 1 · head 2d4ffb45ee7b · record sha256 bbf55b805aaed6b3c811f8faa2e980eaf4c2aab469849bfd955a1ca845dbdf36 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-23 21:21 ship: draft PR opened: #8 https://github.com/BreathBand/breathband-console/pull/8 · chore/t-0002 at 2d4ffb45ee7b → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:52 close: worktree removed · branch chore/t-0002 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:52 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -61,3 +63,7 @@
 - 2026-11-23 21:21 acceptance A3: met — Differences and hard-coded values are under Observations, which says "Nothing here is a request to change it". No recommendations or redesigns appear anywhere.
 - 2026-11-23 21:21 acceptance A4: met — The diff adds only DESIGN.md.
 - 2026-11-23 21:21 judge review posted: https://github.com/BreathBand/breathband-console/pull/8#pullrequestreview-6029728212
+
+## Outcome
+
+- 2026-11-23 21:52 PR #8 merged by arynbht 2026-11-23 21:39 · 3h27m · 5843k tokens · $7.23
