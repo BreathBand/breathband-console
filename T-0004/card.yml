@@ -1,0 +1,38 @@
+id: T-0004
+title: Download the Compare table as CSV
+type: feature
+source: prompt
+description: "The Compare page's \"Side by side\" table
+  (src/app/cloud/trends/page.tsx:189-217, rows built by CompareRow at 222-244:
+  sessions, a week, average, change, on target, rate, weakest part) is the one
+  coach data table with no export, while the sessions list (\"CSV of these\",
+  SessionsTab.tsx) and the athlete workspace (\"Export CSV\",
+  AthleteWorkspace.tsx) both have one, using downloadText/slug from
+  src/lib/download.ts and the RFC 4180 field() helper in src/lib/domain/csv.ts.
+  Add compareCsv(rows) to csv.ts, compute the periodStats rows in the page so
+  the table and the CSV share them, and add a small ghost \"CSV of this table\"
+  button in the Side by side header. No new dependency."
+acceptance:
+  - id: A1
+    text: a "CSV of this table" button in the Side by side header downloads
+      breathband-compare-<period>.csv with one header row and one row per picked
+      athlete, in the table's order and with the table's values; empty values
+      are blank cells and names containing commas or quotes are quoted
+    verify: manual
+  - id: A2
+    text: the button is disabled when no athlete is picked
+    verify: manual
+  - id: A3
+    text: a unit test checks compareCsv's header, a row with a null average and
+      rate, and quoting
+    verify: unit
+out_of_scope: []
+touches:
+  - src/lib/domain/csv.ts
+  - src/app/cloud/trends/page.tsx
+  - src/lib/domain/compare-csv.test.ts
+pages: []
+constraints: []
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-23
