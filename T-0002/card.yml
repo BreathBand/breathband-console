@@ -1,0 +1,46 @@
+id: T-0002
+title: Document the current design system in DESIGN.md
+type: chore
+source: prompt
+description: "Rivetari's judge enforces DESIGN.md, but this repo doesn't have
+  one, so UI changes have no written design contract to be checked against.
+  Write DESIGN.md at the repo root describing the design system as it exists in
+  the code today, with no redesign: colour tokens and their roles, typography
+  (families, sizes, weights, line heights), spacing and radius scales,
+  elevation/shadows, breakpoints, and the shared components with what each is
+  for and its main variants. The sources are the global tokens in
+  src/app/globals.css, the signed-in console's layout and components in
+  src/app/cloud/console.css and src/app/cloud/, the public site in
+  src/app/(site)/ (site.css and _components), and the shared components in
+  src/components/ (charts, Icon, Measured, Progress, Score, States,
+  trendCharts). Every value written must be the value in the code, with the file
+  it comes from; where the two surfaces (site and console) differ or a value is
+  hard-coded instead of using a token, say so plainly under an 'Observations'
+  heading rather than proposing changes. Keep it readable for someone about to
+  change the UI: a short intro, then one section per topic, tables where they
+  help."
+acceptance:
+  - id: A1
+    text: DESIGN.md exists at the repo root with sections for colour tokens,
+      typography, spacing and radius, elevation, breakpoints and shared
+      components, each naming the file its values come from
+    verify: review
+  - id: A2
+    text: every token name and value DESIGN.md cites appears in the named source
+      file as written
+    verify: review
+  - id: A3
+    text: "it describes the current design only: differences and hard-coded values
+      are listed under Observations, with no proposed redesign"
+    verify: review
+  - id: A4
+    text: no file other than DESIGN.md changes
+    verify: review
+out_of_scope: []
+touches:
+  - DESIGN.md
+pages: []
+constraints: []
+risk: medium
+owner: arynbht@gmail.com
+created: 2026-11-23
