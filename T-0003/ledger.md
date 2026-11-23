@@ -14,6 +14,8 @@
 - 2026-11-23 21:06 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-23 21:08 judge: judge passed · round 1 · head 5d4e2f3b91f9 · record sha256 ceb72dbf33a2034a25926beb41797964d9c225912f2d60c698fd1813b8f2e2d5 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-23 21:08 ship: draft PR opened: #7 https://github.com/BreathBand/breathband-console/pull/7 · fix/t-0003 at 5d4e2f3b91f9 → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:26 close: worktree removed · branch fix/t-0003 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-23 21:26 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -54,3 +56,7 @@
 - 2026-11-23 21:08 acceptance A2: unverified — The caption and RateBars band read targets.rateLow and targets.rateHigh in both views. There are no screenshots showing 10–14.
 - 2026-11-23 21:08 acceptance A3: met — targets.test.ts covers link targets present, targets null/undefined/missing, and link null/undefined.
 - 2026-11-23 21:08 judge review posted: https://github.com/BreathBand/breathband-console/pull/7#pullrequestreview-6029549327
+
+## Outcome
+
+- 2026-11-23 21:26 PR #7 merged by arynbht 2026-11-23 21:25 · 1h06m · 1324k tokens · $1.64
