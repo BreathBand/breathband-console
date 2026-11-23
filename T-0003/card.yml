@@ -1,0 +1,46 @@
+id: T-0003
+title: Use the coach's targets on the athlete Overview
+type: fix
+source: prompt
+description: "The athlete Overview judges reminders and shades the rate chart
+  against the default targets, while the Trends tab and the coach's header use
+  the targets the coach set. AthleteOverview.tsx:42 calls activity(sessions,
+  now) with no rules or targets, so DEFAULT_TARGETS (score 7, rate 12-16) always
+  apply; line 138 hard-codes the caption \"br/min, shaded 12-16\", and RateBars
+  in src/components/charts.tsx:76-84 hard-codes the 12/16 band.
+  TrendsTab.tsx:26-33 loads the coach's targets, so the same athlete sees two
+  different targets: the seeded demo athlete has a coach target of 8
+  (src/lib/backend/local/db.ts:75), but Overview reminders say \"under their
+  target of 7\". Load the coach link's targets once in AthleteWorkspace (for the
+  athlete as well as the coach) and pass them down: Overview's activity() and
+  caption use them, RateBars takes lo/hi props, and TrendsTab uses the shared
+  value instead of its own load. The choice (link targets when present,
+  otherwise DEFAULT_TARGETS) lives in a small pure helper so it can be
+  unit-tested; this repo has no React test setup."
+acceptance:
+  - id: A1
+    text: signed in as the demo athlete, a score-target reminder on Overview names
+      8, the same value as the Trends tab's Targets panel
+    verify: manual
+  - id: A2
+    text: after a coach saves a rate target of 10-14, that athlete's Overview chart
+      caption reads "shaded 10-14" and the band sits at 10 and 14, for both the
+      coach's and the athlete's view
+    verify: manual
+  - id: A3
+    text: a unit test covers the target choice helper (link targets when present,
+      otherwise DEFAULT_TARGETS)
+    verify: unit
+out_of_scope: []
+touches:
+  - src/app/cloud/AthleteWorkspace.tsx
+  - src/app/cloud/AthleteOverview.tsx
+  - src/components/charts.tsx
+  - src/app/cloud/TrendsTab.tsx
+  - src/lib/domain/targets.ts
+  - src/lib/domain/targets.test.ts
+pages: []
+constraints: []
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-23
