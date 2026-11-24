@@ -22,7 +22,7 @@ export default function SharingPage() {
   if (auth.profile?.role === "coach") {
     return (
       <div className="container">
-        <EmptyState title="Sharing is set by athletes">
+        <EmptyState title="Sharing is set by athletes" level={1}>
           <p className="muted">
             To add an athlete, enter their invite code on the <Link href="/cloud/athletes/">Athletes</Link> page.
           </p>

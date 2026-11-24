@@ -312,7 +312,9 @@ function ToReview({
                 <Link className="feed-body feed-link" href={sessionHref(s.athleteId, s.id)}>
                   <b>
                     {m.profile.displayName}
-                    <i className="new-dot" aria-label="Not opened yet" />
+                    <i className="new-dot">
+                      <span className="sr-only">Not opened yet</span>
+                    </i>
                   </b>
                   <span>
                     {describeMode(s)} · {formatDuration(s.durationSec)} · {daysAgoText(days)}, {formatTime(s.startedAt)}

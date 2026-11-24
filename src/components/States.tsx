@@ -13,10 +13,11 @@ export function Skeleton({ lines = 3, label = "Loading…" }: { lines?: number; 
   );
 }
 
-export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
+export function EmptyState({ title, level = 2, children }: { title: string; level?: 1 | 2; children?: ReactNode }) {
+  const Heading = level === 1 ? "h1" : "h2";
   return (
     <div className="empty">
-      <h2>{title}</h2>
+      <Heading>{title}</Heading>
       {children}
     </div>
   );
