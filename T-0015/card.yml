@@ -1,0 +1,77 @@
+id: T-0015
+title: Fit the console top bar between 961px and 1440px
+type: fix
+source: prompt
+description: "Between 961px and about 1360px the signed-in top bar is wider than
+  the window, so every /cloud page scrolls sideways. CloudShell.tsx:96-153
+  renders the brand, the nav, the AthletePicker (coach on /cloud/sessions/ and
+  /cloud/session/, CloudShell.tsx:114-118), the sync chip and the name and Sign
+  out button in one flex row (.topbar-row, src/app/cloud/console.css:31-37).
+  None of these can shrink: .brand is white-space: nowrap (console.css:46),
+  .topnav a is nowrap (console.css:2237-2239), and .sync and .who are nowrap
+  (console.css:144-152). The row only wraps at 960px and below
+  (console.css:1081-1097). Measured at 1024px: coach pages are 1172px wide
+  (screens/coach__cloud__1024.png, report.json: div.topbar-end, span.who,
+  a.who-name), and athlete-workspace pages with the picker are 1355px wide
+  (screens/coach__cloud_session_athlete_demo-athlete_id_s001__1024.png). The
+  user's name ends up under Sign out, off the dark bar. Because the
+  athlete-workspace row needs about 1355px, those pages should also overflow at
+  1280px, the proof's lg width; 1440px is fine. Make the bar fit from 961px to
+  1440px. The session rail sticks under the bar using --topbar-h: 57px
+  (console.css:9, 204-207), so if the bar gets taller in this range, --topbar-h
+  must follow it."
+acceptance:
+  - id: A1
+    text: at 1024px, 1280px and 1320px, document.documentElement.scrollWidth equals
+      the viewport width on /cloud/ and on
+      /cloud/session/?athlete=demo-athlete&id=s024, and the brand, every nav
+      link, the athlete picker, Reset, the user's name and Sign out each sit
+      fully on the dark bar; at 1440px the bar is still the single row it is
+      today
+    verify: manual
+  - id: A2
+    text: the 1280px after-screenshots of /cloud/sessions/?athlete=demo-athlete and
+      /cloud/session/?athlete=demo-athlete&id=s024 are 1280px wide and show the
+      whole top bar, with the name and Sign out inside it
+    verify: screenshot
+  - id: A3
+    text: before and after screenshots at 375px and 768px show the top bar unchanged
+      (the existing wrapped layout at 960px and below)
+    verify: screenshot
+  - id: A4
+    text: at 1024px and 1280px, scrolling the session review page keeps the session
+      rail directly under the top bar, with no gap and no overlap
+    verify: manual
+  - id: A5
+    text: axe reports 0 serious or critical violations on the listed pages, and
+      every top bar control still has its visible label or an accessible name
+    verify: screenshot
+out_of_scope:
+  - The main nav scrolling sideways at 375px (S4 in 03-console-inventory.md)
+  - Swapping the top bar's literals (.brand gap 10px, .picker 10px/12px, .picker
+    .avatar
+  - The Compare table on phones (B1-7), axe fixes elsewhere (B1-9), chart text
+    alternatives (B1-10)
+  - The signed-out bc- header in auth.css and the public site header
+  - Changing what the bar contains, which nav items a role gets, or the auth
+    gate logic in CloudShell.tsx
+touches:
+  - src/app/cloud/CloudShell.tsx
+  - src/app/cloud/console.css
+pages:
+  - /cloud/
+  - /cloud/sessions/?athlete=demo-athlete
+  - /cloud/session/?athlete=demo-athlete&id=s024
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - follow DESIGN.md; colours come from tokens in src/app/globals.css
+  - "static export only (output: export): no server actions, route handlers or
+    dynamic routes"
+  - if a media query is needed, reuse one of the console.css breakpoints
+    DESIGN.md lists (1280px, 1100px, 960px, 640px); no new breakpoint
+  - controls in the bar keep a target height of at least 36px
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-24
