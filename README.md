@@ -2,9 +2,11 @@
 
 The Breathband website (`/`) and the BreathCloud console (`/cloud/`), where athletes and coaches sign in to see breathing sessions recorded with the Breathband app.
 
-**Status:** local development. The console runs on a local demo backend; Firebase and Google Cloud are prepared for but not installed. The roadmap is in [docs/PLAN.md](docs/PLAN.md).
+**Status:** local development. The console runs on a local demo backend. The deploy target is Google Cloud Run, prepared but not deployed. The roadmap and the decisions behind it are in [docs/PLAN.md](docs/PLAN.md#decisions).
 
 ## Quick start
+
+### Run locally
 
 ```bash
 nvm use            # Node 22
@@ -12,6 +14,17 @@ npm install
 cp .env.example .env.local
 npm run dev        # http://localhost:3000
 ```
+
+### Run in a container
+
+The same static build the deploy uses, served by nginx on port 8080:
+
+```bash
+docker build -t breathband-console .
+docker run -p 8080:8080 breathband-console
+```
+
+Then open <http://localhost:8080/>. The backend is chosen at build time with `--build-arg NEXT_PUBLIC_BACKEND=local` (the default); see [Cloud Run](docs/PLAN.md#cloud-run).
 
 Open <http://localhost:3000/cloud/> and sign in with a demo account (password `breathband`, or use the one-click buttons on the sign-in page):
 
@@ -80,19 +93,18 @@ src/
 │       ├── local/            working fake (localStorage + seeded demo data)
 │       └── firebase/         stub, implemented in Phase 4
 firebase/                     draft Firestore/Storage rules + indexes (not deployed)
-firebase.json                 Hosting + emulator config (not used yet)
-Dockerfile, nginx.conf        Cloud Run alternative to Firebase Hosting
+firebase.json                 Hosting + emulator config (kept, not used)
+Dockerfile, nginx.conf        Cloud Run image: static export served by nginx on :8080
 ```
 
 - **The build is fully static.** `next build` emits HTML/JS/CSS only. The browser talks to the backend directly, and access control lives in the backend's rules (`firebase/firestore.rules`), not in a server. The local adapter enforces the same rules, so permission errors show up in development.
-- **Screens never import an adapter.** They call `useBackend()`. Moving to Firebase means implementing `src/lib/backend/firebase/index.ts` and setting `NEXT_PUBLIC_BACKEND=firebase`. No page changes are needed.
+- **Screens never import an adapter.** They call `useBackend()`. Moving off the local adapter (the plan is an `http` adapter for a future Cloud Run API) means implementing an adapter and selecting it with `NEXT_PUBLIC_BACKEND`. No page changes are needed.
 
-## Deploy targets (prepared, not active)
+## Deploy target: Cloud Run (prepared, not deployed)
 
-- **Firebase Hosting:** `firebase deploy --only hosting` serves `out/` (see `firebase.json`).
-- **Cloud Run:** `gcloud run deploy breathband-web --source .` builds the `Dockerfile` (nginx on :8080).
+The deploy target is **Google Cloud Run**. `gcloud run deploy breathband-web --source . --region <region> --allow-unauthenticated` builds the `Dockerfile` (nginx on :8080). A person runs that by hand; CI and agents don't. Details are in [docs/PLAN.md](docs/PLAN.md#cloud-run).
 
-Both steps are in [docs/PLAN.md](docs/PLAN.md#phase-4-move-to-firebase).
+Firebase Hosting is no longer a target. `firebase.json` and `firebase/` stay in the repo unchanged, but nothing deploys them.
 
 ## Related
 
