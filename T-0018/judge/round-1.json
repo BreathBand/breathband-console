@@ -1,0 +1,164 @@
+{
+  "task": "T-0018",
+  "round": 1,
+  "verdict": "passed",
+  "head": "da582428340964c2d8eb866e09a3e1206305d734",
+  "base": "44e6ffb292b5e8694d42498dcb8a3909f27f9e75",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — group.test.ts covers every listed helper: pacerAt switching inclusively at atSec, pacerPhase across two out-of-order switches, pacerValue -1/+1, pacerCue in/out, all liveRead states with strict quarter boundaries and -33/-34 depth, formatLag/formatDepth signs, describeGroupAverage null and number, describePacer with zero and one switch.\n- A2: met — format-dates uses 'en-GB' and local-time constructors. coaching-calendar covers isOpen for all five statuses, the three new dueText branches, timeAgo's five ranges, dayKey for Date and ISO, and lastDays (count, order, noon, ends today, month crossing).\n- A3: met — rangeLabel listed range and fallback; inPeriod offsets 0 and 1 with both boundaries; periodStats best/weakest/openCount/rateOutside/perWeek (hand-checked: exhale timing mean 6, 7 sessions over 14 days = 3.5); bucketAverage/bucketRate null and 1-decimal, with paced and null rates ignored; daysAgoText, legacyBand at all four values, isLegacyScores for all three cases.\n- A4: met — slug cases match the card. downloadText runs without jsdom using stubGlobal/spyOn and fake timers; it checks href, download, one click, removal, default and passed Blob types, and revocation only after timers run. Stubs and timers are restored in afterEach.\n- A5: unverified — The diff adds only the six new test files, with no source or existing-test changes, comments or suppressions. No test, lint or typecheck output under TZ=UTC or Pacific/Auckland was provided.\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- formatLag(-0.04) pins behaviour the card lists as odd `src/lib/domain/group.test.ts:110` — Drop line 110 and mention the mismatch in the PR body.\n- Exact en-GB strings depend on the ICU version `src/lib/domain/format-dates.test.ts:26` — Optionally loosen to /^Sun,? 8 Nov 2026$/ (and similarly on lines 16 and 10), or accept the pin as describing today's runtime.\n- ReturnType<typeof vi.spyOn> may not accept the narrowed spy under strict typecheck `src/lib/download.test.ts:26` — Type the variables as MockInstance<typeof URL.createObjectURL> / MockInstance<typeof URL.revokeObjectURL>, or let them be inferred inside each test.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/lib/domain/group.test.ts",
+        "line": 110,
+        "acceptance_id": null,
+        "title": "formatLag(-0.04) pins behaviour the card lists as odd",
+        "detail": "Out of scope asks for odd behaviour to be reported in the PR rather than asserted, and names the formatLag(-0.04) vs formatDepth(-0.4) sign mismatch. The ±0.0 s output is arguably the sensible half, and A1 only asks for +, − and ±, which lines 107-109 already cover. Even so, this line locks in one side of a known inconsistency, so a later fix would break it.",
+        "repro": "Change formatLag to keep the sign for small negatives, as formatDepth does; line 110 fails.",
+        "fix": "Drop line 110 and mention the mismatch in the PR body.",
+        "pattern": "06560c9d8a2b"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/domain/format-dates.test.ts",
+        "line": 26,
+        "acceptance_id": null,
+        "title": "Exact en-GB strings depend on the ICU version",
+        "detail": "Whether en-GB puts a comma after the weekday ('Sun, 8 Nov 2026' vs 'Sun 8 Nov 2026', and likewise for formatDay) has changed between ICU/CLDR releases. These exact toBe assertions match today's Node 22 output but could break on a Node upgrade without any source change.",
+        "repro": "Run the suite on a Node build with a different bundled ICU or small-icu.",
+        "fix": "Optionally loosen to /^Sun,? 8 Nov 2026$/ (and similarly on lines 16 and 10), or accept the pin as describing today's runtime.",
+        "pattern": "a1e3fc0fe02a"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/download.test.ts",
+        "line": 26,
+        "acceptance_id": null,
+        "title": "ReturnType<typeof vi.spyOn> may not accept the narrowed spy under strict typecheck",
+        "detail": "vi.spyOn(URL, 'createObjectURL') returns a MockInstance typed to that method's signature. Assigning it to the generic ReturnType<typeof vi.spyOn> can fail assignability on some vitest versions. Typecheck output isn't in the proof, so this can't be confirmed from the diff.",
+        "repro": "npm run typecheck",
+        "fix": "Type the variables as MockInstance<typeof URL.createObjectURL> / MockInstance<typeof URL.revokeObjectURL>, or let them be inferred inside each test.",
+        "pattern": "afd25bca078a"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "group.test.ts covers every listed helper: pacerAt switching inclusively at atSec, pacerPhase across two out-of-order switches, pacerValue -1/+1, pacerCue in/out, all liveRead states with strict quarter boundaries and -33/-34 depth, formatLag/formatDepth signs, describeGroupAverage null and number, describePacer with zero and one switch."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "format-dates uses 'en-GB' and local-time constructors. coaching-calendar covers isOpen for all five statuses, the three new dueText branches, timeAgo's five ranges, dayKey for Date and ISO, and lastDays (count, order, noon, ends today, month crossing)."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "rangeLabel listed range and fallback; inPeriod offsets 0 and 1 with both boundaries; periodStats best/weakest/openCount/rateOutside/perWeek (hand-checked: exhale timing mean 6, 7 sessions over 14 days = 3.5); bucketAverage/bucketRate null and 1-decimal, with paced and null rates ignored; daysAgoText, legacyBand at all four values, isLegacyScores for all three cases."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "slug cases match the card. downloadText runs without jsdom using stubGlobal/spyOn and fake timers; it checks href, download, one click, removal, default and passed Blob types, and revocation only after timers run. Stubs and timers are restored in afterEach."
+      },
+      {
+        "id": "A5",
+        "status": "unverified",
+        "note": "The diff adds only the six new test files, with no source or existing-test changes, comments or suppressions. No test, lint or typecheck output under TZ=UTC or Pacific/Auckland was provided."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 275128,
+      "costUsd": 3.6658178
+    }
+  }
+}
