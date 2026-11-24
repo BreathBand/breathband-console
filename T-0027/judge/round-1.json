@@ -1,0 +1,180 @@
+{
+  "task": "T-0027",
+  "round": 1,
+  "verdict": "passed",
+  "head": "2d67b4f2c20af31f2da55e961e6a48aa77239ab5",
+  "base": "389d42272853bd8b573106e217c4b5c23bc078d9",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "medium",
+    "effective": "medium",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — Pre-warped bilinear SOS design from FIXED_CONSTANTS.lowPassFilter. Forward-backward with odd edge padding and steady-state initial conditions. filter.test.ts covers 20 and 10 Hz, the four frequencies with the specified tolerances, and peak shift of at most 1 sample.\n- A2: met — calibrate, toPctOfMax and calibrationFromLegacy (approximate: true) are exported. The test recovers A100 and midline within 0.5%, checks top-3 minus bottom-3 = 100 ± 0.5, and checks that a two-breath recording returns null.\n- A3: met — detectTransitions returns index, t, type and level from the filtered signal. Tests cover 35 alternating transitions, timing and level, the prominence ripple under and over the threshold, and spacing. Thresholds come from config.\n- A4: met — alternate() keeps the more extreme of adjacent same-type extrema. Hand-built peak and trough cases are tested, and alternation is asserted on all goldens and demos.\n- A5: met — Artifacts are interpolated before filtering, and extrema beyond the limit are rejected. The spike test, lost-then-recovered test and 10 s hold test are present. Output length and indices are preserved.\n- A6: unverified — New config keys only, with a value test. index.ts re-exports all three modules. No Appendix literals and no new comments or suppressions. Lint, typecheck and test pass is left to the deterministic stage; no results were provided here.\n\n<details><summary>4 suggestion(s), non-blocking</summary>\n\n- calibrate has no artifact rejection, so one raw glitch can set A100 `src/lib/analysis/calibration.ts:37` — Consider rejecting extrema whose width or level is an outlier against the other breaths, for example a robust median-based limit, once the owner confirms the rule.\n- prominence is O(n) per candidate and enforceSpacing is O(k²) `src/lib/analysis/transitions.ts:70` — Stop the prominence scan at the spacing or a reasonable window, or use a monotonic-stack approach. Check spacing against index-sorted neighbours instead of every kept item.\n- Golden test does not pin the literal 5 k s and ±3 values from A3 `src/lib/analysis/transitions.test.ts:17` — Add expect(HALF_CYCLE_S).toBe(5) and expect(PACER_AMPLITUDE_PCT).toBe(3).\n- Object.hasOwn requires lib ES2022 `src/lib/analysis/config-additions.test.ts:11` — Use `\"calibrationPeakCount\" in OPEN_CONSTANTS` or Object.prototype.hasOwnProperty.call.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/calibration.ts",
+        "line": 37,
+        "acceptance_id": null,
+        "title": "calibrate has no artifact rejection, so one raw glitch can set A100",
+        "detail": "calibrate filters the raw recording and takes the top 3 peaks and bottom 3 troughs with no spike handling. A single large sensor glitch survives the 1 Hz low-pass as a tall, narrow peak, becomes one of the 3 highest peaks, and inflates A100 and shifts M. The card does not require artifact handling before calibration, so this is not blocking.",
+        "repro": "In generateCalibration({a100:2000, midline:512, sampleRateHz:20}).raw, set one sample mid-recording to 512 + 10*2000 and call calibrate(raw, 20). a100 comes out well above 2000.",
+        "fix": "Consider rejecting extrema whose width or level is an outlier against the other breaths, for example a robust median-based limit, once the owner confirms the rule.",
+        "pattern": "830c4f0a4bc5"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/transitions.ts",
+        "line": 70,
+        "acceptance_id": null,
+        "title": "prominence is O(n) per candidate and enforceSpacing is O(k²)",
+        "detail": "Each candidate scans outward until it meets a higher sample, which can cover the whole signal for the dominant peaks. enforceSpacing runs kept.some for every transition. A long open session at 20 Hz with many small extrema becomes quadratic.",
+        "repro": "detectTransitions on a 30-minute 20 Hz noisy signal (36,000 samples, thousands of candidates) is noticeably slow.",
+        "fix": "Stop the prominence scan at the spacing or a reasonable window, or use a monotonic-stack approach. Check spacing against index-sorted neighbours instead of every kept item.",
+        "pattern": "fad3ca069506"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/transitions.test.ts",
+        "line": 17,
+        "acceptance_id": "A3",
+        "title": "Golden test does not pin the literal 5 k s and ±3 values from A3",
+        "detail": "The test derives the expected times and levels from cycleS(PACER_5_5)/2 and PACER_AMPLITUDE_PCT. If synth.ts changed those constants, the test would still pass while no longer checking the criterion as written.",
+        "repro": "Change PACER_AMPLITUDE_PCT in synth.ts. The A3 test still passes with different levels.",
+        "fix": "Add expect(HALF_CYCLE_S).toBe(5) and expect(PACER_AMPLITUDE_PCT).toBe(3).",
+        "pattern": "1bbf5a10f286"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/config-additions.test.ts",
+        "line": 11,
+        "acceptance_id": null,
+        "title": "Object.hasOwn requires lib ES2022",
+        "detail": "If tsconfig's lib or target is below ES2022, typecheck fails. Object.prototype.hasOwnProperty.call avoids the dependency.",
+        "repro": "Run npm run typecheck with lib below ES2022.",
+        "fix": "Use `\"calibrationPeakCount\" in OPEN_CONSTANTS` or Object.prototype.hasOwnProperty.call.",
+        "pattern": "2e39ab247b2d"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "Pre-warped bilinear SOS design from FIXED_CONSTANTS.lowPassFilter. Forward-backward with odd edge padding and steady-state initial conditions. filter.test.ts covers 20 and 10 Hz, the four frequencies with the specified tolerances, and peak shift of at most 1 sample."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "calibrate, toPctOfMax and calibrationFromLegacy (approximate: true) are exported. The test recovers A100 and midline within 0.5%, checks top-3 minus bottom-3 = 100 ± 0.5, and checks that a two-breath recording returns null."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "detectTransitions returns index, t, type and level from the filtered signal. Tests cover 35 alternating transitions, timing and level, the prominence ripple under and over the threshold, and spacing. Thresholds come from config."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "alternate() keeps the more extreme of adjacent same-type extrema. Hand-built peak and trough cases are tested, and alternation is asserted on all goldens and demos."
+      },
+      {
+        "id": "A5",
+        "status": "met",
+        "note": "Artifacts are interpolated before filtering, and extrema beyond the limit are rejected. The spike test, lost-then-recovered test and 10 s hold test are present. Output length and indices are preserved."
+      },
+      {
+        "id": "A6",
+        "status": "unverified",
+        "note": "New config keys only, with a value test. index.ts re-exports all three modules. No Appendix literals and no new comments or suppressions. Lint, typecheck and test pass is left to the deterministic stage; no results were provided here."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 33860,
+      "costUsd": 0.375596
+    }
+  }
+}
