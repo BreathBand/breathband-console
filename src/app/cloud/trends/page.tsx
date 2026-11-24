@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 import { Measured } from "@/components/Measured";
 import { Score } from "@/components/Score";
@@ -213,7 +213,7 @@ function Compare({ coachId }: { coachId: string }) {
           </button>
         </div>
         <div className="table-scroll">
-          <table className="table">
+          <table className="table compare-table">
             <thead>
               <tr>
                 <th>Athlete</th>
@@ -258,21 +258,44 @@ function compareRows(members: TeamMember[], chosen: Map<string, number>, now: Da
 function CompareRow({ m, cur, change }: CompareRowData) {
   return (
     <tr>
-      <td>
+      <Cell label="Athlete">
         <Link className="row-link" href={athleteHref(m.profile.uid, "trends")}>
           {m.profile.displayName}
         </Link>
-      </td>
-      <td className="num">{cur.count}</td>
-      <td className="num">{formatScore(cur.perWeek)}</td>
-      <td className="num">{cur.average === null ? <span className="muted">–</span> : <Score value={cur.average} />}</td>
-      <td className="num">{change === null ? "–" : `${change >= 0 ? "+" : "−"}${formatScore(Math.abs(change))}`}</td>
-      <td className="num">
+      </Cell>
+      <Cell label="Sessions" className="num">
+        {cur.count}
+      </Cell>
+      <Cell label="A week" className="num">
+        {formatScore(cur.perWeek)}
+      </Cell>
+      <Cell label="Average score" className="num">
+        {cur.average === null ? <span className="muted">–</span> : <Score value={cur.average} />}
+      </Cell>
+      <Cell label="Change" className="num">
+        {change === null ? "–" : `${change >= 0 ? "+" : "−"}${formatScore(Math.abs(change))}`}
+      </Cell>
+      <Cell label="On target" className="num">
         {cur.onTarget} of {cur.scoredCount}
-      </td>
-      <td className="num">{cur.rateAverage === null ? "–" : `${formatScore(cur.rateAverage)}/min`}</td>
-      <td className="sub">{cur.weakest ? `${cur.weakest.label} (${formatScore(cur.weakest.value)})` : "–"}</td>
+      </Cell>
+      <Cell label="Breathing rate" className="num">
+        {cur.rateAverage === null ? "–" : `${formatScore(cur.rateAverage)}/min`}
+      </Cell>
+      <Cell label="Weakest part" className="sub">
+        {cur.weakest ? `${cur.weakest.label} (${formatScore(cur.weakest.value)})` : "–"}
+      </Cell>
     </tr>
+  );
+}
+
+function Cell({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
+  return (
+    <td className={className}>
+      <span className="compare-label" hidden>
+        {label}
+      </span>
+      {children}
+    </td>
   );
 }
 
