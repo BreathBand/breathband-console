@@ -10,6 +10,8 @@
 - 2026-11-24 05:00 route: route approved; assembly sha256 0ae19ceff5a5872f25b29d957e1cfad64beca5647649ac5ed01f5878dc4a3ba6 (rivetari runtime (autonomy review-at-pr, for arynbht@gmail.com))
 - 2026-11-24 05:19 isolate: worktree .worktrees/T-0017 · branch chore/t-0017 from origin/main (44e6ffb292b5) · port 5181 · db breathband_console_t0017 · env sha256 84dcecbe2b8e6aab6c9ce336f4b0721449562152dae261f3cbc509261f3364d5 (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 05:19 build: build started · skills spine only · budget 8 steps / 15k ctx · ~27620 prompt tokens · 2 repo file(s) in context · 148639 tokens · $0.52 · 3 turns (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:22 close: worktree C:\Users\arynb\Documents\Projects\breathband-console\.worktrees\T-0017 kept: it has uncommitted edits; remove it by hand · branch chore/t-0017 kept (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:22 close: ledger sealed · abandoned (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -34,3 +36,7 @@
 - 2026-11-24 05:00 frontend-design matched but isn't available (not locked, not synced, or blocked at sync)
 - 2026-11-24 05:00 native-writing matched but isn't available (not locked, not synced, or blocked at sync)
 - 2026-11-24 05:00 a11y: no vendored skill covers it; the agent works from the spine
+
+## Outcome
+
+- 2026-11-24 05:22 abandoned: redraft to route with the a11y/frontend skills (R-17) · 22m · 149k tokens · $0.52
