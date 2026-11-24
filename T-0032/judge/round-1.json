@@ -1,0 +1,180 @@
+{
+  "task": "T-0032",
+  "round": 1,
+  "verdict": "failed",
+  "head": "aabbdd1dd137cefca2b34867f5133f688d0be7e3",
+  "base": "add28b6d43a545f7fd7d9310b7b3b1957dadc39c",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "high",
+    "effective": "high",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "request-changes",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · 1 blocking\n\n#### Blocking\n\n**acceptance (A5): Reference for inhale and exhale depth is a local literal, not read from config.ts** `src/lib/analysis/open.ts:64`\nA5 names 'the reference depth for inhale and exhale depth' among the Appendix numbers open.ts must read from src/lib/analysis/config.ts. The card's constraints also require importing Appendix constants from config.ts. Inhale depth (peak.level - MIDLINE_PCT) and exhale depth (MIDLINE_PCT - next.level) are measured against `const MIDLINE_PCT = 0`, which is defined in open.ts. Only the depth-index reference (referenceDepthPeakToTroughPctOfMax) comes from config, and the card says the depth index uses avg depth only.\n- **Repro:** In src/lib/analysis/open.ts, line 64 defines `const MIDLINE_PCT = 0;` as a local literal. openBreaths uses it as the reference for inhaleDepthPct (`peak.level - MIDLINE_PCT`) and exhaleDepthPct (`MIDLINE_PCT - next.level`). No FIXED_CONSTANTS or OPEN_CONSTANTS key is read for this reference; the config.ts import provides only bandEdgeEpsilon, normalRateBpm, normalDepthBand, referenceDepthPeakToTroughPctOfMax, depthIndexCapPct, maxEventMarkersPerOpenSession, artifactLimitPctOfMax and transitionRefineWindowS.\n- **Fix:** Read the inhale and exhale depth reference from config.ts. If no key exists, add a new FIXED_CONSTANTS key, which is allowed. Assert it in open-config.test.ts and use it in openBreaths.\n\n#### Acceptance\n- A1: met — openMetrics and analyzeOpen return {whole, segments, markersUsed, markersIgnored}. open.test.ts covers 0, 1, 2 and 3 markers, a peak on either side of a marker, and an empty segment.\n- A2: met — Literal fixture with all six cases; every metric is checked within 0.05.\n- A3: met — Segmented fixture with 12/12/20 breaths; whole-session values match the hand-derived figures (44 breaths, 300/44, 32/44).\n- A4: unverified — Noise-free end-to-end and Tier B tests are present, with one shared seed stored as data. Whether Tier B passes depends on the test run.\n- A5: unmet — Inhale and exhale depth reference is hard-coded (MIDLINE_PCT). The cap key, its test and the index re-export are present. Lint, typecheck and test are left to the deterministic checks.\n- A6: met — insideBand and depthIndex use bandEdgeEpsilon. open-edges.test.ts covers every listed edge, including the non-representable periods.\n- A7: met — refineTransitions uses transitionRefineWindowS, asserted by a test. open-refine.test.ts shows I:E 2.0±0.05 refined and <1.9 unrefined. transitions.ts is untouched.\n- A8: met — A single dated PROVISIONAL entry with both readings, the quotes, the 1.81 vs 2.0 effect, and the paced/open divergence. No other PLAN.md changes.\n\n<details><summary>2 suggestion(s), non-blocking</summary>\n\n- An ignored extra marker can still make the whole analysis throw `src/lib/analysis/open.ts:158` — Validate only markersUsed, or count invalid extras in markersIgnored.\n- Refinement can reorder a close peak and trough, so the breath is silently dropped `src/lib/analysis/open.ts:199` — Clamp each refine window so it cannot cross the neighbouring detected transition.\n\n</details>\n\n_claude-opus-5-5 · 2 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [
+      {
+        "kind": "acceptance",
+        "file": "src/lib/analysis/open.ts",
+        "line": 64,
+        "acceptance_id": "A5",
+        "title": "Reference for inhale and exhale depth is a local literal, not read from config.ts",
+        "detail": "A5 names 'the reference depth for inhale and exhale depth' among the Appendix numbers open.ts must read from src/lib/analysis/config.ts. The card's constraints also require importing Appendix constants from config.ts. Inhale depth (peak.level - MIDLINE_PCT) and exhale depth (MIDLINE_PCT - next.level) are measured against `const MIDLINE_PCT = 0`, which is defined in open.ts. Only the depth-index reference (referenceDepthPeakToTroughPctOfMax) comes from config, and the card says the depth index uses avg depth only.",
+        "repro": "In src/lib/analysis/open.ts, line 64 defines `const MIDLINE_PCT = 0;` as a local literal. openBreaths uses it as the reference for inhaleDepthPct (`peak.level - MIDLINE_PCT`) and exhaleDepthPct (`MIDLINE_PCT - next.level`). No FIXED_CONSTANTS or OPEN_CONSTANTS key is read for this reference; the config.ts import provides only bandEdgeEpsilon, normalRateBpm, normalDepthBand, referenceDepthPeakToTroughPctOfMax, depthIndexCapPct, maxEventMarkersPerOpenSession, artifactLimitPctOfMax and transitionRefineWindowS.",
+        "fix": "Read the inhale and exhale depth reference from config.ts. If no key exists, add a new FIXED_CONSTANTS key, which is allowed. Assert it in open-config.test.ts and use it in openBreaths.",
+        "pattern": "dcf8f32f9949"
+      }
+    ],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/open.ts",
+        "line": 158,
+        "acceptance_id": null,
+        "title": "An ignored extra marker can still make the whole analysis throw",
+        "detail": "All markers are range-checked before slicing to the first 2. A third, legacy marker past the end of the recording therefore throws RangeError instead of being ignored and counted.",
+        "repro": "openMetrics(t, {durationS: 18, markersS: [4.5, 9, 19]}) throws, although 19 would be ignored.",
+        "fix": "Validate only markersUsed, or count invalid extras in markersIgnored.",
+        "pattern": "07ed06fb79c0"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/open.ts",
+        "line": 199,
+        "acceptance_id": null,
+        "title": "Refinement can reorder a close peak and trough, so the breath is silently dropped",
+        "detail": "The peak and trough windows (±5 samples at 20 Hz) can overlap when a peak and the next trough are under 0.5 s apart. After sorting by index, the trough can then precede the peak. openBreaths then skips that trough-peak-trough run without signalling it.",
+        "repro": "Detected peak at index p and trough at p+6, with raw minimum at p+1 and raw maximum at p+5: the refined order becomes trough, peak.",
+        "fix": "Clamp each refine window so it cannot cross the neighbouring detected transition.",
+        "pattern": "66d65834c205"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "openMetrics and analyzeOpen return {whole, segments, markersUsed, markersIgnored}. open.test.ts covers 0, 1, 2 and 3 markers, a peak on either side of a marker, and an empty segment."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "Literal fixture with all six cases; every metric is checked within 0.05."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "Segmented fixture with 12/12/20 breaths; whole-session values match the hand-derived figures (44 breaths, 300/44, 32/44)."
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": "Noise-free end-to-end and Tier B tests are present, with one shared seed stored as data. Whether Tier B passes depends on the test run."
+      },
+      {
+        "id": "A5",
+        "status": "unmet",
+        "note": "Inhale and exhale depth reference is hard-coded (MIDLINE_PCT). The cap key, its test and the index re-export are present. Lint, typecheck and test are left to the deterministic checks."
+      },
+      {
+        "id": "A6",
+        "status": "met",
+        "note": "insideBand and depthIndex use bandEdgeEpsilon. open-edges.test.ts covers every listed edge, including the non-representable periods."
+      },
+      {
+        "id": "A7",
+        "status": "met",
+        "note": "refineTransitions uses transitionRefineWindowS, asserted by a test. open-refine.test.ts shows I:E 2.0±0.05 refined and <1.9 unrefined. transitions.ts is untouched."
+      },
+      {
+        "id": "A8",
+        "status": "met",
+        "note": "A single dated PROVISIONAL entry with both readings, the quotes, the 1.81 vs 2.0 effect, and the paced/open divergence. No other PLAN.md changes."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 54109,
+      "costUsd": 0.5657752
+    }
+  }
+}

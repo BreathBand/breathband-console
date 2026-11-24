@@ -1,0 +1,94 @@
+npm test · exit 0 · the judge's tier 1 run on the change
+new tests:
+  src/lib/analysis/golden/open-golden.test.ts: matches every ${name} metric within 0.05
+  src/lib/analysis/golden/open-golden.test.ts: splits 12 / 12 / 20 breaths at 54 s and 90 s
+  src/lib/analysis/golden/open-golden.test.ts: gives each segment the metrics of its pattern
+  src/lib/analysis/golden/open-golden.test.ts: gives the whole session 44 breaths, rate 14.667, depth 6.818 and 72.7% normal
+  src/lib/analysis/golden/open-golden.test.ts: reproduces the normal values from synth through analyzeOpen
+  src/lib/analysis/golden/open-golden.test.ts: normal pattern lands near the normal values, 100% at normal rate and depth
+  src/lib/analysis/golden/open-golden.test.ts: uses both markers and keeps the three segment bounds
+  src/lib/analysis/golden/open-golden.test.ts: lands each segment near its Tier A values, with exact % at normal rate and depth
+  src/lib/analysis/golden/open-golden.test.ts: lands the whole session near its Tier A values
+  src/lib/analysis/open-config.test.ts: caps the depth index at +/-100
+  src/lib/analysis/open-config.test.ts: refines transitions within 0.25 s of the detected time
+  src/lib/analysis/open-config.test.ts: measures inhale and exhale depth from a midline at 0% of max
+  src/lib/analysis/open-config.test.ts: keeps the new names out of the open group
+  src/lib/analysis/open-edges.test.ts: counts periods of exactly 5.0 s and 3.75 s as normal
+  src/lib/analysis/open-edges.test.ts: counts periods built from non-representable times as normal
+  src/lib/analysis/open-edges.test.ts: does not count periods of 5.05 s or 3.70 s
+  src/lib/analysis/open-edges.test.ts: counts depths of exactly 4.5% and 7.5% as normal
+  src/lib/analysis/open-edges.test.ts: does not count depths of 4.45% or 7.55%
+  src/lib/analysis/open-edges.test.ts: keeps exactly +100 and -100
+  src/lib/analysis/open-edges.test.ts: caps values beyond +/-100
+  src/lib/analysis/open-edges.test.ts: leaves values inside the cap alone
+  src/lib/analysis/open-refine.test.ts: gives I:E 2.0 +/- 0.05 through analyzeOpen
+  src/lib/analysis/open-refine.test.ts: gives I:E below 1.9 from the same detected transitions without refinement
+  src/lib/analysis/open-refine.test.ts: moves every transition onto the raw extremum of its type
+  src/lib/analysis/open-refine.test.ts: moves a peak to the raw maximum inside the window
+  src/lib/analysis/open-refine.test.ts: never looks outside the window
+  src/lib/analysis/open-refine.test.ts: moves a trough to the raw minimum and clamps the window to the recording
+  src/lib/analysis/open-refine.test.ts: skips artifact samples and keeps the detected point when nothing usable is near
+  src/lib/analysis/open.test.ts: has no segments without a marker
+  src/lib/analysis/open.test.ts: splits into before and after with one marker
+  src/lib/analysis/open.test.ts: splits into before, between and after with two markers
+  src/lib/analysis/open.test.ts: uses the first two markers by time and counts the third as ignored
+  src/lib/analysis/open.test.ts: puts a breath in the segment that holds its peak
+  src/lib/analysis/open.test.ts: gives an empty segment 0 breaths and null metrics
+  src/lib/analysis/open.test.ts: gives null metrics when the session has no complete breath
+  src/lib/analysis/open.test.ts: rejects a bad duration or a marker outside the session
+  src/lib/analysis/open.test.ts: forms trough, peak, trough breaths from unsorted transitions
+  src/lib/analysis/open.test.ts: skips runs that do not alternate
+  src/lib/analysis/open.test.ts: returns whole and no segments without markers
+  src/lib/analysis/open.test.ts: turns marker sample indices into seconds and ignores a third marker
+  src/lib/analysis/open.test.ts: splits into before and after with one marker
+  src/lib/analysis/open.test.ts: is re-exported from the analysis index
+
+
+> breathband-console@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254[39m
+
+ [32m✓[39m src/lib/domain/format-dates.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/paced-edges.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/lib/domain/domain.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m src/lib/download.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/app/cloud/trends/compare-table.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/open.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/filter.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/paced.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/calibration.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m src/lib/backend/http/http.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/open-refine.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/lib/dockerSmoke.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 131[2mms[22m[39m
+ [32m✓[39m src/lib/domain/trends-buckets.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/contract.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 68[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/golden/paced-golden.test.ts [2m([22m[2m42 tests[22m[2m)[22m[32m 65[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/transitions.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m src/lib/domain/group.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 103[2mms[22m[39m
+ [32m✓[39m src/components/chartTable.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/synth.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+ [32m✓[39m src/components/States.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/app/cloud/session/Waveform.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/golden/open-golden.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/domain/coaching-calendar.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/open-edges.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/synth-calibration.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/domain/compare-csv.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/paced-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/domain/helpers-misc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/lib/domain/targets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/domain/total-score.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/app/globals.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config-additions.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/open-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m35 passed[39m[22m[90m (35)[39m
+[2m      Tests [22m [1m[32m428 passed[39m[22m[90m (428)[39m
+[2m   Start at [22m 05:23:41
+[2m   Duration [22m 596ms[2m (transform 45%, import 29%, tests 21%, worker 5%)[22m
+
+

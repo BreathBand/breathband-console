@@ -1,0 +1,191 @@
+{
+  "task": "T-0032",
+  "round": 2,
+  "verdict": "passed",
+  "head": "2ea54a78ee3c9849d3a2a4472ee6fcd1a131eb81",
+  "base": "add28b6d43a545f7fd7d9310b7b3b1957dadc39c",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "high",
+    "effective": "high",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=2 -->\n### Rivetari judge · round 2 · approve\n\n#### Acceptance\n- A1: met — Both functions return {whole, segments, markersUsed, markersIgnored}. open.test.ts covers 0/1/2/3 markers, a peak on either side of a marker and an empty segment.\n- A2: met — Literal transition lists and expected values. Hand-checked: mixed periods give 14.545 / 75%, and tooDeep is capped at 100.\n- A3: met — The fixture gives 12/12/20 breaths. Whole-session values check out by hand: 14.667, 6.818, 13.636, 72.727.\n- A4: unverified — Tier A end-to-end and Tier B tests are present with one shared seed and noise setting. Whether noisy refinement stays within ±0.3 / ±0.1 s depends on the test run.\n- A5: unverified — Config reads, the depthIndexCapPct key with its test, and the index re-export are present. Lint, typecheck and test results were not available to review.\n- A6: met — open-edges.test.ts covers every listed edge, including the non-representable periods and the ±100 cap, using bandEdgeEpsilon.\n- A7: met — The new key, the refine tests, and the unrefined I:E < 1.9 check are present, and transitions.ts is untouched. The window rounding defect applies only at sample rates other than 20 Hz.\n- A8: met — One dated, PROVISIONAL row: quotes l.15 and l.16, gives both readings, 1.81 vs 2.0, and the paced divergence. No other PLAN.md text changes.\n\n<details><summary>4 suggestion(s), non-blocking</summary>\n\n- Refine window can reach past ±0.25 s because Math.round rounds the half-sample up `src/lib/analysis/open.ts:189` _(downgraded: no reproduction confirmed: A7's text, the ±0.25 s rule, the value of FIXED_CONSTANTS.transitionRefineWindowS and which rates assertSampleRateHz accepts are not in the given text, so 10 Hz giving a 3-sample window cannot be shown to break a stated criterion.)_ — Use Math.floor(FIXED_CONSTANTS.transitionRefineWindowS * sampleRateHz + FIXED_CONSTANTS.bandEdgeEpsilon) so the window never exceeds 0.25 s.\n- An out-of-range marker that would be ignored still throws `src/lib/analysis/open.ts:161` — Run the range check on markersUsed only, or drop non-finite and out-of-range extras into markersIgnored.\n- Band-edge check reimplements paced.ts's epsilon pattern inline `src/lib/analysis/open.ts:75` — Reuse or extract the paced.ts edge helper for insideBand and the cap.\n- Refined transitions can collide or reorder `src/lib/analysis/open.ts:200` — Optionally keep each refined index between its neighbours' detected indices.\n\n</details>\n\n_claude-opus-5-5 · 2 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/open.ts",
+        "line": 189,
+        "acceptance_id": "A7",
+        "title": "Refine window can reach past ±0.25 s because Math.round rounds the half-sample up",
+        "detail": "reach = Math.round(transitionRefineWindowS * sampleRateHz). When 0.25 × fs ends in .5, the window grows by one sample beyond 0.25 s. At 10 Hz, round(2.5) = 3 samples, which is 0.30 s. At 30 Hz, round(7.5) = 8 samples, which is 0.267 s. analyzeOpen accepts any sampleRateHz that passes assertSampleRateHz. At those rates it can move a transition to a raw extremum outside the ±0.25 s window that A7 and the PLAN.md decision both state. The tests only use 20 Hz, where 0.25 × 20 = 5 is exact, so they don't catch this.",
+        "repro": "refineTransitions(raw, 10, [{index: 20, t: 2, type: 'peak', level: 0}]) with raw = 40 zeros and raw[23] = 5. It returns index 23 (t = 2.3 s, 0.3 s from the detected time). It should keep index 20.",
+        "fix": "Use Math.floor(FIXED_CONSTANTS.transitionRefineWindowS * sampleRateHz + FIXED_CONSTANTS.bandEdgeEpsilon) so the window never exceeds 0.25 s.",
+        "pattern": "04974fd3b8a3",
+        "downgraded": "no reproduction confirmed: A7's text, the ±0.25 s rule, the value of FIXED_CONSTANTS.transitionRefineWindowS and which rates assertSampleRateHz accepts are not in the given text, so 10 Hz giving a 3-sample window cannot be shown to break a stated criterion."
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/open.ts",
+        "line": 161,
+        "acceptance_id": null,
+        "title": "An out-of-range marker that would be ignored still throws",
+        "detail": "Markers are range-checked before the slice to the first 2. A legacy third marker past the session end raises a RangeError for the whole session instead of being ignored and counted. Consider validating only markersUsed, or counting invalid extras in markersIgnored.",
+        "repro": "openMetrics(t, {durationS: 18, markersS: [4.5, 9, 25]}) throws instead of returning markersIgnored: 1.",
+        "fix": "Run the range check on markersUsed only, or drop non-finite and out-of-range extras into markersIgnored.",
+        "pattern": "a3934cb67b40"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/open.ts",
+        "line": 75,
+        "acceptance_id": null,
+        "title": "Band-edge check reimplements paced.ts's epsilon pattern inline",
+        "detail": "The card names floorAtEdge in paced.ts as the pattern to follow. insideBand and the depthIndex cap use bandEdgeEpsilon correctly but duplicate that logic. A shared helper would keep open and paced consistent.",
+        "repro": "n/a",
+        "fix": "Reuse or extract the paced.ts edge helper for insideBand and the cap.",
+        "pattern": "6a7342bf05a8"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/open.ts",
+        "line": 200,
+        "acceptance_id": null,
+        "title": "Refined transitions can collide or reorder",
+        "detail": "Adjacent same-type windows can share a sample, and a peak can move past a nearby trough. After the sort by index, the sequence then stops alternating and openBreaths silently drops those breaths. This is noise-dependent and not shown by the current fixtures.",
+        "repro": "n/a",
+        "fix": "Optionally keep each refined index between its neighbours' detected indices.",
+        "pattern": "19d6919f11cc"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "Both functions return {whole, segments, markersUsed, markersIgnored}. open.test.ts covers 0/1/2/3 markers, a peak on either side of a marker and an empty segment."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "Literal transition lists and expected values. Hand-checked: mixed periods give 14.545 / 75%, and tooDeep is capped at 100."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "The fixture gives 12/12/20 breaths. Whole-session values check out by hand: 14.667, 6.818, 13.636, 72.727."
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": "Tier A end-to-end and Tier B tests are present with one shared seed and noise setting. Whether noisy refinement stays within ±0.3 / ±0.1 s depends on the test run."
+      },
+      {
+        "id": "A5",
+        "status": "unverified",
+        "note": "Config reads, the depthIndexCapPct key with its test, and the index re-export are present. Lint, typecheck and test results were not available to review."
+      },
+      {
+        "id": "A6",
+        "status": "met",
+        "note": "open-edges.test.ts covers every listed edge, including the non-representable periods and the ±100 cap, using bandEdgeEpsilon."
+      },
+      {
+        "id": "A7",
+        "status": "met",
+        "note": "The new key, the refine tests, and the unrefined I:E < 1.9 check are present, and transitions.ts is untouched. The window rounding defect applies only at sample rates other than 20 Hz."
+      },
+      {
+        "id": "A8",
+        "status": "met",
+        "note": "One dated, PROVISIONAL row: quotes l.15 and l.16, gives both readings, 1.81 vs 2.0, and the paced divergence. No other PLAN.md text changes."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 49168,
+      "costUsd": 0.4749898
+    }
+  }
+}
