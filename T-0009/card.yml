@@ -1,0 +1,53 @@
+id: T-0009
+title: Build and serve the console in Docker locally, with npm run docker:smoke
+type: chore
+source: prompt
+description: "Decision 1 (2026-11-23): the deploy target is Google Cloud Run,
+  using the existing Dockerfile (Dockerfile:1-24, static export served by nginx
+  on 8080) and nginx.conf. Nothing proves that the image builds or that it
+  serves the routes (package.json:5-14 has no Docker script), and the batch
+  standing check needs a repeatable docker build, docker run -p 8080:8080 and
+  smoke test. Playwright isn't a dependency yet; its setup is a separate card
+  that needs a person's approval for the dev dependency. So this smoke test uses
+  Node's built-in fetch and has no new dependencies; the Playwright version
+  comes with the e2e card."
+acceptance:
+  - id: A1
+    text: npm run docker:smoke builds the image from the Dockerfile with
+      NEXT_PUBLIC_BACKEND=local, runs it with -p 8080:8080, waits until it is
+      ready, and checks that http://localhost:8080/ and
+      http://localhost:8080/cloud/login/ both return 200 HTML containing each
+      page's expected content (for example the console sign-in heading on
+      /cloud/login/). It exits 0 on success and non-zero with a clear message on
+      any failure
+    verify: e2e
+  - id: A2
+    text: docker:smoke always stops and removes the container it started, on success
+      and on failure, and fails clearly when the Docker daemon isn't running
+    verify: e2e
+  - id: A3
+    text: The smoke script is plain Node (node:22 built-ins only, for example
+      scripts/docker-smoke.mjs) with no new dependency; npm run lint, typecheck
+      and test still pass
+    verify: unit
+  - id: A4
+    text: If the Dockerfile, nginx.conf or .dockerignore need a fix to make the
+      image build and serve /cloud/login/ (trailing-slash routes), the fix is
+      minimal and explained in the PR; the image still listens on 8080
+    verify: review
+out_of_scope:
+  - Any gcloud, Cloud Run deploy or GCP resource
+  - CI or workflow changes
+  - firebase/ and firebase.json
+touches:
+  - scripts/**
+  - package.json
+  - Dockerfile
+  - nginx.conf
+  - .dockerignore
+pages: []
+constraints:
+  - no new dependencies
+risk: high
+owner: arynbht@gmail.com
+created: 2026-11-24
