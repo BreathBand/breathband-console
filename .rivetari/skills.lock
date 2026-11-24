@@ -51,6 +51,11 @@ skills:
     pin: 2c5958ecac7cee2b583967a2c4981d0f4a75c579
     hash: sha256:19de668f2da4a0cd78cce1a5e7e10094ac01d0feb80bcc7190fee085ce49df32
     scope: task
+  - name: impeccable
+    source: arynbht/impeccable/.agents/skills/impeccable
+    pin: 9563f8282b9c8bf376ed822c83241982dec3c253
+    hash: sha256:d7641453ac94eb93c05241027f8c68b472084ee941cca8d781049ecfd4097d0d
+    scope: task
   - name: improve-animations
     source: emilkowalski/skills/skills/improve-animations
     pin: 715c1807e08c497cfd1dc4feb450a2a3300ef2a9
@@ -114,6 +119,11 @@ skills:
     pin: 301b02b12bff98e4688e6984af6556802322bbde
     hash: sha256:7c8229bdd75758eddb1cec1988d3fe34612d6270f93531ee01eb52a2071b18a3
     scope: always
+  - name: ui-ux-pro-max
+    source: nextlevelbuilder/ui-ux-pro-max-skill/.claude/skills/ui-ux-pro-max
+    pin: a4fc248f6136552cb881e298847abc7ddce84e6b
+    hash: sha256:a924558da7692f8f8f252f5b3969a3b5e4e1975ee9c92a1e0bfc3c7122ade44a
+    scope: task
   - name: webapp-testing
     source: anthropics/skills/skills/webapp-testing
     mirror: arynbht/anthropics-skills/skills/webapp-testing

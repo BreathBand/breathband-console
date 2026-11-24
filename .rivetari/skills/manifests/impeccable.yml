@@ -1,0 +1,53 @@
+name: impeccable
+source: arynbht/impeccable/.agents/skills/impeccable
+pin: 9563f8282b9c8bf376ed822c83241982dec3c253
+hash: "sha256:d7641453ac94eb93c05241027f8c68b472084ee941cca8d781049ecfd4097d0d"
+license: Apache-2.0
+scope: task
+sectors: [ui]
+phases: [brief, polish, review]
+triggers:
+  paths: ["src/components/**", "src/styles/**", "app/**/page.*", "**/*.css", "DESIGN.md", "PRODUCT.md"]
+  keywords: [redesign, polish, design, layout, visual, slop, critique, typography, design system]
+  flags: [public-facing]
+provides: [critique, audit, polish, DESIGN.md, PRODUCT.md, design-detector]
+conflicts: [taste-skill, hallmark]
+requires: []
+commands:
+  - "<skill-base-dir>/scripts/impeccable context"
+  - "<skill-base-dir>/scripts/impeccable detect <path>"
+  - "$impeccable init"
+  - "$impeccable document"
+  - "$impeccable shape [feature]"
+  - "$impeccable extract [target]"
+  - "$impeccable critique [target]"
+  - "$impeccable audit [target]"
+  - "$impeccable polish [target]"
+  - "$impeccable bolder [target]"
+  - "$impeccable quieter [target]"
+  - "$impeccable distill [target]"
+  - "$impeccable harden [target]"
+  - "$impeccable onboard [target]"
+  - "$impeccable animate [target]"
+  - "$impeccable colorize [target]"
+  - "$impeccable typeset [target]"
+  - "$impeccable layout [target]"
+  - "$impeccable delight [target]"
+  - "$impeccable overdrive [target]"
+  - "$impeccable clarify [target]"
+  - "$impeccable adapt [target]"
+  - "$impeccable optimize [target]"
+  - "$impeccable live"
+  - "$impeccable generate [n] [action] [element]"
+  - "$impeccable doctor"
+tokens: 3000
+tools: [shell, network, browser]
+tested_on: "2026-11-24"
+notes: >
+  Trimmed fork of pbakaus/impeccable@3842da6efefa843f0a8bc63a80aeb19568172a90
+  (skill-v4.8.2+7, engine 0.1.21). reference/hooks.md is removed, SKILL.md forbids
+  `impeccable hooks` and runs `detect` by hand, and doctor --fix waits for the user;
+  FORK.md in the skill lists the changes. The engine binary still contains the hook
+  installer and telemetry: the repo commits .impeccable/config.json with telemetry off
+  and the hook disabled and declined. No live or generate in unattended runs; a DESIGN.md
+  rewrite is a stop-and-ask.
