@@ -14,6 +14,9 @@
 - 2026-11-24 05:46 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 05:47 judge: judge passed · round 1 · head e33005a4f348 · record sha256 7f06da0610137e1d827e11a7c61557dced7b1ba38ab5047276753a16c3b24513 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 05:47 ship: draft PR opened: #30 https://github.com/BreathBand/breathband-console/pull/30 · feature/t-0022 at e33005a4f348 → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:12 close: worktree removed · branch feature/t-0022 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:12 close: floorplan updated · 1 call(s) · 28075 tokens · $0.08 (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:12 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -53,3 +56,7 @@
 - 2026-11-24 05:47 acceptance A4: unverified — role=img and aria-label are kept, aria-describedby points to the sr-only summary, ids come from useId, and the toggle is .no-print. Print preview has not been checked.
 - 2026-11-24 05:47 acceptance A5: unverified — No axe run was provided.
 - 2026-11-24 05:47 judge review posted: https://github.com/BreathBand/breathband-console/pull/30#pullrequestreview-6034304690
+
+## Outcome
+
+- 2026-11-24 06:12 PR #30 merged by arynbht 2026-11-24 06:08 · 39m · 3698k tokens · $2.85
