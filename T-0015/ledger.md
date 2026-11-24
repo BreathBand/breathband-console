@@ -14,6 +14,8 @@
 - 2026-11-24 05:11 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 05:12 judge: judge passed · round 1 · head 9b2d3a68e8c3 · record sha256 e350da7da3525a163ea8ec0db31ca2926940d55f7423ba062c48094d65a0c887 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 05:13 ship: draft PR opened: #24 https://github.com/BreathBand/breathband-console/pull/24 · fix/t-0015 at 9b2d3a68e8c3 → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:21 close: worktree removed · branch fix/t-0015 kept (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:21 close: ledger sealed · abandoned (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -50,3 +52,7 @@
 - 2026-11-24 05:12 acceptance A4: unverified — --topbar-h now follows the measured bar height through ResizeObserver. A manual scroll check is needed.
 - 2026-11-24 05:12 acceptance A5: unverified — Accessible names are kept through clip-hiding. No axe run is shown.
 - 2026-11-24 05:13 judge review posted: https://github.com/BreathBand/breathband-console/pull/24#pullrequestreview-6034050711
+
+## Outcome
+
+- 2026-11-24 05:21 abandoned: redraft to route with the a11y/frontend skills (R-17) (PR #24 is left as it is) · 22m · 1096k tokens · $1.21
