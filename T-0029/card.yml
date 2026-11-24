@@ -1,0 +1,162 @@
+id: T-0029
+title: Method-C paced scoring with golden vectors
+type: feature
+source: prompt
+description: >-
+  Paced sessions are scored with the Appendix's method C, and the console
+  computes the scores itself (docs/PLAN.md:49). Today no code does this. The
+  only 1-10 scoring is the local simulation in src/lib/backend/local/live.ts:94,
+  toScore, which works in % of the pacer. It isn't in SD, has no skill band, and
+  has no missed or double breaths. The seeded scores are random
+  (src/lib/backend/local/seed.ts:152). The stored shape,
+  src/lib/domain/types.ts:40-46 (TransitionScores), holds only total, timing and
+  depth, with no On target %, direction or histogram. The constants are already
+  in src/lib/analysis/config.ts: skillBandK (config.ts:15-20), topDeviationBand
+  (config.ts:21), extremumPhase (config.ts:22), totalBreathScoreWeights
+  (config.ts:23-28), depthSdPctOfMax and timingSdBreathFraction
+  (config.ts:36-37), and deviationHistogram (config.ts:47).
+
+
+  This card adds src/lib/analysis/paced.ts, which implements method C on the
+  transitions from B1-2. Pacer transitions are at t = k × halfCycle for k = 1,
+  2, … while t is before the session end. Odd k are peaks at +3% and even k are
+  troughs at -3%, so a 5-5, 180 s session has the Appendix's 35. For each pacer
+  transition, the user transitions of the same type within ±1 timing SD are
+  found. None means missed, and two or more means double: either one scores 1
+  point for timing and 1 for depth. Exactly one is scored: d_time = (t_user −
+  t_pacer) / SD_time; d_depth = (L_user − L_pacer) / SD_depth at peaks and
+  (L_pacer − L_user) / SD_depth at troughs; e = |d| / k; and p = clamp(10 −
+  floor(10 e), 1, 10). Timing In / Ex and Depth In / Ex are the mean points at
+  peaks / troughs. Timing and Depth are the means of their In and Ex. The Total
+  comes from combineTransitionScores in src/lib/domain/scores.ts after B1-6 (the
+  mean of the four, rounded once to 1 decimal), so the formula lives in one
+  place.
+
+
+  The golden vectors come in two tiers because of a finding in discovery. The
+  noise-free Appendix patterns fall exactly on band edges: half depth, +4.5% and
+  -1.5% give e = 0.5, 1.8× gives e = 0.8, and the 9 s cycle gives e = 0.1, 0.3,
+  0.5, 0.7 and 0.9. floor(10 e) therefore flips with tiny numerical differences,
+  and noise moves those points up by half a point on average, which is why the
+  Appendix's "≈" values sit about 0.5 above the exact ones. Tier A therefore
+  feeds exact transition lists into the scorer (±0.05), with end-to-end Tier A
+  only for the patterns that don't sit on a band edge. Tier B runs end to end
+  with seeded noise.
+
+
+  Assumptions for the owner to confirm, each covered by a test. The matching
+  window is inclusive (|Δt| ≤ SD_time), and one user transition may count for
+  two pacer transitions. On target % is reported separately for timing and
+  depth. Histogram bins include their lower edge, the last bin includes +1, and
+  depth values beyond ±1 SD go in the outermost bins.
+acceptance:
+  - id: A1
+    text: "src/lib/analysis/paced.ts exports pacerTransitions(halfCycleS, durationS)
+      and scorePaced(userTransitions, {halfCycleS, durationS, skillLevel}),
+      returning one entry per pacer transition. Each entry has the type, phase,
+      matched user transitions, d_time, d_depth, timing points and depth points,
+      and is marked as missed or double where it applies. New test
+      src/lib/analysis/paced.test.ts uses small hand-built lists to cover: no
+      match is missed (1 and 1); two matches are double (1 and 1); the signs
+      (late +, early -, deep +, shallow -) at both peaks and troughs; e = 0.05
+      gives 10; e = 0.95 gives 1; e = 3 is clamped to 1; and the four skill
+      bands come from OPEN_CONSTANTS.skillBandK. SD_time is
+      timingSdBreathFraction × the breath length (2 s for 2-2, 5 s for 5-5)."
+    verify: unit
+  - id: A2
+    text: "scorePaced also returns: scores {timing {inhale, exhale}, depth {inhale,
+      exhale}, total}, with total from combineTransitionScores (B1-6);
+      onTargetPct {timing, depth}, where |d| ≤ k counts and missed or double
+      counts as off target; direction per phase, as the mean signed d in SD and
+      also in seconds (timing) and % of max (depth); histograms for timing and
+      depth with the bins from FIXED_CONSTANTS.deviationHistogram plus a
+      missed/double count; and counts of missed, double and pacer transitions.
+      paced.test.ts checks each against a hand-worked four-transition example."
+    verify: unit
+  - id: A3
+    text: "Tier A, scorer level. src/lib/analysis/golden/paced-tier-a.ts holds exact
+      transition lists for 5-5, 180 s, Beginner. Each case has its inputs, the
+      per-transition derivation (Δt, d, e, points) and the expected results, all
+      as literal data: no comments, and nothing computed by the code under test.
+      src/lib/analysis/golden/paced-golden.test.ts matches within ±0.05: on-time
+      (user at 5k, ±3) gives Timing 10.0, Depth 10.0, Total 10.0 and On target
+      100%. 0.35 SD early (user at 5k − 1.75) gives Timing In/Ex 7.0, Depth
+      10.0, Total 8.5, timing direction -0.35 SD (-1.75 s) and all 35 timing
+      values in the [-0.5, -0.25) bin. The same input at Intermediate gives
+      Timing 6.0 / Total 8.0, and at Expert Timing 1.0 / Total 5.5 with timing
+      On target 0%. Half depth (±1.5) gives Depth In/Ex 5.0, Total 7.5 and depth
+      direction -0.5 SD (-1.5%). 1.8× (±5.4) gives Depth 2.0, Total 6.0 and
+      depth direction +0.8 SD (+2.4%). +4.5 / -1.5 gives Depth In 5.0, Depth Ex
+      5.0, Total 7.5, and depth direction +0.5 SD on the inhale and -0.5 SD on
+      the exhale."
+    verify: unit
+  - id: A4
+    text: "Tier A, scorer level, 9 s cycle. User transitions are at 4.5 i (i =
+      1..39; odd i are peaks at +3, even i are troughs at -3). Expected: timing
+      points at pacer peaks 9,7,5,3,1,3,5,7,9,9,7,5,3,1,3,5,7,9 and at pacer
+      troughs 8,6,4,1,1,4,6,8,10,8,6,4,1,1,4,6,8; Timing In 49/9 (≈ 5.444),
+      Timing Ex 86/17 (≈ 5.059), Timing ≈ 5.252; Depth In 9.0, Depth Ex 134/17
+      (≈ 7.882); Total 6.8; 6 double, 0 missed; timing On target 29/35. All of
+      this is in the fixture as data and checked within ±0.05. End-to-end Tier A
+      (B1-1 synth → B1-2 detectTransitions → scorePaced, noise-free) reproduces
+      the on-time and 0.35 SD early results within ±0.05."
+    verify: unit
+  - id: A5
+    text: "Tier B, end to end. src/lib/analysis/golden/paced-tier-b.ts stores one
+      noise setting and seed (as data) shared by all six B1-1 golden profiles.
+      With it, paced-golden.test.ts lands inside the Appendix values ±0.3:
+      on-time Total 9.6-10.0; 0.35 SD early Timing 6.7-7.3 and Depth 9.4-10.0;
+      half depth Depth 5.2-6.1; 1.8× Depth 2.1-2.7; +4.5 / -1.5 Depth In
+      5.3-5.9, Depth Ex 4.9-5.5, and depth direction +0.5 ± 0.1 SD inhale and
+      -0.5 ± 0.1 SD exhale; 9 s cycle Timing 5.4-6.0 with at least one double.
+      If no single shared noise setting meets all six, the build stops and asks
+      instead of tuning per profile."
+    verify: unit
+  - id: A6
+    text: paced.ts reads every Appendix number from src/lib/analysis/config.ts,
+      including k, the band width, the top-band points, the SDs, the phase
+      mapping and the histogram. Fixed values that aren't there yet (the ±1 SD
+      matching window, the 1 point for missed or double, the 1-10 point range)
+      are added to FIXED_CONSTANTS as new keys only, with a new test asserting
+      them. src/lib/analysis/index.ts re-exports paced.ts. npm run lint,
+      typecheck and test pass.
+    verify: review
+out_of_scope:
+  - Signal generation (B1-1); filtering, calibration and transition detection
+    (B1-2)
+  - Open-session metrics (B1-4)
+  - Storing On target %, direction or histogram on SessionSummary, and the
+    method-c-v1 scoring version (B1-5)
+  - Changing combineTransitionScores (B1-6); this card only calls it
+  - Rescoring legacy or seeded sessions, live.ts scoring, and any review screen
+    (Batches 2, 4 and 6)
+  - Smoothness (out of scope for v1 per the Appendix)
+touches:
+  - src/lib/analysis/paced.ts
+  - src/lib/analysis/paced.test.ts
+  - src/lib/analysis/golden/paced-tier-a.ts
+  - src/lib/analysis/golden/paced-tier-b.ts
+  - src/lib/analysis/golden/paced-golden.test.ts
+  - src/lib/analysis/config.ts
+  - src/lib/analysis/paced-config.test.ts
+  - src/lib/analysis/index.ts
+pages: []
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - import Appendix constants from src/lib/analysis/config.ts
+  - config.ts may only gain new FIXED_CONSTANTS keys; existing keys and values
+    stay
+  - expected golden values are literal data, never computed at test time by the
+    code under test
+  - static export only; pure TypeScript with no browser or Node APIs
+  - depends on B1-1, B1-2 and B1-6, all merged (synth.ts,
+    calibration/filter/transitions.ts, combineTransitionScores)
+  - do not round the four sub-scores before combineTransitionScores;
+    Math.round(x * 10) / 10 can round an exact .x5 down because of float error
+    (7.35 gives 7.3), so if any expected Total sits on a .x5 boundary, stop and
+    ask instead of adjusting the expectation
+risk: high
+owner: arynbht@gmail.com
+created: 2026-11-24
