@@ -11,8 +11,8 @@ phases:
   - polish
   - review
 triggers:
-  paths: []
-  keywords: []
+  paths: ["**/*.css", "src/components/**", "src/app/**/page.tsx", "DESIGN.md"]
+  keywords: [design, layout, typography, colour, color, accessibility, spacing]
   flags: []
 provides: []
 conflicts: []
