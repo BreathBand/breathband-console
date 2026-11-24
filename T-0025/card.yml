@@ -1,0 +1,62 @@
+id: T-0025
+title: Stop the axe fixes from widening the report at 375px and duplicating a
+  landmark name
+type: fix
+source: prompt
+description: "Fix 1 of 2 for T-0013 (B1-9, PR #31), built on its branch
+  fix/t-0013. A Playwright and axe run at T-0013's head ee22d0a against main
+  101fe0e found two regressions that T-0013 introduces. (1) On
+  /cloud/report/?athlete=demo-athlete at 375px the page scrolls sideways: its
+  scrollWidth is 423 on head versus 375 on main. The new sr-only 'Timing,
+  exhale' and 'Depth, exhale' spans in the sessions table's th
+  (src/app/cloud/report/page.tsx:638, :644) are position:absolute
+  (src/app/globals.css .sr-only, :211-221) inside the .table-scroll wrapper
+  (globals.css:482-484). That wrapper is not a positioned ancestor, so the spans
+  escape the scroll container and widen the page. (2) On
+  /cloud/session/?athlete=demo-athlete&id=s001 axe now reports landmark-unique
+  (moderate), which main does not. The new .bt-scroll at
+  src/app/cloud/session/Waveform.tsx:299 has role=region and the accessible name
+  'Breaths in view', the same name as the section.pane it sits in. The judge
+  blocked the same pattern on the Plan tab in T-0013 round 1."
+acceptance:
+  - id: A1
+    text: At 375px on /cloud/report/?athlete=demo-athlete the page's
+      document.documentElement.scrollWidth is 375 (no sideways page scroll). The
+      sr-only th text 'Timing, exhale' and 'Depth, exhale' is still in the DOM,
+      and the report table still scrolls inside its own .table-scroll
+    verify: screenshot
+  - id: A2
+    text: On /cloud/session/?athlete=demo-athlete&id=s001 at 375px and 1280px axe
+      reports no landmark-unique violation. The .bt-scroll keeps role=region,
+      tabindex=0 and an accessible name that differs from every other landmark
+      on the page, and it still takes Tab focus and scrolls with the arrow keys
+    verify: screenshot
+  - id: A3
+    text: "Everything T-0013 fixed still holds: axe reports 0 serious or critical
+      violations on the card's pages, no scrollable-region-focusable at 375px,
+      and no new violation of any impact compared with main"
+    verify: screenshot
+  - id: A4
+    text: No existing test changes; npm run lint, npm run typecheck and npm test pass
+    verify: unit
+out_of_scope:
+  - The Plan tab being wider than 375px (pre-existing on main, S3 in discovery)
+  - The athlete pages scrolling sideways at 1280px (the top bar, T-0021)
+  - Any other axe rule or page
+touches:
+  - src/app/globals.css
+  - src/app/cloud/session/Waveform.tsx
+  - src/app/cloud/report/page.tsx
+pages:
+  - /cloud/report/?athlete=demo-athlete
+  - /cloud/session/?athlete=demo-athlete&id=s001
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - follow DESIGN.md; colours come from tokens in src/app/globals.css
+  - no new eslint-disable or other suppressions
+  - "static export only (output: export)"
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-24
