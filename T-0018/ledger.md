@@ -15,6 +15,9 @@
 - 2026-11-24 05:10 prove: proof passed · test-run (the judge's tier 1 run) (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 05:24 judge: judge passed · round 1 · head da5824283409 · record sha256 36d03082c1f24eca96925406cba883c64ed9ceef661478507123071eb25ff54d (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 05:24 ship: draft PR opened: #26 https://github.com/BreathBand/breathband-console/pull/26 · chore/t-0018 at da5824283409 → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:36 close: worktree removed · branch chore/t-0018 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:36 close: floorplan updated · 3 call(s) · 255953 tokens · $0.46 (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:36 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -48,3 +51,7 @@
 - 2026-11-24 05:24 acceptance A4: met — slug cases match the card. downloadText runs without jsdom using stubGlobal/spyOn and fake timers; it checks href, download, one click, removal, default and passed Blob types, and revocation only afte…
 - 2026-11-24 05:24 acceptance A5: unverified — The diff adds only the six new test files, with no source or existing-test changes, comments or suppressions. No test, lint or typecheck output under TZ=UTC or Pacific/Auckland was provided.
 - 2026-11-24 05:24 judge review posted: https://github.com/BreathBand/breathband-console/pull/26#pullrequestreview-6034137497
+
+## Outcome
+
+- 2026-11-24 05:36 PR #26 merged by arynbht 2026-11-24 05:36 · 33m · 1323k tokens · $5.08
