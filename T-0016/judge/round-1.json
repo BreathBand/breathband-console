@@ -1,0 +1,164 @@
+{
+  "task": "T-0016",
+  "round": 1,
+  "verdict": "passed",
+  "head": "c6490c6eda6d36023dcff5a2d27a55873e0d27bf",
+  "base": "44e6ffb292b5e8694d42498dcb8a3909f27f9e75",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — chartTable.test.ts covers sorting, the label, the formatted value and the 'Outside the target' note for TimeTrend; value plus unit for PeriodBars; period word plus date, one column per series and '–' for null in CompareChart; and the summary's count, range and low/high/latest.\n- A2: unverified — Screenshot criterion. The code renders a button with aria-expanded and aria-controls only when there is data. Whether the collapsed layout is unchanged depends on the screenshots (see suggestions).\n- A3: unverified — Manual criterion. A native button, a caption from ariaLabel, col and row th, and values matching the tooltip formats are present. 375px fit relies on the existing .table-scroll.\n- A4: unverified — Manual criterion. role=img and aria-label are kept, aria-describedby points to the useId summary, and .viz-data has .no-print. Print preview still needs checking.\n- A5: unverified — Requires an axe run on the listed pages.\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- Collapsed state depends on the hidden attribute not being overridden by .table-scroll `src/components/trendCharts.tsx:49` — Render the `.table-scroll` block only when `open`, or add `.viz-data [hidden] { display: none; }` next to the new rules.\n- Components now return two siblings instead of one root `src/components/trendCharts.tsx:230` — If any caller lays children out in a row, wrap `{chart}` and `<ChartTable>` in a single block-level div.\n- Confirm `.small` modifies `.link` `src/components/trendCharts.tsx:45` — Drop `small` if it has no effect on `.link`, or use `className=\"button ghost small\"`.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/components/trendCharts.tsx",
+        "line": 49,
+        "acceptance_id": "A2",
+        "title": "Collapsed state depends on the hidden attribute not being overridden by .table-scroll",
+        "detail": "The collapsed table is hidden only by `hidden={!open}` on the `.table-scroll` div. The UA `[hidden]{display:none}` rule loses to any author `display` declaration. If `.table-scroll` sets `display` (block, grid, etc.) in console.css, the caption stays visible under every chart when collapsed. That would break A2's 'looks the same apart from the button'.",
+        "repro": "Only if `.table-scroll` declares `display`: load /cloud/?athlete=demo-athlete Trends tab with the toggle collapsed and the caption text shows under each chart.",
+        "fix": "Render the `.table-scroll` block only when `open`, or add `.viz-data [hidden] { display: none; }` next to the new rules.",
+        "pattern": "9c04147067c2"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/components/trendCharts.tsx",
+        "line": 230,
+        "acceptance_id": "A2",
+        "title": "Components now return two siblings instead of one root",
+        "detail": "TimeTrend, PeriodBars and CompareChart now return a fragment of `.viz` plus `.viz-data`, where they used to return a single `.viz` div. A caller that places the chart in a flex row or a grid cell, or styles `> .viz` / `:only-child`, gets an extra item. The callers can't change under this card, so the A2 screenshots are the only check on this.",
+        "repro": "Compare the 375/768/1280 before and after screenshots of TrendsTab, the Compare page and the report for any shift of the button or chart.",
+        "fix": "If any caller lays children out in a row, wrap `{chart}` and `<ChartTable>` in a single block-level div.",
+        "pattern": "b149ce1f9675"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/components/trendCharts.tsx",
+        "line": 45,
+        "acceptance_id": null,
+        "title": "Confirm `.small` modifies `.link`",
+        "detail": "The constraint names `.link` or ghost small `.button`. `small` may only be defined as a `.button` modifier, in which case it does nothing here.",
+        "repro": "Inspect the toggle's computed font size against other `.link` elements.",
+        "fix": "Drop `small` if it has no effect on `.link`, or use `className=\"button ghost small\"`.",
+        "pattern": "1a3dd55a65ef"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "chartTable.test.ts covers sorting, the label, the formatted value and the 'Outside the target' note for TimeTrend; value plus unit for PeriodBars; period word plus date, one column per series and '–' for null in CompareChart; and the summary's count, range and low/high/latest."
+      },
+      {
+        "id": "A2",
+        "status": "unverified",
+        "note": "Screenshot criterion. The code renders a button with aria-expanded and aria-controls only when there is data. Whether the collapsed layout is unchanged depends on the screenshots (see suggestions)."
+      },
+      {
+        "id": "A3",
+        "status": "unverified",
+        "note": "Manual criterion. A native button, a caption from ariaLabel, col and row th, and values matching the tooltip formats are present. 375px fit relies on the existing .table-scroll."
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": "Manual criterion. role=img and aria-label are kept, aria-describedby points to the useId summary, and .viz-data has .no-print. Print preview still needs checking."
+      },
+      {
+        "id": "A5",
+        "status": "unverified",
+        "note": "Requires an axe run on the listed pages."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 20034,
+      "costUsd": 0.21045999999999998
+    }
+  }
+}
