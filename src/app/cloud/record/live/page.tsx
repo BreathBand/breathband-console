@@ -4,10 +4,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon, Mark } from "@/components/Icon";
-import { calibrate } from "@/lib/analysis/calibration";
-import { filtfilt } from "@/lib/analysis/filter";
+import { CALIBRATION_BREATHS, calibrationProgress } from "@/lib/analysis/calibrationProgress";
 import { analyzeOpenRecording } from "@/lib/analysis/session";
-import { findExtrema } from "@/lib/analysis/transitions";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { useDevice } from "@/lib/device/DeviceProvider";
 import { BAND_COMMANDS, SAMPLE_RATE_HZ, STRAP_TENSION } from "@/lib/device/config";
@@ -25,8 +23,6 @@ import { TONES, useTones } from "./useTones";
 
 type Phase = "strap" | "calibrate" | "ready" | "countdown" | "live" | "review";
 
-const CALIBRATION_BREATHS = 5;
-const CALIBRATION_MIN_BREATHS = 3;
 const CALIBRATION_GIVE_UP_S = 90;
 /** A recent calibration from this connection can be reused for this long. */
 const CALIBRATION_REUSE_MS = 15 * 60_000;
@@ -136,27 +132,14 @@ function Instrument() {
   useEffect(() => {
     if (phase !== "calibrate") return;
     const timer = setInterval(() => {
-      const samples = calRaw.current;
       const seconds = (performance.now() - calStarted.current) / 1000;
-      if (samples.length < 4 * SAMPLE_RATE_HZ) return;
-      const filtered = filtfilt(samples, SAMPLE_RATE_HZ);
-      let lo = Infinity;
-      let hi = -Infinity;
-      for (const v of filtered) {
-        lo = Math.min(lo, v);
-        hi = Math.max(hi, v);
-      }
-      const peaks = findExtrema(filtered, SAMPLE_RATE_HZ, { minProminence: (hi - lo) * 0.35 }).filter((e) => e.type === "peak").length;
-      setCalBreaths(Math.min(peaks, CALIBRATION_BREATHS));
-      const enough = peaks >= CALIBRATION_BREATHS || (peaks >= CALIBRATION_MIN_BREATHS && seconds > 50);
-      if (enough) {
-        const result = calibrate(samples, SAMPLE_RATE_HZ);
-        if (result && result.a100 > 0) {
-          device.setCalibration(result);
-          scale.current = { a100: result.a100, midline: result.midline };
-          setPhase("ready");
-          return;
-        }
+      const { breaths, result } = calibrationProgress(calRaw.current, SAMPLE_RATE_HZ, seconds);
+      setCalBreaths(breaths);
+      if (result) {
+        device.setCalibration(result);
+        scale.current = { a100: result.a100, midline: result.midline };
+        setPhase("ready");
+        return;
       }
       if (seconds > CALIBRATION_GIVE_UP_S) {
         setCalError("We couldn't see three deep breaths. Check the strap is snug, then try again, breathing slowly all the way in and out.");

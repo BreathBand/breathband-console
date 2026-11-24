@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon, Mark } from "@/components/Icon";
-import { calibrate, type Calibration } from "@/lib/analysis/calibration";
+import type { Calibration } from "@/lib/analysis/calibration";
+import { calibrationProgress } from "@/lib/analysis/calibrationProgress";
 import type { PacedResult } from "@/lib/analysis/paced";
 import { analyzePacedRecording } from "@/lib/analysis/session";
 import { bluetoothSupport } from "@/lib/device/bluetooth";
@@ -28,7 +29,6 @@ interface Person {
 /** One person's band and recording, kept outside React state and read every frame. */
 interface Lane {
   source: SignalSource | null;
-  status: SourceStatus;
   lastN: number;
   cal: number[];
   scale: Calibration | null;
@@ -40,7 +40,7 @@ interface Lane {
 const LENGTHS = [60, 120, 300];
 const CAL_GIVE_UP_S = 90;
 
-const emptyLane = (): Lane => ({ source: null, status: { state: "idle" }, lastN: -1, cal: [], scale: null, startN: null, pct: [], unsub: [] });
+const emptyLane = (): Lane => ({ source: null, lastN: -1, cal: [], scale: null, startN: null, pct: [], unsub: [] });
 
 /**
  * Two people, one pacer: the app's multi-user mode ("User 1 / User 2") on the
@@ -67,6 +67,9 @@ export default function DuoPage() {
   const tones = useTones(sound);
   const lanes = useRef<[Lane, Lane]>([emptyLane(), emptyLane()]);
   const phaseRef = useRef<Phase>("setup");
+  const setLane = useCallback((i: 0 | 1, lane: Lane) => {
+    lanes.current = i === 0 ? [lane, lanes.current[1]] : [lanes.current[0], lane];
+  }, []);
   const calStarted = useRef(0);
 
   useEffect(() => {
@@ -96,31 +99,31 @@ export default function DuoPage() {
     const person = people[i];
     const source: SignalSource = person.kind === "bluetooth" ? new BluetoothBand() : new SimulatedBand(Date.now() % 100_000 + i * 7919);
     if (source instanceof SimulatedBand) source.setPersona(person.persona);
-    lanes.current[i] = { ...emptyLane(), source };
-    const next = lanes.current[i];
-    next.unsub = [
+    // The callbacks look their lane up each time, so a lane can be replaced (recalibrated) without resubscribing.
+    const unsub = [
       source.onStatus((s) => {
-        next.status = s;
         setStatuses((all) => (i === 0 ? [s, all[1]] : [all[0], s]));
       }),
       source.subscribe((s) => {
-        next.lastN = s.n;
+        const lane = lanes.current[i];
+        lane.lastN = s.n;
         const p = phaseRef.current;
-        if (p === "calibrate") next.cal.push(s.value);
-        if (p === "live" && next.scale && next.startN !== null && s.n >= next.startN) {
-          next.pct.push(((s.value - next.scale.midline) / next.scale.a100) * 100);
+        if (p === "calibrate") lane.cal.push(s.value);
+        if (p === "live" && lane.scale && lane.startN !== null && s.n >= lane.startN) {
+          lane.pct.push(((s.value - lane.scale.midline) / lane.scale.a100) * 100);
         }
       }),
     ];
+    setLane(i, { ...emptyLane(), source, unsub });
     await source.connect();
   };
 
   const startCalibration = () => {
-    for (const lane of lanes.current) {
-      lane.cal = [];
-      lane.scale = null;
+    ([0, 1] as const).forEach((i) => {
+      const lane = lanes.current[i];
+      setLane(i, { ...lane, cal: [], scale: null });
       void lane.source?.send(BAND_COMMANDS.calibrate).catch(() => undefined);
-    }
+    });
     calStarted.current = performance.now();
     setCalDone([false, false]);
     setCalError(null);
@@ -130,12 +133,13 @@ export default function DuoPage() {
   useEffect(() => {
     if (phase !== "calibrate") return;
     const timer = setInterval(() => {
-      const done = lanes.current.map((lane) => {
+      const done = ([0, 1] as const).map((i) => {
+        const lane = lanes.current[i];
         if (lane.scale) return true;
-        if (lane.cal.length < 30 * SAMPLE_RATE_HZ) return false;
-        const result = calibrate(lane.cal, SAMPLE_RATE_HZ);
-        if (result && result.a100 > 0) lane.scale = result;
-        return Boolean(lane.scale);
+        const { result } = calibrationProgress(lane.cal, SAMPLE_RATE_HZ, (performance.now() - calStarted.current) / 1000);
+        if (!result) return false;
+        setLane(i, { ...lane, scale: result });
+        return true;
       }) as [boolean, boolean];
       setCalDone(done);
       if (done[0] && done[1]) setPhase("ready");
@@ -145,7 +149,7 @@ export default function DuoPage() {
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [phase]);
+  }, [phase, setLane]);
 
   const begin = () => {
     tones.unlock();
@@ -155,15 +159,16 @@ export default function DuoPage() {
   useEffect(() => {
     if (phase !== "countdown") return;
     const go = setTimeout(() => {
-      lanes.current.forEach((lane) => {
-        lane.startN = lane.lastN + 1;
-        lane.pct = [];
-        if (lane.source instanceof SimulatedBand) lane.source.follow({ inhaleS: pacer, exhaleS: pacer, startN: lane.startN });
+      ([0, 1] as const).forEach((i) => {
+        const lane = lanes.current[i];
+        const startN = lane.lastN + 1;
+        setLane(i, { ...lane, startN, pct: [] });
+        if (lane.source instanceof SimulatedBand) lane.source.follow({ inhaleS: pacer, exhaleS: pacer, startN });
       });
       setPhase("live");
     }, 3000);
     return () => clearTimeout(go);
-  }, [phase, pacer]);
+  }, [phase, pacer, setLane]);
 
   const finish = useCallback(() => {
     const scored = lanes.current.map((lane) => {
@@ -324,9 +329,24 @@ export default function DuoPage() {
               </div>
             </div>
             <div className="inst-actions">
-              <button type="button" className="button" data-size="large" disabled={!bothConnected} onClick={startCalibration}>
-                Calibrate both
-              </button>
+              {bothConnected ? (
+                <button type="button" className="button" data-size="large" onClick={startCalibration}>
+                  Calibrate both
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="button"
+                  data-size="large"
+                  onClick={() => {
+                    ([0, 1] as const).forEach((i) => {
+                      if (statuses[i].state !== "connected") void connect(i);
+                    });
+                  }}
+                >
+                  Connect both bands
+                </button>
+              )}
             </div>
           </section>
         ) : phase === "calibrate" ? (

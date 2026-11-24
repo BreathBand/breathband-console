@@ -46,6 +46,10 @@ export default function RecordSetupPage() {
           <h1>New session</h1>
           <p className="page-lede">Choose how you want to breathe. Your band calibrates at the start, and your score is ready the moment you stop.</p>
         </div>
+        <Link href="/cloud/record/duo/" className="button" data-variant="ghost" data-size="small">
+          <Icon name="users" size={16} />
+          Two-person session
+        </Link>
       </header>
 
       {plan && (
