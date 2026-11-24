@@ -50,6 +50,7 @@ export const FIXED_CONSTANTS = {
   pacedMatchWindowSd: 1,
   missedOrDoublePoints: 1,
   pacedPointRange: { min: 1, max: 10 } satisfies Range,
+  bandEdgeEpsilon: 1e-9,
 } as const;
 
 export const ANALYSIS_CONFIG = {

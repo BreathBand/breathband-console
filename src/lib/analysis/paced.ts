@@ -90,6 +90,10 @@ function sign(type: PacedTransitionType): number {
   return type === "peak" ? 1 : -1;
 }
 
+function floorAtEdge(quotient: number): number {
+  return Math.floor(quotient + FIXED_CONSTANTS.bandEdgeEpsilon);
+}
+
 function mean(values: readonly number[]): number {
   return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
@@ -119,7 +123,7 @@ export function timingSdS(halfCycleS: number): number {
 export function pacedPoints(e: number): number {
   const { maxDeviationPct, points } = OPEN_CONSTANTS.topDeviationBand;
   const { min, max } = FIXED_CONSTANTS.pacedPointRange;
-  const raw = points - Math.floor((e * PERCENT) / maxDeviationPct);
+  const raw = points - floorAtEdge((e * PERCENT) / maxDeviationPct);
   return Math.min(max, Math.max(min, raw));
 }
 
@@ -131,7 +135,7 @@ export function histogramBinCount(): number {
 export function histogramBin(d: number): number {
   const { minSd, stepSd } = FIXED_CONSTANTS.deviationHistogram;
   const last = histogramBinCount() - 1;
-  return Math.min(last, Math.max(0, Math.floor((d - minSd) / stepSd)));
+  return Math.min(last, Math.max(0, floorAtEdge((d - minSd) / stepSd)));
 }
 
 function scoreOne(
