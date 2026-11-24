@@ -16,6 +16,8 @@
 - 2026-11-24 00:21 prove: proof passed · test-run (the judge's tier 1 run) (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 00:22 judge: judge failed · round 1 · head 7618c9bdaa64 · 1 blocking · record sha256 0d127c01b1e06af38edf07d3d452aae0cf375e5b72c59665d065996511ea4c4a (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 00:22 build: build paused: 1 thing(s) to ask about · commit 7618c9bdaa64 · 111899 tokens · $0.39 · 3 turns · retry (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 00:34 close: worktree removed · branch feature/t-0008 kept (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 00:34 close: ledger sealed · abandoned (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -63,3 +65,7 @@
 - 2026-11-24 00:22 acceptance A3: met — kind includes 'http'; backendKind and createBackend('http') are covered in the new http.test.ts, including the firebase and fallback-to-local cases
 - 2026-11-24 00:22 acceptance A4: unverified — .env.example was withheld from the judge as a sensitive path
 - 2026-11-24 00:22 acceptance A5: unverified — No new deps and no local/** changes in the diff; the lint/typecheck/test/build results were not provided
+
+## Outcome
+
+- 2026-11-24 00:34 abandoned: redrafted as T-0011 (owner chose exported HTTP_ROUTES + README over a header comment) · 21m · 1439k tokens · $2.08
