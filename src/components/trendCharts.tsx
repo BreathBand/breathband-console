@@ -1,7 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type PointerEvent, type ReactNode } from "react";
+import { useId, useState, type PointerEvent, type ReactNode } from "react";
+import {
+  chartSummary,
+  compareSummary,
+  compareTable,
+  periodBarsTable,
+  shortDate,
+  timeTrendTable,
+  type ChartTable,
+} from "./chartTable";
 
 // Time-based charts for trends, comparison and reports. Inline SVG at the
 // width they're given, colours from tokens, a hover crosshair and tooltip on
@@ -20,8 +29,6 @@ export function dateTicks(t0: number, t1: number, max: number): number[] {
   return out.length > max ? out.filter((_, i) => i % Math.ceil(out.length / max) === 0) : out;
 }
 
-const shortDate = (t: number) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-
 /** A floating label next to the hovered point, inside the chart's box. */
 function Tip({ x, y, width, children }: { x: number; y: number; width: number; children: ReactNode }) {
   const left = Math.min(Math.max(8, x + 12), width - 188);
@@ -29,6 +36,65 @@ function Tip({ x, y, width, children }: { x: number; y: number; width: number; c
     <div className="viz-tip" style={{ left, top: Math.max(0, y - 10) }} role="status">
       {children}
     </div>
+  );
+}
+
+function ChartData({
+  summaryId,
+  summary,
+  caption,
+  table,
+  hasData,
+}: {
+  summaryId: string;
+  summary: string;
+  caption: string;
+  table: () => ChartTable;
+  hasData: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const tableId = useId();
+  const captionId = useId();
+  const data = open ? table() : null;
+  return (
+    <>
+      <p id={summaryId} className="sr-only">
+        {summary}
+      </p>
+      {hasData && (
+        <div className="viz-data no-print">
+          <button type="button" className="link small" aria-expanded={open} aria-controls={tableId} onClick={() => setOpen(!open)}>
+            {open ? "Hide the table" : "Show values as a table"}
+          </button>
+          <div className="table-scroll" id={tableId} hidden={!open} role="region" aria-labelledby={captionId} tabIndex={open ? 0 : -1}>
+            {data && (
+              <table className="table">
+                <caption id={captionId}>{caption}</caption>
+                <thead>
+                  <tr>
+                    {data.columns.map((c, i) => (
+                      <th key={i} scope="col">
+                        {c}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.rows.map((r) => (
+                    <tr key={r.key}>
+                      <th scope="row">{r.head}</th>
+                      {r.cells.map((c, i) => (
+                        <td key={i}>{c}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -78,6 +144,7 @@ export function TimeTrend({
   ariaLabel: string;
 }) {
   const router = useRouter();
+  const summaryId = useId();
   const [hover, setHover] = useState<number | null>(null);
   const pad = { l: 30, r: 12, t: 10, b: 22 };
   const w = width - pad.l - pad.r;
@@ -98,6 +165,7 @@ export function TimeTrend({
   const hp = hover === null ? null : sorted[hover];
 
   return (
+    <>
     <div className="viz" style={{ width, height }}>
       <svg
         className="chart"
@@ -105,6 +173,7 @@ export function TimeTrend({
         height={height}
         role="img"
         aria-label={ariaLabel}
+        aria-describedby={summaryId}
         onPointerMove={onMove}
         onPointerLeave={() => setHover(null)}
         onClick={() => hp?.href && router.push(hp.href)}
@@ -166,6 +235,14 @@ export function TimeTrend({
       )}
       {sorted.length === 0 && <p className="viz-empty">Nothing in this period.</p>}
     </div>
+    <ChartData
+      summaryId={summaryId}
+      summary={chartSummary({ count: sorted.length, noun: "point", t0, t1, values: sorted.map((p) => p.v), format })}
+      caption={ariaLabel}
+      table={() => timeTrendTable(sorted, format)}
+      hasData={sorted.length > 0}
+    />
+    </>
   );
 }
 
@@ -194,6 +271,7 @@ export function PeriodBars({
   unit: string;
   ariaLabel: string;
 }) {
+  const summaryId = useId();
   const [hover, setHover] = useState<number | null>(null);
   const pad = { l: 30, r: 12, t: 12, b: 22 };
   const w = width - pad.l - pad.r;
@@ -208,6 +286,7 @@ export function PeriodBars({
   const hb = hover === null ? null : bars[hover];
 
   return (
+    <>
     <div className="viz" style={{ width, height }}>
       <svg
         className="chart"
@@ -215,6 +294,7 @@ export function PeriodBars({
         height={height}
         role="img"
         aria-label={ariaLabel}
+        aria-describedby={summaryId}
         onPointerMove={(e) => {
           const x = e.clientX - e.currentTarget.getBoundingClientRect().left - pad.l;
           const i = Math.floor(x / slot);
@@ -268,6 +348,21 @@ export function PeriodBars({
         </Tip>
       )}
     </div>
+    <ChartData
+      summaryId={summaryId}
+      summary={chartSummary({
+        count: bars.length,
+        noun: "bar",
+        t0: bars[0]?.start ?? 0,
+        t1: bars[bars.length - 1]?.start ?? 0,
+        values: bars.map((b) => b.value),
+        format: (v) => `${v} ${unit}`,
+      })}
+      caption={ariaLabel}
+      table={() => periodBarsTable(bars, unit)}
+      hasData={bars.length > 0}
+    />
+    </>
   );
 }
 
@@ -343,6 +438,7 @@ export function CompareChart({
   connectGaps?: boolean;
   ariaLabel: string;
 }) {
+  const summaryId = useId();
   const [hover, setHover] = useState<number | null>(null);
   const pad = { l: 30, r: 96, t: 12, b: 22 };
   const w = width - pad.l - pad.r;
@@ -363,6 +459,7 @@ export function CompareChart({
   for (let k = 1; k < ends.length; k++) ends[k].y = Math.max(ends[k].y, ends[k - 1].y + 14);
 
   return (
+    <>
     <div className="viz" style={{ width, height }}>
       <svg
         className="chart"
@@ -370,6 +467,7 @@ export function CompareChart({
         height={height}
         role="img"
         aria-label={ariaLabel}
+        aria-describedby={summaryId}
         onPointerMove={(e) => {
           const x = e.clientX - e.currentTarget.getBoundingClientRect().left;
           const i = Math.round(((x - pad.l) / w) * (n - 1));
@@ -435,5 +533,13 @@ export function CompareChart({
         </Tip>
       )}
     </div>
+    <ChartData
+      summaryId={summaryId}
+      summary={compareSummary(series, starts, format)}
+      caption={ariaLabel}
+      table={() => compareTable(series, starts, format, periodWord)}
+      hasData={n > 0 && series.some((s) => s.values.some((v) => v !== null))}
+    />
+    </>
   );
 }
