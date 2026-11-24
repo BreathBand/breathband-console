@@ -6,7 +6,9 @@
 
 - 2026-11-24 06:43 intake: card drafted with 4 acceptance criteria; awaiting confirmation (arynbht@gmail.com)
 - 2026-11-24 06:43 intake: intake confirmed; card sha256 5460122b5d144ecb84a98781d96a6cc5172168db5aaab6ae0f08a0a57b4bbc4c (arynbht@gmail.com (--yes))
+- 2026-11-24 06:44 route: assembly proposed; sha256 fc050b210f9db32c9d88ed9360b6a39829b6b904ee9d910b866df5b0c702df2d; skills none; proof test-run; awaiting approval (rivetari router (for arynbht@gmail.com))
 
 ## Decisions
 
 - 2026-11-24 06:43 risk high: declared high, raised from low (no high or medium signal in the touches)
+- 2026-11-24 06:44 routed to testing: testing (touches **/*.test.* (src/lib/analysis/paced-edges.test.ts))
