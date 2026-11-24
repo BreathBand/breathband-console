@@ -14,6 +14,9 @@
 - 2026-11-24 00:20 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 00:21 judge: judge passed · round 1 · head 137fec2f6572 · record sha256 2b3bfd64da6ebe80bb78fd6d8eafc01b9c8745d6faa343df4211115d70ef9982 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 00:21 ship: draft PR opened: #12 https://github.com/BreathBand/breathband-console/pull/12 · chore/t-0006 at 137fec2f6572 → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 04:34 close: worktree removed · branch chore/t-0006 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 04:34 close: floorplan updated · 1 call(s) · 27877 tokens · $0.08 (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 04:34 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -52,3 +55,7 @@
 - 2026-11-24 00:21 acceptance A3: met — README covers npm run dev, the docker build and run steps, the localhost:8080 URL and Cloud Run as the target, and says Firebase Hosting is no longer a target.
 - 2026-11-24 00:21 acceptance A4: met — The diff touches only README.md and docs/PLAN.md.
 - 2026-11-24 00:21 judge review posted: https://github.com/BreathBand/breathband-console/pull/12#pullrequestreview-6031687236
+
+## Outcome
+
+- 2026-11-24 04:34 PR #12 merged by arynbht 2026-11-24 04:34 · 4h21m · 436k tokens · $0.71
