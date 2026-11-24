@@ -1,0 +1,225 @@
+[
+ {
+  "route": "/cloud/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud@375.png",
+  "bytes": 181929,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/",
+  "width": 768,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud@768.png",
+  "bytes": 193787,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 768,
+  "clientWidth": 768,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud@1280.png",
+  "bytes": 194409,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/athletes/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_athletes@375.png",
+  "bytes": 130272,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/athletes/",
+  "width": 768,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_athletes@768.png",
+  "bytes": 127752,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 768,
+  "clientWidth": 768,
+  "overflowingScrollers": [
+   "div.table-scroll 942/702"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/athletes/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_athletes@1280.png",
+  "bytes": 139927,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/trends/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_trends@375.png",
+  "bytes": 81641,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score per week\"]",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "div.table-scroll 576/309"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/trends/",
+  "width": 768,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_trends@768.png",
+  "bytes": 103076,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score per week\"]",
+  "scrollWidth": 768,
+  "clientWidth": 768,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/trends/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_trends@1280.png",
+  "bytes": 112236,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score per week\"]",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_sessions_athlete_demo_athlete_tab_trends@375.png",
+  "bytes": 128828,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score for\"]",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "nav.tabs 436/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+  "width": 768,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_sessions_athlete_demo_athlete_tab_trends@768.png",
+  "bytes": 141269,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score for\"]",
+  "scrollWidth": 768,
+  "clientWidth": 768,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_sessions_athlete_demo_athlete_tab_trends@1280.png",
+  "bytes": 141883,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score for\"]",
+  "scrollWidth": 1355,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s024",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_session_athlete_demo_athlete_id_s024@375.png",
+  "bytes": 125838,
+  "dataSelector": ".bt-scroll",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "div.bt-scroll 337/309"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 1,
+  "violations": [
+   {
+    "id": "scrollable-region-focusable",
+    "impact": "serious",
+    "help": "Scrollable region must have keyboard access",
+    "nodes": [
+     {
+      "target": ".bt-scroll",
+      "html": "<div class=\"bt-scroll\">",
+      "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s024",
+  "width": 768,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_session_athlete_demo_athlete_id_s024@768.png",
+  "bytes": 152803,
+  "dataSelector": ".bt-scroll",
+  "scrollWidth": 768,
+  "clientWidth": 768,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s024",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev32/head/cloud_session_athlete_demo_athlete_id_s024@1280.png",
+  "bytes": 211980,
+  "dataSelector": ".bt-scroll",
+  "scrollWidth": 1355,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 0,
+  "violations": []
+ }
+]
