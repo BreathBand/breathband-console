@@ -42,6 +42,7 @@
 ## Stop-and-ask
 
 - 2026-11-24 00:40 asked: judge: the reviewer wasn't shown .env.example; look at the change
+- 2026-11-24 04:48 answered: allowed — Owner (present, 2026-11-24): A5 checked by hand. .env.example diff adds 'local | firebase | http' and a commented NEXT_PUBLIC_API_BASE_URL placeholder; new test asserts both. Ship it.
 
 ## Proof
 
