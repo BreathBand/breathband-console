@@ -1,0 +1,28 @@
+[
+ {
+  "route": "/cloud/join/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/evmain/public/cloud_join@375.png",
+  "bytes": 110845,
+  "dataSelector": "h1",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/join/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/evmain/public/cloud_join@1280.png",
+  "bytes": 128304,
+  "dataSelector": "h1",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ }
+]

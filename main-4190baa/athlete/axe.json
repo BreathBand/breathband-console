@@ -1,0 +1,30 @@
+[
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s001",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/evmain/athlete/cloud_session_athlete_demo_athlete_id_s001@375.png",
+  "bytes": 111687,
+  "dataSelector": ".bt-scroll",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "div.bt-scroll 337/309"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s001",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/evmain/athlete/cloud_session_athlete_demo_athlete_id_s001@1280.png",
+  "bytes": 191477,
+  "dataSelector": ".bt-scroll",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ }
+]

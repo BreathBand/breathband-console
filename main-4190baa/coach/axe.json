@@ -1,0 +1,30 @@
+[
+ {
+  "route": "/cloud/account/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/evmain/coach/cloud_account@375.png",
+  "bytes": 81575,
+  "dataSelector": "form",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/account/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/evmain/coach/cloud_account@1280.png",
+  "bytes": 91039,
+  "dataSelector": "form",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ }
+]
