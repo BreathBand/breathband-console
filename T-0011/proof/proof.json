@@ -1,0 +1,28 @@
+{
+  "task": "T-0011",
+  "kind": "test-run",
+  "passed": true,
+  "lines": [
+    "tests passed (npm test, exit 0, in the judge's tier 1 run on the change) · new tests: src/lib/backend/http/http.test.ts: throws an Error naming the setting and the stub's file; src/lib/backend/http/http.test.ts: has one route per AuthService method; src/lib/backend/http/http.test.ts: has one route per DataService method; src/lib/backend/http/http.test.ts: uses an HTTP verb and a /v1/ path for every route; src/lib/backend/http/http.test.ts: matches the route table in the README; src/lib/backend/http/http.test.ts: returns http for NEXT_PUBLIC_BACKEND=http; src/lib/backend/http/http.test.ts: returns firebase for NEXT_PUBLIC_BACKEND=firebase; src/lib/backend/http/http.test.ts: throws the stub's error without calling fetch; src/lib/backend/http/http.test.ts: is what an NEXT_PUBLIC_BACKEND=http build creates; src/lib/backend/http/http.test.ts: lists http as an allowed NEXT_PUBLIC_BACKEND value; src/lib/backend/http/http.test.ts: has a commented placeholder for the API base URL",
+    "output: …2m\u001b[2m27 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 79\u001b[2mms\u001b[22m\u001b[39m \u001b[32m✓\u001b[39m src/lib/backend/http/http.test.ts \u001b[2m(\u001b[22m\u001b[2m14 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 14\u001b[2mms\u001b[22m\u001b[39m \u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m \u001b[2m Tests \u001b[22m \u001b[1m\u001b[32m66 passed\u001b[39m\u001b[22m\u001b[90m (66)\u001b[39m \u001b[2m Start at \u001b[22m 19:40:07 \u001b[2m Duration \u001b[22m 369ms\u001b[2m (tests 33%, import 33%, transform 29%, worker 5%)\u001b[22m",
+    "evidence: the judge's test run on the evidence branch: https://github.com/BreathBand/breathband-console/blob/evidence/T-0011/test-run.txt?raw=true"
+  ],
+  "tests": {
+    "exitCode": 0,
+    "added": [
+      "src/lib/backend/http/http.test.ts: throws an Error naming the setting and the stub's file",
+      "src/lib/backend/http/http.test.ts: has one route per AuthService method",
+      "src/lib/backend/http/http.test.ts: has one route per DataService method",
+      "src/lib/backend/http/http.test.ts: uses an HTTP verb and a /v1/ path for every route",
+      "src/lib/backend/http/http.test.ts: matches the route table in the README",
+      "src/lib/backend/http/http.test.ts: returns http for NEXT_PUBLIC_BACKEND=http",
+      "src/lib/backend/http/http.test.ts: returns firebase for NEXT_PUBLIC_BACKEND=firebase",
+      "src/lib/backend/http/http.test.ts: throws the stub's error without calling fetch",
+      "src/lib/backend/http/http.test.ts: is what an NEXT_PUBLIC_BACKEND=http build creates",
+      "src/lib/backend/http/http.test.ts: lists http as an allowed NEXT_PUBLIC_BACKEND value",
+      "src/lib/backend/http/http.test.ts: has a commented placeholder for the API base URL"
+    ],
+    "output": "\n> breathband-console@0.1.0 test\n> vitest run\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.1.1 \u001b[39m\u001b[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254\u001b[39m\n\n \u001b[32m✓\u001b[39m src/lib/domain/compare-csv.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 5\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/domain/targets.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 3\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/domain/domain.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 21\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/backend/local/local.test.ts \u001b[2m(\u001b[22m\u001b[2m27 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 79\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/backend/http/http.test.ts \u001b[2m(\u001b[22m\u001b[2m14 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 14\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m66 passed\u001b[39m\u001b[22m\u001b[90m (66)\u001b[39m\n\u001b[2m   Start at \u001b[22m 19:40:07\n\u001b[2m   Duration \u001b[22m 369ms\u001b[2m (tests 33%, import 33%, transform 29%, worker 5%)\u001b[22m\n\n\n",
+    "outcome": "pass"
+  }
+}

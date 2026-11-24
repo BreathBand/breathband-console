@@ -1,0 +1,166 @@
+{
+  "task": "T-0011",
+  "round": 1,
+  "verdict": "needs a human",
+  "head": "201f4a75a5436d185aed897a37dd6a0cf36ecd9a",
+  "base": "7fa76ea1e1d82913590fe367b6e73ea9c9e4ea9a",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "high",
+    "effective": "high",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "needs-human",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · needs a human\n\nSome changed files weren't shown to the reviewer (listed at the end), so a person has to look at them: the judge doesn't approve what it hasn't seen.\n\n#### Acceptance\n- A1: met — createHttpBackend() throws an Error whose message contains NEXT_PUBLIC_BACKEND=http and src/lib/backend/http/index.ts; a test asserts both.\n- A2: met — HTTP_ROUTES is typed as Record<keyof AuthService|DataService, HttpRoute> with a GET/POST/PUT/PATCH/DELETE verb and a /v1/ path per entry. New tests compare its keys to the local backend's auth and data methods.\n- A3: met — README covers every route (a test checks it matches HTTP_ROUTES), the auth open decision, that the stub makes no network calls, and activation steps. The diff adds no code comments.\n- A4: met — Backend['kind'] includes 'http'. backendKind() and createBackend() are covered in http.test.ts for http, firebase and local/''/other, with a fetch stub asserted not called.\n- A5: unverified — .env.example was withheld from review as a sensitive path, so its contents can't be checked here. The new tests assert both lines (the value list including http, and the commented NEXT_PUBLIC_API_BASE_URL); rely on the test run's result.\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- Existing doc comment on kind now misdescribes http `src/lib/backend/types.ts:197` — When the adapter is implemented, switch the UI's demo-data check to kind === \"local\" and update this comment. Add that step to the README's 'Activating it later' list.\n- .env.example is read at describe-collection time `src/lib/backend/http/http.test.ts:104` — Move the readFileSync call into each it(), or into a beforeAll.\n- A few proposed routes are inconsistent with the rest of the table `src/lib/backend/http/index.ts:63` — Consider PUT /v1/coaches/{coachId}/squads/{squadId} (or POST for create), and GET /v1/athletes/{athleteId}/coaches/{coachId} for getCoachLink. Keep the README table in sync.\n\n</details>\n\n_Not reviewed: `.env.example` (sensitive path)._\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/lib/backend/types.ts",
+        "line": 197,
+        "acceptance_id": null,
+        "title": "Existing doc comment on kind now misdescribes http",
+        "detail": "The comment says the UI shows a demo-data marker whenever kind is not \"firebase\". Once the http adapter is real, a live Cloud Run backend would be labelled as demo data. It is harmless while the stub throws, but the UI check should become kind === \"local\" when the adapter is implemented.",
+        "repro": "Not reachable today because createHttpBackend() always throws.",
+        "fix": "When the adapter is implemented, switch the UI's demo-data check to kind === \"local\" and update this comment. Add that step to the README's 'Activating it later' list.",
+        "pattern": "e03e280c0c6c"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/backend/http/http.test.ts",
+        "line": 104,
+        "acceptance_id": null,
+        "title": ".env.example is read at describe-collection time",
+        "detail": "readFileSync runs inside the describe body, not inside an it(). If .env.example is missing or moved, the whole test file fails to collect, which hides the A1, A2 and A4 results behind one ENOENT.",
+        "repro": "Delete or rename .env.example, then run npm run test. Every test in http.test.ts is reported as a collection error.",
+        "fix": "Move the readFileSync call into each it(), or into a beforeAll.",
+        "pattern": "23c34a52af2b"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/backend/http/index.ts",
+        "line": 63,
+        "acceptance_id": null,
+        "title": "A few proposed routes are inconsistent with the rest of the table",
+        "detail": "saveSquad uses PUT on the collection path with no {squadId}, while deleteSquad has one. getCoachLink uses a separate /v1/coach-links/{coachId}/{athleteId} root, while the related coach routes nest under /v1/athletes/{athleteId}/coaches/{coachId}. These are proposals only, so nothing breaks today.",
+        "repro": "Not applicable; the table is not called yet.",
+        "fix": "Consider PUT /v1/coaches/{coachId}/squads/{squadId} (or POST for create), and GET /v1/athletes/{athleteId}/coaches/{coachId} for getCoachLink. Keep the README table in sync.",
+        "pattern": "d0a5a09df831"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "createHttpBackend() throws an Error whose message contains NEXT_PUBLIC_BACKEND=http and src/lib/backend/http/index.ts; a test asserts both."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "HTTP_ROUTES is typed as Record<keyof AuthService|DataService, HttpRoute> with a GET/POST/PUT/PATCH/DELETE verb and a /v1/ path per entry. New tests compare its keys to the local backend's auth and data methods."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "README covers every route (a test checks it matches HTTP_ROUTES), the auth open decision, that the stub makes no network calls, and activation steps. The diff adds no code comments."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "Backend['kind'] includes 'http'. backendKind() and createBackend() are covered in http.test.ts for http, firebase and local/''/other, with a fetch stub asserted not called."
+      },
+      {
+        "id": "A5",
+        "status": "unverified",
+        "note": ".env.example was withheld from review as a sensitive path, so its contents can't be checked here. The new tests assert both lines (the value list including http, and the commented NEXT_PUBLIC_API_BASE_URL); rely on the test run's result."
+      }
+    ],
+    "unreviewed": [
+      ".env.example"
+    ],
+    "usage": {
+      "tokens": 18244,
+      "costUsd": 0.16506
+    }
+  }
+}
