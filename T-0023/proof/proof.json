@@ -1,0 +1,254 @@
+{
+  "task": "T-0023",
+  "kind": "ui-screenshots",
+  "passed": true,
+  "lines": [
+    "screenshots: /cloud/, /cloud/athletes/, /cloud/trends/, /cloud/sessions/?athlete=demo-athlete&tab=trends, /cloud/session/?athlete=demo-athlete&id=s024 at sm/md/lg, before and after (30 images) on the evidence branch: T-0023/",
+    "axe: 0 serious or critical violations",
+    "visual diff: not automated yet; the before/after images are the comparison",
+    "signed in: .rivetari/proof-auth.mjs ran on each side before its shots"
+  ],
+  "shots": [
+    {
+      "page": "/cloud/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-1-cloud-sm.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-1-cloud-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-1-cloud-md.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-1-cloud-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-1-cloud-lg.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-1-cloud-lg.png?raw=true"
+    },
+    {
+      "page": "/cloud/athletes/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-2-cloud-athletes-sm.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-2-cloud-athletes-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/athletes/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-2-cloud-athletes-md.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-2-cloud-athletes-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/athletes/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-2-cloud-athletes-lg.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-2-cloud-athletes-lg.png?raw=true"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-3-cloud-trends-sm.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-3-cloud-trends-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-3-cloud-trends-md.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-3-cloud-trends-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-3-cloud-trends-lg.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-3-cloud-trends-lg.png?raw=true"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-4-cloud-sessions-sm.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-4-cloud-sessions-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-4-cloud-sessions-md.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-4-cloud-sessions-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-4-cloud-sessions-lg.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-4-cloud-sessions-lg.png?raw=true"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s024",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-5-cloud-session-sm.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-5-cloud-session-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s024",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-5-cloud-session-md.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-5-cloud-session-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s024",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\before-5-cloud-session-lg.png",
+      "status": 200,
+      "side": "before",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/before-5-cloud-session-lg.png?raw=true"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-1-cloud-sm.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-1-cloud-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-1-cloud-md.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-1-cloud-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-1-cloud-lg.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-1-cloud-lg.png?raw=true"
+    },
+    {
+      "page": "/cloud/athletes/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-2-cloud-athletes-sm.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-2-cloud-athletes-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/athletes/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-2-cloud-athletes-md.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-2-cloud-athletes-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/athletes/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-2-cloud-athletes-lg.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-2-cloud-athletes-lg.png?raw=true"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-3-cloud-trends-sm.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-3-cloud-trends-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-3-cloud-trends-md.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-3-cloud-trends-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/trends/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-3-cloud-trends-lg.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-3-cloud-trends-lg.png?raw=true"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-4-cloud-sessions-sm.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-4-cloud-sessions-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-4-cloud-sessions-md.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-4-cloud-sessions-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-4-cloud-sessions-lg.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-4-cloud-sessions-lg.png?raw=true"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s024",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-5-cloud-session-sm.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-5-cloud-session-sm.png?raw=true"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s024",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-5-cloud-session-md.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-5-cloud-session-md.png?raw=true"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s024",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0023\\proof\\after-5-cloud-session-lg.png",
+      "status": 200,
+      "side": "after",
+      "url": "https://github.com/BreathBand/breathband-console/blob/evidence/T-0023/after-5-cloud-session-lg.png?raw=true"
+    }
+  ],
+  "violations": []
+}
