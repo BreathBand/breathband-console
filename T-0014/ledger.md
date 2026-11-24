@@ -14,6 +14,9 @@
 - 2026-11-24 05:05 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 05:06 judge: judge passed · round 1 · head 58dd4863b997 · record sha256 5291d0f6757acbccbb634289e451f7f7317f5756195bd2fccf57931021489ac0 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 05:06 ship: draft PR opened: #22 https://github.com/BreathBand/breathband-console/pull/22 · fix/t-0014 at 58dd4863b997 → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:51 close: worktree removed · branch fix/t-0014 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:51 close: floorplan updated · 1 call(s) · 28014 tokens · $0.08 (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:51 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -50,3 +53,7 @@
 - 2026-11-24 05:06 acceptance A3: met — Each value has its column name as visible label text in the phone layout, and the thead stays in the DOM. The athlete Link and the Score component are unchanged.
 - 2026-11-24 05:06 acceptance A4: unverified — No axe run is in the diff.
 - 2026-11-24 05:06 judge review posted: https://github.com/BreathBand/breathband-console/pull/22#pullrequestreview-6033997982
+
+## Outcome
+
+- 2026-11-24 05:51 PR #22 merged by arynbht 2026-11-24 05:50 · 52m · 1071k tokens · $1.04
