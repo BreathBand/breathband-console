@@ -8,6 +8,8 @@
 - 2026-11-24 06:24 intake: intake confirmed; card sha256 f4249a41968f84141ef30aff12120574037e0eeeaab56dd37f385b7264749b50 (rivetari runtime (autonomy review-at-pr, for arynbht@gmail.com))
 - 2026-11-24 06:24 route: assembly proposed; sha256 0f7af81c9bfc489ef435a68324ea4917ce3de278070980884f5f9f671a2f79dc; skills none; proof test-run; awaiting approval (rivetari router (for arynbht@gmail.com))
 - 2026-11-24 06:24 route: route approved; assembly sha256 0f7af81c9bfc489ef435a68324ea4917ce3de278070980884f5f9f671a2f79dc (rivetari runtime (autonomy review-at-pr, for arynbht@gmail.com))
+- 2026-11-24 06:25 isolate: worktree .worktrees/T-0028 · branch chore/t-0028 from origin/main (4190baa70132) · port 5175 · db breathband_console_t0028 · env sha256 970102cdcb25a9fb17c7a7b5d090b67962d2f87b9a98169bd80e9ca7895faf05 (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:25 build: build started · skills spine only · budget 12 steps / 60k ctx · ~13552 prompt tokens · 2 repo file(s) in context · 188684 tokens · $0.31 · 5 turns (rivetari runtime (for arynbht@gmail.com))
 
 ## Decisions
 
@@ -17,3 +19,7 @@
 - 2026-11-24 06:24 decided not in: ui (scored only on description keywords)
 - 2026-11-24 06:24 decided not in: data (scored only on description keywords)
 - 2026-11-24 06:24 decided not in: infra (scored only on description keywords)
+
+## Stop-and-ask
+
+- 2026-11-24 06:25 asked: budget_exhausted: the plan call reached its 4-turn limit before it replied with a plan; allow to plan again with 8 turns, or deny to plan again within 4
