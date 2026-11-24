@@ -296,7 +296,7 @@ export function BreathTable({ breaths, t0, t1 }: { breaths: BreathDeviation[]; t
   const rows = breaths.filter((b) => b.tPeak >= t0 && b.tPeak <= t1);
   if (rows.length === 0) return <p className="muted">No complete breaths in this part of the session.</p>;
   return (
-    <div className="bt-scroll" tabIndex={0} role="region" aria-label="Breaths in view">
+    <div className="bt-scroll" tabIndex={0} role="region" aria-label="Timing and depth of each breath">
       <table className="table bt">
         <thead>
           <tr>
