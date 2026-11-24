@@ -1,0 +1,78 @@
+id: T-0020
+title: "Total Breath Score: mean of the four, rounded once"
+type: fix
+source: prompt
+description: "Owner decision: the Total Breath Score is the mean of the four
+  sub-scores (Timing In, Timing Ex, Depth In, Depth Ex), with weights from
+  OPEN_CONSTANTS.totalBreathScoreWeights (src/lib/analysis/config.ts:23-28,
+  equal at 0.25), rounded once to 1 decimal. Today the code rounds twice.
+  src/lib/domain/scores.ts:60 defines mean(a, b) as Math.round(((a + b) / 2) *
+  10) / 10. combineTransitionScores (scores.ts:63-68) returns
+  mean(mean(timing.inhale, timing.exhale), mean(depth.inhale, depth.exhale)),
+  which rounds the timing mean and the depth mean to 1 decimal and then rounds
+  their mean again. The JSDoc at scores.ts:62 still states that rule (\"approved
+  16 Nov\"). With whole-number inputs the two rules agree. That covers today's
+  callers: src/lib/backend/local/seed.ts:152-156 passes clamp(Math.round(...))
+  values and src/lib/backend/local/live.ts:135-136,155 passes Math.round values,
+  so seeded and simulated totals don't change and the local DB needs no reseed.
+  The rules disagree once sub-scores are method-C means with decimals (B1-3).
+  For example, timing 7.06 / 7.06 and depth 8 / 8 gives 7.6 today, but the mean
+  of the four is 7.53, which rounds to 7.5. The existing test at
+  src/lib/domain/domain.test.ts:26-29 expects 7.5 and 5.5, which holds under
+  both rules, so it stays as it is."
+acceptance:
+  - id: A1
+    text: "combineTransitionScores keeps its signature (timing: InhaleExhale, depth:
+      InhaleExhale) => number. It returns the weighted sum of the four
+      sub-scores, with weights from OPEN_CONSTANTS.totalBreathScoreWeights
+      imported from src/lib/analysis/config.ts, rounded once with Math.round(x *
+      10) / 10. No intermediate value is rounded."
+    verify: review
+  - id: A2
+    text: "New test src/lib/domain/total-score.test.ts asserts these cases, which
+      differ from the old rule: timing {7.06, 7.06} with depth {8, 8} gives 7.5
+      (was 7.6); timing {7.3, 7.4} with depth {8.2, 8.3} gives 7.8 (was 7.9);
+      timing {6.25, 6.25} with depth {8, 8} gives 7.1 (was 7.2)."
+    verify: unit
+  - id: A3
+    text: "total-score.test.ts also shows that whole-number inputs give the same
+      result as before, including means ending in .25 and .75: timing {8, 7}
+      with depth {7, 7} gives 7.3, and timing {8, 8} with depth {8, 7} gives
+      7.8. It also checks that the sum of the four weights read from config is
+      1."
+    verify: unit
+  - id: A4
+    text: The private two-argument mean helper at scores.ts:60 and the stale JSDoc
+      line at scores.ts:62 are removed. scores.ts has no new comment lines.
+      Nothing else in scores.ts changes (scoreWord, formatScore, legacyBand,
+      headline and the type guards are byte-identical).
+    verify: review
+  - id: A5
+    text: The existing tests (including domain.test.ts:26-29 and local.test.ts) pass
+      unchanged. npm run lint, typecheck and test pass.
+    verify: unit
+out_of_scope:
+  - Method-C sub-scores themselves (B1-3), which will call this function
+  - New fields or a new scoring version on SessionSummary (B1-5); this card does
+    not add or bump a SCORING_VERSIONS entry
+  - The doc comment on TransitionScores in src/lib/domain/types.ts:34-39 (owned
+    by B1-5; with equal weights the wording is still true)
+  - Any change to src/app/(site)/_lib/scores.ts, which has its own copy for the
+    public site
+  - Tests for other helpers in scores.ts such as legacyBand (B1-11)
+  - Rescoring stored sessions
+touches:
+  - src/lib/domain/scores.ts
+  - src/lib/domain/total-score.test.ts
+pages: []
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - import Appendix constants from src/lib/analysis/config.ts
+  - formula change; owner has decided (mean of the four, rounded once, 1
+    decimal), so no other formula is in scope
+  - static export only
+risk: high
+owner: arynbht@gmail.com
+created: 2026-11-24
