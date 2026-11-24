@@ -478,3 +478,23 @@
     font-size: var(--t-36);
   }
 }
+
+/* ================================================================ account */
+
+.seg.seg-wide {
+  display: inline-flex;
+  margin-top: var(--s-4);
+}
+
+.defaults-grid {
+  margin: var(--s-4) 0 var(--s-3);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+@media (max-width: 640px) {
+  .defaults-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

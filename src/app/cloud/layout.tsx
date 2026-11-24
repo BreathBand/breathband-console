@@ -5,6 +5,7 @@ import { CloudShell } from "./CloudShell";
 import "./console.css";
 import "./shell.css";
 import "./product.css";
+import "./home.css";
 import "./record/record.css";
 import "./session/review.css";
 

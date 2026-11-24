@@ -8,6 +8,7 @@ import { formatLongDay, initials } from "@/lib/domain/format";
 import type { UserProfile } from "@/lib/domain/types";
 import { signOutToLanding } from "../CloudShell";
 import { AlertRulesSection } from "./AlertRulesForm";
+import { AppearanceSection, SessionDefaultsSection } from "./Preferences";
 
 // /cloud/account/ — the signed-in user's own details.
 export default function AccountPage() {
@@ -34,11 +35,13 @@ function Account({ profile }: { profile: UserProfile }) {
   }
 
   return (
-    <div className="container review narrow">
-      <div className="title-row">
-        <h1>Account</h1>
-        <span>The same account signs you in to the Breathband app.</span>
-      </div>
+    <div className="container page narrow">
+      <header className="page-head">
+        <div>
+          <h1>Account</h1>
+          <p className="page-lede">The same account signs you in to the Breathband app.</p>
+        </div>
+      </header>
 
       <section className="pane pane-pad" aria-labelledby="profile-h">
         <div className="pane-h">
@@ -106,6 +109,8 @@ function Account({ profile }: { profile: UserProfile }) {
         </p>
       </section>
 
+      {!coach && <SessionDefaultsSection />}
+      <AppearanceSection />
       {coach && <AlertRulesSection coachId={profile.uid} />}
 
       <div className="row">

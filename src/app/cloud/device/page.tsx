@@ -149,13 +149,19 @@ export default function DevicePage() {
             <BandFigure />
             <ol className="steps">
               <li>
-                <b>Put the band on.</b> Wrap it around your belly, just below the ribs.
+                <span>
+                  <b>Put the band on.</b> Wrap it around your belly, just below the ribs.
+                </span>
               </li>
               <li>
-                <b>Connect.</b> {kind === "bluetooth" ? "Choose your Breathband when the browser asks." : "The simulator starts streaming at once."}
+                <span>
+                  <b>Connect.</b> {kind === "bluetooth" ? "Choose your Breathband when the browser asks." : "The simulator starts streaming at once."}
+                </span>
               </li>
               <li>
-                <b>Tighten the strap</b> until the gauge sits in the green.
+                <span>
+                  <b>Tighten the strap</b> until the gauge sits in the green.
+                </span>
               </li>
             </ol>
           </div>

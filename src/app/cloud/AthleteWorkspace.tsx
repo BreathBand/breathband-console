@@ -14,6 +14,7 @@ import { DEFAULT_ALERTS, type AlertRules, type AthleteTargets, type CoachLink, t
 import { downloadText, slug } from "@/lib/download";
 import { useLoad } from "@/lib/useLoad";
 import type { ConsoleContext } from "./AthleteConsole";
+import { AthleteHome } from "./AthleteHome";
 import { AthleteOverview } from "./AthleteOverview";
 import { athleteHref, sessionHref, type AthleteTab } from "./links";
 import { NotesTab } from "./NotesTab";
@@ -108,14 +109,23 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
     reload: data.retry,
   };
 
-  const tabs: { id: AthleteTab; label: string; count?: number }[] = [
-    { id: "overview", label: "Overview" },
-    { id: "trends", label: "Trends" },
-    { id: "sessions", label: "Sessions", count: sessions.length },
-    { id: "plan", label: self ? "From your coach" : "Plan", count: ws.plans.filter(isOpen).length || undefined },
-  ];
-  if (!self) tabs.push({ id: "notes", label: "Notes" });
-  const current = tabs.some((t) => t.id === tab) ? tab : "overview";
+  // An athlete's own overview is their home page, with its own layout and no tabs.
+  if (self && tab === "overview") return <AthleteHome ws={ws} />;
+
+  const tabs: { id: AthleteTab; label: string; count?: number }[] = self
+    ? [
+        { id: "sessions", label: "Sessions", count: sessions.length },
+        { id: "trends", label: "Trends" },
+        { id: "plan", label: "From your coach", count: ws.plans.filter(isOpen).length || undefined },
+      ]
+    : [
+        { id: "overview", label: "Overview" },
+        { id: "trends", label: "Trends" },
+        { id: "sessions", label: "Sessions", count: sessions.length },
+        { id: "plan", label: "Plan", count: ws.plans.filter(isOpen).length || undefined },
+        { id: "notes", label: "Notes" },
+      ];
+  const current = tabs.some((t) => t.id === tab) ? tab : tabs[0].id;
 
   return (
     <div className="container review workspace">

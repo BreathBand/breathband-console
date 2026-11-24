@@ -61,7 +61,7 @@ export function AthleteConsole({
 
   const keep = filter === "all" ? "" : `&type=${filter}`;
   const base = `?athlete=${encodeURIComponent(athleteId)}${keep}`;
-  const overviewHref = self ? "/cloud/" : athleteHref(athleteId);
+  const overviewHref = self ? "/cloud/sessions/" : athleteHref(athleteId);
   const sessionHref = (id: string) => `/cloud/session/${base}&id=${encodeURIComponent(id)}`;
 
   const railRef = useRef<HTMLUListElement>(null);
@@ -119,7 +119,7 @@ export function AthleteConsole({
           <li>
             <Link href={overviewHref} className="rail-overview" aria-current={sessionId ? undefined : "page"}>
               <Icon name="chevronLeft" size={18} />
-              {self ? "Overview" : name}
+              {self ? "All sessions" : name}
             </Link>
           </li>
           {sessions.status === "loading" ? (

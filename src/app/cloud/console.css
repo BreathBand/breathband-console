@@ -179,16 +179,22 @@
 
 .hero .lbl,
 .stat .lbl {
-  font: 400 var(--t-13) / 1.25 var(--f-cond);
+  font: 600 var(--t-13) / 1.25 var(--f-sans);
   color: var(--c-ink-2);
 }
 
 .hero .n,
 .stat .n {
   display: block;
-  font: 600 var(--t-36) / 1 var(--f-sans);
-  letter-spacing: -0.02em;
-  margin: 6px 0 4px;
+  font: 400 var(--t-40) / 1 var(--f-display);
+  letter-spacing: -0.03em;
+  margin: 8px 0 6px;
+}
+
+.stat .n small {
+  font: 500 var(--t-15) / 1 var(--f-sans);
+  letter-spacing: 0;
+  color: var(--c-ink-2);
 }
 
 .stat .n.sm {
@@ -1380,8 +1386,8 @@ a.plain {
 }
 
 .cell[data-band="ok"] {
-  background: var(--c-ok);
-  border-color: var(--c-ok);
+  background: var(--c-ink);
+  border-color: var(--c-ink);
 }
 
 .cell[data-band="mid"] {
@@ -1390,8 +1396,8 @@ a.plain {
 }
 
 .cell[data-band="low"] {
-  background: var(--c-low);
-  border-color: var(--c-low);
+  background: var(--c-low-mark);
+  border-color: var(--c-low-mark);
 }
 
 .cell[data-band="open"] {
@@ -2079,7 +2085,7 @@ a.plain {
 }
 
 .chart .viz-target {
-  stroke: var(--c-ok);
+  stroke: var(--c-ink-2);
   stroke-width: 1.5;
   stroke-dasharray: 5 4;
 }
