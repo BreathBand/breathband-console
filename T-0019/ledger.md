@@ -24,3 +24,4 @@
 ## Stop-and-ask
 
 - 2026-11-24 05:25 asked: budget_exhausted: the plan call reached its 4-turn limit before it replied with a plan; allow to plan again with 8 turns, or deny to plan again within 4
+- 2026-11-24 05:29 answered: allowed — plan budget 8 turns; the 4-turn plan limit is too tight for non-trivial cards here (R-21). Decided by rivetari-51, the pilot's merge and stop decider for the owner
