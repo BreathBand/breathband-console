@@ -38,3 +38,4 @@
 - 2026-11-24 00:27 asked: budget_exhausted: the plan call reached its 4-turn limit before it replied with a plan; allow to plan again with 8 turns, or deny to plan again within 4
 - 2026-11-24 00:34 answered: allowed — Person approves planning with 8 turns; person also pre-approves @playwright/test as an exact-version devDependency for this card
 - 2026-11-24 00:41 asked: agent_question: May I run `npm exec -- playwright install chromium` and then `PORT=5178 npm run e2e` in this worktree to confirm the smoke specs pass (A3)?
+- 2026-11-24 00:41 answered: allowed — Person approved @playwright/test for this card; installing its chromium browser and running the e2e specs locally is part of that approval
