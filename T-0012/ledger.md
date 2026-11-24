@@ -15,6 +15,9 @@
 - 2026-11-24 05:07 prove: proof passed · test-run (the judge's tier 1 run) (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 05:09 judge: judge passed · round 1 · head 1768961bc7d9 · record sha256 97af3cc46f80efde97c018c5d640f80ad15111b043c2b30752372606f65c9993 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 05:09 ship: draft PR opened: #23 https://github.com/BreathBand/breathband-console/pull/23 · feature/t-0012 at 1768961bc7d9 → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:04 close: worktree removed · branch feature/t-0012 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:04 close: floorplan updated · 1 call(s) · 28017 tokens · $0.08 (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:04 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -55,3 +58,7 @@
 - 2026-11-24 05:09 acceptance A5: met — Test passes for the default timings at 20 Hz. See the defect: expected values are not exact for off-grid knot times.
 - 2026-11-24 05:09 acceptance A6: unverified — Constants come from config.ts and index.ts re-exports synth. No lint, typecheck or test run output was provided with the diff.
 - 2026-11-24 05:09 judge review posted: https://github.com/BreathBand/breathband-console/pull/23#pullrequestreview-6034022531
+
+## Outcome
+
+- 2026-11-24 06:04 PR #23 merged by arynbht 2026-11-24 06:02 · 1h06m · 969k tokens · $2.38
