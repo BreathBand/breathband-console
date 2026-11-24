@@ -1,0 +1,286 @@
+{
+ "shots": [
+  {
+   "route": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+   "width": 375,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30/head/cloud_sessions_athlete_demo_athlete_tab_trends@375.png",
+   "bytes": 138117,
+   "dataSelector": "svg[role=\"img\"][aria-label^=\"Total Breath Score for\"]",
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "charts": 5,
+   "toggles": 4,
+   "seriousOrCritical": 0,
+   "violations": []
+  },
+  {
+   "route": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+   "width": 768,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30/head/cloud_sessions_athlete_demo_athlete_tab_trends@768.png",
+   "bytes": 150654,
+   "dataSelector": "svg[role=\"img\"][aria-label^=\"Total Breath Score for\"]",
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "charts": 5,
+   "toggles": 4,
+   "seriousOrCritical": 0,
+   "violations": []
+  },
+  {
+   "route": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+   "width": 1280,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30/head/cloud_sessions_athlete_demo_athlete_tab_trends@1280.png",
+   "bytes": 148946,
+   "dataSelector": "svg[role=\"img\"][aria-label^=\"Total Breath Score for\"]",
+   "scrollWidth": 1355,
+   "clientWidth": 1280,
+   "charts": 5,
+   "toggles": 4,
+   "seriousOrCritical": 0,
+   "violations": []
+  },
+  {
+   "route": "/cloud/trends/",
+   "width": 375,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30/head/cloud_trends@375.png",
+   "bytes": 83936,
+   "dataSelector": "svg[role=\"img\"][aria-label^=\"Total Breath Score per week\"]",
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "charts": 2,
+   "toggles": 1,
+   "seriousOrCritical": 0,
+   "violations": []
+  },
+  {
+   "route": "/cloud/trends/",
+   "width": 768,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30/head/cloud_trends@768.png",
+   "bytes": 105725,
+   "dataSelector": "svg[role=\"img\"][aria-label^=\"Total Breath Score per week\"]",
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "charts": 2,
+   "toggles": 1,
+   "seriousOrCritical": 0,
+   "violations": []
+  },
+  {
+   "route": "/cloud/trends/",
+   "width": 1280,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30/head/cloud_trends@1280.png",
+   "bytes": 114655,
+   "dataSelector": "svg[role=\"img\"][aria-label^=\"Total Breath Score per week\"]",
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "charts": 2,
+   "toggles": 1,
+   "seriousOrCritical": 0,
+   "violations": []
+  },
+  {
+   "route": "/cloud/report/?athlete=demo-athlete",
+   "width": 375,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30/head/cloud_report_athlete_demo_athlete@375.png",
+   "bytes": 189173,
+   "dataSelector": "svg[role=\"img\"][aria-label^=\"Total Breath Score for\"]",
+   "scrollWidth": 375,
+   "clientWidth": 375,
+   "charts": 8,
+   "toggles": 6,
+   "seriousOrCritical": 0,
+   "violations": [
+    {
+     "id": "empty-table-header",
+     "impact": "minor",
+     "help": "Table header text should not be empty",
+     "nodes": [
+      {
+       "target": "th:nth-child(6)",
+       "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>"
+      },
+      {
+       "target": "th:nth-child(8)",
+       "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "route": "/cloud/report/?athlete=demo-athlete",
+   "width": 768,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30/head/cloud_report_athlete_demo_athlete@768.png",
+   "bytes": 234842,
+   "dataSelector": "svg[role=\"img\"][aria-label^=\"Total Breath Score for\"]",
+   "scrollWidth": 768,
+   "clientWidth": 768,
+   "charts": 8,
+   "toggles": 6,
+   "seriousOrCritical": 0,
+   "violations": [
+    {
+     "id": "empty-table-header",
+     "impact": "minor",
+     "help": "Table header text should not be empty",
+     "nodes": [
+      {
+       "target": "th:nth-child(6)",
+       "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>"
+      },
+      {
+       "target": "th:nth-child(8)",
+       "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "route": "/cloud/report/?athlete=demo-athlete",
+   "width": 1280,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30/head/cloud_report_athlete_demo_athlete@1280.png",
+   "bytes": 239892,
+   "dataSelector": "svg[role=\"img\"][aria-label^=\"Total Breath Score for\"]",
+   "scrollWidth": 1280,
+   "clientWidth": 1280,
+   "charts": 8,
+   "toggles": 6,
+   "seriousOrCritical": 0,
+   "violations": [
+    {
+     "id": "empty-table-header",
+     "impact": "minor",
+     "help": "Table header text should not be empty",
+     "nodes": [
+      {
+       "target": "th:nth-child(6)",
+       "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>"
+      },
+      {
+       "target": "th:nth-child(8)",
+       "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "keyboard": {
+  "tabsToReach": 26,
+  "reached": true,
+  "ariaExpandedBefore": "false",
+  "enter": {
+   "ariaExpanded": "true",
+   "ariaControls": "_r_1_",
+   "panelVisible": true,
+   "caption": "Total Breath Score for 11 paced sessions, target 8",
+   "th": 14,
+   "rows": 11,
+   "firstRow": [
+    "Wed, Oct 28 · Paced 5-5",
+    "5.5",
+    "Outside the target"
+   ],
+   "pageScroll": "375/375"
+  },
+  "spaceTogglesTo": "false"
+ },
+ "svg": [
+  {
+   "route": "/cloud/sessions/?athlete=demo-athlete&tab=trends",
+   "svgs": [
+    {
+     "ariaLabel": "BreathBand",
+     "describedby": null,
+     "describedText": null
+    },
+    {
+     "ariaLabel": "Total Breath Score for 11 paced sessions, target 8",
+     "describedby": "_r_0_",
+     "describedText": "11 points from Oct 25 to Nov 24. Lowest 5.5, highest 8.3, latest 8."
+    },
+    {
+     "ariaLabel": "Average timing and depth scores over the period",
+     "describedby": "_r_3_",
+     "describedText": "10 points from Oct 21 to Nov 18. Timing: lowest 6.5, highest 7.7, latest 7.7. Depth: lowest 5.5, highest 8.3, latest 8.3."
+    },
+    {
+     "ariaLabel": "Breathing rate for 2 open sessions, target 12 to 16",
+     "describedby": "_r_6_",
+     "describedText": "2 points from Oct 25 to Nov 24. Lowest 12 br/min, highest 12 br/min, latest 12 br/min."
+    },
+    {
+     "ariaLabel": "Sessions per day over the period",
+     "describedby": "_r_9_",
+     "describedText": "30 bars from Oct 26 to Nov 24. Lowest 0 sessions, highest 1 sessions, latest 0 sessions."
+    }
+   ]
+  },
+  {
+   "route": "/cloud/trends/",
+   "svgs": [
+    {
+     "ariaLabel": "BreathBand",
+     "describedby": null,
+     "describedText": null
+    },
+    {
+     "ariaLabel": "Total Breath Score per week for Alex, Leo, Maya, Priya, Sam",
+     "describedby": "_r_0_",
+     "describedText": "30 points from Aug 26 to Nov 18. Alex: lowest 5.8, highest 8, latest 8. Leo: lowest 4.4, highest 6.7, latest 6.7. Maya: lowest 7.1, highest 8.5, latest 8. Priya"
+    }
+   ]
+  },
+  {
+   "route": "/cloud/report/?athlete=demo-athlete",
+   "svgs": [
+    {
+     "ariaLabel": "BreathBand",
+     "describedby": null,
+     "describedText": null
+    },
+    {
+     "ariaLabel": "BreathBand",
+     "describedby": null,
+     "describedText": null
+    },
+    {
+     "ariaLabel": "Total Breath Score for 11 paced sessions, target 8",
+     "describedby": "_r_9_",
+     "describedText": "11 points from Oct 25 to Nov 24. Lowest 5.5, highest 8.3, latest 8."
+    },
+    {
+     "ariaLabel": "Total Breath Score for 11 paced sessions, target 8",
+     "describedby": "_r_0_",
+     "describedText": "11 points from Oct 25 to Nov 24. Lowest 5.5, highest 8.3, latest 8."
+    },
+    {
+     "ariaLabel": "Breathing rate for 2 open sessions, target 12 to 16",
+     "describedby": "_r_c_",
+     "describedText": "2 points from Oct 25 to Nov 24. Lowest 12 br/min, highest 12 br/min, latest 12 br/min."
+    },
+    {
+     "ariaLabel": "Breathing rate for 2 open sessions, target 12 to 16",
+     "describedby": "_r_3_",
+     "describedText": "2 points from Oct 25 to Nov 24. Lowest 12 br/min, highest 12 br/min, latest 12 br/min."
+    },
+    {
+     "ariaLabel": "Sessions per day over the period",
+     "describedby": "_r_f_",
+     "describedText": "30 bars from Oct 26 to Nov 24. Lowest 0 sessions, highest 1 sessions, latest 0 sessions."
+    },
+    {
+     "ariaLabel": "Sessions per day over the period",
+     "describedby": "_r_6_",
+     "describedText": "30 bars from Oct 26 to Nov 24. Lowest 0 sessions, highest 1 sessions, latest 0 sessions."
+    }
+   ]
+  }
+ ],
+ "print": {
+  "visibleToggles": 0,
+  "visibleChartTables": 0,
+  "visibleCharts": 4
+ }
+}
