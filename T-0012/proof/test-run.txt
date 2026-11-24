@@ -1,0 +1,44 @@
+npm test · exit 0 · the judge's tier 1 run on the change
+new tests:
+  src/lib/analysis/synth.test.ts: writes durationS × sampleRateHz samples at i / sampleRateHz
+  src/lib/analysis/synth.test.ts: peaks at +3 and troughs at -3 for a 1.5 s inhale / 3.0 s exhale
+  src/lib/analysis/synth.test.ts: starts the pacer at a trough at t = 0 and rises first, ±3% of max
+  src/lib/analysis/synth.test.ts: maps % of max to raw units as midline + pct / 100 × a100
+  src/lib/analysis/synth.test.ts: switches pattern at a marker
+  src/lib/analysis/synth.test.ts: returns a pacer only when every segment is paced
+  src/lib/analysis/synth.test.ts: rejects an empty segment list and bad rates
+  src/lib/analysis/synth.test.ts: runs every profile for 180 s against the 5-5 pacer
+  src/lib/analysis/synth.test.ts: onTime equals the pacer sample by sample
+  src/lib/analysis/synth.test.ts: early is 0.35 timing SD (1.75 s) early, first peak at 3.25 s
+  src/lib/analysis/synth.test.ts: shortCycle peaks 9 s apart against the 10 s pacer
+  src/lib/analysis/synth.test.ts: has early, shallow, too deep, too fast and lost-then-recovered for paced and open sessions
+  src/lib/analysis/synth.test.ts: makes each fault differ from its normal pattern in the named way
+  src/lib/analysis/synth.test.ts: gives identical arrays for the same seed and different arrays for another
+  src/lib/analysis/synth.test.ts: gives the clean signal exactly when every SD is 0
+  src/lib/analysis/synth.test.ts: jitters transition levels and times by about their SDs
+  src/lib/analysis/synth.test.ts: uses a PRNG in [0, 1) that repeats for a seed
+  src/lib/analysis/synth.test.ts: knows A100 and the midline from the recording's highest peaks and lowest troughs
+  src/lib/analysis/synth.test.ts: rejects fewer than three breaths
+  src/lib/analysis/synth.test.ts: re-exports synth
+
+
+> breathband-console@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254[39m
+
+ [32m✓[39m src/lib/domain/targets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/domain/compare-csv.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/domain/domain.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 78[2mms[22m[39m
+ [32m✓[39m src/lib/dockerSmoke.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 113[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/synth.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m7 passed[39m[22m[90m (7)[39m
+[2m      Tests [22m [1m[32m110 passed[39m[22m[90m (110)[39m
+[2m   Start at [22m 00:07:14
+[2m   Duration [22m 318ms[2m (tests 42%, transform 29%, import 25%, worker 5%)[22m
+
+
