@@ -1,0 +1,81 @@
+id: T-0017
+title: Move the console.css hard-coded values in DESIGN.md Observations onto tokens
+type: chore
+source: prompt
+description: "DESIGN.md:430-444 (Observations, 'Hard-coded values in the
+  console', the src/app/cloud/console.css rows) lists values written as literals
+  instead of tokens. All of them are still on main. Replace each one with a
+  token from src/app/globals.css (:root at :11-105) that has exactly the same
+  value, so nothing changes visually. Where a token with that value exists, use
+  it: console.css:580 .chart text font-size 12px -> var(--t-12); console.css:92
+  .picker padding 0 12px -> 0 var(--s-4). Where none exists, add one to :root
+  and leave it out of the dark block (:108-156), so dark mode keeps the same
+  value too. Proposed names, open to change at intake: console.css:132 .picker
+  .avatar background #3a434d -> --c-chrome-3; :2277 .viz-tip-out color #f3c27a
+  -> --c-tip-warn; :2225 @media print body, .console-body background #fff ->
+  --c-paper (#ffffff; --c-pane can't be used because it is #181c21 in dark);
+  :378 .hero .n, .stat .n 36px -> --t-36; :1228 .avatar.sm 10px and :1607 .cell
+  b 10px -> --t-10; :431 .scale i, :568 .sw-pacer, :982 .skeleton span radius
+  2px -> --r-hair; :1322 .progress-bar and :1581 .cell radius 3px -> --r-bar;
+  :1276 .count and :1756 .tab-count radius 10px -> --r-badge; :2470 .chip-pick
+  radius 18px -> --r-chip; :42 .brand gap 10px, :90 .picker gap 10px and the
+  10px in :255 .rail-list a padding 9px 10px -> --s-chrome (10px), and the 9px
+  -> --s-rail-y (9px). DESIGN.md describes the code as it is, so its token
+  tables and those Observations rows are updated in the same change."
+acceptance:
+  - id: A1
+    text: each of the 20 literals listed in the description (console.css:42, 90, 92,
+      132, 255 twice, 378, 431, 568, 580, 982, 1228, 1276, 1322, 1581, 1607,
+      1756, 2225, 2277, 2470) is now a var(--token), and no other console.css
+      declaration changes
+    verify: review
+  - id: A2
+    text: every new token is defined once on :root in src/app/globals.css with the
+      exact literal it replaces, and none is overridden in the
+      prefers-color-scheme dark block, so light and dark computed values stay
+      the same
+    verify: review
+  - id: A3
+    text: before and after screenshots of the listed pages at 375px, 768px and
+      1280px are visually identical
+    verify: screenshot
+  - id: A4
+    text: DESIGN.md lists each new token in the right table (colour, size scale,
+      spacing, radius) with its value and role, and the console.css rows of
+      Observations 'Hard-coded values in the console' (DESIGN.md:434-444) are
+      gone. The auth.css, group.css and report.css rows stay
+    verify: review
+  - id: A5
+    text: axe reports 0 serious or critical violations on the listed pages
+    verify: screenshot
+out_of_scope:
+  - "Literals in console.css that DESIGN.md doesn't list (e.g. :221, :254, :309,
+    :385, control heights 36px/52px): the Batch 6 token clean-up remainder"
+  - Literals in auth.css, group.css, report.css and site.css
+  - Any visual change, renaming existing tokens, or snapping values to the
+    --s-*/--t-*/--r-* scales
+  - Top bar layout (B1-8), the Compare table (B1-7), axe fixes (B1-9), chart
+    text alternatives (B1-10)
+touches:
+  - src/app/cloud/console.css
+  - src/app/globals.css
+  - DESIGN.md
+pages:
+  - /cloud/
+  - /cloud/athletes/
+  - /cloud/trends/
+  - /cloud/sessions/?athlete=demo-athlete&tab=trends
+  - /cloud/session/?athlete=demo-athlete&id=s024
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - follow DESIGN.md; colours come from tokens in src/app/globals.css
+  - "static export only (output: export): no server actions, route handlers or
+    dynamic routes"
+  - new tokens use the existing prefixes (--c-, --t-, --s-, --r-) and don't
+    reuse a name already in globals.css or site.css
+  - no visual change in light or dark mode
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-24
