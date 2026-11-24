@@ -1,0 +1,178 @@
+{
+  "task": "T-0008",
+  "round": 1,
+  "verdict": "failed",
+  "head": "7618c9bdaa64c2a5ee77f09f68b20242c3493d98",
+  "base": "7fa76ea1e1d82913590fe367b6e73ea9c9e4ea9a",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "high",
+    "effective": "high",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "request-changes",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · 1 blocking\n\n#### Blocking\n\n**acceptance (A2): Stub has no header comment; the route map, auth status and no-network note live in exported data and a README** `src/lib/backend/http/index.ts:1`\nA2 requires the stub's header comment to map every AuthService/DataService method to a proposed REST call, state that auth is an open decision, and state that it makes no network calls. index.ts opens directly with an import and has no comment at all. Instead the content is in HTTP_ROUTES, HTTP_AUTH and HTTP_NETWORK_CALLS, which are runtime exports, and in README.md. README.md justifies this with 'The house rule against comments in code changes', but neither AGENTS.md nor CONSTRAINTS.md has such a rule. The firebase stub the card points to as the pattern is a documented stub.\n- **Repro:** Open src/lib/backend/http/index.ts as added in the diff: line 1 is `import type { AuthService, Backend, DataService } from \"../types\";` and none of the 93 lines is a comment. The route map, open-decision auth status and no-network flag exist only as the runtime exports HTTP_ROUTES, HTTP_AUTH and HTTP_NETWORK_CALLS, not as a header comment.\n- **Fix:** Add a header comment at the top of index.ts that lists each method → METHOD /v1/... (or points line-by-line to HTTP_ROUTES with the verbs/paths inline), says auth is an open decision (firebase-id-token / identity-platform / session-cookie), and says the stub makes no network calls. Drop the README sentence that cites a non-existent house rule.\n\n#### Acceptance\n- A1: met — createHttpBackend throws an Error naming NEXT_PUBLIC_BACKEND=http and pointing to src/lib/backend/http/index.ts; covered by the test\n- A2: unmet — No header comment in index.ts; the content is in exported data and README.md instead\n- A3: met — kind includes 'http'; backendKind and createBackend('http') are covered in the new http.test.ts, including the firebase and fallback-to-local cases\n- A4: unverified — .env.example was withheld from the judge as a sensitive path\n- A5: unverified — No new deps and no local/** changes in the diff; the lint/typecheck/test/build results were not provided\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- .env.example was withheld from review; a person must confirm A4 `.env.example` — Have the reviewer check that .env.example has `http` in the allowed values and a line like `# NEXT_PUBLIC_API_BASE_URL=https://…run.app`.\n- HTTP_NETWORK_CALLS is a constant that asserts nothing `src/lib/backend/http/index.ts:18` — Remove the constant and its assertion, and state the property in the header comment.\n- kind doc comment does not account for http `src/lib/backend/types.ts:198` — Reword the comment to say the badge is shown when kind === \"local\", and update the UI check when the adapter lands.\n\n</details>\n\n_Not reviewed: `.env.example` (sensitive path)._\n\n_claude-opus-5-5 · 2 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [
+      {
+        "kind": "acceptance",
+        "file": "src/lib/backend/http/index.ts",
+        "line": 1,
+        "acceptance_id": "A2",
+        "title": "Stub has no header comment; the route map, auth status and no-network note live in exported data and a README",
+        "detail": "A2 requires the stub's header comment to map every AuthService/DataService method to a proposed REST call, state that auth is an open decision, and state that it makes no network calls. index.ts opens directly with an import and has no comment at all. Instead the content is in HTTP_ROUTES, HTTP_AUTH and HTTP_NETWORK_CALLS, which are runtime exports, and in README.md. README.md justifies this with 'The house rule against comments in code changes', but neither AGENTS.md nor CONSTRAINTS.md has such a rule. The firebase stub the card points to as the pattern is a documented stub.",
+        "repro": "Open src/lib/backend/http/index.ts as added in the diff: line 1 is `import type { AuthService, Backend, DataService } from \"../types\";` and none of the 93 lines is a comment. The route map, open-decision auth status and no-network flag exist only as the runtime exports HTTP_ROUTES, HTTP_AUTH and HTTP_NETWORK_CALLS, not as a header comment.",
+        "fix": "Add a header comment at the top of index.ts that lists each method → METHOD /v1/... (or points line-by-line to HTTP_ROUTES with the verbs/paths inline), says auth is an open decision (firebase-id-token / identity-platform / session-cookie), and says the stub makes no network calls. Drop the README sentence that cites a non-existent house rule.",
+        "pattern": "55a6731d80ec"
+      }
+    ],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": ".env.example",
+        "line": null,
+        "acceptance_id": "A4",
+        "title": ".env.example was withheld from review; a person must confirm A4",
+        "detail": ".env.example is listed as a sensitive path that was not shown, so the judge cannot see whether it lists `http` as an allowed NEXT_PUBLIC_BACKEND value and has a commented NEXT_PUBLIC_API_BASE_URL placeholder. README.md step 3 refers to it, which suggests it was meant to change.",
+        "repro": "The diff contains no hunk visible to the judge for .env.example.",
+        "fix": "Have the reviewer check that .env.example has `http` in the allowed values and a line like `# NEXT_PUBLIC_API_BASE_URL=https://…run.app`.",
+        "pattern": "72d06cfae801"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/backend/http/index.ts",
+        "line": 18,
+        "acceptance_id": null,
+        "title": "HTTP_NETWORK_CALLS is a constant that asserts nothing",
+        "detail": "`export const HTTP_NETWORK_CALLS = false` only documents intent, and the test that checks it is tautological. The fetch/XMLHttpRequest spy test is what actually proves there are no network calls.",
+        "repro": "n/a",
+        "fix": "Remove the constant and its assertion, and state the property in the header comment.",
+        "pattern": "929d62902522"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/backend/types.ts",
+        "line": 198,
+        "acceptance_id": null,
+        "title": "kind doc comment does not account for http",
+        "detail": "The comment 'Shown in the UI when not \"firebase\", so demo data is never mistaken for real data' would show the demo badge for a real http backend once it is implemented.",
+        "repro": "n/a while createHttpBackend throws",
+        "fix": "Reword the comment to say the badge is shown when kind === \"local\", and update the UI check when the adapter lands.",
+        "pattern": "830c8a60510c"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "createHttpBackend throws an Error naming NEXT_PUBLIC_BACKEND=http and pointing to src/lib/backend/http/index.ts; covered by the test"
+      },
+      {
+        "id": "A2",
+        "status": "unmet",
+        "note": "No header comment in index.ts; the content is in exported data and README.md instead"
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "kind includes 'http'; backendKind and createBackend('http') are covered in the new http.test.ts, including the firebase and fallback-to-local cases"
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": ".env.example was withheld from the judge as a sensitive path"
+      },
+      {
+        "id": "A5",
+        "status": "unverified",
+        "note": "No new deps and no local/** changes in the diff; the lint/typecheck/test/build results were not provided"
+      }
+    ],
+    "unreviewed": [
+      ".env.example"
+    ],
+    "usage": {
+      "tokens": 23478,
+      "costUsd": 0.1992938
+    }
+  }
+}

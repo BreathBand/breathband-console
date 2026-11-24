@@ -1,0 +1,28 @@
+{
+  "task": "T-0008",
+  "kind": "test-run",
+  "passed": true,
+  "lines": [
+    "tests passed (npm test, exit 0, in the judge's tier 1 run on the change) · new tests: src/lib/backend/http/http.test.ts: throws, naming the setting and pointing to the stub; src/lib/backend/http/http.test.ts: makes no network calls; src/lib/backend/http/http.test.ts: leaves auth as an open decision; src/lib/backend/http/http.test.ts: throws the stub's error for http; src/lib/backend/http/http.test.ts: picks http from NEXT_PUBLIC_BACKEND=http; src/lib/backend/http/http.test.ts: still builds the local backend by default; src/lib/backend/http/http.test.ts: returns http for NEXT_PUBLIC_BACKEND=http; src/lib/backend/http/http.test.ts: still returns firebase for NEXT_PUBLIC_BACKEND=firebase; src/lib/backend/http/http.test.ts: returns local when unset; src/lib/backend/http/http.test.ts: has a route for every AuthService and DataService method; src/lib/backend/http/http.test.ts: uses a valid verb and a /v1/ path for every route",
+    "output: …\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 10\u001b[2mms\u001b[22m\u001b[39m \u001b[32m✓\u001b[39m src/lib/backend/local/local.test.ts \u001b[2m(\u001b[22m\u001b[2m27 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 75\u001b[2mms\u001b[22m\u001b[39m \u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m \u001b[2m Tests \u001b[22m \u001b[1m\u001b[32m68 passed\u001b[39m\u001b[22m\u001b[90m (68)\u001b[39m \u001b[2m Start at \u001b[22m 19:21:37 \u001b[2m Duration \u001b[22m 285ms\u001b[2m (transform 37%, import 32%, tests 26%, worker 4%)\u001b[22m",
+    "evidence: the judge's test run on the evidence branch: https://github.com/BreathBand/breathband-console/blob/evidence/T-0008/test-run.txt?raw=true"
+  ],
+  "tests": {
+    "exitCode": 0,
+    "added": [
+      "src/lib/backend/http/http.test.ts: throws, naming the setting and pointing to the stub",
+      "src/lib/backend/http/http.test.ts: makes no network calls",
+      "src/lib/backend/http/http.test.ts: leaves auth as an open decision",
+      "src/lib/backend/http/http.test.ts: throws the stub's error for http",
+      "src/lib/backend/http/http.test.ts: picks http from NEXT_PUBLIC_BACKEND=http",
+      "src/lib/backend/http/http.test.ts: still builds the local backend by default",
+      "src/lib/backend/http/http.test.ts: returns http for NEXT_PUBLIC_BACKEND=http",
+      "src/lib/backend/http/http.test.ts: still returns firebase for NEXT_PUBLIC_BACKEND=firebase",
+      "src/lib/backend/http/http.test.ts: returns local when unset",
+      "src/lib/backend/http/http.test.ts: has a route for every AuthService and DataService method",
+      "src/lib/backend/http/http.test.ts: uses a valid verb and a /v1/ path for every route"
+    ],
+    "output": "\n> breathband-console@0.1.0 test\n> vitest run\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.1.1 \u001b[39m\u001b[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254\u001b[39m\n\n \u001b[32m✓\u001b[39m src/lib/domain/compare-csv.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 4\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/domain/targets.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 3\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/domain/domain.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 19\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/backend/http/http.test.ts \u001b[2m(\u001b[22m\u001b[2m16 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 10\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/backend/local/local.test.ts \u001b[2m(\u001b[22m\u001b[2m27 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 75\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m5 passed\u001b[39m\u001b[22m\u001b[90m (5)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m68 passed\u001b[39m\u001b[22m\u001b[90m (68)\u001b[39m\n\u001b[2m   Start at \u001b[22m 19:21:37\n\u001b[2m   Duration \u001b[22m 285ms\u001b[2m (transform 37%, import 32%, tests 26%, worker 4%)\u001b[22m\n\n\n",
+    "outcome": "pass"
+  }
+}
