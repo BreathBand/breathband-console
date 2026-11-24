@@ -1,0 +1,81 @@
+npm test · exit 0 · the judge's tier 1 run on the change
+new tests:
+  src/lib/analysis/calibration.test.ts: recovers the known A100 and midline within 0.5% of A100
+  src/lib/analysis/calibration.test.ts: returns exactly 3 peaks and 3 troughs, the most extreme ones, in time order
+  src/lib/analysis/calibration.test.ts: puts the calibrated recording's top-3 peaks 100% of max above its bottom-3 troughs
+  src/lib/analysis/calibration.test.ts: works at 10 Hz too
+  src/lib/analysis/calibration.test.ts: returns null for a two-breath recording
+  src/lib/analysis/calibration.test.ts: returns null for an empty or flat recording
+  src/lib/analysis/calibration.test.ts: maps (signal - M) / A100 x 100
+  src/lib/analysis/calibration.test.ts: rejects a non-positive or non-finite scale
+  src/lib/analysis/calibration.test.ts: gives A100 = max - min and M = (max + min) / 2, marked approximate
+  src/lib/analysis/calibration.test.ts: maps the legacy extremes to +/-50% of max
+  src/lib/analysis/calibration.test.ts: is re-exported from the analysis index
+  src/lib/analysis/config-additions.test.ts: calibrates from the 3 highest peaks and the 3 lowest troughs
+  src/lib/analysis/config-additions.test.ts: keeps the new names out of the open group
+  src/lib/analysis/filter.test.ts: reads the cutoff and order from FIXED_CONSTANTS.lowPassFilter
+  src/lib/analysis/filter.test.ts: has unity gain at DC in every section
+  src/lib/analysis/filter.test.ts: rejects a cutoff at or above Nyquist and a bad sample rate or order
+  src/lib/analysis/filter.test.ts: matches the analytic zero-phase gain for ${frequencyHz} Hz at ${sampleRateHz} Hz
+  src/lib/analysis/filter.test.ts: matches the analytic gain for an odd order too
+  src/lib/analysis/filter.test.ts: does not move the peaks of a 0.1 Hz sine by more than one sample at ${sampleRateHz} Hz
+  src/lib/analysis/filter.test.ts: returns a new array of the input's length and leaves the input alone
+  src/lib/analysis/filter.test.ts: passes a constant through unchanged, edges included
+  src/lib/analysis/filter.test.ts: handles empty, one-sample and short inputs
+  src/lib/analysis/filter.test.ts: is re-exported from the analysis index
+  src/lib/analysis/transitions.test.ts: finds 35 alternating transitions starting with a peak
+  src/lib/analysis/transitions.test.ts: places each within one sample of 5 k seconds with levels of +/-3
+  src/lib/analysis/transitions.test.ts: ignores a ${type} ripple just under the configured prominence
+  src/lib/analysis/transitions.test.ts: detects a ${type} ripple just over the configured prominence
+  src/lib/analysis/transitions.test.ts: takes a custom prominence from the options
+  src/lib/analysis/transitions.test.ts: keeps only the higher of two peaks closer than transitionMinSpacingS
+  src/lib/analysis/transitions.test.ts: keeps both when the spacing allows it
+  src/lib/analysis/transitions.test.ts: keeps only the lower of two troughs closer than transitionMinSpacingS
+  src/lib/analysis/transitions.test.ts: leaves one peak after filtering two close peaks
+  src/lib/analysis/transitions.test.ts: keeps only the higher of two peaks left next to each other
+  src/lib/analysis/transitions.test.ts: keeps only the lower of two troughs left next to each other
+  src/lib/analysis/transitions.test.ts: alternates strictly on the ${name} golden
+  src/lib/analysis/transitions.test.ts: alternates strictly on the ${group} ${name} demo
+  src/lib/analysis/transitions.test.ts: keeps every level within the artifact limit on the ${group} lost-then-recovered demo
+  src/lib/analysis/transitions.test.ts: gives the same transitions with single-sample +/-250% spikes added
+  src/lib/analysis/transitions.test.ts: skips non-finite samples and returns nothing when every sample is an artifact
+  src/lib/analysis/transitions.test.ts: finds nothing inside a 10 s flat hold and leaves the transitions around it unchanged
+  src/lib/analysis/transitions.test.ts: is re-exported from the analysis index
+
+
+> breathband-console@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254[39m
+
+ [32m✓[39m src/lib/domain/format-dates.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/lib/download.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/lib/domain/coaching-calendar.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/domain/group.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/synth-calibration.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/domain/domain.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m src/lib/domain/trends-buckets.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/backend/http/http.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/app/cloud/trends/compare-table.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/components/chartTable.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/lib/dockerSmoke.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 119[2mms[22m[39m
+ [32m✓[39m src/lib/domain/compare-csv.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/domain/total-score.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/domain/targets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/contract.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m src/lib/domain/helpers-misc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config-additions.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 94[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/calibration.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/filter.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/transitions.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/synth.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 65[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m23 passed[39m[22m[90m (23)[39m
+[2m      Tests [22m [1m[32m283 passed[39m[22m[90m (283)[39m
+[2m   Start at [22m 01:21:49
+[2m   Duration [22m 444ms[2m (transform 36%, import 31%, tests 26%, worker 6%)[22m
+
+
