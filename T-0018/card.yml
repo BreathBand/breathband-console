@@ -1,0 +1,117 @@
+id: T-0018
+title: Tests for untested domain helpers
+type: chore
+source: prompt
+description: >-
+  Several exported helpers in src/lib/domain and src/lib/download.ts have no
+  direct test. The existing tests are src/lib/domain/domain.test.ts,
+  compare-csv.test.ts and targets.test.ts, and none of them imports these:
+
+  - group.ts, which has no test file at all: pacerAt (group.ts:12), pacerPhase
+  across several switches (group.ts:23), pacerValue (group.ts:37), pacerCue
+  (group.ts:42), liveRead (group.ts:57), formatLag (group.ts:68), formatDepth
+  (group.ts:74), describeGroupAverage (group.ts:83) and describePacer
+  (group.ts:88). These drive the coach's live group view.
+
+  - format.ts: formatSessionDate (format.ts:10), formatDay (format.ts:21),
+  formatLongDay (format.ts:30) and formatTime (format.ts:40).
+
+  - coaching.ts: isOpen (coaching.ts:52), the dueText branches "Due today", "Due
+  tomorrow" and "Was due N days ago" (coaching.ts:68-74; domain.test.ts:169,175
+  cover only two), timeAgo (coaching.ts:118), dayKey (coaching.ts:131) and
+  lastDays (coaching.ts:137).
+
+  - activity.ts: daysAgoText (activity.ts:89).
+
+  - trends.ts: rangeLabel and its fallback (trends.ts:19), inPeriod with offset
+  1 (trends.ts:22), the periodStats fields best, weakest, openCount, rateOutside
+  and perWeek (trends.ts:68-97), bucketAverage (trends.ts:177) and bucketRate
+  (trends.ts:183). bucketAverage and bucketRate feed the Compare chart.
+
+  - scores.ts: legacyBand at its 70 and 50 thresholds (scores.ts:38-40) and
+  isLegacyScores (scores.ts:9).
+
+  - download.ts: downloadText (download.ts:2) and slug (download.ts:14).
+
+  This card adds new test files only and changes no source.
+acceptance:
+  - id: A1
+    text: New src/lib/domain/group.test.ts covers every group.ts helper listed.
+      pacerAt switches at atSec inclusive. pacerPhase adds π per half cycle
+      across two pacer switches, given out of order. pacerValue is -1 at t = 0
+      and +1 after one half cycle. pacerCue gives 'in' with the full half cycle
+      left at t = 0 and 'out' just after a half cycle. liveRead covers
+      'settling', 'shallow' (depth below -33), 'late' and 'early' (strictly
+      beyond half / 4) and 'with' exactly at half / 4. formatLag covers +, − and
+      ± with one decimal. formatDepth covers + and − and ±0%.
+      describeGroupAverage covers null giving '–' and a number going through
+      formatScore. describePacer covers no switch and one switch.
+    verify: unit
+  - id: A2
+    text: New src/lib/domain/format-dates.test.ts covers formatSessionDate,
+      formatDay (with and without the weekday), formatLongDay and formatTime,
+      using the explicit locale 'en-GB'. Dates are built with local-time
+      constructors (new Date(2026, 10, 8, 7, 36)), so the result doesn't depend
+      on the machine's time zone. New src/lib/domain/coaching-calendar.test.ts
+      covers isOpen for all five statuses, the three untested dueText branches,
+      timeAgo at 'just now', minutes, hours, 'yesterday' and days, dayKey for a
+      Date and an ISO string, and lastDays (count, oldest first, each at local
+      noon, ending today).
+    verify: unit
+  - id: A3
+    text: New src/lib/domain/trends-buckets.test.ts covers rangeLabel for a listed
+      range and the '<n> days' fallback, and inPeriod with offset 0 and 1 (start
+      inclusive, end exclusive). It checks periodStats best, weakest, openCount,
+      rateOutside and perWeek on a small hand-built list. bucketAverage and
+      bucketRate return null for an empty bucket and a 1-decimal mean otherwise,
+      and bucketRate ignores paced sessions and null rates. New
+      src/lib/domain/helpers-misc.test.ts covers daysAgoText (0, 1, n),
+      legacyBand at 70, 69.9, 50 and 49.9, and isLegacyScores for legacy,
+      transition and null scores.
+    verify: unit
+  - id: A4
+    text: "New src/lib/download.test.ts covers slug: 'Alex Morgan' gives
+      'alex-morgan', accents are stripped by NFKD, underscores and runs of
+      spaces become one '-', and an all-punctuation name gives 'athlete'. It
+      covers downloadText without jsdom, by stubbing document and
+      URL.createObjectURL / revokeObjectURL with vi.stubGlobal and vi.spyOn and
+      using fake timers. It checks the anchor's href and download, one click,
+      the anchor removed, the Blob type (the default 'text/csv;charset=utf-8'
+      and a passed type), and the object URL revoked only after the timer runs.
+      Stubs are restored after each test."
+    verify: unit
+  - id: A5
+    text: "The diff adds only the six new test files: no source file and no existing
+      test changes. npm run test passes with TZ=UTC and with
+      TZ=Pacific/Auckland, and npm run lint and typecheck pass."
+    verify: unit
+out_of_scope:
+  - Fixing any helper. Odd behaviour found while testing is reported in the PR
+    rather than asserted or changed, for example formatDepth(-0.4) giving '−0%'
+    while formatLag(-0.04) gives '±0.0 s', describePacer dropping a switch back
+    to the first pacer, and formatLongDay's JSDoc saying 'Sun 8 Nov 2026' while
+    en-GB gives 'Sun, 8 Nov 2026'
+  - combineTransitionScores and the Total Breath Score (B1-6)
+  - src/lib/domain/waveform.ts and anything under src/lib/analysis (B1-1 to B1-4)
+  - Hooks (useLoad, useElementWidth), src/lib/backend/** and logic inside
+    src/app/** (later cards)
+  - Adding jsdom or any test-environment dependency
+touches:
+  - src/lib/domain/group.test.ts
+  - src/lib/domain/format-dates.test.ts
+  - src/lib/domain/coaching-calendar.test.ts
+  - src/lib/domain/trends-buckets.test.ts
+  - src/lib/domain/helpers-misc.test.ts
+  - src/lib/download.test.ts
+pages: []
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - import Appendix constants from src/lib/analysis/config.ts (none are expected
+    here)
+  - no source changes; tests describe today's behaviour
+  - static export only
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-24
