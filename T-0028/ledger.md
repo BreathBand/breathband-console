@@ -44,3 +44,4 @@
 - 2026-11-24 06:29 flagged: new_dependency: package.json adds @playwright/test
 - 2026-11-24 06:29 asked: protected_path: package.json — changes package.json scripts (the commands the checks run)
 - 2026-11-24 06:29 asked: protected_path: package.json — changes package.json scripts (the commands the checks run)
+- 2026-11-24 06:33 answered: allowed — package.json: adds only the e2e script, check and every existing script unchanged; and the card's named devDependency @playwright/test pinned exactly at 1.65.1 (lockfile +46: playwright, playwright-core, optional fsevents). Both allowed by rivetari-51, the pilot's decider
