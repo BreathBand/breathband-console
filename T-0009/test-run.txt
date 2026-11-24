@@ -1,0 +1,37 @@
+npm run test · exit 0
+new tests:
+  src/lib/dockerSmoke.test.ts: builds with the local backend and maps port 8080
+  src/lib/dockerSmoke.test.ts: names each container uniquely with the smoke prefix
+  src/lib/dockerSmoke.test.ts: checks the home page and the console sign-in page
+  src/lib/dockerSmoke.test.ts: passes a 200 HTML page with the expected text
+  src/lib/dockerSmoke.test.ts: names the path and status when the status isn't 200
+  src/lib/dockerSmoke.test.ts: rejects a page that isn't HTML
+  src/lib/dockerSmoke.test.ts: lists the expected text that is missing
+  src/lib/dockerSmoke.test.ts: finds each Next.js script once, including ones in the RSC payload
+  src/lib/dockerSmoke.test.ts: passes when any script carries the expected text
+  src/lib/dockerSmoke.test.ts: fails when no script carries the expected text
+  src/lib/dockerSmoke.test.ts: retries until the server answers
+  src/lib/dockerSmoke.test.ts: names the URL and the last error when it times out
+  src/lib/dockerSmoke.test.ts: includes the cause and handles non-errors
+  src/lib/dockerSmoke.test.ts: captures output and the exit code
+  src/lib/dockerSmoke.test.ts: explains a missing CLI
+
+
+> breathband-console@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90mC:/Users/arynb/Documents/Projects/breathband-console/.worktrees/T-0009[39m
+
+ [32m✓[39m src/lib/domain/targets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/domain/compare-csv.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/domain/domain.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m src/lib/dockerSmoke.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 93[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 75[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m67 passed[39m[22m[90m (67)[39m
+[2m   Start at [22m 19:36:37
+[2m   Duration [22m 359ms[2m (import 36%, transform 34%, tests 26%, worker 3%)[22m
+
+
