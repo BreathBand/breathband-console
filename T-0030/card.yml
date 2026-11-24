@@ -1,0 +1,63 @@
+id: T-0030
+title: Make method-C points and histogram bins exact at band edges
+type: fix
+source: prompt
+description: "Fix 1 of 2 for T-0029 (B1-3, PR #37), built on its branch
+  feature/t-0029. src/lib/analysis/paced.ts computes points as points -
+  Math.floor((e * PERCENT) / maxDeviationPct) (pacedPoints, about line 122) and
+  histogram bins as Math.floor((d - minSd) / stepSd) (histogramBin, about line
+  134). Both are a bare floor of a float quotient, so an exact band edge can
+  land just below the integer and score a point too many. Two realistic depth
+  inputs show it with today's code, at Beginner (k = 1): a user peak at 3.3%
+  against the pacer's 3% gives delta 0.2999999999999998, d 0.09999999999999994
+  and 10 points instead of 9; a user peak at 5.1% gives delta
+  2.0999999999999996, d 0.6999999999999998 and 4 points instead of 3. The
+  Appendix goldens sit exactly on band edges (e = 0.1 ... 0.9), so the points
+  must be exact there. rivetari-51, the run's decider, required this fix before
+  PR #37 goes to merge."
+acceptance:
+  - id: A1
+    text: pacedPoints and histogramBin are exact at band and bin edges. The floor is
+      taken either with a named tolerance added as a new FIXED_CONSTANTS key
+      (for example bandEdgeEpsilon = 1e-9, asserted by a new test) or with exact
+      arithmetic. There is no bare Math.floor of a float quotient left in either
+      function
+    verify: review
+  - id: A2
+    text: "A new test file src/lib/analysis/paced-edges.test.ts forms d the way
+      scorePaced does, from transition times and levels through the same
+      subtraction and division, and checks at Beginner that each j = 1..9 gives
+      exactly 10 - j points. It does this for timing at 5-5 (user = pacer + j ×
+      0.5 s and pacer - j × 0.5 s), timing at 2-2 (j × 0.2 s), depth at peaks
+      (user level 3 + j × 0.3 %) and depth at troughs (user level -3 - j × 0.3
+      %). The two inputs above are named regression cases: 3.3% gives 9 points
+      and 5.1% gives 3 points"
+    verify: unit
+  - id: A3
+    text: "The same test checks histogramBin with d formed from levels at every bin
+      edge from -1 to +1 in 0.25 steps: each edge lands in the bin whose lower
+      edge it is, and +1 lands in the last bin"
+    verify: unit
+  - id: A4
+    text: Every existing test, including the Tier A and Tier B goldens in
+      paced-golden.test.ts, passes unchanged. No golden expectation is edited;
+      npm run lint, npm run typecheck and npm test pass
+    verify: unit
+out_of_scope:
+  - Any change to the method-C formula, the goldens or their expected values
+  - Open-session metrics (B1-4)
+touches:
+  - src/lib/analysis/paced.ts
+  - src/lib/analysis/config.ts
+  - src/lib/analysis/paced-edges.test.ts
+pages: []
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - config.ts may only gain new FIXED_CONSTANTS keys; existing keys and values
+    stay
+  - no new eslint-disable or other suppressions
+risk: high
+owner: arynbht@gmail.com
+created: 2026-11-24
