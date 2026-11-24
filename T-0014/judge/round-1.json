@@ -1,0 +1,136 @@
+{
+  "task": "T-0014",
+  "round": 1,
+  "verdict": "passed",
+  "head": "58dd4863b997e19e529c5882b01cd456ea951dd1",
+  "base": "c7f8fd24c1711df6e1e7be1e462319aa016c4383",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: unverified — Screenshot at 375px is not part of the diff. The card layout looks sound: 2-column grid, name and Weakest part full width, overflow visible, nowrap reset.\n- A2: unverified — The new rules sit inside the max-width 640px block and the labels carry `hidden`, so the desktop layout should be unchanged. Needs before and after screenshots at 768px and 1280px.\n- A3: met — Each value has its column name as visible label text in the phone layout, and the thead stays in the DOM. The athlete Link and the Score component are unchanged.\n- A4: unverified — No axe run is in the diff.\n\n<details><summary>1 suggestion(s), non-blocking</summary>\n\n- Tests read source text, not rendered output `src/app/cloud/trends/compare-table.test.ts` — Add a render test of CompareRow inside a table that asserts the label text, link href and Score word.\n\n</details>\n\n_claude-sonnet-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-sonnet-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/trends/compare-table.test.ts",
+        "line": null,
+        "title": "Tests read source text, not rendered output",
+        "detail": "The tests regex over page.tsx and console.css. They would pass even if the label span were dropped from the DOM, or if a later rule such as `.table td.num` or a `[hidden]` override in globals.css stopped the labels from showing at 640px. A render test with testing-library would check that each td contains its label text and that the athlete link and Score word are present.",
+        "repro": "",
+        "fix": "Add a render test of CompareRow inside a table that asserts the label text, link href and Score word.",
+        "pattern": "01490dd51c80"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "unverified",
+        "note": "Screenshot at 375px is not part of the diff. The card layout looks sound: 2-column grid, name and Weakest part full width, overflow visible, nowrap reset."
+      },
+      {
+        "id": "A2",
+        "status": "unverified",
+        "note": "The new rules sit inside the max-width 640px block and the labels carry `hidden`, so the desktop layout should be unchanged. Needs before and after screenshots at 768px and 1280px."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "Each value has its column name as visible label text in the phone layout, and the thead stays in the DOM. The athlete Link and the Score component are unchanged."
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": "No axe run is in the diff."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 11944,
+      "costUsd": 0.0575658
+    }
+  }
+}
