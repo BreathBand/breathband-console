@@ -564,3 +564,15 @@
 .home-rate h3 {
   font: 600 var(--t-13) / 1.2 var(--f-sans);
 }
+
+@media (max-width: 560px) {
+  .home-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .home-actions .button[data-size="large"] {
+    flex: 1 1 100%;
+    padding: 0 var(--s-5);
+    white-space: normal;
+  }
+}

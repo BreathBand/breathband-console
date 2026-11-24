@@ -87,7 +87,7 @@
   align-items: center;
   gap: var(--s-4);
   font-weight: 600;
-  color: var(--c-ink-3);
+  color: var(--c-ink-2);
 }
 
 .welcome-steps li[data-state="done"] {
@@ -408,5 +408,18 @@
   .welcome-breath span {
     animation: none;
     transform: scale(0.7);
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-brand span {
+    display: none;
+  }
+  .welcome-steps {
+    gap: 4px;
+  }
+  .ws-n {
+    width: 24px;
+    height: 24px;
   }
 }

@@ -201,7 +201,7 @@
 
 .sl-tags > span[data-k="kudos"] {
   background: var(--c-in-tint);
-  color: var(--c-in);
+  color: color-mix(in srgb, var(--c-in) 70%, var(--c-ink));
 }
 
 .sl-tags > span[data-k="plan"] {
