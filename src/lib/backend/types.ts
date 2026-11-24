@@ -60,7 +60,10 @@ export type NewAssignment = Pick<
   "athleteId" | "mode" | "pacerHalfCycleSec" | "durationSec" | "target" | "dueAt" | "note"
 >;
 
-export type NewGroupSession = Pick<GroupSession, "title" | "athleteIds" | "pacerHalfCycleSec" | "durationSec">;
+/** A session as the recorder hands it over: everything but what the store assigns. */
+export type NewSession = Omit<SessionSummary, "id" | "athleteId" | "waveformPath">;
+
+export type NewGroupSession =Pick<GroupSession, "title" | "athleteIds" | "pacerHalfCycleSec" | "durationSec">;
 
 /** Where an invited athlete is: still to answer, in the session, briefly lost, or gone. */
 export type Presence = "invited" | "joined" | "reconnecting" | "left";
@@ -93,6 +96,13 @@ export interface DataService {
   getWaveform(session: SessionSummary): Promise<Waveform>;
   /** Athletes only, on their own sessions. */
   updateSessionNote(athleteId: string, sessionId: string, note: string): Promise<void>;
+  /**
+   * Athletes only, on their own data: stores a session recorded in the browser
+   * with its signal, and returns the stored summary (with its id and waveformPath).
+   */
+  saveSession(athleteId: string, session: NewSession, waveform: Waveform): Promise<SessionSummary>;
+  /** Athletes only, on their own sessions: removes the session, its signal and its comments. */
+  deleteSession(athleteId: string, sessionId: string): Promise<void>;
 
   /** Athletes the signed-in coach is linked to. */
   listAthletes(coachId: string): Promise<UserProfile[]>;

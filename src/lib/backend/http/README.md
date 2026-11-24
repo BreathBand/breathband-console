@@ -36,6 +36,8 @@ These are proposals, not a published API. They are copied from `HTTP_ROUTES`; if
 | `getSession` | `GET` | `/v1/athletes/{athleteId}/sessions/{sessionId}` |
 | `getWaveform` | `GET` | `/v1/athletes/{athleteId}/sessions/{sessionId}/waveform` |
 | `updateSessionNote` | `PUT` | `/v1/athletes/{athleteId}/sessions/{sessionId}/note` |
+| `saveSession` | `POST` | `/v1/athletes/{athleteId}/sessions` |
+| `deleteSession` | `DELETE` | `/v1/athletes/{athleteId}/sessions/{sessionId}` |
 | `listAthletes` | `GET` | `/v1/coaches/{coachId}/athletes` |
 | `listCoaches` | `GET` | `/v1/athletes/{athleteId}/coaches` |
 | `getCoachLink` | `GET` | `/v1/coach-links/{coachId}/{athleteId}` |

@@ -4,6 +4,9 @@ import { DeviceProvider } from "@/lib/device/DeviceProvider";
 import { CloudShell } from "./CloudShell";
 import "./console.css";
 import "./shell.css";
+import "./product.css";
+import "./record/record.css";
+import "./session/review.css";
 
 export const metadata: Metadata = {
   title: "BreathCloud",

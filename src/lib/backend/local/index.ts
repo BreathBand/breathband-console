@@ -252,6 +252,51 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       if (!found) throw new BackendError("not-found");
     },
 
+    // Mirrors firestore.rules (create: isSelf, athleteId == uid) and storage.rules (own waveform, < 5 MB).
+    async saveSession(athleteId, session, waveform) {
+      await delay();
+      assertIsSelf(athleteId);
+      if (!(session.durationSec > 0) || waveform.user.length === 0) throw new BackendError("invalid-input", "empty recording");
+      if (waveform.pacer && waveform.pacer.length !== waveform.user.length) {
+        throw new BackendError("invalid-input", "pacer and user signals differ in length");
+      }
+      const id = newId("s");
+      const saved: SessionSummary = {
+        ...session,
+        id,
+        athleteId,
+        waveformPath: `waveforms/${athleteId}/${id}.json.gz`,
+        note: session.note.trim().slice(0, 2000),
+      };
+      checkSessionContract(saved, waveform);
+      if (JSON.stringify(waveform).length > 5 * 1024 * 1024) throw new BackendError("invalid-input", "signal over 5 MB");
+      mutate((db) => {
+        db.sessions[athleteId] = [saved, ...(db.sessions[athleteId] ?? [])].sort((a, b) =>
+          b.startedAt.localeCompare(a.startedAt),
+        );
+        db.recordedWaveforms[saved.waveformPath] = waveform;
+      });
+      return saved;
+    },
+
+    async deleteSession(athleteId, sessionId) {
+      await delay();
+      assertIsSelf(athleteId);
+      let found = false;
+      mutate((db) => {
+        const session = db.sessions[athleteId]?.find((s) => s.id === sessionId);
+        if (!session) return;
+        found = true;
+        db.sessions[athleteId] = db.sessions[athleteId].filter((s) => s.id !== sessionId);
+        delete db.recordedWaveforms[session.waveformPath];
+        db.comments[athleteId] = (db.comments[athleteId] ?? []).filter((c) => c.sessionId !== sessionId);
+        for (const coachId of Object.keys(db.seen)) {
+          db.seen[coachId] = db.seen[coachId].filter((key) => key !== `${athleteId}/${sessionId}`);
+        }
+      });
+      if (!found) throw new BackendError("not-found");
+    },
+
     async listAthletes(coachId) {
       await delay();
       assertIsSelf(coachId);

@@ -16,7 +16,8 @@ export const SIM_SCALE = { a100: 900, midline: (STRAP_TENSION.min + STRAP_TENSIO
 const SLACK_LEVEL = 1150;
 const TIGHTEN_S = 3.5;
 const CONNECT_MS = 900;
-const CALIBRATION = { breaths: 5, inhaleS: 3, exhaleS: 4, peakPct: 48 } as const;
+/** Deep breaths of ±50 % of max with little scatter, so the simulator's calibration lands on SIM_SCALE. */
+const CALIBRATION = { breaths: 5, inhaleS: 3, exhaleS: 4, peakPct: 50, scatterPct: 0.4 } as const;
 
 const PERSONAS: Record<SimPersona, { shiftS: number; depth: number; rate: number; timingSd: number; ampSd: number }> = {
   steady: { shiftS: 0, depth: 1, rate: 1, timingSd: 0.12, ampSd: 0.25 },
@@ -168,7 +169,7 @@ export class SimulatedBand implements SignalSource {
       if (kind === "trough" && mode.left <= 1) this.mode = { kind: "rest" };
       else if (kind === "trough") this.mode = { kind: "calibrate", left: mode.left - 1 };
       const half = kind === "peak" ? CALIBRATION.inhaleS : CALIBRATION.exhaleS;
-      return { t: last.t + half, level: sign * (CALIBRATION.peakPct + 3 * this.jitter()), kind };
+      return { t: last.t + half, level: sign * (CALIBRATION.peakPct + CALIBRATION.scatterPct * this.jitter()), kind };
     }
 
     if (mode.kind === "follow" && p.rate === 1) {

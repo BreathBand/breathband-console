@@ -1,0 +1,265 @@
+/*
+ * Session review additions for method C (paced) and the Appendix's open
+ * metrics: the score hero, the inhale/exhale breakdown with on-target bars,
+ * the deviation histogram, the open metrics grid and the marker segments.
+ */
+
+.mc {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-4);
+}
+
+.mc.mc-open {
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+
+.mc-open .mc-segs {
+  grid-column: 1 / -1;
+}
+
+.mc-hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-5) var(--s-6);
+}
+
+.mc-hero .lbl {
+  font: 600 var(--t-13) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.mc-total {
+  display: block;
+  font-size: var(--t-72);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.mc-total small {
+  margin-left: 4px;
+  font-size: 0.28em;
+  letter-spacing: 0;
+  color: var(--c-ink-2);
+}
+
+.mc-hero .w {
+  display: flex;
+  align-items: center;
+  font: 600 var(--t-15) / 1.2 var(--f-sans);
+}
+
+.mc-hero .d {
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.mc-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mc-table th,
+.mc-table td {
+  padding: var(--s-3) var(--s-3) var(--s-3) 0;
+  text-align: left;
+  border-bottom: 1px solid var(--c-rule-soft);
+  white-space: nowrap;
+}
+
+.mc-table thead th {
+  padding-top: 0;
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.mc-table tbody th {
+  font-weight: 600;
+}
+
+.mc-n {
+  font: 400 var(--t-24) / 1 var(--f-display);
+  margin-right: 6px;
+}
+
+.mc-pct {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-3);
+  font-weight: 600;
+}
+
+.mc-bar {
+  width: 64px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--c-well);
+  overflow: hidden;
+}
+
+.mc-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--c-ink);
+}
+
+.mc-lean {
+  margin: var(--s-4) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--s-2);
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.mc-lean b {
+  color: var(--c-ink);
+}
+
+.mc-hist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.hist {
+  margin: 0;
+}
+
+.hist figcaption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-3);
+  font-size: var(--t-12);
+  color: var(--c-ink-2);
+  margin-bottom: var(--s-2);
+}
+
+.hist figcaption b {
+  color: var(--c-ink);
+  font-size: var(--t-13);
+}
+
+.hist-bars {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: 3px;
+  height: 56px;
+  align-items: end;
+}
+
+.hist-col {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  border-radius: var(--r-1) var(--r-1) 0 0;
+}
+
+.hist-col[data-on] {
+  background: var(--c-well);
+}
+
+.hist-col i {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--c-ink-3);
+}
+
+.hist-col[data-on] i {
+  background: var(--c-ink);
+}
+
+.hist-col small {
+  position: absolute;
+  top: 2px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font: 600 10px / 1 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.hist-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--s-1);
+  font-size: var(--t-12);
+  color: var(--c-ink-2);
+}
+
+.metric-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-5) var(--s-6);
+}
+
+.metric-grid dt {
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.metric-grid dd {
+  margin: var(--s-1) 0 0;
+  font: 400 var(--t-24) / 1.1 var(--f-display);
+}
+
+.metric-grid dd small {
+  display: block;
+  margin-top: 2px;
+  font: 500 var(--t-12) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.table.segs td b {
+  font-weight: 600;
+}
+
+.chart .target-band {
+  fill: var(--c-band);
+  opacity: 0.8;
+}
+
+.bt tr[data-missed] td {
+  color: var(--c-low);
+}
+
+@media (max-width: 1280px) {
+  .mc {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+  .mc .mc-hist {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .mc,
+  .mc.mc-open {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .mc-total {
+    font-size: var(--t-56);
+  }
+}
+
+@media print {
+  .mc {
+    grid-template-columns: 180px minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .mc-hist,
+  .mc-hero,
+  .mc-break {
+    break-inside: avoid;
+  }
+}

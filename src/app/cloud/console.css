@@ -262,23 +262,27 @@
 }
 
 /* score atoms */
+/* Score bands are graded ink, as on the site: solid for good, hollow for fair, amber for low. The word always travels with it. */
 .dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   margin-right: 5px;
-  vertical-align: 1px;
+  vertical-align: 0;
   flex: none;
-  background: var(--c-mid);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--c-ink-3);
 }
 
 .dot[data-band="ok"] {
-  background: var(--c-ok);
+  background: var(--c-ink);
+  box-shadow: none;
 }
 
 .dot[data-band="low"] {
-  background: var(--c-low);
+  background: var(--c-low-mark);
+  box-shadow: none;
 }
 
 .score {

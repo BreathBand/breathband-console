@@ -89,6 +89,17 @@ export function WaveChart({
       {ticks.map((t) => (
         <line key={t} className="grid" x1={X(t)} x2={X(t)} y1={box.y} y2={box.y + box.h} />
       ))}
+      {waveform.units === "pct-max" && (
+        <>
+          <rect className="target-band" x={box.x} width={box.w} y={Y(frame.midline + 3)} height={Math.max(0, Y(frame.midline - 3) - Y(frame.midline + 3))} />
+          <text className="lane-lbl" x={pad.l - 8} y={Y(frame.midline + 3) + 4} textAnchor="end">
+            +3%
+          </text>
+          <text className="lane-lbl" x={pad.l - 8} y={Y(frame.midline - 3) + 4} textAnchor="end">
+            −3%
+          </text>
+        </>
+      )}
       <line className="midline" x1={box.x} x2={box.x + box.w} y1={midY} y2={midY} />
       {pacer && <path className="pacer" d={pacer} strokeWidth={span <= 70 ? 7 : 4} />}
       <path className="trace-in" d={user} clipPath={`url(#${clipIn})`} />
@@ -101,12 +112,16 @@ export function WaveChart({
           </text>
         </g>
       ))}
-      <text className="lane-lbl" x={pad.l - 8} y={box.y + 12} textAnchor="end">
-        IN
-      </text>
-      <text className="lane-lbl" x={pad.l - 8} y={box.y + box.h - 3} textAnchor="end">
-        OUT
-      </text>
+      {waveform.units !== "pct-max" && (
+        <>
+          <text className="lane-lbl" x={pad.l - 8} y={box.y + 12} textAnchor="end">
+            IN
+          </text>
+          <text className="lane-lbl" x={pad.l - 8} y={box.y + box.h - 3} textAnchor="end">
+            OUT
+          </text>
+        </>
+      )}
       {ticks.map((t) => (
         <text key={t} x={X(t)} y={height - 5} textAnchor="middle">
           {formatDuration(t)}
@@ -125,12 +140,15 @@ export function DeviationStrip({
   t1,
   width,
   halfCycle,
+  depthMax = 25,
 }: {
   breaths: BreathDeviation[];
   t0: number;
   t1: number;
   width: number;
   halfCycle: number;
+  /** Where the depth lane's bars reach full height: 25 (% of the pacer's depth) or, for method C, % of max. */
+  depthMax?: number;
 }) {
   const laneH = 28;
   const gap = 8;
@@ -142,7 +160,7 @@ export function DeviationStrip({
 
   const lanes = [
     { label: "Timing", y0: 0, max: Math.max(0.4, halfCycle * 0.25), unit: " s", in: "inLag", out: "outLag", words: ["late", "early"] },
-    { label: "Depth", y0: laneH + gap, max: 25, unit: "%", in: "inDepth", out: "outDepth", words: ["deeper", "shallower"] },
+    { label: "Depth", y0: laneH + gap, max: depthMax, unit: "%", in: "inDepth", out: "outDepth", words: ["deeper", "shallower"] },
   ] as const;
 
   return (

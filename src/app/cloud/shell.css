@@ -10,6 +10,8 @@
   min-height: 100dvh;
   display: grid;
   grid-template-columns: var(--side) minmax(0, 1fr);
+  /* The carbon column runs the full height of a long page, not just the sticky sidebar's. */
+  background: linear-gradient(to right, var(--c-chrome) var(--side), var(--c-ground) var(--side));
 }
 
 .app-main {
@@ -417,6 +419,7 @@
   .app {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: auto 1fr;
+    background: var(--c-ground);
   }
   .app-main {
     padding-bottom: calc(68px + env(safe-area-inset-bottom));
