@@ -30,10 +30,12 @@ Light values are in `:root`. Dark values are in `@media (prefers-color-scheme: d
 | --- | --- | --- | --- |
 | `--c-chrome` | `#1d2228` | `#14181c` | Top bar background; tooltip background (`.viz-tip`); landing hero background (`auth.css`) |
 | `--c-chrome-2` | `#272d34` | `#1f252b` | Raised items on the chrome: current nav link, athlete picker, chrome buttons |
+| `--c-chrome-3` | `#3a434d` | – | Avatar background inside the athlete picker (`.picker .avatar`) |
 | `--c-chrome-rule` | `#353c45` | `#2e353d` | Lines and borders on the chrome |
 | `--c-chrome-ink` | `#eef0f2` | – | Primary text on the chrome |
 | `--c-chrome-ink-2` | `#a6afb9` | – | Secondary text on the chrome |
 | `--c-live` | `#4fc387` | – | "Live/synced" dot in the top bar (`.live`) and the accent on the landing page's `.bc-right-place` |
+| `--c-tip-warn` | `#f3c27a` | – | Out-of-target text in the chart tooltip (`.viz-tip-out`) |
 
 **Surfaces**
 
@@ -41,6 +43,7 @@ Light values are in `:root`. Dark values are in `@media (prefers-color-scheme: d
 | --- | --- | --- | --- |
 | `--c-ground` | `#eef0f2` | `#0f1215` | Page background (`body`) |
 | `--c-pane` | `#ffffff` | `#181c21` | Panes, cards, inputs, ghost buttons |
+| `--c-paper` | `#ffffff` | – | Page background in print (`@media print` `body, .console-body` in `console.css`) |
 | `--c-rule` | `#d9dde2` | `#2e353d` | Pane borders, input borders, dividers |
 | `--c-rule-soft` | `#e7eaed` | `#242a31` | Table row lines, list dividers, skeleton bars, progress track |
 | `--c-well` | `#f5f6f8` | `#1e2329` | Recessed areas: hover rows, chips, plan cards, comment bubbles |
@@ -161,16 +164,18 @@ All of these are defined on `.site`. The site is dark only (`color-scheme: dark`
 
 **Size scale** (`globals.css`):
 
-| Token | Value |
-| --- | --- |
-| `--t-12` | `12px` |
-| `--t-13` | `13px` |
-| `--t-15` | `15px` |
-| `--t-17` | `17px` |
-| `--t-20` | `20px` |
-| `--t-24` | `24px` |
-| `--t-28` | `28px` |
-| `--t-40` | `40px` |
+| Token | Value | Use |
+| --- | --- | --- |
+| `--t-10` | `10px` | Small avatar initials (`.avatar.sm`) and day-cell figures (`.cell b`) in `console.css` |
+| `--t-12` | `12px` | |
+| `--t-13` | `13px` | |
+| `--t-15` | `15px` | |
+| `--t-17` | `17px` | |
+| `--t-20` | `20px` | |
+| `--t-24` | `24px` | |
+| `--t-28` | `28px` | |
+| `--t-36` | `36px` | Headline numbers (`.hero .n, .stat .n`) in `console.css` |
+| `--t-40` | `40px` | |
 
 **Base text styles** (`globals.css`, `font` shorthand as written):
 
@@ -190,7 +195,7 @@ All of these are defined on `.site`. The site is dark only (`color-scheme: dark`
 | `.table th` | `400 var(--t-12) / 1.2 var(--f-cond)` | |
 | `.table td` | `400 var(--t-15) / 1.2 var(--f-sans)` | `td.sub`: `400 var(--t-13) / 1.2 var(--f-cond)` |
 
-Console-specific sizes outside the scale (`src/app/cloud/console.css`): headline numbers `.hero .n, .stat .n` use `600 36px / 1 var(--f-sans)` with `letter-spacing: -0.02em`. The brand in the top bar is `600 var(--t-17) / 1 var(--f-sans)`. The landing hero `h1` in `src/app/cloud/auth.css` is `600 34px / 1.1 var(--f-sans)`, `var(--t-40)` from 720px and `44px` from 1100px.
+Console-specific sizes (`src/app/cloud/console.css`): headline numbers `.hero .n, .stat .n` use `600 var(--t-36) / 1 var(--f-sans)` with `letter-spacing: -0.02em`. The brand in the top bar is `600 var(--t-17) / 1 var(--f-sans)`. Outside the scale, the landing hero `h1` in `src/app/cloud/auth.css` is `600 34px / 1.1 var(--f-sans)`, `var(--t-40)` from 720px and `44px` from 1100px.
 
 ### Public site
 
@@ -235,6 +240,11 @@ Console-specific sizes outside the scale (`src/app/cloud/console.css`): headline
 | `--s-4` | `12px` | `--s-9` | `48px` |
 | `--s-5` | `16px` | | |
 
+| Spacing token off the scale | Value | Use |
+| --- | --- | --- |
+| `--s-rail-y` | `9px` | Vertical padding of session rail links (`.rail-list a`) |
+| `--s-chrome` | `10px` | Gap in the top bar brand and athlete picker (`.brand`, `.picker`); horizontal padding of session rail links (`.rail-list a`) |
+
 | Layout token | Value | Where | Use |
 | --- | --- | --- | --- |
 | `--page-max` | `1240px` | `globals.css` | `.container` max width; `.bc-wrap` and `.bc-bar-row` in `auth.css` |
@@ -246,9 +256,13 @@ Common patterns: `.container` pads `var(--s-7) var(--s-5)`, `.pane-pad` / `.card
 
 | Radius token (`globals.css`) | Value | Use |
 | --- | --- | --- |
+| `--r-hair` | `2px` | Scale cells (`.scale i`), the pacer swatch (`.sw-pacer`), skeleton bars (`.skeleton span`) |
+| `--r-bar` | `3px` | Progress bar track (`.progress-bar`), 14-day grid cells (`.cell`) |
 | `--r-1` | `4px` | Chips and flags (`.chip`, `.flag`), scrubber |
 | `--r-2` | `6px` | Panes, cards, buttons, fields, segmented controls, nav links, bubbles |
+| `--r-badge` | `10px` | Count badges (`.count`, `.tab-count`) |
 | `--r-sheet` | `12px` | Screenshot frames on the landing page (`.bc-shot img` in `auth.css`) |
+| `--r-chip` | `18px` | Athlete pick chips in the squad form and on Compare (`.chip-pick`) |
 
 ### Public site: `src/app/(site)/site.css`
 
@@ -413,7 +427,7 @@ These are facts about the current code. Nothing here is a request to change it.
 - **Breath colours.** Console inhale/exhale are `--c-in` `#d0283e` / `--c-out` `#1e63d0` (light) and `#f06478` / `#6c9ef2` (dark). Site inhale/exhale are `--in` `#e8644f` / `--out` `#6f97e0` on carbon and `--in-ink` `#b33f2c` / `--out-ink` `#2f5bb0` on light.
 - **Low-score amber.** Console `--c-low` is `#b7701a` (light) / `#e0a050` (dark). Site `--amber` is `#d99a3a`.
 - **Action colour.** The console has one teal action colour (`--c-action`). The site has none: primary buttons are bone (`--bone`) pills with carbon text.
-- **Shape.** Console radii are `--r-1` `4px`, `--r-2` `6px`, `--r-sheet` `12px`, and buttons are `--r-2` rectangles with `min-height: 44px`. Site radii are `--radius` `8px` and `--radius-lg` `16px`, plus `999px` pills for buttons, inputs and nav links, and `22px` for `.h-inst` and `.h-card`. The site's primary button is `min-height: 48px`.
+- **Shape.** Console radii are `--r-hair` `2px`, `--r-bar` `3px`, `--r-1` `4px`, `--r-2` `6px`, `--r-badge` `10px`, `--r-sheet` `12px` and `--r-chip` `18px`, and buttons are `--r-2` rectangles with `min-height: 44px`. Site radii are `--radius` `8px` and `--radius-lg` `16px`, plus `999px` pills for buttons, inputs and nav links, and `22px` for `.h-inst` and `.h-card`. The site's primary button is `min-height: 48px`.
 - **Focus.** Console: `outline: 2px solid var(--c-action)` (`globals.css`). Site: `outline: 2px solid var(--focus)`, where `--focus` is `#b9cdf3`, or `#2f5bb0` inside `.s-light` (`src/app/(site)/site.css`).
 - **Same name, different value.** `--ease-out` is `cubic-bezier(0.2, 0, 0, 1)` in `globals.css` and `cubic-bezier(0.23, 1, 0.32, 1)` on `.site` in `site.css`. Inside `.site` the site value applies.
 - **Same value, separate tokens.** The content width is `1240px` on both surfaces, as `--page-max` (`globals.css`) and `--wrap` (`site.css`). The site gutter (`--gutter`) is `16px`, widening to `32px` at 720px; the console uses `--s-5` (`16px`) for side padding.
@@ -431,17 +445,6 @@ These are facts about the current code. Nothing here is a request to change it.
 
 | File | Selector | Value |
 | --- | --- | --- |
-| `src/app/cloud/console.css` | `.picker .avatar` | `background: #3a434d` |
-| `src/app/cloud/console.css` | `.viz-tip-out` | `color: #f3c27a` |
-| `src/app/cloud/console.css` | `@media print` `body, .console-body` | `background: #fff` |
-| `src/app/cloud/console.css` | `.hero .n, .stat .n` | `font: 600 36px / 1 var(--f-sans)` (36px is not on the `--t-*` scale) |
-| `src/app/cloud/console.css` | `.chart text` | `font-size: 12px` (same value as `--t-12`) |
-| `src/app/cloud/console.css` | `.avatar.sm`; `.cell b` | `font-size: 10px`; `font: 600 10px / 1 var(--f-cond)` |
-| `src/app/cloud/console.css` | `.scale i`, `.sw-pacer`, `.skeleton span` | `border-radius: 2px` |
-| `src/app/cloud/console.css` | `.progress-bar`, `.cell` | `border-radius: 3px` |
-| `src/app/cloud/console.css` | `.count`, `.tab-count` | `border-radius: 10px` |
-| `src/app/cloud/console.css` | `.chip-pick` | `border-radius: 18px` |
-| `src/app/cloud/console.css` | `.brand`, `.picker`; `.picker`; `.rail-list a` | `gap: 10px`; `padding: 0 12px`; `padding: 9px 10px` (pixel spacing beside the `--s-*` scale) |
 | `src/app/cloud/auth.css` | `.bc-hero h1` | `font: 600 34px / 1.1 var(--f-sans)`, `font-size: 44px` from 1100px |
 | `src/app/cloud/auth.css` | `.bc-trace-axis` | `font: 600 10px var(--f-cond)` |
 | `src/app/cloud/auth.css` | `.bc-tag` | `border-radius: 999px` |
@@ -456,7 +459,7 @@ Control heights (`44px`, `40px`, `36px`) are written as pixel values in `globals
 
 ### Print values that differ from the screen tokens
 
-In `src/app/cloud/report/report.css` the print overrides use different values from the light tokens in `globals.css` for five tokens: `--c-rule` `#c9ced4` (screen `#d9dde2`), `--c-rule-soft` `#e2e5e8` (screen `#e7eaed`), `--c-ink-2` `#4f5761` (screen `#5a626c`), `--c-band` `#eef0f2` (screen `#f1f3f5`) and `--c-bar` `#9aa3ad` (screen `#b7bec6`). The print block does not override `--c-chrome*`, `--c-live`, `--c-action-pressed`, `--c-danger`, `--c-in-tint`, `--c-out-tint`, `--c-series-*` or `--shadow-float`.
+In `src/app/cloud/report/report.css` the print overrides use different values from the light tokens in `globals.css` for five tokens: `--c-rule` `#c9ced4` (screen `#d9dde2`), `--c-rule-soft` `#e2e5e8` (screen `#e7eaed`), `--c-ink-2` `#4f5761` (screen `#5a626c`), `--c-band` `#eef0f2` (screen `#f1f3f5`) and `--c-bar` `#9aa3ad` (screen `#b7bec6`). The print block does not override `--c-chrome*`, `--c-live`, `--c-tip-warn`, `--c-paper`, `--c-action-pressed`, `--c-danger`, `--c-in-tint`, `--c-out-tint`, `--c-series-*` or `--shadow-float`.
 
 ### Hard-coded values on the site (instead of a token)
 
@@ -472,7 +475,7 @@ In `src/app/cloud/report/report.css` the print overrides use different values fr
 | `.s-phone`; `.s-phone img` | `#050505`, `#3a3632`; `#f7f8f6` | |
 | `.s-window` | `background: #eef0ef` | |
 | `.s-input::placeholder` | `#8b867e` | |
-| `.s-wl-error` | `color: #f2c27a` | close to the console's `.viz-tip-out` `#f3c27a` |
+| `.s-wl-error` | `color: #f2c27a` | close to the console's `--c-tip-warn` `#f3c27a` |
 | `.h-tick`; `.h-tick-maj`; `.h-guide` | `#3a3632`; `#7d776e`; `#4a4540` | |
 | `.h-gf`; `.h-gm`; `.h-mid`, `.h-nowline` | `#24221f`; `#302d29`; `#5b564f` | |
 | `.h-pc`, `.h-k-pc` | `#948e85` | |

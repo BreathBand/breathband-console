@@ -12,14 +12,17 @@
   /* chrome (top bar) */
   --c-chrome: #1d2228;
   --c-chrome-2: #272d34;
+  --c-chrome-3: #3a434d;
   --c-chrome-rule: #353c45;
   --c-chrome-ink: #eef0f2;
   --c-chrome-ink-2: #a6afb9;
   --c-live: #4fc387;
+  --c-tip-warn: #f3c27a;
 
   /* surfaces */
   --c-ground: #eef0f2;
   --c-pane: #ffffff;
+  --c-paper: #ffffff;
   --c-rule: #d9dde2;
   --c-rule-soft: #e7eaed;
   --c-well: #f5f6f8;
@@ -69,6 +72,7 @@
   --f-sans: var(--font-plex), "IBM Plex Sans", system-ui, sans-serif;
   --f-cond: var(--font-plex-condensed), "IBM Plex Sans Condensed", var(--f-sans);
   --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --t-10: 10px;
   --t-12: 12px;
   --t-13: 13px;
   --t-15: 15px;
@@ -76,12 +80,17 @@
   --t-20: 20px;
   --t-24: 24px;
   --t-28: 28px;
+  --t-36: 36px;
   --t-40: 40px;
 
   /* shape + space */
+  --r-hair: 2px;
+  --r-bar: 3px;
   --r-1: 4px;
   --r-2: 6px;
+  --r-badge: 10px;
   --r-sheet: 12px;
+  --r-chip: 18px;
   --s-1: 4px;
   --s-2: 6px;
   --s-3: 8px;
@@ -91,6 +100,8 @@
   --s-7: 24px;
   --s-8: 32px;
   --s-9: 48px;
+  --s-rail-y: 9px;
+  --s-chrome: 10px;
   --page-max: 1240px;
   --rail: 300px;
 
