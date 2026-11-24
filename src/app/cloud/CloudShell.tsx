@@ -9,6 +9,7 @@ import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { resetBrowserDb } from "@/lib/backend/local/db";
 import { AthletePicker } from "./AthletePicker";
 import { CloudLanding } from "./CloudLanding";
+import { trackTopbarHeight } from "./topbarHeight";
 
 /** Pages for signed-out visitors. They render without the app chrome and bring their own header. */
 const PUBLIC_PATHS = ["/cloud/login/", "/cloud/signup/", "/cloud/reset/"];
@@ -93,7 +94,7 @@ export function CloudShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="app">
-      <header className="topbar">
+      <header className="topbar" ref={trackTopbarHeight}>
         <div className="topbar-row">
           <Link href="/cloud/" className="brand">
             <Mark />
