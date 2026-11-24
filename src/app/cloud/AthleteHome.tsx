@@ -20,6 +20,11 @@ import type { Workspace } from "./AthleteWorkspace";
 const DAY = 86_400_000;
 const TREND_DAYS = 56;
 
+/** Flag texts are written for a coach ("their target"); on the athlete's own home they read as "your". */
+export function ownWords(text: string): string {
+  return text.replace(/\btheir\b/g, "your").replace(/\bThey\b/g, "You").replace(/\bthey\b/g, "you");
+}
+
 function greeting(now: Date): string {
   const h = now.getHours();
   return h < 5 ? "Good evening" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
@@ -77,7 +82,7 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
           {a.flags.map((f) => (
             <li key={f.kind} data-kind={f.kind}>
               <Icon name="info" size={18} />
-              {f.text}
+              {ownWords(f.text)}
             </li>
           ))}
         </ul>

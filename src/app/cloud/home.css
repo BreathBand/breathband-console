@@ -30,6 +30,7 @@
   align-items: center;
   padding: var(--s-6) var(--s-7);
   border-radius: calc(var(--r-sheet) + 4px);
+  border: 1px solid var(--c-rule);
   background: var(--c-ground);
   color: var(--c-ink);
 }
