@@ -1,0 +1,125 @@
+{
+  "task": "T-0030",
+  "round": 1,
+  "verdict": "passed",
+  "head": "b78435b31396625bdf9888cd8991ec63cde42ec1",
+  "base": "5dbdae75be427c24dcbed3d0bf6bee8027307919",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "high",
+    "effective": "high",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — Both pacedPoints and histogramBin now floor through floorAtEdge(quotient + FIXED_CONSTANTS.bandEdgeEpsilon). bandEdgeEpsilon = 1e-9 is a new FIXED_CONSTANTS key, and a new test asserts it. No bare Math.floor of a quotient is left in either function.\n- A2: met — paced-edges.test.ts goes through scorePaced, using transition times and levels. It covers 5-5 at ±j×0.5 s, 2-2 at ±j×0.2 s, peaks at 3+j×0.3 % and troughs at -3-j×0.3 %, each expecting 10-j points. It also includes the named 3.3 % → 9 and 5.1 % → 3 regression cases.\n- A3: met — Edges -1..+1 in 0.25 steps are built from levels. Each one is checked directly against histogramBin and also through the scorePaced histogram. The expected bin is min(i, last), so +1 lands in the last bin.\n- A4: unverified — No existing tests or goldens are touched, and config.ts only gains a key. The lint, typecheck and test results were not part of this review, so pass/fail comes from the deterministic check stage.\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "Both pacedPoints and histogramBin now floor through floorAtEdge(quotient + FIXED_CONSTANTS.bandEdgeEpsilon). bandEdgeEpsilon = 1e-9 is a new FIXED_CONSTANTS key, and a new test asserts it. No bare Math.floor of a quotient is left in either function."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "paced-edges.test.ts goes through scorePaced, using transition times and levels. It covers 5-5 at ±j×0.5 s, 2-2 at ±j×0.2 s, peaks at 3+j×0.3 % and troughs at -3-j×0.3 %, each expecting 10-j points. It also includes the named 3.3 % → 9 and 5.1 % → 3 regression cases."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "Edges -1..+1 in 0.25 steps are built from levels. Each one is checked directly against histogramBin and also through the scorePaced histogram. The expected bin is min(i, last), so +1 lands in the last bin."
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": "No existing tests or goldens are touched, and config.ts only gains a key. The lint, typecheck and test results were not part of this review, so pass/fail comes from the deterministic check stage."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 12614,
+      "costUsd": 0.111536
+    }
+  }
+}
