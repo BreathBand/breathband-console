@@ -1,0 +1,57 @@
+id: T-0011
+title: Add a documented http backend adapter stub for a future Cloud Run API
+type: feature
+source: prompt
+description: "Redraft of T-0008 with the owner's answer (2026-11-24): the stub
+  is documented through exported route data plus a README, not a header comment,
+  because quality.no-new-comments is on. Decision 2 (2026-11-23): BreathCloud
+  runs on the local adapter for now, and the backend seam gets an http adapter
+  stub with the same interface for a future Cloud Run API. Today
+  src/lib/backend/index.ts:12-17 chooses only between local and firebase,
+  src/lib/backend/types.ts:197 types kind as 'local' | 'firebase', and
+  src/lib/backend/firebase/index.ts:29-34 is the pattern for a stub whose
+  factory throws with a pointer to its file."
+acceptance:
+  - id: A1
+    text: src/lib/backend/http/index.ts exports createHttpBackend(), which throws an
+      Error naming NEXT_PUBLIC_BACKEND=http and pointing to
+      src/lib/backend/http/index.ts
+    verify: unit
+  - id: A2
+    text: src/lib/backend/http/index.ts exports HTTP_ROUTES with one entry (an HTTP
+      verb and a /v1/ path) for every AuthService and DataService method in
+      src/lib/backend/types.ts, and a new test checks its keys against the local
+      backend's auth and data methods
+    verify: unit
+  - id: A3
+    text: "src/lib/backend/http/README.md explains the stub: the proposed REST route
+      for each method (matching HTTP_ROUTES), that auth for the future Cloud Run
+      API is an open decision, that the stub makes no network calls, and how to
+      activate it later; no code comments are added"
+    verify: review
+  - id: A4
+    text: Backend['kind'] includes 'http'; backendKind() returns 'http' for
+      NEXT_PUBLIC_BACKEND=http, 'firebase' for firebase and 'local' otherwise;
+      createBackend('http') throws the stub's error and makes no fetch call. All
+      of this is shown in a new test file src/lib/backend/http/http.test.ts
+    verify: unit
+  - id: A5
+    text: .env.example lists http as an allowed NEXT_PUBLIC_BACKEND value plus a
+      commented placeholder for the future API base URL; a new test reads
+      .env.example and asserts both lines are present
+    verify: unit
+out_of_scope:
+  - Implementing any HTTP call or server
+  - Firebase adapter, firebase/ rules, src/lib/backend/local/**
+touches:
+  - src/lib/backend/http/**
+  - src/lib/backend/index.ts
+  - src/lib/backend/types.ts
+  - .env.example
+pages: []
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+risk: high
+owner: arynbht@gmail.com
+created: 2026-11-24
