@@ -5,6 +5,8 @@
 // and bump SCORING_VERSION when the scoring formulas change so old sessions
 // can be told apart (and rescored later if needed).
 
+import type { SkillLevel } from "@/lib/analysis/config";
+
 export type Role = "athlete" | "coach";
 
 export interface UserProfile {
@@ -45,6 +47,26 @@ export interface TransitionScores {
   smoothness: InhaleExhale | null;
 }
 
+export interface NullableInhaleExhale {
+  inhale: number | null;
+  exhale: number | null;
+}
+
+export interface DeviationHistogram {
+  timing: number[];
+  depth: number[];
+  missedOrDouble: number;
+}
+
+export interface PacedDetails {
+  onTargetPct: { timing: number; depth: number };
+  direction: { timing: NullableInhaleExhale; depth: NullableInhaleExhale };
+  histogram: DeviationHistogram;
+  missed: number;
+  double: number;
+  transitions: number;
+}
+
 /**
  * Which formula produced a session's `scores`. Bump (add a new value) when the
  * app's scoring changes, so old sessions can be told apart and rescored.
@@ -52,6 +74,7 @@ export interface TransitionScores {
 export const SCORING_VERSIONS = {
   legacy: "legacy-v1",
   transition: "transition-v1",
+  methodC: "method-c-v1",
 } as const;
 
 /**
@@ -85,7 +108,11 @@ export interface SessionSummary {
   appVersion: string;
   /** Set when the session was recorded as part of a coach's live group session. */
   groupSessionId?: string | null;
+  skillLevel?: SkillLevel;
+  paced?: PacedDetails | null;
 }
+
+export type WaveformUnits = "raw" | "pct-max";
 
 /** The raw signal for one session. Cloud Storage: `SessionSummary.waveformPath`. */
 export interface Waveform {
@@ -93,12 +120,13 @@ export interface Waveform {
   sampleIntervalMs: number;
   /** User signal, already sign-flipped the way the app displays it. */
   user: number[];
+  units?: WaveformUnits;
   /** Pacer signal at the same sample indices; null for open sessions. */
   pacer: number[] | null;
   /** Sample indices where the user tapped the marker button. */
   markers: number[];
   /** Highest and lowest readings from the deep-breath calibration. */
-  calibration: { min: number; max: number };
+  calibration: { min: number; max: number; a100?: number; midline?: number; peaks?: number[]; troughs?: number[] };
 }
 
 /**

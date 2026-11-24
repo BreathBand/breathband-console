@@ -23,6 +23,7 @@ import {
 import { browserStore, type DbStore, type LocalDb } from "./db";
 import { joinOffset, LIVE_HZ, liveProfile, liveSample, presenceAt, recordGroupSession } from "./live";
 import { generateWaveform } from "./seed";
+import { checkSessionContract } from "./validate";
 
 // Local adapter: behaves like the Firebase setup will — including the access
 // rules in firebase/firestore.rules — so screens hit the same permission and
@@ -721,6 +722,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
           if (saved) recorded.push(saved);
         }
       }
+      for (const { summary, waveform } of recorded) checkSessionContract(summary, waveform);
       return changeGroup(id, ["live"], (g, d) => {
         g.status = "ended";
         g.endedAt = now().toISOString();
