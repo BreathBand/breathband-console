@@ -1,0 +1,44 @@
+{
+ "store": {
+  "sessionsBefore": 11,
+  "sessionsAfter": 0
+ },
+ "results": [
+  {
+   "route": "/cloud/sessions/?athlete=demo-athlete-5&tab=trends",
+   "dataFreeSelector": "text=Nothing in this period.",
+   "emptyStates": [
+    "Nothing in this period.",
+    "Nothing in this period."
+   ],
+   "toggles": 1,
+   "chartsWithSummary": 4,
+   "storedSessions": 0,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30nd/head/nodata@1280.png"
+  },
+  {
+   "route": "/cloud/sessions/?athlete=demo-athlete-5&tab=trends&period=week",
+   "dataFreeSelector": "text=Nothing in this period.",
+   "emptyStates": [
+    "Nothing in this period.",
+    "Nothing in this period."
+   ],
+   "toggles": 1,
+   "chartsWithSummary": 4,
+   "storedSessions": 0,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30nd/head/nodata_period_week@1280.png"
+  },
+  {
+   "route": "/cloud/sessions/?athlete=demo-athlete-5&tab=trends&period=90d",
+   "dataFreeSelector": "text=Nothing in this period.",
+   "emptyStates": [
+    "Nothing in this period.",
+    "Nothing in this period."
+   ],
+   "toggles": 1,
+   "chartsWithSummary": 4,
+   "storedSessions": 0,
+   "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev30nd/head/nodata_period_90d@1280.png"
+  }
+ ]
+}
