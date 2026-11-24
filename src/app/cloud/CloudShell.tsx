@@ -16,7 +16,7 @@ import { DeviceStatus } from "./device/DeviceStatus";
 const PUBLIC_PATHS = ["/cloud/login/", "/cloud/signup/", "/cloud/reset/"];
 const LANDING = "/cloud/";
 /** Full-screen pages: the recording instrument brings its own frame. */
-const BARE_PATHS = ["/cloud/record/live/"];
+const BARE_PATHS = ["/cloud/record/live/", "/cloud/record/duo/"];
 
 // Set just before a deliberate sign-out, so the gate sends the visitor to the
 // BreathCloud landing page instead of the login page.
@@ -54,7 +54,7 @@ const COACH_NAV: NavItem[] = [
   { href: "/cloud/athletes/", label: "Athletes", icon: "athletes", match: ["/cloud/athletes/", "/cloud/sessions/", "/cloud/session/"] },
   { href: "/cloud/trends/", label: "Compare", icon: "compare", match: ["/cloud/trends/"] },
   { href: "/cloud/group/", label: "Live group", icon: "group", match: ["/cloud/group/", "/cloud/group/live/"] },
-  { href: "/cloud/record/", label: "Record", icon: "record", match: ["/cloud/record/", "/cloud/record/live/"] },
+  { href: "/cloud/record/duo/", label: "Two-person", icon: "users", match: ["/cloud/record/duo/"] },
 ];
 
 /**

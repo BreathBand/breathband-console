@@ -168,6 +168,12 @@ const PATHS = {
     </>
   ),
   menu: <path d="M4.5 7h15M4.5 12h15M4.5 17h15" />,
+  users: (
+    <>
+      <circle cx="9" cy="12" r="5.5" />
+      <circle cx="15" cy="12" r="5.5" />
+    </>
+  ),
   timer: (
     <>
       <circle cx="12" cy="13" r="7.5" />
