@@ -1,0 +1,175 @@
+{
+  "task": "T-0022",
+  "round": 1,
+  "verdict": "passed",
+  "head": "e33005a4f348d5157b2e1535a231131517ce66ac",
+  "base": "3eb29862b1b7781b6008e72be4b2a1f057d4839f",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — chartTable.test.ts covers sorting, tooltip label, format, 'Outside the target', per-bar label and unit, compare rows with period word, date and '–', and the summary count, range and lowest/highest/latest.\n- A2: unverified — The button has aria-expanded and aria-controls and is not rendered when there is no data. No screenshot proof was provided, and the fragment's effect on caller layout is unchecked.\n- A3: unverified — It is a native button with a caption from ariaLabel, th headers with scope, and an overflow-x scroll wrapper. The keyboard and 375px behaviour needs manual proof.\n- A4: unverified — role=img and aria-label are kept, aria-describedby points to the sr-only summary, ids come from useId, and the toggle is .no-print. Print preview has not been checked.\n- A5: unverified — No axe run was provided.\n\n<details><summary>4 suggestion(s), non-blocking</summary>\n\n- Charts now return a fragment, which adds sibling nodes inside callers' containers `src/components/trendCharts.tsx:168` — Wrap the .viz div and ChartData in one container element, for example <div className=\"viz-wrap\">, instead of a fragment.\n- compareTable receives periodWord, which may be undefined `src/components/trendCharts.tsx:539` — Pass periodWord ?? \"\" to compareTable, or confirm the existing destructuring default.\n- Hard-coded 36px and 40px sizes `src/app/cloud/console.css:2386` — Use existing size or spacing tokens if DESIGN.md defines them.\n- Fragment children are not re-indented `src/components/trendCharts.tsx:168` — Run the formatter on the file.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/components/trendCharts.tsx",
+        "line": 168,
+        "acceptance_id": "A2",
+        "title": "Charts now return a fragment, which adds sibling nodes inside callers' containers",
+        "detail": "TimeTrend, PeriodBars and CompareChart used to render a single .viz div. They now render .viz, an sr-only <p> and a .viz-data div as siblings. If any caller (TrendsTab, trends/page, report/page) places the chart directly in a flex row or grid, the toggle becomes its own flex or grid item. It would then sit beside the chart rather than under it, and the collapsed layout would change. The callers are not in this diff, so this can't be confirmed either way.",
+        "repro": "Check the 375/768/1280 screenshots of the Trends tab, the Compare page and the report for any chart whose parent uses display:flex or display:grid.",
+        "fix": "Wrap the .viz div and ChartData in one container element, for example <div className=\"viz-wrap\">, instead of a fragment.",
+        "pattern": "158ae21eccf7"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/components/trendCharts.tsx",
+        "line": 539,
+        "acceptance_id": null,
+        "title": "compareTable receives periodWord, which may be undefined",
+        "detail": "periodWord is an optional prop. compareTable builds the row head with `${periodWord} ${date(t)}`. If CompareChart does not destructure periodWord with a default, a caller that omits it gets rows headed 'undefined 2 Nov'. The destructuring is outside the diff, so I couldn't confirm whether a default exists.",
+        "repro": "Render <CompareChart ... /> without periodWord and open the table.",
+        "fix": "Pass periodWord ?? \"\" to compareTable, or confirm the existing destructuring default.",
+        "pattern": "57eacae05c55"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/console.css",
+        "line": 2386,
+        "acceptance_id": null,
+        "title": "Hard-coded 36px and 40px sizes",
+        "detail": "min-height: 36px and height: 40px are literal values while the surrounding rules use --s-* tokens. This isn't a colour, so it doesn't break the token rule, but it drifts from DESIGN.md spacing.",
+        "repro": "n/a",
+        "fix": "Use existing size or spacing tokens if DESIGN.md defines them.",
+        "pattern": "60fa02c3588a"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/components/trendCharts.tsx",
+        "line": 168,
+        "acceptance_id": null,
+        "title": "Fragment children are not re-indented",
+        "detail": "The .viz block keeps its old indentation under the new <>. If lint runs a Prettier check, this may fail it.",
+        "repro": "Run npm run lint, or prettier --check, on src/components/trendCharts.tsx.",
+        "fix": "Run the formatter on the file.",
+        "pattern": "eb86322be42c"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "chartTable.test.ts covers sorting, tooltip label, format, 'Outside the target', per-bar label and unit, compare rows with period word, date and '–', and the summary count, range and lowest/highest/latest."
+      },
+      {
+        "id": "A2",
+        "status": "unverified",
+        "note": "The button has aria-expanded and aria-controls and is not rendered when there is no data. No screenshot proof was provided, and the fragment's effect on caller layout is unchecked."
+      },
+      {
+        "id": "A3",
+        "status": "unverified",
+        "note": "It is a native button with a caption from ariaLabel, th headers with scope, and an overflow-x scroll wrapper. The keyboard and 375px behaviour needs manual proof."
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": "role=img and aria-label are kept, aria-describedby points to the sr-only summary, ids come from useId, and the toggle is .no-print. Print preview has not been checked."
+      },
+      {
+        "id": "A5",
+        "status": "unverified",
+        "note": "No axe run was provided."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 20160,
+      "costUsd": 0.2047
+    }
+  }
+}
