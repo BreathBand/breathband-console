@@ -47,6 +47,9 @@ export const FIXED_CONSTANTS = {
   deviationHistogram: { minSd: -1, maxSd: 1, stepSd: 0.25, missedOrDoubleBin: true },
   calibrationPeakCount: 3,
   calibrationTroughCount: 3,
+  pacedMatchWindowSd: 1,
+  missedOrDoublePoints: 1,
+  pacedPointRange: { min: 1, max: 10 } satisfies Range,
 } as const;
 
 export const ANALYSIS_CONFIG = {
