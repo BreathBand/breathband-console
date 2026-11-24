@@ -1,0 +1,156 @@
+id: T-0031
+title: Open-session metrics with per-segment split and golden vectors
+type: feature
+source: prompt
+description: >-
+  The Appendix defines ten open-session metrics, each also shown per segment
+  (before, between and after up to 2 event markers). Today an open session
+  carries one number: src/lib/domain/types.ts:79-80 (respirationRateBpm, "null
+  when fewer than 3 breaths"), which the seed makes up
+  (src/lib/backend/local/seed.ts:172-173), and the open review shows only that
+  rate (the parity map, row 9). Markers are stored as sample indices with no cap
+  (types.ts:98). src/lib/domain/waveform.ts:53 returns no breaths for open
+  sessions at all. The constants are in src/lib/analysis/config.ts:
+  normalInhaleDurationS and normalExhaleDurationS (config.ts:29-30),
+  normalDepthBand {centre 6, tolerance 25%} (config.ts:31), normalRateBpm 12-16
+  (config.ts:44), normalIeRatio (config.ts:45) and maxEventMarkersPerOpenSession
+  2 (config.ts:46).
+
+
+  This card adds src/lib/analysis/open.ts. A breath runs trough → peak → trough,
+  using the transitions from B1-2. The metrics:
+
+  - Avg rate = 60 / mean period.
+
+  - I:E = mean exhale / mean inhale, as the x in "1 : x".
+
+  - Inhale duration = peak − previous trough. Exhale duration = trough −
+  previous peak.
+
+  - Avg depth = peak − next trough.
+
+  - Inhale depth = peak above the midline. Exhale depth = trough below the
+  midline, as a positive number.
+
+  - Depth index = (avg depth − 6) / 6 × 100, capped at ±100.
+
+  - % at normal rate = the share of breaths whose own rate is inside 12-16 bpm
+  (inclusive).
+
+  - % at normal depth = the share of breaths whose depth is inside 6% ± 25%,
+  that is 4.5-7.5 (inclusive, read as a relative tolerance).
+
+  Every metric is computed for the whole session and for each segment.
+
+  Assumptions for the owner to confirm, each covered by a test. A breath belongs
+  to the segment that contains its peak. Only the first 2 markers by time are
+  used, and any extra markers (legacy app data) are ignored and counted. The
+  depth index uses avg depth only. As in B1-3, Tier A feeds exact transition
+  lists into the metrics (±0.05), plus one noise-free end to end check. Tier B
+  runs end to end with seeded noise.
+acceptance:
+  - id: A1
+    text: src/lib/analysis/open.ts exports openMetrics(transitions, {durationS,
+      markersS}) and analyzeOpen(pctSamples, sampleRateHz, markerIndices), which
+      runs B1-2's detectTransitions first. Both return {whole, segments,
+      markersUsed, markersIgnored}. Segments are [] with no marker, before/after
+      with 1, and before/between/after with 2, each with fromS, toS, breath
+      count and the full metric set. A segment with no complete breath has null
+      metrics. New test src/lib/analysis/open.test.ts covers 0, 1, 2 and 3
+      markers (the third is ignored and counted), a breath whose peak sits on
+      either side of a marker, and an empty segment.
+    verify: unit
+  - id: A2
+    text: "Tier A, metrics level. src/lib/analysis/golden/open-tier-a.ts holds exact
+      transition lists and literal expected values (no comments, nothing
+      computed by the code under test).
+      src/lib/analysis/golden/open-golden.test.ts matches every metric within
+      ±0.05: normal (inhale 1.5 s, exhale 3.0 s, ±3) gives rate 13.333, I:E 2.0,
+      inhale 1.5 s, exhale 3.0 s, depth 6.0, inhale depth 3.0, exhale depth 3.0,
+      depth index 0, normal rate 100%, normal depth 100%. Deep-fast (1.0 / 2.0
+      s, ±4.5) gives rate 20.0, I:E 2.0, depth 9.0, depth index +50, normal rate
+      0%, normal depth 0%. Shallow-slow (2.0 / 4.0 s, ±1.5) gives rate 10.0,
+      depth 3.0, depth index -50, normal rate 0%, normal depth 0%. Asymmetric
+      (1.5 / 3.0 s, peaks +4, troughs -2) gives depth 6.0, inhale depth 4.0,
+      exhale depth 2.0, depth index 0. Too deep (1.5 / 3.0 s, ±7.5) gives depth
+      15.0 and depth index +100 (capped from +150). Mixed periods 4.5, 4.5, 4.5,
+      3.0 repeating give normal rate 75% and rate 60 / 4.125 ≈ 14.545."
+    verify: unit
+  - id: A3
+    text: Tier A, segments. The exact list is normal from 0 to 54 s, deep-fast from
+      54 to 90 s and normal from 90 to 180 s, with markers at 54 s and 90 s. It
+      gives segments before / between / after with 12 / 12 / 20 breaths, whose
+      metrics equal the normal / deep-fast / normal Tier A values within ±0.05.
+      The whole session gives rate 14.667 (44 breaths in 180 s), I:E 2.0, depth
+      300/44 ≈ 6.818, depth index ≈ 13.6, normal rate 32/44 ≈ 72.7% and normal
+      depth 32/44 ≈ 72.7%. All of this is in the fixture as data.
+    verify: unit
+  - id: A4
+    text: "End to end. The B1-1 normal open pattern (1.5 / 3.0 s, ±3, 180 s, 20 Hz,
+      noise-free) through analyzeOpen matches the normal Tier A values within
+      ±0.05. Tier B: src/lib/analysis/golden/open-tier-b.ts stores one noise
+      setting and seed as data. With it, the normal pattern and the 2-marker
+      segmented session from A3 (built with B1-1's piecewise form) land within
+      ±0.3 of the Tier A values for rate (bpm), I:E, and the depths (% of max),
+      and within ±0.1 s for durations. The % at normal rate and depth equal the
+      Tier A values exactly (100 or 0 per segment)."
+    verify: unit
+  - id: A5
+    text: open.ts reads every Appendix number from src/lib/analysis/config.ts
+      (normal rate, the depth band and its tolerance, the marker cap, the
+      reference depth for inhale and exhale depth). The ±100 depth-index cap is
+      added to FIXED_CONSTANTS as a new key, with a new test asserting it.
+      src/lib/analysis/index.ts re-exports open.ts. npm run lint, typecheck and
+      test pass.
+    verify: review
+  - id: A6
+    text: Range checks and the cap are exact at their edges. The inclusive bounds
+      for % at normal rate (12-16 bpm) and % at normal depth (4.5-7.5 % of max),
+      and the ±100 depth-index cap, are compared using
+      FIXED_CONSTANTS.bandEdgeEpsilon (already on main, 1e-9), never a bare
+      float comparison. A new test src/lib/analysis/open-edges.test.ts forms
+      breaths from transition times and levels and checks that periods of
+      exactly 5.0 s (12 bpm) and 3.75 s (16 bpm) and depths of exactly 4.5 %
+      (±2.25) and 7.5 % (±3.75) count as normal, while 5.05 s, 3.70 s, 4.45 %
+      and 7.55 % do not. It also checks that a depth index of exactly ±100 stays
+      ±100 and one beyond it is capped.
+    verify: unit
+out_of_scope:
+  - Signal generation (B1-1); filtering, calibration and transition detection
+    (B1-2)
+  - Method-C paced scoring (B1-3)
+  - Storing open metrics on SessionSummary, and the 2-marker cap on write
+    (B1-5); in v1 the metrics are computed on read
+  - Open-session metrics around lost or artifact spans (lost-then-recovered); no
+    Appendix rule says how a breath spanning a lost span counts
+  - Formatting the I:E as 1 to x, the red-inhale / blue-exhale graph, zoom, the
+    per-segment table and any review screen (Batch 2)
+  - The normal inhale and exhale duration ranges are only for display (Batch 2);
+    no metric here uses them
+touches:
+  - src/lib/analysis/open.ts
+  - src/lib/analysis/open.test.ts
+  - src/lib/analysis/golden/open-tier-a.ts
+  - src/lib/analysis/golden/open-tier-b.ts
+  - src/lib/analysis/golden/open-golden.test.ts
+  - src/lib/analysis/config.ts
+  - src/lib/analysis/open-config.test.ts
+  - src/lib/analysis/index.ts
+  - src/lib/analysis/open-edges.test.ts
+pages: []
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - import Appendix constants from src/lib/analysis/config.ts
+  - config.ts may only gain new FIXED_CONSTANTS keys; existing keys and values
+    stay
+  - expected golden values are literal data, never computed at test time by the
+    code under test
+  - static export only; pure TypeScript with no browser or Node APIs
+  - "depends on B1-1 and B1-2, both merged; method C (B1-3) is merged too and
+    shows the band-edge pattern to follow: floorAtEdge and
+    FIXED_CONSTANTS.bandEdgeEpsilon in src/lib/analysis/paced.ts"
+risk: high
+owner: arynbht@gmail.com
+created: 2026-11-24
