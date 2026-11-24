@@ -1,0 +1,38 @@
+[
+ {
+  "route": "/cloud/trends/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev22/base/cloud_trends@375.png",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "div.table-scroll 576/309"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/trends/",
+  "width": 768,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev22/base/cloud_trends@768.png",
+  "scrollWidth": 768,
+  "clientWidth": 768,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/trends/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev22/base/cloud_trends@1280.png",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ }
+]
