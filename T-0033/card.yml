@@ -1,0 +1,62 @@
+id: T-0033
+title: Locate paced transitions on the raw signal the same way open metrics do
+type: refactor
+source: prompt
+description: HELD until Harm confirms the provisional reading recorded in
+  docs/PLAN.md "Decisions" (2026-11-24). Do not confirm or run this card before
+  then. The Appendix (l.15-16) low-passes the signal and then finds peaks and
+  troughs. Open metrics (B1-4) detect on the filtered signal and then move each
+  transition to the raw signal's extremum within
+  ±FIXED_CONSTANTS.transitionRefineWindowS (0.25 s), because the 1 Hz filter
+  shifts the extrema of asymmetric breaths (noise-free 1.5 s in, 3.0 s out reads
+  I:E 1.81 instead of 2.0). Method-C paced scoring (src/lib/analysis/paced.ts,
+  B1-3) still scores the filtered locations from detectTransitions, so paced and
+  open locate transitions differently. This card moves the refinement into one
+  shared function, used by both, so paced timing and depth are scored at the
+  same refined transitions as open metrics.
+acceptance:
+  - id: A1
+    text: One exported refinement function in src/lib/analysis/ takes the raw
+      samples, the sample rate and B1-2's detected transitions, and returns
+      transitions moved to the raw extremum of the same type within
+      ±FIXED_CONSTANTS.transitionRefineWindowS. analyzeOpen and the paced
+      end-to-end path both call it, and no second copy of the logic remains.
+      detectTransitions itself is unchanged.
+    verify: review
+  - id: A2
+    text: "Every paced golden is re-run and passes unchanged: Tier A (exact lists,
+      which never go through detection), the noise-free end-to-end Tier A cases,
+      Tier B with its one shared noise setting, and the band-edge tests. No
+      expected value or range is edited; if a Tier B range fails, the build
+      stops and asks."
+    verify: unit
+  - id: A3
+    text: A new test shows an asymmetric paced breath (peaks 1.5 s after each
+      trough, pacer 5-5) gets the same transition times through the paced path
+      as through analyzeOpen, and that its timing deviation no longer carries
+      the filter shift.
+    verify: unit
+  - id: A4
+    text: docs/PLAN.md's 2026-11-24 entry is updated to say paced and open now
+      locate transitions the same way. npm run lint, typecheck and test pass.
+    verify: review
+out_of_scope:
+  - Changing the Appendix reading itself (that is Harm's decision)
+  - Any change to method-C points, matching, or the goldens' expected values
+touches:
+  - src/lib/analysis/paced.ts
+  - src/lib/analysis/open.ts
+  - src/lib/analysis/refine.ts
+  - src/lib/analysis/refine.test.ts
+  - src/lib/analysis/index.ts
+  - docs/PLAN.md
+pages: []
+constraints:
+  - do not start before Harm confirms the provisional reading in docs/PLAN.md
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - no golden expected value or range is edited
+risk: high
+owner: arynbht@gmail.com
+created: 2026-11-24
