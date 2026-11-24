@@ -1,0 +1,88 @@
+npm test · exit 0 · the judge's tier 1 run on the change
+new tests:
+  src/lib/domain/coaching-calendar.test.ts: is open while active or behind
+  src/lib/domain/coaching-calendar.test.ts: is closed once done, missed or cancelled
+  src/lib/domain/coaching-calendar.test.ts: says today, tomorrow and how many days ago
+  src/lib/domain/coaching-calendar.test.ts: says just now under a minute
+  src/lib/domain/coaching-calendar.test.ts: counts minutes, then hours
+  src/lib/domain/coaching-calendar.test.ts: says yesterday, then counts days
+  src/lib/domain/coaching-calendar.test.ts: keys a Date by its local day
+  src/lib/domain/coaching-calendar.test.ts: keys an ISO string by the local day it falls on
+  src/lib/domain/coaching-calendar.test.ts: gives count days, oldest first, ending today
+  src/lib/domain/coaching-calendar.test.ts: puts each day at local noon
+  src/lib/domain/coaching-calendar.test.ts: crosses a month boundary
+  src/lib/domain/format-dates.test.ts: shows the weekday, day, month and time
+  src/lib/domain/format-dates.test.ts: shows the weekday by default
+  src/lib/domain/format-dates.test.ts: leaves the weekday out when asked
+  src/lib/domain/format-dates.test.ts: adds the year
+  src/lib/domain/format-dates.test.ts: shows the local time
+  src/lib/domain/group.test.ts: keeps the starting pacer until the switch
+  src/lib/domain/group.test.ts: switches at atSec inclusive
+  src/lib/domain/group.test.ts: adds π per half cycle on a steady pacer
+  src/lib/domain/group.test.ts: accumulates across two switches given out of order
+  src/lib/domain/group.test.ts: starts fully out and is fully in after one half cycle
+  src/lib/domain/group.test.ts: is 'in' with the full half cycle left at the start
+  src/lib/domain/group.test.ts: is 'out' just after a half cycle
+  src/lib/domain/group.test.ts: is settling with no breath yet
+  src/lib/domain/group.test.ts: is shallow when depth falls below -33
+  src/lib/domain/group.test.ts: is late or early only strictly beyond a quarter of the half cycle
+  src/lib/domain/group.test.ts: is with the pacer exactly at a quarter of the half cycle
+  src/lib/domain/group.test.ts: signs the lag with one decimal
+  src/lib/domain/group.test.ts: signs the depth as a whole percent
+  src/lib/domain/group.test.ts: shows a dash until there is an average
+  src/lib/domain/group.test.ts: formats the average like a score
+  src/lib/domain/group.test.ts: names the pacer with no switch
+  src/lib/domain/group.test.ts: names both pacers after one switch
+  src/lib/domain/helpers-misc.test.ts: says today, yesterday, or how many days ago
+  src/lib/domain/helpers-misc.test.ts: is ok from 70
+  src/lib/domain/helpers-misc.test.ts: is mid from 50 and low below
+  src/lib/domain/helpers-misc.test.ts: is true for legacy scores only
+  src/lib/domain/trends-buckets.test.ts: uses the label of a listed range
+  src/lib/domain/trends-buckets.test.ts: falls back to a count of days
+  src/lib/domain/trends-buckets.test.ts: takes the last days, start inclusive and end exclusive
+  src/lib/domain/trends-buckets.test.ts: takes the period before with offset 1
+  src/lib/domain/trends-buckets.test.ts: picks the best scored session
+  src/lib/domain/trends-buckets.test.ts: finds the weakest sub-score by its mean
+  src/lib/domain/trends-buckets.test.ts: counts open sessions with a rate and those outside the target range
+  src/lib/domain/trends-buckets.test.ts: averages sessions per week over the period
+  src/lib/domain/trends-buckets.test.ts: has no best or weakest without scored sessions
+  src/lib/domain/trends-buckets.test.ts: is null for an empty bucket or one with nothing scored
+  src/lib/domain/trends-buckets.test.ts: averages the scored sessions to one decimal
+  src/lib/domain/trends-buckets.test.ts: is null for an empty bucket
+  src/lib/domain/trends-buckets.test.ts: averages open-session rates to one decimal
+  src/lib/domain/trends-buckets.test.ts: ignores paced sessions and null rates
+  src/lib/download.test.ts: lower-cases and joins words with a dash
+  src/lib/download.test.ts: strips accents
+  src/lib/download.test.ts: turns underscores and runs of spaces into one dash
+  src/lib/download.test.ts: falls back to 'athlete' when nothing is left
+  src/lib/download.test.ts: clicks a temporary link to the file and removes it
+  src/lib/download.test.ts: makes a CSV by default and uses a passed type
+  src/lib/download.test.ts: revokes the object URL only after the timer runs
+
+
+> breathband-console@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254[39m
+
+ [32m✓[39m src/lib/domain/compare-csv.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/domain/group.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/lib/domain/trends-buckets.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/domain/targets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/domain/coaching-calendar.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/lib/domain/helpers-misc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/backend/http/http.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/lib/domain/domain.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/lib/domain/format-dates.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/lib/download.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m src/lib/dockerSmoke.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 102[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 80[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m13 passed[39m[22m[90m (13)[39m
+[2m      Tests [22m [1m[32m151 passed[39m[22m[90m (151)[39m
+[2m   Start at [22m 00:10:12
+[2m   Duration [22m 315ms[2m (transform 35%, tests 30%, import 29%, worker 6%)[22m
+
+
