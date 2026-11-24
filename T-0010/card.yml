@@ -1,0 +1,50 @@
+id: T-0010
+title: Set up Playwright e2e with coach and athlete sign-in reusing the
+  proof-auth flow
+type: chore
+source: prompt
+description: "The batch standing check needs e2e tests for the demo path
+  (athlete history, paced and open sessions, coach view) against the dev server
+  and the Docker container. The repo has no e2e setup: package.json:15-23 has
+  vitest only. .rivetari/proof-auth.mjs already signs in as the seeded demo
+  coach through the 'Sign in as Lena Vos' button on /cloud/login/ and waits for
+  the localStorage currentUid. The e2e setup needs the same flow for both
+  personas: coach (Lena Vos, demo-coach) and athlete (Alex Morgan,
+  athlete@demo.local). This needs @playwright/test as a new dev dependency,
+  which is a stop for a person."
+acceptance:
+  - id: A1
+    text: "@playwright/test is added as a devDependency with an exact version, and
+      playwright.config.ts at the repo root runs e2e/ against BASE_URL (default
+      http://localhost:3000, starting npm run dev when unset) so the same specs
+      run against http://localhost:8080 for the container"
+    verify: review
+  - id: A2
+    text: e2e/auth.ts exports signInAsCoach(page) and signInAsAthlete(page), using
+      the demo-account buttons on /cloud/login/ with the same
+      click-until-hydrated and localStorage currentUid wait as
+      .rivetari/proof-auth.mjs (copied or ported, not imported from .rivetari)
+    verify: e2e
+  - id: A3
+    text: e2e/smoke.spec.ts signs in as the coach and lands on the roster, and signs
+      in as the athlete and lands on their overview; npm run e2e passes locally
+    verify: e2e
+  - id: A4
+    text: npm test (vitest) doesn't pick up e2e/ specs, and npm run lint and
+      typecheck pass
+    verify: unit
+out_of_scope:
+  - Editing .rivetari/proof-auth.mjs
+  - CI or workflow changes
+  - Demo-path specs beyond sign-in (later batches)
+touches:
+  - e2e/**
+  - playwright.config.ts
+  - package.json
+  - package-lock.json
+  - .gitignore
+pages: []
+constraints: []
+risk: medium
+owner: arynbht@gmail.com
+created: 2026-11-24
