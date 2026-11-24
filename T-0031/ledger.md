@@ -7,6 +7,7 @@
 - 2026-11-24 06:57 intake: card drafted with 6 acceptance criteria; awaiting confirmation (arynbht@gmail.com)
 - 2026-11-24 06:58 intake: intake confirmed; card sha256 e1705e91af2bca5b13ae9af387c7f038a55df814cea5e65d2dc3d77a96124e5e (arynbht@gmail.com (--yes))
 - 2026-11-24 06:58 route: assembly proposed; sha256 3dc8a91dd333f612cb54f3ee108bd90f0e8944db7e77806250a6f51b07e5a188; skills none; proof test-run; awaiting approval (rivetari router (for arynbht@gmail.com))
+- 2026-11-24 07:00 route: route approved; assembly sha256 3dc8a91dd333f612cb54f3ee108bd90f0e8944db7e77806250a6f51b07e5a188 (arynbht@gmail.com (--yes))
 
 ## Decisions
 
