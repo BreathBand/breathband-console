@@ -1,0 +1,175 @@
+{
+  "task": "T-0015",
+  "round": 1,
+  "verdict": "passed",
+  "head": "9b2d3a68e8c3d1967c8ce60e0d369259921b33e5",
+  "base": "c7f8fd24c1711df6e1e7be1e462319aa016c4383",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: unverified — Manual check. No-overflow at 1281-1355px depends on wrapping, and the 1440px single row is expected but not shown by the diff.\n- A2: unverified — No 1280px after-screenshots are in the change. The compact rules apply at 1280px.\n- A3: unverified — The 960px-and-below rules are unchanged and the new base wrap is overridden there. Before and after screenshots are needed.\n- A4: unverified — --topbar-h now follows the measured bar height through ResizeObserver. A manual scroll check is needed.\n- A5: unverified — Accessible names are kept through clip-hiding. No axe run is shown.\n\n<details><summary>4 suggestion(s), non-blocking</summary>\n\n- Brand wordmark and sync status text are visually removed from 961-1280px `src/app/cloud/console.css:1086` — Hide the text only if the row still overflows without it. Otherwise keep the wordmark and rely on wrapping.\n- Compact rules stop at 1280px but the athlete row needs about 1355px `src/app/cloud/console.css:1083` — Accept the wrap, or tighten the row at 1320px without adding a breakpoint.\n- offsetHeight rounds, so a fractional bar height can leave a sub-pixel gap or overlap under the rail `src/app/cloud/topbarHeight.ts:5` — Use header.getBoundingClientRect().height instead of offsetHeight.\n- CSS tests match raw stylesheet text `src/app/cloud/topbar.test.ts:62` — Rely on the 1024px, 1280px and 1320px scrollWidth checks from A1 for the layout, and keep these tests minimal.\n\n</details>\n\n_claude-sonnet-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-sonnet-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/console.css",
+        "line": 1086,
+        "acceptance_id": null,
+        "title": "Brand wordmark and sync status text are visually removed from 961-1280px",
+        "detail": "`.brand > span` and `.sync-text` are clipped, so sighted users at 1024px and 1280px see only the logo mark and a status chip with no text. The accessible names survive, but the card puts changing what the bar contains out of scope. If the sync chip's state is shown only by colour, that is a colour-only cue. Check whether the bar fits with the text kept before dropping it.",
+        "repro": "Open /cloud/ at 1024px and compare with 1440px: the 'BreathBand BreathCloud' text and the sync label are gone.",
+        "fix": "Hide the text only if the row still overflows without it. Otherwise keep the wordmark and rely on wrapping.",
+        "pattern": "d910f6b14f67"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/console.css",
+        "line": 1083,
+        "acceptance_id": null,
+        "title": "Compact rules stop at 1280px but the athlete row needs about 1355px",
+        "detail": "Between 1281px and about 1355px the athlete-workspace bar fits only because flex-wrap now lets it wrap to two rows. That meets the no-overflow part of A1 but looks unplanned at 1320px, and --topbar-h follows the taller bar. Confirm the two-row look is acceptable in the 1320px screenshot.",
+        "repro": "Load /cloud/session/?athlete=demo-athlete&id=s024 at 1320px and check whether the name and Sign out land on a second row.",
+        "fix": "Accept the wrap, or tighten the row at 1320px without adding a breakpoint.",
+        "pattern": "1e25baf17e2d"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/topbarHeight.ts",
+        "line": 5,
+        "acceptance_id": null,
+        "title": "offsetHeight rounds, so a fractional bar height can leave a sub-pixel gap or overlap under the rail",
+        "detail": "If the wrapped bar's height is fractional, the rounded integer written to --topbar-measured can leave the rail 0.5px off the bar, which A4 forbids.",
+        "repro": "Give the bar a fractional content height, for example a 1.4 line-height on the wrapped row, and scroll the session page.",
+        "fix": "Use header.getBoundingClientRect().height instead of offsetHeight.",
+        "pattern": "65c9af47b32d"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/topbar.test.ts",
+        "line": 62,
+        "acceptance_id": null,
+        "title": "CSS tests match raw stylesheet text",
+        "detail": "The assertions use indexOf and regexes on console.css, which breaks on a harmless reformat and does not prove the bar fits. The first '.rail {' match may also not be the rule intended.",
+        "repro": "Reorder declarations inside `.topbar-row` or add another selector ending in `.rail`, and the tests fail or pass wrongly.",
+        "fix": "Rely on the 1024px, 1280px and 1320px scrollWidth checks from A1 for the layout, and keep these tests minimal.",
+        "pattern": "2eb48e336eca"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "unverified",
+        "note": "Manual check. No-overflow at 1281-1355px depends on wrapping, and the 1440px single row is expected but not shown by the diff."
+      },
+      {
+        "id": "A2",
+        "status": "unverified",
+        "note": "No 1280px after-screenshots are in the change. The compact rules apply at 1280px."
+      },
+      {
+        "id": "A3",
+        "status": "unverified",
+        "note": "The 960px-and-below rules are unchanged and the new base wrap is overridden there. Before and after screenshots are needed."
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": "--topbar-h now follows the measured bar height through ResizeObserver. A manual scroll check is needed."
+      },
+      {
+        "id": "A5",
+        "status": "unverified",
+        "note": "Accessible names are kept through clip-hiding. No axe run is shown."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 16422,
+      "costUsd": 0.09550399999999999
+    }
+  }
+}
