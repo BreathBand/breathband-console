@@ -19,3 +19,4 @@
 ## Stop-and-ask
 
 - 2026-11-24 06:45 asked: budget_exhausted: the plan call reached its 4-turn limit before it replied with a plan; allow to plan again with 8 turns, or deny to plan again within 4
+- 2026-11-24 06:46 answered: allowed — plan budget 8 turns (standing rule from rivetari-51: allow 8 when the plan is all that's missing; R-21)
