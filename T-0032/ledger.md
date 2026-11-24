@@ -23,3 +23,4 @@
 ## Stop-and-ask
 
 - 2026-11-24 10:11 asked: budget_exhausted: the plan call reached its 4-turn limit before it replied with a plan; allow to plan again with 8 turns, or deny to plan again within 4
+- 2026-11-24 10:12 answered: allowed — plan budget 8 turns (standing rule from rivetari-51; R-21). Commit your work before asking any question: an agent-question pause does not commit (R-14), and T-0031's work was lost that way.
