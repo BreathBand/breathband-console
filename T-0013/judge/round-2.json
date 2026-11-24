@@ -1,0 +1,164 @@
+{
+  "task": "T-0013",
+  "round": 2,
+  "verdict": "passed",
+  "head": "ee22d0a89ff2721c65f2150f16d2c8b7b94b7ded",
+  "base": "c7f8fd24c1711df6e1e7be1e462319aa016c4383",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=2 -->\n### Rivetari judge · round 2 · approve\n\n#### Acceptance\n- A1: unverified — The fixes for both serious rules are in the markup, but the proof is the axe screenshot run, which this diff doesn't include.\n- A2: unverified — Both scrollers now have tabIndex=0, role=region and an aria-label. The focus outline, arrow-key scrolling and the axe result at 375px need the manual check.\n- A3: met — aria-label is removed from both .new-dot elements, and 'Not opened yet' is now sr-only text inside the dot. Visual parity relies on .sr-only and still needs to be confirmed in the screenshots.\n- A4: met — The three reported pages pass level={1}. EmptyState defaults to h2, and a test covers both levels.\n- A5: met — The 6th and 8th th now carry sr-only 'Timing, exhale' and 'Depth, exhale'. sr-only text should leave the table's appearance unchanged.\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- New .empty h1 rule may not match the existing empty-state h2 styling `src/app/globals.css:206` — Find the existing `.empty h2` rule and change its selector to `.empty h1, .empty h2`, instead of adding a separate rule with values chosen by hand.\n- Scrollers are tab stops even when they don't overflow `src/app/cloud/PlanTab.tsx:93` — Optional: set tabIndex only when scrollWidth > clientWidth, or accept the extra stop.\n- No test pins the new a11y markup on the dot, scrollers and report headers `src/components/States.test.ts:1` — Add a small render test for BreathTable that asserts role=\"region\", tabindex=\"0\" and the aria-label.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/app/globals.css",
+        "line": 206,
+        "acceptance_id": null,
+        "title": "New .empty h1 rule may not match the existing empty-state h2 styling",
+        "detail": "The new rule sets only font and letter-spacing on `.empty h1`. Any other `.empty h2` styling elsewhere (margin, colour, size in console.css or globals.css) will not apply to the h1, and the global h1 margin and colour will apply instead. The card allows no visual change beyond the scroller focus outline. This is not visible from the diff, so it can't be confirmed.",
+        "repro": "Compare before and after screenshots of /cloud/sharing/ as a coach, checking the empty-state title's size, weight, colour and spacing.",
+        "fix": "Find the existing `.empty h2` rule and change its selector to `.empty h1, .empty h2`, instead of adding a separate rule with values chosen by hand.",
+        "pattern": "a93868ca38cc"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/PlanTab.tsx",
+        "line": 93,
+        "acceptance_id": null,
+        "title": "Scrollers are tab stops even when they don't overflow",
+        "detail": "tabIndex={0} applies at every width, so at 1440px, where the table fits, keyboard users get an extra stop that does nothing. axe does not require focusability when the element doesn't overflow. The same applies to Waveform.tsx:299.",
+        "repro": "At 1440px on /cloud/sessions/?athlete=demo-athlete&tab=plan, pressing Tab lands on the Earlier wrapper even though it can't scroll.",
+        "fix": "Optional: set tabIndex only when scrollWidth > clientWidth, or accept the extra stop.",
+        "pattern": "52dcbfdbd375"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/components/States.test.ts",
+        "line": 1,
+        "acceptance_id": null,
+        "title": "No test pins the new a11y markup on the dot, scrollers and report headers",
+        "detail": "Only EmptyState's heading level is tested. Nothing guards the removal of aria-label from .new-dot, the role, name and tabIndex on .table-scroll and .bt-scroll, or the sr-only text in the report th, so a later change could quietly reintroduce the axe violations. The ErrorState cases test code this diff didn't change.",
+        "repro": "Revert the role, aria-label and tabIndex on the bt-scroll div in Waveform.tsx: every test still passes.",
+        "fix": "Add a small render test for BreathTable that asserts role=\"region\", tabindex=\"0\" and the aria-label.",
+        "pattern": "92a7fb7a8a0c"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "unverified",
+        "note": "The fixes for both serious rules are in the markup, but the proof is the axe screenshot run, which this diff doesn't include."
+      },
+      {
+        "id": "A2",
+        "status": "unverified",
+        "note": "Both scrollers now have tabIndex=0, role=region and an aria-label. The focus outline, arrow-key scrolling and the axe result at 375px need the manual check."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "aria-label is removed from both .new-dot elements, and 'Not opened yet' is now sr-only text inside the dot. Visual parity relies on .sr-only and still needs to be confirmed in the screenshots."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "The three reported pages pass level={1}. EmptyState defaults to h2, and a test covers both levels."
+      },
+      {
+        "id": "A5",
+        "status": "met",
+        "note": "The 6th and 8th th now carry sr-only 'Timing, exhale' and 'Depth, exhale'. sr-only text should leave the table's appearance unchanged."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 14482,
+      "costUsd": 0.137772
+    }
+  }
+}

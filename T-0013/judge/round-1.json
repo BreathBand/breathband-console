@@ -1,0 +1,165 @@
+{
+  "task": "T-0013",
+  "round": 1,
+  "verdict": "failed",
+  "head": "eff1f317bbc0f0aaf4b10dd2b7f5b5fae6ec3be1",
+  "base": "c7f8fd24c1711df6e1e7be1e462319aa016c4383",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "request-changes",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · 1 blocking\n\n#### Blocking\n\n**defect: New scroller region has the same name as the section it sits in, which adds a landmark-unique violation** `src/app/cloud/PlanTab.tsx:93`\nThe enclosing <section aria-labelledby=\"past-h\"> is already a region landmark named \"Earlier\". The new div also has role=\"region\" and aria-labelledby=\"past-h\", so the page now has two nested region landmarks that are both called \"Earlier\". The original audit ran best-practice rules (it reported page-has-heading-one), so the same run will now report landmark-unique on this page. The card says to fix only the reported rules, and this adds a new axe failure on a page it was cleaning up. Screen-reader users also hear \"Earlier, region\" twice in a row.\n- **Repro:** Load /cloud/sessions/?athlete=demo-athlete&tab=plan with an athlete whose plan has past items, so `past.length > 0` and the Earlier section renders. The <section aria-labelledby=\"past-h\"> is a region landmark named \"Earlier\". The new <div className=\"table-scroll\" role=\"region\" aria-labelledby=\"past-h\"> (PlanTab.tsx:93) is a second, nested region also named \"Earlier\". Run axe-core with best-practice rules enabled: landmark-unique flags both elements as region|Earlier.\n- **Fix:** Give the scroller its own name, e.g. replace aria-labelledby=\"past-h\" with aria-label=\"Earlier practices\" (or aria-labelledby pointing to a distinct caption).\n\n#### Acceptance\n- A1: unverified — Needs the tool-produced axe screenshots. The code changes look like they address both serious rules.\n- A2: unverified — Both scrollers now have tabIndex=0, role=region and a name, and the global :focus-visible should draw the outline. A manual axe, Tab and arrow-key check at 375px is still needed.\n- A3: met — Both .new-dot elements dropped aria-label for an sr-only span. The span is clipped, so the dot should look the same; the screenshots confirm this.\n- A4: met — The three reported pages pass level={1}. EmptyState still defaults to h2, and new tests cover both levels.\n- A5: met — The 6th and 8th th now have sr-only 'Timing, exhale' and 'Depth, exhale'. The text is clipped, so the table looks the same.\n\n<details><summary>2 suggestion(s), non-blocking</summary>\n\n- .empty h1 may not match the h2 it replaces `src/app/globals.css:206` — Copy exactly the computed styles of the existing .empty h2 (font size and margin) into .empty h1, or share one selector: `.empty h1, .empty h2 { … }`.\n- The sr-only text joins the link name with no separator `src/app/cloud/CoachDashboard.tsx:316` — Put a leading space or a comma in the sr-only text, e.g. \", not opened yet\".\n\n</details>\n\n_claude-opus-5-5 · 2 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [
+      {
+        "kind": "defect",
+        "file": "src/app/cloud/PlanTab.tsx",
+        "line": 93,
+        "acceptance_id": null,
+        "title": "New scroller region has the same name as the section it sits in, which adds a landmark-unique violation",
+        "detail": "The enclosing <section aria-labelledby=\"past-h\"> is already a region landmark named \"Earlier\". The new div also has role=\"region\" and aria-labelledby=\"past-h\", so the page now has two nested region landmarks that are both called \"Earlier\". The original audit ran best-practice rules (it reported page-has-heading-one), so the same run will now report landmark-unique on this page. The card says to fix only the reported rules, and this adds a new axe failure on a page it was cleaning up. Screen-reader users also hear \"Earlier, region\" twice in a row.",
+        "repro": "Load /cloud/sessions/?athlete=demo-athlete&tab=plan with an athlete whose plan has past items, so `past.length > 0` and the Earlier section renders. The <section aria-labelledby=\"past-h\"> is a region landmark named \"Earlier\". The new <div className=\"table-scroll\" role=\"region\" aria-labelledby=\"past-h\"> (PlanTab.tsx:93) is a second, nested region also named \"Earlier\". Run axe-core with best-practice rules enabled: landmark-unique flags both elements as region|Earlier.",
+        "fix": "Give the scroller its own name, e.g. replace aria-labelledby=\"past-h\" with aria-label=\"Earlier practices\" (or aria-labelledby pointing to a distinct caption).",
+        "pattern": "4a5518420df0"
+      }
+    ],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/app/globals.css",
+        "line": 206,
+        "acceptance_id": null,
+        "title": ".empty h1 may not match the h2 it replaces",
+        "detail": "The global h2 is 600 var(--t-15)/1.3, but the new .empty h1 rule uses var(--t-17), and the rest of the global h1 rule (margins, colour, etc.) still applies. Unless a .empty h2 override elsewhere already uses --t-17 and the same box styles, the three empty states will render differently. The constraints allow no visual change beyond the scroller focus outline.",
+        "repro": "Compare before and after screenshots of /cloud/sharing/ as a coach.",
+        "fix": "Copy exactly the computed styles of the existing .empty h2 (font size and margin) into .empty h1, or share one selector: `.empty h1, .empty h2 { … }`.",
+        "pattern": "e9727b375b9d"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/CoachDashboard.tsx",
+        "line": 316,
+        "acceptance_id": null,
+        "title": "The sr-only text joins the link name with no separator",
+        "detail": "The span sits inside <b> right after the display name, so the link's accessible name may read as \"Lena VosNot opened yet\" in some screen readers.",
+        "repro": "Inspect the accessible name of the To review link for an unopened session in Chrome DevTools.",
+        "fix": "Put a leading space or a comma in the sr-only text, e.g. \", not opened yet\".",
+        "pattern": "2eb620c53401"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "unverified",
+        "note": "Needs the tool-produced axe screenshots. The code changes look like they address both serious rules."
+      },
+      {
+        "id": "A2",
+        "status": "unverified",
+        "note": "Both scrollers now have tabIndex=0, role=region and a name, and the global :focus-visible should draw the outline. A manual axe, Tab and arrow-key check at 375px is still needed."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "Both .new-dot elements dropped aria-label for an sr-only span. The span is clipped, so the dot should look the same; the screenshots confirm this."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "The three reported pages pass level={1}. EmptyState still defaults to h2, and new tests cover both levels."
+      },
+      {
+        "id": "A5",
+        "status": "met",
+        "note": "The 6th and 8th th now have sr-only 'Timing, exhale' and 'Depth, exhale'. The text is clipped, so the table looks the same."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 24039,
+      "costUsd": 0.2081312
+    }
+  }
+}

@@ -13,6 +13,11 @@
 - 2026-11-24 05:24 build: build started · skills spine only · budget 8 steps / 15k ctx · ~28258 prompt tokens · 8 repo file(s) in context · 210707 tokens · $0.51 · 8 turns (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 05:27 build: build done · commit eff1f317bbc0 · 11 file(s) this round · 1720196 tokens · $1.15 · 39 turns · I've made fixes for all four axe rules. Lint, typecheck, the new tests and `npm run build` (the static export) all pass. I couldn't do step 8: there's no Playwright or Puppeteer in the repo and I coul (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 05:28 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:46 judge: judge failed · round 1 · head eff1f317bbc0 · 1 blocking · record sha256 2063d875fce4f143539330104d8df72d2e7045c191aa1564d9f89ca146a5a00e (rivetari judge (for arynbht@gmail.com))
+- 2026-11-24 05:47 build: build done · commit ee22d0a89ff2 · 1 file(s) this round · 201016 tokens · $0.34 · 4 turns · retry · I fixed the one problem the judge sent back. On the Plan tab, the "Earlier" section and the scrolling table inside it were both regions named "Earlier", which axe reports as a duplicate (`landmark-uni (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:48 prove: proof passed · ui-screenshots (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:49 judge: judge passed · round 2 · head ee22d0a89ff2 · record sha256 401a0a4644379f3fa9ee0a97800ce9a7f88583ed65bfe02fa9e9b41fb1525d8b (rivetari judge (for arynbht@gmail.com))
+- 2026-11-24 05:49 ship: draft PR opened: #31 https://github.com/BreathBand/breathband-console/pull/31 · fix/t-0013 at ee22d0a89ff2 → main (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -49,7 +54,27 @@
 - 2026-11-24 05:28 axe: 0 serious or critical violations
 - 2026-11-24 05:28 visual diff: not automated yet; the before/after images are the comparison
 - 2026-11-24 05:28 signed in: .rivetari/proof-auth.mjs ran on each side before its shots
+- 2026-11-24 05:48 screenshots: /cloud/, /cloud/sessions/?athlete=demo-athlete&tab=sessions, /cloud/sessions/?athlete=demo-athlete&tab=plan, /cloud/session/?athlete=demo-athlete&id=s001, /cloud/session/?id=s001, /cloud/sharing/, /cloud/group/live/, /cloud/report/?athlete=demo-athlete at sm/md/lg, before and after (48 images) in .rivetari/tasks/T-0013/proof/ (not pushed: upload failed: …nUZR42PKQFksBr9QKVXCPusD3OiA/RkQ5kP8qV/Jl1WywAp/6+dcmPM2zL1UrUahe4JqfnWWKXIul3uUbfP8njAFLW1OFr3gdFtZ72cNH+PtQT7/brW+NXqJAHh0y9V8/U/A1U7AfwIMAD7mS3pCbuWJAAAAAElFTkSuQmCC" /> </a> </div> </body> </html>)
+- 2026-11-24 05:48 axe: 0 serious or critical violations
+- 2026-11-24 05:48 visual diff: not automated yet; the before/after images are the comparison
+- 2026-11-24 05:48 signed in: .rivetari/proof-auth.mjs ran on each side before its shots
 
 ## Judge
 
 - 2026-11-24 05:28 tier 1 round 1: pass · 7/8 pass · 1 pre-existing
+- 2026-11-24 05:44 tier 1 round 1: pass · 7/8 pass · 1 pre-existing
+- 2026-11-24 05:46 review round 1: request-changes; 1 blocking, 2 suggestion(s) (claude-opus-5-5) · 24039 tokens · $0.21
+- 2026-11-24 05:46 blocking defect src/app/cloud/PlanTab.tsx:93 — New scroller region has the same name as the section it sits in, which adds a landmark-unique violation · repro: Load /cloud/sessions/?athlete=demo-athlete&tab=plan with an athlete whose plan has past items, so `past.length > 0` and the Earlier section renders. The <section aria-labelledby="past-h"> is a region landmark named "Earlier". The new <div className="table-scroll" role="region" aria-labelledby="past-… · fix: Give the scroller its own name, e.g. replace aria-labelledby="past-h" with aria-label="Earlier practices" (or aria-labelledby pointing to a distinct caption).
+- 2026-11-24 05:46 acceptance A1: unverified — Needs the tool-produced axe screenshots. The code changes look like they address both serious rules.
+- 2026-11-24 05:46 acceptance A2: unverified — Both scrollers now have tabIndex=0, role=region and a name, and the global :focus-visible should draw the outline. A manual axe, Tab and arrow-key check at 375px is still needed.
+- 2026-11-24 05:46 acceptance A3: met — Both .new-dot elements dropped aria-label for an sr-only span. The span is clipped, so the dot should look the same; the screenshots confirm this.
+- 2026-11-24 05:46 acceptance A4: met — The three reported pages pass level={1}. EmptyState still defaults to h2, and new tests cover both levels.
+- 2026-11-24 05:46 acceptance A5: met — The 6th and 8th th now have sr-only 'Timing, exhale' and 'Depth, exhale'. The text is clipped, so the table looks the same.
+- 2026-11-24 05:48 tier 1 round 2: pass · 7/8 pass · 1 pre-existing
+- 2026-11-24 05:49 review round 2: approve; 0 blocking, 3 suggestion(s) (claude-opus-5-5) · 14482 tokens · $0.14
+- 2026-11-24 05:49 acceptance A1: unverified — The fixes for both serious rules are in the markup, but the proof is the axe screenshot run, which this diff doesn't include.
+- 2026-11-24 05:49 acceptance A2: unverified — Both scrollers now have tabIndex=0, role=region and an aria-label. The focus outline, arrow-key scrolling and the axe result at 375px need the manual check.
+- 2026-11-24 05:49 acceptance A3: met — aria-label is removed from both .new-dot elements, and 'Not opened yet' is now sr-only text inside the dot. Visual parity relies on .sr-only and still needs to be confirmed in the screenshots.
+- 2026-11-24 05:49 acceptance A4: met — The three reported pages pass level={1}. EmptyState defaults to h2, and a test covers both levels.
+- 2026-11-24 05:49 acceptance A5: met — The 6th and 8th th now carry sr-only 'Timing, exhale' and 'Depth, exhale'. sr-only text should leave the table's appearance unchanged.
+- 2026-11-24 05:49 judge review posted: https://github.com/BreathBand/breathband-console/pull/31#pullrequestreview-6034322850
