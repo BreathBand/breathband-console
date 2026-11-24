@@ -1,0 +1,159 @@
+{
+  "task": "T-0006",
+  "round": 1,
+  "verdict": "passed",
+  "head": "137fec2f6572fd501babf67e7be68effa40ad82f",
+  "base": "7fa76ea1e1d82913590fe367b6e73ea9c9e4ea9a",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — Decisions section lists 1-7 with the date 2026-11-23, and the two old rows are struck through with pointers to the new decisions.\n- A2: met — The Cloud Run section replaces the alternative, with local docker build and run, the build arg, the gcloud command and a person-only note. Whether the Dockerfile actually has the build arg is not shown in this diff.\n- A3: met — README covers npm run dev, the docker build and run steps, the localhost:8080 URL and Cloud Run as the target, and says Firebase Hosting is no longer a target.\n- A4: met — The diff touches only README.md and docs/PLAN.md.\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- Demo-account steps now sit under the container heading but point at port 3000 `README.md:30` — Move the demo-account paragraph and list under '### Run locally', or add a short '### Sign in' heading after both run sections.\n- Unexplained 'D6' reference and unverified claims about the Dockerfile and CI `docs/PLAN.md:263` — Link or define D6 (or drop the sentence), and confirm the Dockerfile ARG and workflow claims before merging.\n- Other Firebase-as-backend text left unmarked `docs/PLAN.md` — Reword the row to 'backend rules handle authorization' or add a superseded note.\n\n</details>\n\n_claude-sonnet-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-sonnet-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "README.md",
+        "line": 30,
+        "acceptance_id": null,
+        "title": "Demo-account steps now sit under the container heading but point at port 3000",
+        "detail": "The new '### Run in a container' section was inserted before the 'Open http://localhost:3000/cloud/ and sign in with a demo account' paragraph. That paragraph and the demo-account list now read as part of the container section, while their URL belongs to the npm run dev flow.",
+        "repro": "Read README.md Quick start top to bottom: the container section ends with 'open localhost:8080', and the next paragraph says to open localhost:3000.",
+        "fix": "Move the demo-account paragraph and list under '### Run locally', or add a short '### Sign in' heading after both run sections.",
+        "pattern": "14d13dd0bee9"
+      },
+      {
+        "kind": "suggestion",
+        "file": "docs/PLAN.md",
+        "line": 263,
+        "acceptance_id": null,
+        "title": "Unexplained 'D6' reference and unverified claims about the Dockerfile and CI",
+        "detail": "'The region waits on D6' refers to something not defined in this diff. The text also states that the Dockerfile's NEXT_PUBLIC_BACKEND build arg defaults to local, and that no workflow deploys. Neither the Dockerfile nor the workflows are in this change, so the docs can't be checked against them here.",
+        "repro": "Search docs/PLAN.md for 'D6' and confirm the Dockerfile has ARG NEXT_PUBLIC_BACKEND=local.",
+        "fix": "Link or define D6 (or drop the sentence), and confirm the Dockerfile ARG and workflow claims before merging.",
+        "pattern": "219ff85012ee"
+      },
+      {
+        "kind": "suggestion",
+        "file": "docs/PLAN.md",
+        "line": null,
+        "acceptance_id": null,
+        "title": "Other Firebase-as-backend text left unmarked",
+        "detail": "The 'Static export with the browser talking to the backend directly' row still says 'Firebase rules handle authorization', and Phase 4b stays active-looking. The Phase 4 banner covers it, but the row itself disagrees with decision 1.",
+        "repro": "Read the 'Decisions already made' table after the two superseded rows.",
+        "fix": "Reword the row to 'backend rules handle authorization' or add a superseded note.",
+        "pattern": "f15ebbbdc109"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "Decisions section lists 1-7 with the date 2026-11-23, and the two old rows are struck through with pointers to the new decisions."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "The Cloud Run section replaces the alternative, with local docker build and run, the build arg, the gcloud command and a person-only note. Whether the Dockerfile actually has the build arg is not shown in this diff."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "README covers npm run dev, the docker build and run steps, the localhost:8080 URL and Cloud Run as the target, and says Firebase Hosting is no longer a target."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "The diff touches only README.md and docs/PLAN.md."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 13513,
+      "costUsd": 0.057912
+    }
+  }
+}
