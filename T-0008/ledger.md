@@ -5,6 +5,7 @@
 ## Timeline
 
 - 2026-11-24 00:14 intake: card drafted with 5 acceptance criteria; awaiting confirmation (arynbht@gmail.com)
+- 2026-11-24 00:14 intake: intake confirmed; card sha256 8b5250a89b7f2d81b10e51cffcb4d11ec147537db9e83a2364794be6d7646ddf (arynbht@gmail.com (--yes))
 
 ## Decisions
 
