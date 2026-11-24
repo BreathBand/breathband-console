@@ -1,0 +1,29 @@
+{
+  "task": "T-0019",
+  "kind": "migration-dry-run",
+  "passed": true,
+  "lines": [
+    "migration-dry-run has no proof runner yet; the test run stands in, and a person attaches the migration-dry-run proof",
+    "tests passed (npm run test, exit 0) · new tests: src/lib/backend/local/contract.test.ts: accepts an open waveform with 2 markers; src/lib/backend/local/contract.test.ts: rejects an open waveform with 3 markers; src/lib/backend/local/contract.test.ts: accepts a paced waveform with 3 markers; src/lib/backend/local/contract.test.ts: rejects a calibration with 2 peaks; src/lib/backend/local/contract.test.ts: rejects a calibration with 4 troughs; src/lib/backend/local/contract.test.ts: rejects a 7-bin histogram; src/lib/backend/local/contract.test.ts: rejects an unknown skill level; src/lib/backend/local/contract.test.ts: accepts every seeded session with its generated waveform; src/lib/backend/local/contract.test.ts: stores sessions that pass the contract check; src/lib/backend/local/contract.test.ts: reads open and paced sessions with every new field back unchanged; src/lib/backend/local/contract.test.ts: reads a seeded legacy session with none of the new keys",
+    "output: …2m11 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 52\u001b[2mms\u001b[22m\u001b[39m \u001b[32m✓\u001b[39m src/lib/backend/local/local.test.ts \u001b[2m(\u001b[22m\u001b[2m27 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 76\u001b[2mms\u001b[22m\u001b[39m \u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m8 passed\u001b[39m\u001b[22m\u001b[90m (8)\u001b[39m \u001b[2m Tests \u001b[22m \u001b[1m\u001b[32m104 passed\u001b[39m\u001b[22m\u001b[90m (104)\u001b[39m \u001b[2m Start at \u001b[22m 00:32:01 \u001b[2m Duration \u001b[22m 421ms\u001b[2m (transform 39%, import 38%, tests 20%, worker 3%)\u001b[22m",
+    "evidence: the test run on the evidence branch: https://github.com/BreathBand/breathband-console/blob/evidence/T-0019/test-run.txt?raw=true"
+  ],
+  "tests": {
+    "exitCode": 0,
+    "added": [
+      "src/lib/backend/local/contract.test.ts: accepts an open waveform with 2 markers",
+      "src/lib/backend/local/contract.test.ts: rejects an open waveform with 3 markers",
+      "src/lib/backend/local/contract.test.ts: accepts a paced waveform with 3 markers",
+      "src/lib/backend/local/contract.test.ts: rejects a calibration with 2 peaks",
+      "src/lib/backend/local/contract.test.ts: rejects a calibration with 4 troughs",
+      "src/lib/backend/local/contract.test.ts: rejects a 7-bin histogram",
+      "src/lib/backend/local/contract.test.ts: rejects an unknown skill level",
+      "src/lib/backend/local/contract.test.ts: accepts every seeded session with its generated waveform",
+      "src/lib/backend/local/contract.test.ts: stores sessions that pass the contract check",
+      "src/lib/backend/local/contract.test.ts: reads open and paced sessions with every new field back unchanged",
+      "src/lib/backend/local/contract.test.ts: reads a seeded legacy session with none of the new keys"
+    ],
+    "output": "\n> breathband-console@0.1.0 test\n> vitest run\n\n\n\u001b[1m\u001b[30m\u001b[46m RUN \u001b[49m\u001b[39m\u001b[22m \u001b[36mv5.1.1 \u001b[39m\u001b[90mC:/Users/arynb/Documents/Projects/breathband-console/.worktrees/T-0019\u001b[39m\n\n \u001b[32m✓\u001b[39m src/lib/domain/targets.test.ts \u001b[2m(\u001b[22m\u001b[2m3 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 3\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/analysis/config.test.ts \u001b[2m(\u001b[22m\u001b[2m12 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 6\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/domain/compare-csv.test.ts \u001b[2m(\u001b[22m\u001b[2m5 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 4\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/domain/domain.test.ts \u001b[2m(\u001b[22m\u001b[2m17 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 21\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/dockerSmoke.test.ts \u001b[2m(\u001b[22m\u001b[2m15 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 94\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/backend/http/http.test.ts \u001b[2m(\u001b[22m\u001b[2m14 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 8\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/backend/local/contract.test.ts \u001b[2m(\u001b[22m\u001b[2m11 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 52\u001b[2mms\u001b[22m\u001b[39m\n \u001b[32m✓\u001b[39m src/lib/backend/local/local.test.ts \u001b[2m(\u001b[22m\u001b[2m27 tests\u001b[22m\u001b[2m)\u001b[22m\u001b[32m 76\u001b[2mms\u001b[22m\u001b[39m\n\n\u001b[2m Test Files \u001b[22m \u001b[1m\u001b[32m8 passed\u001b[39m\u001b[22m\u001b[90m (8)\u001b[39m\n\u001b[2m      Tests \u001b[22m \u001b[1m\u001b[32m104 passed\u001b[39m\u001b[22m\u001b[90m (104)\u001b[39m\n\u001b[2m   Start at \u001b[22m 00:32:01\n\u001b[2m   Duration \u001b[22m 421ms\u001b[2m (transform 39%, import 38%, tests 20%, worker 3%)\u001b[22m\n\n\n",
+    "outcome": "pass"
+  }
+}

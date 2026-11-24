@@ -1,0 +1,164 @@
+{
+  "task": "T-0019",
+  "round": 1,
+  "verdict": "passed",
+  "head": "e837425c68b3d84b33aa7233f4e2be9d0d5e2e09",
+  "base": "44e6ffb292b5e8694d42498dcb8a3909f27f9e75",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "medium",
+    "effective": "medium",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — All nine additions are present with the specified names and types. SkillLevel uses a type-only import. Only added lines, plus the widened calibration line. No new comments.\n- A2: met — checkSessionContract throws BackendError('invalid-input') with a field-named message for each of the four cases, and applies the marker cap only when mode is 'open'.\n- A3: met — Covers 2 vs 3 open markers, 3 paced markers, 2 peaks, a 7-bin histogram, and every seeded session paired with generateWaveform.\n- A4: met — Open and paced sessions with all new fields are placed in a memoryStore and read back via getSession and getWaveform with toEqual. A seeded legacy session is checked for absence of the new keys.\n- A5: met — The check runs over recorded sessions before changeGroup writes them. No existing tests or Firebase rules are touched. lint, typecheck and test results are left to the deterministic checks.\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- A rejected recording blocks the whole group from ending `src/lib/backend/local/index.ts:725` — Confirm that live.ts caps open-session markers at FIXED_CONSTANTS.maxEventMarkersPerOpenSession. Otherwise decide whether one bad recording should block ending the group.\n- Histogram bin count is derived, not read `src/lib/backend/local/validate.ts:6` — Use the bin count or edges from FIXED_CONSTANTS.deviationHistogram if one exists.\n- Round-trip assertion may not prove anything was preserved `src/lib/backend/local/contract.test.ts:157` — Store structuredClone(open) and structuredClone(openWave), then compare reads to the originals with toStrictEqual.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/lib/backend/local/index.ts",
+        "line": 725,
+        "acceptance_id": null,
+        "title": "A rejected recording blocks the whole group from ending",
+        "detail": "If any recorded summary or waveform fails the check, endGroupSession throws before changeGroup runs. The group then stays 'live' and every retry fails the same way. The diff doesn't show whether recordGroupSession in live.ts can produce an open session with more than 2 markers, so this may never happen. If it can, the coach has no way to end the session.",
+        "repro": "Speculative: a live open profile in live.ts that emits 3 or more markers, then endGroupSession(id).",
+        "fix": "Confirm that live.ts caps open-session markers at FIXED_CONSTANTS.maxEventMarkersPerOpenSession. Otherwise decide whether one bad recording should block ending the group.",
+        "pattern": "accf9de170d5"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/backend/local/validate.ts",
+        "line": 6,
+        "acceptance_id": null,
+        "title": "Histogram bin count is derived, not read",
+        "detail": "HISTOGRAM_BINS is computed as round((maxSd - minSd) / stepSd). That works if deviationHistogram exposes exactly those keys and the bins are half-open steps. If config.ts already exposes a bin count or edges array, read it directly so the two can't drift.",
+        "repro": "n/a",
+        "fix": "Use the bin count or edges from FIXED_CONSTANTS.deviationHistogram if one exists.",
+        "pattern": "bc2791a8927d"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/backend/local/contract.test.ts",
+        "line": 157,
+        "acceptance_id": null,
+        "title": "Round-trip assertion may not prove anything was preserved",
+        "detail": "toEqual ignores keys whose value is undefined. And if memoryStore hands back the same object references, the comparison is trivially true. Comparing against independent copies with toStrictEqual would make the round-trip check meaningful.",
+        "repro": "n/a",
+        "fix": "Store structuredClone(open) and structuredClone(openWave), then compare reads to the originals with toStrictEqual.",
+        "pattern": "29ed063e4a94"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "All nine additions are present with the specified names and types. SkillLevel uses a type-only import. Only added lines, plus the widened calibration line. No new comments."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "checkSessionContract throws BackendError('invalid-input') with a field-named message for each of the four cases, and applies the marker cap only when mode is 'open'."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "Covers 2 vs 3 open markers, 3 paced markers, 2 peaks, a 7-bin histogram, and every seeded session paired with generateWaveform."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "Open and paced sessions with all new fields are placed in a memoryStore and read back via getSession and getWaveform with toEqual. A seeded legacy session is checked for absence of the new keys."
+      },
+      {
+        "id": "A5",
+        "status": "met",
+        "note": "The check runs over recorded sessions before changeGroup writes them. No existing tests or Firebase rules are touched. lint, typecheck and test results are left to the deterministic checks."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 18047,
+      "costUsd": 0.176108
+    }
+  }
+}
