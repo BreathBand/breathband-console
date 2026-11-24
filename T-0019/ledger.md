@@ -15,6 +15,9 @@
 - 2026-11-24 05:32 prove: proof passed · migration-dry-run (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 05:32 judge: judge passed · round 1 · head e837425c68b3 · record sha256 a7e2a0665cb1be129464c3c4726b0cb64df5220e0128d082037f45d087fb32fa (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 05:32 ship: draft PR opened: #29 https://github.com/BreathBand/breathband-console/pull/29 · feature/t-0019 at e837425c68b3 → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:38 close: worktree removed · branch feature/t-0019 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:38 close: floorplan updated · 1 call(s) · 28034 tokens · $0.08 (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 05:38 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -59,3 +62,7 @@
 - 2026-11-24 05:32 acceptance A4: met — Open and paced sessions with all new fields are placed in a memoryStore and read back via getSession and getWaveform with toEqual. A seeded legacy session is checked for absence of the new keys.
 - 2026-11-24 05:32 acceptance A5: met — The check runs over recorded sessions before changeGroup writes them. No existing tests or Firebase rules are touched. lint, typecheck and test results are left to the deterministic checks.
 - 2026-11-24 05:32 judge review posted: https://github.com/BreathBand/breathband-console/pull/29#pullrequestreview-6034197576
+
+## Outcome
+
+- 2026-11-24 05:38 PR #29 merged by arynbht 2026-11-24 05:36 · 33m · 1793k tokens · $2.34
