@@ -1,0 +1,104 @@
+id: T-0012
+title: Synthetic breathing-signal generator with fault profiles
+type: feature
+source: prompt
+description: "Decision 3 in docs/PLAN.md:49 moves scoring into a shared
+  src/lib/analysis/ library, but that library is only a skeleton today:
+  src/lib/analysis/index.ts:1 re-exports config.ts and nothing else. Every later
+  Batch 1 card (calibration, transitions, method-C paced scoring, open metrics)
+  needs signals with known answers, and the Appendix golden checks are defined
+  on specific breathing patterns (5-5 pacer, 3-minute session, 35 transitions,
+  Beginner). The only signal generator in the repo is
+  src/lib/backend/local/seed.ts:343-386 (generateWaveform), which makes raw-unit
+  demo waves (calibration fixed at {min 1.2, max 3.4}, seed.ts:348) with random
+  lag and reach driven by made-up scores, so no golden value can be derived from
+  it. Its PRNG, mulberry32 (seed.ts:67-76), lives in the backend layer, which
+  the analysis library must not import. This card adds
+  src/lib/analysis/synth.ts: a deterministic, dependency-free generator that
+  writes signals in % of max relative to the midline (the Appendix unit), at a
+  configurable sample rate, with optional seeded noise, plus named profiles for
+  the six Appendix golden patterns and for the demo fault sessions of Batch 6.
+  Conventions the later cards rely on: the pacer is ±3% (half of
+  FIXED_CONSTANTS.referenceDepthPeakToTroughPctOfMax), starts at a trough at t =
+  0 and rises first, as the group pacer does (src/lib/domain/group.ts:18-22);
+  sample i is at time i / sampleRateHz (division, never i × interval, so
+  transition times are exact)."
+acceptance:
+  - id: A1
+    text: src/lib/analysis/synth.ts exports a generator that takes a breathing
+      pattern (cycle length, separate inhale and exhale durations, peak and
+      trough levels in % of max, time shift in seconds, duration, sample rate)
+      and returns the user signal in % of max relative to the midline. For a
+      paced pattern it also returns the ±3% pacer signal. It can also write raw
+      units given {a100, midline} (raw = midline + pct / 100 × a100). A
+      piecewise form joins patterns at given times, so a session can change
+      pattern at a marker. New test src/lib/analysis/synth.test.ts checks the
+      output length (durationS × sampleRateHz), a 1.5 s inhale / 3.0 s exhale
+      pattern peaking at +3 and troughing at -3 within 1e-9, and the raw-unit
+      mapping.
+    verify: unit
+  - id: A2
+    text: "synth.ts exports named paced golden profiles for a 5-5 pacer, 180 s,
+      matching the Appendix golden checks: on-time; early by 0.35 timing SD
+      (1.75 s, derived from FIXED_CONSTANTS.timingSdBreathFraction rather than
+      typed in); half the pacer depth (±1.5%); 1.8× the pacer depth (±5.4%);
+      peaks +4.5% / troughs -1.5%; and a 9 s cycle against the 10 s pacer.
+      synth.test.ts asserts each profile's defining property on the noise-free
+      signal: the on-time user signal equals the pacer sample by sample within
+      1e-9; the early profile's first user peak is at 3.25 s; the depth
+      profiles' maximum and minimum match their levels within 1e-9; the 9 s
+      profile's peaks are 9 s apart."
+    verify: unit
+  - id: A3
+    text: "synth.ts exports demo fault profiles for paced and open sessions: early,
+      shallow, too deep, too fast, and lost-then-recovered (a normal pattern, a
+      lost span that is flat at the midline with single-sample spikes beyond
+      ±100% of max, then the normal pattern again). A test checks that the lost
+      span is flat apart from the spikes, that every spike is beyond ±100%, and
+      that the signal before and after the span matches the normal pattern."
+    verify: unit
+  - id: A4
+    text: "Noise is optional and seeded by a PRNG implemented inside
+      src/lib/analysis (no import from src/lib/backend). There are three kinds:
+      per-sample Gaussian noise (SD in % of max), per-transition amplitude
+      jitter (SD in % of max) and per-transition timing jitter (SD in seconds).
+      Tests show the same seed gives identical arrays, a different seed gives
+      different arrays, a noise SD of 0 gives the noise-free signal exactly, and
+      over 180 s at 20 Hz the measured SD of (noisy − clean) is within 10% of
+      the configured per-sample SD."
+    verify: unit
+  - id: A5
+    text: "synth.ts also exports a calibration-recording generator: maximal breaths
+      in raw units with known highest peaks and lowest troughs, so that the
+      expected A100 (mean of the 3 highest peaks − mean of the 3 lowest troughs)
+      and midline are known exactly. A test checks those expected values against
+      the generated samples' extremes."
+    verify: unit
+  - id: A6
+    text: synth.ts takes every Appendix number it uses (pacer depth, timing SD
+      fraction, pacer half cycles) from src/lib/analysis/config.ts, and
+      src/lib/analysis/index.ts re-exports synth.ts. npm run lint, typecheck and
+      test pass.
+    verify: review
+out_of_scope:
+  - Filtering, calibration maths and transition detection (B1-2)
+  - Method-C paced scoring and its golden vectors (B1-3)
+  - Open-session metrics and their golden vectors (B1-4)
+  - Reseeding the local adapter's demo data from these profiles (Batch 6);
+    seed.ts and generateWaveform stay as they are
+  - A simulated live sensor / SignalSource (Batch 3)
+touches:
+  - src/lib/analysis/synth.ts
+  - src/lib/analysis/synth.test.ts
+  - src/lib/analysis/index.ts
+pages: []
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - import Appendix constants from src/lib/analysis/config.ts
+  - static export only; pure TypeScript with no browser or Node APIs
+  - do not import from src/lib/backend/**
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-24
