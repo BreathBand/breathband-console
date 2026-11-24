@@ -1,0 +1,52 @@
+id: T-0024
+title: Make generateCalibration's expected values exact or refuse off-grid knot times
+type: fix
+source: prompt
+description: "Fix 1 of 2 for T-0012 (B1-1, PR #23), built on its branch
+  feature/t-0012. T-0012's A5 says the calibration recording's expected A100 and
+  midline are 'known exactly' and checked against the samples. In
+  src/lib/analysis/synth.ts:386-428 generateCalibration derives expectedA100 and
+  expectedMidline from the knot levels (peaksPct and troughsPct), but the
+  samples come from sampleTimes(at, sampleRateHz). When a knot time (restS, then
+  + inhaleS and + exhaleS per breath) times sampleRateHz is not a whole number
+  (for example 12.5 Hz with the default timings), no sample lands on the peak or
+  trough. The raw samples' extremes then silently disagree with expectedA100 and
+  expectedMidline. The judge reviewer flagged this as a defect at synth.ts:415;
+  its verifier downgraded it (Rivetari bug R-22). rivetari-51, the run's
+  decider, ruled that A5 is not met and needs a fix round."
+acceptance:
+  - id: A1
+    text: generateCalibration throws a RangeError, whose message names the sample
+      rate and the first offending knot time, when any knot time × sampleRateHz
+      differs from a whole number by more than 1e-9. With sampleRateHz 12.5 and
+      the default timings it throws, and a new test asserts that
+    verify: unit
+  - id: A2
+    text: A new test at the default 20 Hz checks that the highest 3 raw samples'
+      mean minus the lowest 3 raw samples' mean equals expectedA100, and that
+      their midpoint equals expectedMidline, to within 1e-9. The extremes are
+      taken from the rendered raw samples, not from the knots
+    verify: unit
+  - id: A3
+    text: Every existing synth.test.ts test still passes unchanged; the new tests go
+      in a new file src/lib/analysis/synth-calibration.test.ts. npm run lint,
+      npm run typecheck and npm test pass
+    verify: unit
+out_of_scope:
+  - The other T-0012 review suggestions (piecewise join at markers, fromS > 0,
+    spike assertion, GOLDEN_FACTORS location)
+  - Calibration and transition detection (B1-2)
+  - Any change to generateSignal or generatePiecewise
+touches:
+  - src/lib/analysis/synth.ts
+  - src/lib/analysis/synth-calibration.test.ts
+pages: []
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - import Appendix constants from src/lib/analysis/config.ts
+  - no new eslint-disable or other suppressions
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-24
