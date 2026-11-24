@@ -1,0 +1,159 @@
+{
+  "task": "T-0025",
+  "round": 1,
+  "verdict": "passed",
+  "head": "a5c664c1ef47d86ac87c202993a8562b42a3608b",
+  "base": "ee22d0a89ff2721c65f2150f16d2c8b7b94b7ded",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: unverified — Making .table-scroll a positioned ancestor addresses the stated root cause and leaves the sr-only th spans in place. The 375px scrollWidth must be confirmed by the screenshot run.\n- A2: unverified — The region keeps role=region and tabindex=0 and is renamed 'Timing and depth of each breath', which differs from the pane's 'Breaths in view'. The axe result at 375px and 1280px comes from the proof run.\n- A3: unverified — The diff only adds a CSS position and changes a label, so no new violation is expected. The axe comparison against main must come from the proof run.\n- A4: unverified — No existing test is modified and two new test files are added. Lint, typecheck and test results are not shown in the diff.\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- CSS tests assert source text, not layout `src/app/globals.test.ts:15` — Keep the test as a guard if wanted, but rely on the Playwright scrollWidth check for A1.\n- Row-count assertion depends on bare <tr> markup `src/app/cloud/session/Waveform.test.ts:20` — Use `/<tr[\\s>]/g` and drop line 19.\n- position: relative now applies to every .table-scroll `src/app/globals.css:488` — No change needed now.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/app/globals.test.ts",
+        "line": 15,
+        "acceptance_id": null,
+        "title": "CSS tests assert source text, not layout",
+        "detail": "The test regex-matches the globals.css source. It passes for any rule body that contains these declarations, even if a later rule or media query overrides them. It also breaks on harmless reformatting, such as a grouped selector or the selector not starting a line. It cannot show that scrollWidth stays at 375; only the A1 screenshot run proves that.",
+        "repro": "Change the rule to `.table-scroll, .bt-scroll {` and the rule() lookup throws. Or add a later `.table-scroll { position: static; }` and the test still passes.",
+        "fix": "Keep the test as a guard if wanted, but rely on the Playwright scrollWidth check for A1.",
+        "pattern": "5efacdf6fb67"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/cloud/session/Waveform.test.ts",
+        "line": 20,
+        "acceptance_id": null,
+        "title": "Row-count assertion depends on bare <tr> markup",
+        "detail": "`match(/<tr>/g)` only counts rows rendered with no attributes. If body rows ever get a className or key-driven attribute, the match returns null and the test fails for reasons unrelated to the region name. The `not.toBe(\"Breaths in view\")` assertion on line 19 is also redundant after the exact `toBe` on line 18.",
+        "repro": "Add `className=\"row\"` to the <tr> in BreathTable's tbody and the test fails with 'expected null to have length 2'.",
+        "fix": "Use `/<tr[\\s>]/g` and drop line 19.",
+        "pattern": "530aec62aa8a"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/app/globals.css",
+        "line": 488,
+        "acceptance_id": null,
+        "title": "position: relative now applies to every .table-scroll",
+        "detail": "Every absolutely positioned descendant of any .table-scroll now resolves against the wrapper and is clipped by its overflow-x: auto. Today that is what the sr-only spans need. A future tooltip or popover inside a scrolling table would be clipped, though.",
+        "repro": "None in this diff; this is a forward-looking note.",
+        "fix": "No change needed now.",
+        "pattern": "252c712329a2"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "unverified",
+        "note": "Making .table-scroll a positioned ancestor addresses the stated root cause and leaves the sr-only th spans in place. The 375px scrollWidth must be confirmed by the screenshot run."
+      },
+      {
+        "id": "A2",
+        "status": "unverified",
+        "note": "The region keeps role=region and tabindex=0 and is renamed 'Timing and depth of each breath', which differs from the pane's 'Breaths in view'. The axe result at 375px and 1280px comes from the proof run."
+      },
+      {
+        "id": "A3",
+        "status": "unverified",
+        "note": "The diff only adds a CSS position and changes a label, so no new violation is expected. The axe comparison against main must come from the proof run."
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": "No existing test is modified and two new test files are added. Lint, typecheck and test results are not shown in the diff."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 10851,
+      "costUsd": 0.100132
+    }
+  }
+}
