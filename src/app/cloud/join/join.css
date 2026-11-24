@@ -1,0 +1,530 @@
+/*
+ * Coach invites by link: the coach's "Invite an athlete" section on the
+ * roster (InviteAthlete.tsx, .inv-*) and the athlete's consent page at
+ * /cloud/join/ (.jn-*). Colours and type come from the tokens in globals.css.
+ */
+
+/* ================================================================ coach: invite an athlete */
+
+.inv-explain {
+  margin-top: var(--s-2);
+  max-width: 72ch;
+}
+
+.inv-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) auto;
+  align-items: end;
+  gap: var(--s-4);
+  margin-top: var(--s-4);
+  max-width: 880px;
+}
+
+.inv-error {
+  grid-column: 1 / -1;
+  font-size: var(--t-13);
+}
+
+.inv-created {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+  background: var(--c-well);
+  max-width: 880px;
+}
+
+.inv-link {
+  display: block;
+  padding: var(--s-3) var(--s-4);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+  background: var(--c-pane);
+  font: 500 var(--t-15) / 1.35 var(--f-mono);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.inv-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.inv-another {
+  margin-left: auto;
+}
+
+.inv-sent {
+  margin-top: var(--s-6);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-rule-soft);
+}
+
+.inv-sent-h {
+  font: 600 var(--t-13) / 1.3 var(--f-sans);
+  margin-bottom: var(--s-3);
+}
+
+.inv-table td {
+  height: 48px;
+}
+
+.inv-who {
+  font-weight: 600;
+}
+
+.inv-to {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  height: 48px;
+}
+
+.inv-to svg {
+  color: var(--c-ink-2);
+}
+
+.inv-until {
+  margin-left: var(--s-2);
+}
+
+.inv-row-actions {
+  text-align: right;
+}
+
+.inv-confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.chip[data-invite="accepted"] {
+  background: var(--c-ok-tint);
+  border-color: transparent;
+  color: var(--c-ok-strong);
+}
+
+.chip[data-invite="pending"] {
+  background: var(--c-action-tint);
+  border-color: transparent;
+  color: var(--c-action);
+}
+
+.chip[data-invite="expired"] {
+  background: var(--c-notice);
+  border-color: transparent;
+  color: var(--c-notice-ink);
+}
+
+.chip[data-invite="declined"],
+.chip[data-invite="revoked"] {
+  color: var(--c-ink-2);
+}
+
+@media (max-width: 760px) {
+  .inv-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .inv-form .button {
+    justify-self: start;
+  }
+  .inv-another {
+    margin-left: 0;
+  }
+  /* Sent invites become two-line cards: name and status, then contact and date, then actions. */
+  .inv-table thead {
+    display: none;
+  }
+  .inv-table,
+  .inv-table tbody {
+    display: block;
+  }
+  .inv-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px var(--s-4);
+    padding: var(--s-3) 0;
+    border-top: 1px solid var(--c-rule-soft);
+  }
+  .inv-table tr:first-child {
+    border-top: 0;
+  }
+  .inv-table td {
+    height: auto;
+    border: 0;
+    padding: 0;
+    white-space: normal;
+  }
+  .inv-who {
+    grid-area: 1 / 1;
+  }
+  .inv-state {
+    grid-area: 1 / 2;
+    text-align: right;
+  }
+  .inv-until {
+    display: none;
+  }
+  .inv-to {
+    grid-area: 2 / 1;
+    height: auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .inv-when {
+    grid-area: 2 / 2;
+    text-align: right;
+  }
+  .inv-row-actions {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+  .inv-row-actions:empty {
+    display: none;
+  }
+  .inv-confirm {
+    justify-content: flex-start;
+    margin-top: var(--s-2);
+  }
+  .table-scroll:has(.inv-table) {
+    overflow: visible;
+  }
+}
+
+/* ================================================================ athlete: /cloud/join/ */
+
+.jn {
+  max-width: 760px;
+}
+
+.jn.jn-wide {
+  max-width: 1080px;
+}
+
+.jn-ask {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-5);
+  padding: var(--s-6) var(--s-7);
+}
+
+.jn-avatar {
+  background: var(--c-action-tint);
+  border-color: transparent;
+  color: var(--c-action);
+}
+
+.jn-ask-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.jn-ask h1 {
+  font-size: var(--t-28);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+.jn-ask p {
+  max-width: 68ch;
+}
+
+.jn-notice {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-2);
+  background: var(--c-notice);
+  color: var(--c-notice-ink);
+  font: 400 var(--t-15) / 1.4 var(--f-sans);
+}
+
+.jn-notice svg {
+  margin-top: 1px;
+}
+
+.jn-notice a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.jn-scopes {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.jn-scopes legend {
+  padding: 0;
+  margin-bottom: var(--s-3);
+}
+
+.jn-scope-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+}
+
+.jn-scope {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  padding-right: calc(var(--s-5) + 30px);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+  background: var(--c-pane);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+
+.jn-scope:hover {
+  border-color: var(--c-ink-2);
+}
+
+.jn-scope input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.jn-scope:has(input:focus-visible) {
+  outline: 2px solid var(--c-action);
+  outline-offset: 2px;
+}
+
+.jn-scope:has(input:checked) {
+  border-color: var(--c-action);
+  box-shadow: inset 0 0 0 1px var(--c-action);
+  background: var(--c-action-tint);
+}
+
+.jn-scope:has(input:disabled) {
+  cursor: progress;
+}
+
+.jn-scope-icon {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--c-rule);
+  background: var(--c-pane);
+  color: var(--c-ink);
+}
+
+.jn-scope:has(input:checked) .jn-scope-icon {
+  border-color: var(--c-action);
+  color: var(--c-action);
+}
+
+.jn-scope-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.jn-scope-title {
+  font: 600 var(--t-17) / 1.2 var(--f-sans);
+}
+
+.jn-scope-line {
+  font: 400 var(--t-13) / 1.4 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.jn-scope-check {
+  position: absolute;
+  top: var(--s-5);
+  right: var(--s-5);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--c-rule);
+  background: var(--c-pane);
+  color: transparent;
+}
+
+.jn-scope:has(input:checked) .jn-scope-check {
+  border-color: var(--c-action);
+  background: var(--c-action);
+  color: var(--c-action-ink);
+}
+
+.jn-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-3);
+  align-items: start;
+}
+
+.jn-detail h2 {
+  margin-bottom: var(--s-3);
+}
+
+.jn-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  font: 400 var(--t-13) / 1.45 var(--f-sans);
+}
+
+.jn-list li {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+}
+
+.jn-list svg {
+  margin-top: 1px;
+  color: var(--c-action);
+}
+
+.jn-list b {
+  font-weight: 600;
+}
+
+.jn-list[data-tone="off"] svg {
+  color: var(--c-ink-2);
+}
+
+.jn-list[data-tone="off"] li {
+  color: var(--c-ink-2);
+}
+
+.jn-decide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-5) var(--s-7);
+}
+
+.jn-decide > p:first-child {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+}
+
+.jn-decide > p:first-child svg {
+  margin-top: 2px;
+  color: var(--c-action);
+}
+
+.jn-buttons {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.jn-confirm {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+/* Results and dead ends: one pane with an icon, a heading and what to do next. */
+.jn-outcome {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-5);
+  padding: var(--s-7);
+}
+
+.jn-outcome-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--c-well);
+  color: var(--c-ink-2);
+}
+
+.jn-outcome[data-tone="ok"] .jn-outcome-icon {
+  background: var(--c-ok-tint);
+  color: var(--c-ok-strong);
+}
+
+.jn-outcome[data-tone="warn"] .jn-outcome-icon {
+  background: var(--c-notice);
+  color: var(--c-notice-ink);
+}
+
+.jn-outcome[data-tone="info"] .jn-outcome-icon {
+  background: var(--c-action-tint);
+  color: var(--c-action);
+}
+
+.jn-outcome-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.jn-outcome-body p {
+  color: var(--c-ink-2);
+  max-width: 62ch;
+}
+
+.jn-outcome-body .row {
+  margin-top: var(--s-2);
+}
+
+@media (max-width: 960px) {
+  .jn-detail {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .jn-detail > :first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .jn-ask,
+  .jn-outcome,
+  .jn-decide {
+    padding: var(--s-5);
+  }
+  .jn-ask,
+  .jn-outcome {
+    flex-direction: column;
+    gap: var(--s-4);
+  }
+  .jn-ask h1 {
+    font-size: var(--t-24);
+  }
+  .jn-scope-grid,
+  .jn-detail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .jn-buttons > .button {
+    width: 100%;
+  }
+}

@@ -13,6 +13,12 @@ import type { Backend } from "../types";
 //        DataService.listSessions    → query(users/{id}/sessions, orderBy(startedAt, desc), limit)
 //        DataService.getWaveform     → getBytes(ref(storage, session.waveformPath)) + gunzip
 //        DataService.redeemInvite    → httpsCallable("redeemInvite")   (Cloud Function)
+//        DataService.getCoachLink / setCoachScope → getDoc / updateDoc(coachLinks/{coachId}_{athleteId})
+//        DataService.listAssignments → query(users/{id}/assignments, orderBy(createdAt, desc))
+//        DataService.listComments    → users/{id}/sessions/{sid}/comments, or
+//                                      collectionGroup("comments") where athleteId == id
+//        DataService.listSeenSessions / markSessionSeen → coaches/{uid}/seen/{athleteId_sessionId}
+//        DataService.getCoachNote / saveCoachNote       → coaches/{uid}/athleteNotes/{athleteId}
 //        DataService.joinWaitlist    → addDoc(waitlist)
 //      Map Firebase error codes to BackendError codes (auth/invalid-credential
 //      → "invalid-credentials", permission-denied → "permission-denied", …).

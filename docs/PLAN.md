@@ -29,12 +29,28 @@ Already done in this repo:
   - `/cloud/sessions/?athlete=`
   - `/cloud/session/?athlete=&id=`
 - **Draft access rules** in `firebase/firestore.rules` and `firebase/storage.rules`, matching what the local adapter enforces.
-- **Deployment targets, ready but unused**: `firebase.json` (Hosting + emulators) and `Dockerfile` + `nginx.conf` (Cloud Run).
-- **Tests and CI**: 11 Vitest tests define the behaviour every adapter must have. GitHub Actions runs lint, typecheck, tests and build.
+- **Deployment target, ready but not deployed**: `Dockerfile` + `nginx.conf` for Cloud Run ([decision 1](#decisions), [Cloud Run](#cloud-run)). `firebase.json` (Hosting + emulators) is kept as it is but not used.
+- **Tests and CI**: Vitest tests define the behaviour every adapter must have, plus the domain helpers (scores, activity flags, breath analysis). GitHub Actions runs lint, typecheck, tests and build.
 
-Demo logins (local only): `athlete@demo.local` / `coach@demo.local`, password `breathband`.
+- **Console styled in the Coach Console direction** (Phase 1 tokens and much of Phase 3 on the local adapter): coach dashboard, roster with search and flags, athlete workspace (overview, sessions table with CSV export, practice plans, private coach notes), session review with waveform, deviation strip, breath table, comments and kudos, sharing scope (scores only, or scores and curves), and an account page. See the README for the routes. Practice plans, comments, kudos and sharing scope are the console side of the v1.1 coaching features in the app's requirements (F22); the app still has to show them (Phase 5). **Live group sessions** (`/cloud/group/`) run on a local simulation of the realtime channel. Going live for real needs the Realtime Database (or another realtime channel), the `createGroupSession` Cloud Function, and the app's join and stream flow (the v2 "Group, live" mode).
+
+Demo logins (local only): `coach@demo.local`, `athlete@demo.local`, `sam@demo.local`, `priya@demo.local`, password `breathband`.
 
 ---
+
+## Decisions
+
+Made by the owner on 2026-11-23. Where older text in this plan disagrees with one of these, the decision here wins and the older text is marked superseded.
+
+| # | Date | Decision |
+| --- | --- | --- |
+| 1 | 2026-11-23 | **The deploy target is Google Cloud Run**, using the existing `Dockerfile` and `nginx.conf`: the static export, served by nginx on `$PORT` 8080. No Firebase SDK, no Firebase Hosting and no emulators. `firebase/` and `firebase.json` are left untouched. See [Cloud Run](#cloud-run). |
+| 2 | 2026-11-23 | **"Cloud" means the backend seam, ready but local.** BreathCloud features run on the local adapter. A documented `http` adapter stub is added for a future Cloud Run API. |
+| 3 | 2026-11-23 | **The console computes scores**: method C for paced sessions and the Appendix metrics for open sessions, in a shared `src/lib/analysis/` library. This replaces "scores are computed in the app". |
+| 4 | 2026-11-23 | **Total Breath Score** is the mean of the four sub-scores, rounded once. |
+| 5 | 2026-11-23 | **Web Bluetooth** uses the Nordic UART service UUIDs as a named, labelled assumption, kept in one config file. The simulated sensor is the default. |
+| 6 | 2026-11-23 | **PDF is browser print** with print stylesheets. No server rendering. |
+| 7 | 2026-11-23 | **A UI overhaul is allowed**, but it goes through `DESIGN.md` first. |
 
 ## Decisions already made
 
@@ -43,8 +59,8 @@ Demo logins (local only): `athlete@demo.local` / `coach@demo.local`, password `b
 | One web project for the site and the console | One deploy, one domain, `/cloud` is just a folder of routes |
 | React (Next.js) for the console, not Flutter web | Faster to load, better for dashboards, and the web-design tooling applies directly |
 | Static export with the browser talking to the backend directly | No server to run or pay for. Firebase rules handle authorization. |
-| Firebase as the target backend (Auth, Firestore, Storage, Functions) | Managed, has Flutter and JavaScript SDKs, free tier for early use. Cloud Run is added only for heavy jobs. |
-| Scores are computed **in the app** and uploaded | Scoring formulas exist in one place (Dart). The console only displays them. |
+| **Superseded (2026-11-23) by [decisions 1 and 2](#decisions).** ~~Firebase as the target backend (Auth, Firestore, Storage, Functions)~~ | ~~Managed, has Flutter and JavaScript SDKs, free tier for early use. Cloud Run is added only for heavy jobs.~~ |
+| **Superseded (2026-11-23) by [decision 3](#decisions).** ~~Scores are computed **in the app** and uploaded~~ | ~~Scoring formulas exist in one place (Dart). The console only displays them.~~ |
 | `scoringVersion` stored on every session | Old sessions can be told apart (and rescored) when the formula changes |
 | Coach access through **one-time invite codes**, not a second password | Can be revoked, leaves an audit trail, and nobody shares passwords. **Spec row 10 says "second password", so this needs client sign-off.** |
 | Per-record pages use query strings (`?id=`) | A static export can't prerender per-user dynamic routes |
@@ -70,7 +86,7 @@ Anything per-user happens in Client Components after load. If a future feature n
 | # | Question | Blocks | Suggested default |
 | --- | --- | --- | --- |
 | D1 | **Domain name** and registrar | Phase 2 launch | Cloudflare Registrar or Porkbun |
-| D2 | **Brand direction**: which of the five client UI directions (or a new one) the web adopts | Phase 1 | Match whatever the app ships with |
+| D2 | **Brand direction**: which of the five client UI directions (or a new one) the web adopts | Phase 1 | The console uses **Coach Console** (Nov 2026). The public site still needs a decision; match whatever the app ships with |
 | D3 | **Who can create a web account?** Only people who already set up the app, or anyone (e.g. coaches first)? | Phase 3.2 | Anyone, with role chosen at sign-up. Athletes see an empty state until the app uploads. |
 | D4 | **Scoring display**: legacy 0–100% scores, or the 1–10 per-transition method in the metrics spec | Phase 3.4 | Show whatever `scoringVersion` the session has. Build the display for both. |
 | D5 | Coach access: invite codes (above) vs the spec's second password | Phase 3.5, 5 | Invite codes |
@@ -192,6 +208,8 @@ Every screen needs: a loading skeleton, an empty state, an error state with retr
 
 ## Phase 4: Move to Firebase
 
+**Superseded (2026-11-23) by [decisions 1 and 2](#decisions).** The deploy target is [Cloud Run](#cloud-run) and the console stays on the local adapter, with an `http` adapter stub for a future Cloud Run API. The Firebase steps below are kept for reference only; don't start them.
+
 Do **4a** early, because it unblocks the public launch. Do **4b** when the console and app are ready for real data.
 
 ### 4a: Hosting and waitlist
@@ -216,15 +234,40 @@ Do **4a** early, because it unblocks the public launch. Do **4b** when the conso
 6. CI/CD: deploy to `dev` on merge to `main` and to `prod` on tagged releases, with preview channels for pull requests. Authenticate with Workload Identity Federation (no long-lived keys in GitHub).
 7. Operations: scheduled Firestore exports or point-in-time recovery, error tracking (e.g. Sentry), uptime check on `/` and `/cloud/login/`.
 
-### Alternative: Cloud Run instead of Firebase Hosting
+---
 
-`Dockerfile` builds the same static site into an nginx container on port 8080:
+## Cloud Run
+
+The deploy target ([decision 1](#decisions)). `Dockerfile` builds the static export and `nginx.conf` serves it from nginx on port 8080, the `$PORT` Cloud Run sends traffic to. No Firebase SDK, Firebase Hosting or emulators are involved.
+
+### Run the container locally
+
+```
+docker build -t breathband-console .
+docker run -p 8080:8080 breathband-console
+```
+
+Then open <http://localhost:8080/> (the console is at <http://localhost:8080/cloud/>).
+
+### Build arg: `NEXT_PUBLIC_BACKEND`
+
+`NEXT_PUBLIC_*` values are inlined into the JavaScript at build time, so the backend is picked with a Docker build arg, not a runtime environment variable. Changing it means building a new image. It defaults to `local`:
+
+```
+docker build --build-arg NEXT_PUBLIC_BACKEND=local -t breathband-console .
+```
+
+`local` is the only working value today ([decision 2](#decisions)). The value for the future Cloud Run API comes with its `http` adapter.
+
+### Deploy (a person runs this)
+
+**A person runs this step by hand, from their own machine with their own `gcloud` login. CI and agents do not run it**, and no workflow in `.github/workflows/` deploys. It hasn't been run yet. The region waits on D6.
 
 ```
 gcloud run deploy breathband-web --source . --region <region> --allow-unauthenticated
 ```
 
-Use this only if you need container-level control. Firebase Hosting is simpler and cheaper for static files. Cloud Run's real role later is heavy backend jobs, such as Python waveform analysis or batch rescoring.
+`--source .` has Cloud Build build the `Dockerfile` with its defaults, so the image gets `NEXT_PUBLIC_BACKEND=local`.
 
 ---
 
