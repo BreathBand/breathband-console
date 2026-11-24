@@ -1,0 +1,141 @@
+{
+  "task": "T-0024",
+  "round": 1,
+  "verdict": "passed",
+  "head": "c082fae4c7ce8523226269e12b5881cd7f64e190",
+  "base": "1768961bc7d99cfce81d933672476b8ef9eedcf1",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — A RangeError names the sample rate and the first off-grid knot, found in time order. A new test covers 12.5 Hz with the default timings.\n- A2: met — The new test derives the extremes from rec.raw and compares them to expectedA100 and expectedMidline within 1e-9. It uses local maxima rather than the literal highest 3 samples.\n- A3: unverified — The diff leaves existing tests alone, and the new tests are in a new file. The diff does not show lint, typecheck or test results. It also does not show whether any existing synth.test.ts test calls generateCalibration at an off-grid rate, which would now throw.\n\n<details><summary>2 suggestion(s), non-blocking</summary>\n\n- A2 test picks local maxima, not the highest 3 raw samples `src/lib/analysis/synth-calibration.test.ts` — Leave it, or sort rec.raw directly and take the top and bottom CALIBRATION_EXTREMES_COUNT samples if A2 is meant literally.\n- Constant imported from ./synth rather than config.ts `src/lib/analysis/synth-calibration.test.ts:2` — Import CALIBRATION_EXTREMES_COUNT from ./config if it lives there.\n\n</details>\n\n_claude-sonnet-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-sonnet-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/synth-calibration.test.ts",
+        "line": null,
+        "title": "A2 test picks local maxima, not the highest 3 raw samples",
+        "detail": "A2 says the highest 3 and lowest 3 raw samples. The test takes the top 3 local maxima and minima instead. This matches the implementation's per-peak definition, but it is not what A2 literally says. At 20 Hz the result is the same, because the sample next to a peak is never higher than another peak.",
+        "repro": "Not applicable; the test passes either way at the default timings.",
+        "fix": "Leave it, or sort rec.raw directly and take the top and bottom CALIBRATION_EXTREMES_COUNT samples if A2 is meant literally.",
+        "pattern": "1f2d53102894"
+      },
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/synth-calibration.test.ts",
+        "line": 2,
+        "title": "Constant imported from ./synth rather than config.ts",
+        "detail": "The constraint says Appendix constants come from src/lib/analysis/config.ts. If CALIBRATION_EXTREMES_COUNT is defined there, the test should import it from there. I can't see where it is defined from this diff.",
+        "repro": "Not applicable.",
+        "fix": "Import CALIBRATION_EXTREMES_COUNT from ./config if it lives there.",
+        "pattern": "08c667a5fba8"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "A RangeError names the sample rate and the first off-grid knot, found in time order. A new test covers 12.5 Hz with the default timings."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "The new test derives the extremes from rec.raw and compares them to expectedA100 and expectedMidline within 1e-9. It uses local maxima rather than the literal highest 3 samples."
+      },
+      {
+        "id": "A3",
+        "status": "unverified",
+        "note": "The diff leaves existing tests alone, and the new tests are in a new file. The diff does not show lint, typecheck or test results. It also does not show whether any existing synth.test.ts test calls generateCalibration at an off-grid rate, which would now throw."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 12119,
+      "costUsd": 0.060988
+    }
+  }
+}
