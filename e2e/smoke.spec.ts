@@ -10,9 +10,9 @@ test("the coach signs in and sees the Athletes roster", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Athletes" })).toBeVisible();
 });
 
-test("the athlete signs in and sees their latest Total Breath Score", async ({ page }) => {
+test("the athlete signs in and sees their last session on the home page", async ({ page }) => {
   await signInAsAthlete(page);
   await expect(page).toHaveURL((url) => url.pathname === "/cloud/");
 
-  await expect(page.getByRole("region", { name: "Latest Total Breath Score" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Last session" })).toBeVisible();
 });
