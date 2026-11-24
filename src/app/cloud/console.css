@@ -1,197 +1,8 @@
 /*
- * BreathCloud console layout, after the Coach Console direction's iPad review
- * screen: graphite top bar, a session rail on the left, and dense panes of
- * scores, waveform and breath-by-breath detail. Colours and type come from the
- * tokens in ../globals.css.
+ * BreathCloud pages: a session rail beside dense panes of scores, waveform and
+ * breath-by-breath detail. The frame around them (sidebar, tab bar) is in
+ * shell.css. Colours and type come from the tokens in ../globals.css.
  */
-
-.app {
-  --topbar-h: 57px;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-main {
-  flex: 1;
-  min-width: 0;
-}
-
-/* ================================================================ top bar */
-
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--c-chrome);
-  color: var(--c-chrome-ink);
-  border-bottom: 1px solid var(--c-chrome-rule);
-}
-
-.topbar-row {
-  min-height: 56px;
-  padding: 0 var(--s-6);
-  display: flex;
-  align-items: center;
-  gap: var(--s-5);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: var(--s-chrome);
-  color: inherit;
-  text-decoration: none;
-  font: 600 var(--t-17) / 1 var(--f-sans);
-  white-space: nowrap;
-}
-
-.brand sup {
-  font-size: 0.55em;
-  font-weight: 500;
-}
-
-.brand-sub {
-  color: var(--c-chrome-ink-2);
-  font-weight: 400;
-}
-
-.topnav {
-  display: flex;
-  gap: var(--s-1);
-}
-
-.topnav a {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-2);
-  min-height: 40px;
-  padding: 0 var(--s-4);
-  border-radius: var(--r-2);
-  color: var(--c-chrome-ink-2);
-  font: 500 var(--t-15) / 1 var(--f-sans);
-  text-decoration: none;
-}
-
-.topnav a:hover {
-  color: var(--c-chrome-ink);
-}
-
-.topnav a[aria-current] {
-  background: var(--c-chrome-2);
-  color: var(--c-chrome-ink);
-  box-shadow: inset 0 0 0 1px var(--c-chrome-rule);
-}
-
-.picker {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--s-chrome);
-  height: 40px;
-  padding: 0 var(--s-4);
-  border-radius: var(--r-2);
-  background: var(--c-chrome-2);
-  border: 1px solid var(--c-chrome-rule);
-}
-
-.picker select {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--c-chrome-ink);
-  font: 500 var(--t-15) / 1 var(--f-sans);
-  padding-right: 18px;
-  cursor: pointer;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
-    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: right 6px center, right 1px center;
-  background-size: 5px 5px;
-  background-repeat: no-repeat;
-}
-
-.picker select option {
-  color: var(--c-ink);
-  background: var(--c-pane);
-}
-
-.avatar {
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--c-well);
-  border: 1px solid var(--c-rule);
-  color: var(--c-ink);
-  font: 600 var(--t-12) / 1 var(--f-cond);
-}
-
-.picker .avatar {
-  background: var(--c-chrome-3);
-  border-color: transparent;
-  color: var(--c-chrome-ink);
-}
-
-.topbar-end {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--s-5);
-}
-
-.sync,
-.who {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  font: 400 var(--t-13) / 1.2 var(--f-cond);
-  color: var(--c-chrome-ink-2);
-  white-space: nowrap;
-}
-
-.live {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--c-live);
-}
-
-.who-name {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  font: 500 var(--t-13) / 1.2 var(--f-sans);
-  color: var(--c-chrome-ink);
-}
-
-.who-name small {
-  font: 400 var(--t-12) / 1.2 var(--f-cond);
-  color: var(--c-chrome-ink-2);
-}
-
-.chrome-button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-2);
-  min-height: 36px;
-  padding: 0 var(--s-4);
-  border-radius: var(--r-2);
-  border: 1px solid var(--c-chrome-rule);
-  background: var(--c-chrome-2);
-  color: var(--c-chrome-ink);
-  font: 500 var(--t-13) / 1 var(--f-sans);
-  cursor: pointer;
-}
-
-.chrome-button svg {
-  color: var(--c-chrome-ink-2);
-}
-
-.chrome-button:hover {
-  border-color: var(--c-chrome-ink-2);
-}
 
 /* ================================================================ console grid */
 
@@ -1079,22 +890,6 @@
 }
 
 @media (max-width: 960px) {
-  .app {
-    --topbar-h: 0px;
-  }
-  .topbar {
-    position: static;
-  }
-  .topbar-row {
-    flex-wrap: wrap;
-    padding: var(--s-3) var(--s-5);
-    gap: var(--s-3) var(--s-4);
-  }
-  .topbar-end {
-    width: 100%;
-    margin-left: 0;
-    justify-content: space-between;
-  }
   .console {
     display: flex;
     flex-direction: column;
@@ -1123,11 +918,6 @@
 }
 
 @media (max-width: 640px) {
-  .brand-sub,
-  .sync-text,
-  .who-name small {
-    display: none;
-  }
   .scores,
   .scores[data-cols="2"] {
     grid-template-columns: minmax(0, 1fr);
@@ -1204,16 +994,18 @@
 
 /* ================================================================ shared bits */
 
-a.who-name {
-  text-decoration: none;
-  padding: 4px 8px;
-  margin: -4px 0;
-  border-radius: var(--r-2);
-}
-
-a.who-name:hover,
-a.who-name[aria-current] {
-  background: var(--c-chrome-2);
+.avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--c-well);
+  border: 1px solid var(--c-rule);
+  color: var(--c-ink);
+  font: 600 var(--t-12) / 1 var(--f-sans);
+  letter-spacing: 0.02em;
 }
 
 .avatar.lg {
@@ -2212,7 +2004,6 @@ a.plain {
 }
 
 @media print {
-  .topbar,
   .rail,
   .crumbs,
   .no-print,
@@ -2230,19 +2021,6 @@ a.plain {
   }
   .pane {
     break-inside: avoid;
-  }
-}
-
-/* Three coach tabs don't fit a phone's top bar on one line: keep labels whole and let the bar scroll. */
-.topnav a {
-  white-space: nowrap;
-}
-
-@media (max-width: 640px) {
-  .topnav {
-    max-width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
 }
 

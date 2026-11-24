@@ -3,16 +3,20 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Suspense, useEffect, type ReactNode } from "react";
-import { Icon, Mark } from "@/components/Icon";
+import { Icon, Mark, type IconName } from "@/components/Icon";
 import type { Backend } from "@/lib/backend";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { resetBrowserDb } from "@/lib/backend/local/db";
+import { initials } from "@/lib/domain/format";
 import { AthletePicker } from "./AthletePicker";
 import { CloudLanding } from "./CloudLanding";
+import { DeviceStatus } from "./device/DeviceStatus";
 
 /** Pages for signed-out visitors. They render without the app chrome and bring their own header. */
 const PUBLIC_PATHS = ["/cloud/login/", "/cloud/signup/", "/cloud/reset/"];
 const LANDING = "/cloud/";
+/** Full-screen pages: the recording instrument brings its own frame. */
+const BARE_PATHS = ["/cloud/record/live/"];
 
 // Set just before a deliberate sign-out, so the gate sends the visitor to the
 // BreathCloud landing page instead of the login page.
@@ -30,12 +34,40 @@ export function safeNext(raw: string | null): string {
   return raw && raw.startsWith("/cloud/") && !raw.startsWith("//") ? raw : LANDING;
 }
 
+interface NavItem {
+  href: string;
+  label: string;
+  icon: IconName;
+  match: string[];
+}
+
+const ATHLETE_NAV: NavItem[] = [
+  { href: "/cloud/", label: "Home", icon: "home", match: ["/cloud/"] },
+  { href: "/cloud/record/", label: "Record", icon: "record", match: ["/cloud/record/", "/cloud/record/live/"] },
+  { href: "/cloud/sessions/?tab=sessions", label: "Sessions", icon: "history", match: ["/cloud/sessions/", "/cloud/session/"] },
+  { href: "/cloud/device/", label: "Band", icon: "band", match: ["/cloud/device/"] },
+  { href: "/cloud/sharing/", label: "Sharing", icon: "share", match: ["/cloud/sharing/"] },
+];
+
+const COACH_NAV: NavItem[] = [
+  { href: "/cloud/", label: "Dashboard", icon: "dashboard", match: ["/cloud/"] },
+  { href: "/cloud/athletes/", label: "Athletes", icon: "athletes", match: ["/cloud/athletes/", "/cloud/sessions/", "/cloud/session/"] },
+  { href: "/cloud/trends/", label: "Compare", icon: "compare", match: ["/cloud/trends/"] },
+  { href: "/cloud/group/", label: "Live group", icon: "group", match: ["/cloud/group/", "/cloud/group/live/"] },
+  { href: "/cloud/record/", label: "Record", icon: "record", match: ["/cloud/record/", "/cloud/record/live/"] },
+];
+
 /**
- * Client-side auth gate for everything under /cloud. A static export has no
- * server to redirect from, so signed-out visitors are sent to the login page
- * here (with `?next=` so they come back), and /cloud/ itself shows the
- * BreathCloud landing page until they sign in. This is UX only — data access
- * is enforced by the backend's rules.
+ * Client-side auth gate and app frame for everything under /cloud. A static
+ * export has no server to redirect from, so signed-out visitors are sent to
+ * the login page here (with `?next=` so they come back), and /cloud/ itself
+ * shows the BreathCloud landing page until they sign in. This is UX only —
+ * data access is enforced by the backend's rules.
+ *
+ * Signed in, the frame is a carbon sidebar (brand, the one primary action,
+ * navigation, the band's status and the account) beside the page. Below
+ * 1024px the sidebar folds into a top bar and its navigation docks at the
+ * bottom of the screen as a tab bar.
  */
 export function CloudShell({ children }: { children: ReactNode }) {
   const backend = useBackend();
@@ -58,9 +90,10 @@ export function CloudShell({ children }: { children: ReactNode }) {
 
   if (auth.status === "loading") {
     return (
-      <p className="container muted" aria-busy="true">
-        Loading…
-      </p>
+      <div className="boot" aria-busy="true">
+        <Mark size={36} />
+        <span className="sr-only">Loading BreathCloud…</span>
+      </div>
     );
   }
 
@@ -70,87 +103,98 @@ export function CloudShell({ children }: { children: ReactNode }) {
     return isPublic ? <>{children}</> : null;
   }
   if (isPublic) return null;
+  if (BARE_PATHS.includes(pathname)) return <>{children}</>;
 
   const role = auth.profile?.role ?? "athlete";
-  const nav =
-    role === "coach"
-      ? [
-          { href: "/cloud/", label: "Dashboard", icon: "dashboard" as const, match: ["/cloud/"] },
-          {
-            href: "/cloud/athletes/",
-            label: "Athletes",
-            icon: "athletes" as const,
-            match: ["/cloud/athletes/", "/cloud/sessions/", "/cloud/session/"],
-          },
-          { href: "/cloud/trends/", label: "Compare", icon: "compare" as const, match: ["/cloud/trends/"] },
-          { href: "/cloud/group/", label: "Group sessions", icon: "group" as const, match: ["/cloud/group/", "/cloud/group/live/"] },
-        ]
-      : [
-          { href: "/cloud/", label: "Sessions", icon: "history" as const, match: ["/cloud/", "/cloud/sessions/", "/cloud/session/"] },
-          { href: "/cloud/sharing/", label: "Sharing", icon: "share" as const, match: ["/cloud/sharing/"] },
-        ];
+  const name = auth.profile?.displayName ?? auth.user.email ?? "You";
+  const nav = role === "coach" ? COACH_NAV : ATHLETE_NAV;
   const inAthlete = pathname === "/cloud/sessions/" || pathname === "/cloud/session/";
 
   return (
     <div className="app">
-      <header className="topbar">
-        <div className="topbar-row">
-          <Link href="/cloud/" className="brand">
-            <Mark />
-            <span>
-              BreathBand<sup>®</sup> <span className="brand-sub">BreathCloud</span>
+      <aside className="side">
+        <div className="side-top">
+          <Link href="/cloud/" className="brand" aria-label="Breathband BreathCloud, home">
+            <Mark size={26} label="" />
+            <span className="brand-words" aria-hidden="true">
+              <span className="brand-name">
+                Breathband<sup>®</sup>
+              </span>
+              <span className="brand-sub">BreathCloud</span>
             </span>
           </Link>
+          <Link href="/cloud/account/" className="mbar-account" aria-label={`Your account, ${name}`}>
+            <span className="avatar sm" aria-hidden="true">
+              {initials(name)}
+            </span>
+          </Link>
+        </div>
 
-          <nav className="topnav" aria-label="Main">
-            {nav.map((item) => (
-              <Link key={item.href} href={item.href} aria-current={item.match.includes(pathname) ? "page" : undefined}>
-                <Icon name={item.icon} size={18} />
-                {item.label}
-              </Link>
-            ))}
-          </nav>
+        {role === "athlete" && (
+          <Link href="/cloud/record/" className="side-cta">
+            <span className="side-cta-dot" aria-hidden="true" />
+            Start a session
+          </Link>
+        )}
 
-          {role === "coach" && inAthlete && (
+        <nav className="side-nav" aria-label="Main">
+          {nav.map((item) => (
+            <Link key={item.href} href={item.href} aria-current={item.match.includes(pathname) ? "page" : undefined}>
+              <Icon name={item.icon} size={20} />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+
+        {role === "coach" && inAthlete && (
+          <div className="side-picker">
+            <span className="side-label">Viewing</span>
             <Suspense fallback={null}>
               <AthletePicker coachId={auth.user.uid} />
             </Suspense>
-          )}
+          </div>
+        )}
 
-          <div className="topbar-end">
-            {backend.kind === "local" && (
-              <span className="sync">
+        <div className="side-foot">
+          {role === "athlete" && <DeviceStatus />}
+          {backend.kind === "local" && (
+            <div className="side-demo">
+              <span>
                 <i className="live" aria-hidden="true" />
-                <span className="sync-text">Local demo data</span>
-                <button
-                  type="button"
-                  className="chrome-button"
-                  title="Wipe this browser's demo data and start again"
-                  onClick={() => signOutToLanding(backend, true)}
-                >
-                  <Icon name="refresh" size={16} />
-                  Reset
-                </button>
+                Demo data, stored in this browser
               </span>
-            )}
-            <span className="who">
-              <Link
-                href="/cloud/account/"
-                className="who-name"
-                aria-current={pathname === "/cloud/account/" ? "page" : undefined}
-                title="Your account"
+              <button
+                type="button"
+                className="side-link"
+                title="Wipe this browser's demo data and start again"
+                onClick={() => signOutToLanding(backend, true)}
               >
-                {auth.profile?.displayName ?? auth.user.email}
-                <small>{role === "coach" ? "Coach" : "Athlete"}</small>
-              </Link>
-              <button type="button" className="chrome-button" onClick={() => signOutToLanding(backend)}>
-                <Icon name="signOut" size={16} />
-                Sign out
+                Reset
               </button>
-            </span>
+            </div>
+          )}
+          <div className="side-who">
+            <Link
+              href="/cloud/account/"
+              className="who-name"
+              aria-current={pathname === "/cloud/account/" ? "page" : undefined}
+              title="Your account"
+            >
+              <span className="avatar" aria-hidden="true">
+                {initials(name)}
+              </span>
+              <span>
+                {name}
+                <small>{role === "coach" ? "Coach" : "Athlete"}</small>
+              </span>
+            </Link>
+            <button type="button" className="side-icon" onClick={() => signOutToLanding(backend)} title="Sign out">
+              <Icon name="signOut" size={18} />
+              <span className="sr-only">Sign out</span>
+            </button>
           </div>
         </div>
-      </header>
+      </aside>
       <main className="app-main">{children}</main>
     </div>
   );

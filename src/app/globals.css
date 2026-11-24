@@ -1,59 +1,74 @@
 /*
- * Design tokens: the "Coach Console" direction (breathband-docs,
- * site/design-directions/directions/04-coach-console). Graphite chrome, a cool
- * light ground, white panes divided by rules rather than shadows, one teal
- * action colour, and red/blue for inhale/exhale. Token names match the
- * direction so they map 1:1 onto the app's theme extension.
+ * Design tokens: "Carbon & Breath", the one Breathband world shared by the
+ * public site and BreathCloud. Warm carbon and bone neutrals; the only colour
+ * is the breath (red in, blue out), always with a shape or position cue as
+ * well. Low scores are amber, never red. Funnel Display for headlines and
+ * headline numbers, Funnel Sans for everything you read, Geist Mono only for
+ * live readings (timers, signal values, axes).
+ *
+ * Light is the default for reading and reviewing; dark follows the system or
+ * the account's theme setting (data-theme on <html>). The recording screen is
+ * always dark: when you breathe, the room goes dark.
  *
  * Everything reads from these tokens: change a colour here, not in a component.
  */
 
 :root {
-  /* chrome (top bar) */
-  --c-chrome: #1d2228;
-  --c-chrome-2: #272d34;
-  --c-chrome-3: #3a434d;
-  --c-chrome-rule: #353c45;
-  --c-chrome-ink: #eef0f2;
-  --c-chrome-ink-2: #a6afb9;
-  --c-live: #4fc387;
-  --c-tip-warn: #f3c27a;
+  /* chrome (the carbon sidebar and every surface that stays dark) */
+  --c-chrome: #121110;
+  --c-chrome-2: #1d1b19;
+  --c-chrome-3: #2a2724;
+  --c-chrome-rule: #2d2a27;
+  --c-chrome-ink: #eeebe4;
+  --c-chrome-ink-2: #aaa59c;
+  --c-chrome-ink-3: #77726a;
+  --c-chrome-in: #e8644f;
+  --c-chrome-out: #6f97e0;
+  --c-live: #6cc596;
+  --c-tip-warn: #f0bd6e;
 
   /* surfaces */
-  --c-ground: #eef0f2;
-  --c-pane: #ffffff;
+  --c-ground: #f2f0eb;
+  --c-pane: #fbfaf8;
   --c-paper: #ffffff;
-  --c-rule: #d9dde2;
-  --c-rule-soft: #e7eaed;
-  --c-well: #f5f6f8;
+  --c-rule: #dcd8cf;
+  --c-rule-soft: #e8e5de;
+  --c-well: #ebe8e1;
 
   /* ink */
-  --c-ink: #16191d;
-  --c-ink-2: #5a626c;
-  --c-ink-inverse: #ffffff;
+  --c-ink: #121110;
+  --c-ink-2: #57534c;
+  --c-ink-3: #8f897f;
+  --c-ink-inverse: #f6f4ef;
 
-  /* action + status */
-  --c-action: #0f6e78;
-  --c-action-ink: #ffffff;
-  --c-action-tint: #e1eff0;
-  --c-action-pressed: #0b5860;
-  --c-ok: #2e8b57;
-  --c-ok-strong: #1f6b43;
-  --c-ok-tint: #e2f1e8;
-  --c-mid: #8a939d;
-  --c-low: #b7701a;
+  /* action: ink on bone, the way the site's buttons are bone on carbon */
+  --c-action: #121110;
+  --c-action-ink: #f6f4ef;
+  --c-action-tint: #e4e0d7;
+  --c-action-pressed: #2a2724;
+  --c-link: #121110;
+  --c-focus: #2f5bb0;
+
+  /* status. Score bands are graded ink (see .dot), so colour here means state. */
+  --c-ok: #2f7a52;
+  --c-ok-strong: #1f5c3b;
+  --c-ok-tint: #dfeee4;
+  --c-mid: #8f897f;
+  --c-low: #9a5d0c;
+  --c-low-mark: #d99a3a;
   --c-danger: #b3261e;
-  --c-notice: #fdf3e1;
+  --c-danger-tint: #f6e1df;
+  --c-notice: #f6ead3;
   --c-notice-ink: #6b4510;
 
   /* breath */
-  --c-in: #d0283e;
-  --c-in-tint: #fbe7ea;
-  --c-out: #1e63d0;
-  --c-out-tint: #e4ecfa;
-  --c-pacer: #8c96a1;
-  --c-band: #f1f3f5;
-  --c-bar: #b7bec6;
+  --c-in: #c4442f;
+  --c-in-tint: #f6e2dd;
+  --c-out: #2f5bb0;
+  --c-out-tint: #e1e8f5;
+  --c-pacer: #8f897f;
+  --c-band: #ebe8e1;
+  --c-bar: #c9c4b9;
 
   /*
    * Athletes in comparison charts, in this order (validated with the dataviz
@@ -69,9 +84,10 @@
   --c-series-6: #008300;
 
   /* type */
-  --f-sans: var(--font-plex), "IBM Plex Sans", system-ui, sans-serif;
-  --f-cond: var(--font-plex-condensed), "IBM Plex Sans Condensed", var(--f-sans);
-  --f-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --f-display: var(--font-display), "Funnel Display", system-ui, sans-serif;
+  --f-sans: var(--font-ui), "Funnel Sans", system-ui, sans-serif;
+  --f-cond: var(--f-sans);
+  --f-mono: var(--font-mono), "Geist Mono", ui-monospace, monospace;
   --t-10: 10px;
   --t-12: 12px;
   --t-13: 13px;
@@ -82,15 +98,18 @@
   --t-28: 28px;
   --t-36: 36px;
   --t-40: 40px;
+  --t-56: 56px;
+  --t-72: 72px;
 
   /* shape + space */
   --r-hair: 2px;
   --r-bar: 3px;
-  --r-1: 4px;
-  --r-2: 6px;
+  --r-1: 6px;
+  --r-2: 10px;
   --r-badge: 10px;
-  --r-sheet: 12px;
-  --r-chip: 18px;
+  --r-sheet: 14px;
+  --r-chip: 999px;
+  --r-pill: 999px;
   --s-1: 4px;
   --s-2: 6px;
   --s-3: 8px;
@@ -104,54 +123,64 @@
   --s-chrome: 10px;
   --page-max: 1240px;
   --rail: 300px;
+  --side: 248px;
 
   /* elevation: only what floats */
-  --shadow-float: 0 10px 30px rgba(22, 25, 29, 0.22), 0 1px 3px rgba(22, 25, 29, 0.14);
+  --shadow-float: 0 18px 40px -12px rgb(18 17 16 / 0.28), 0 2px 6px rgb(18 17 16 / 0.1);
 
-  /* motion: near zero */
-  --dur-fast: 120ms;
-  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  /* motion: quick, exponential, from an already-visible default */
+  --dur-fast: 140ms;
+  --dur-mid: 260ms;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 
   color-scheme: light;
 }
 
-/* Dark: the chrome stays graphite; panes drop to near-black and the accents lift. */
+/* Dark: carbon ground, bone ink, and the breath lifts to its on-carbon values. */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --c-chrome: #14181c;
-    --c-chrome-2: #1f252b;
-    --c-chrome-rule: #2e353d;
+  :root:not([data-theme="light"]) {
+    --c-chrome: #0c0b0a;
+    --c-chrome-2: #191816;
+    --c-chrome-3: #2a2724;
+    --c-chrome-rule: #262421;
 
-    --c-ground: #0f1215;
-    --c-pane: #181c21;
-    --c-rule: #2e353d;
-    --c-rule-soft: #242a31;
-    --c-well: #1e2329;
+    --c-ground: #121110;
+    --c-pane: #191816;
+    --c-paper: #ffffff;
+    --c-rule: #2d2a27;
+    --c-rule-soft: #242220;
+    --c-well: #211f1d;
 
-    --c-ink: #e9ecef;
-    --c-ink-2: #9ba4ae;
-    --c-ink-inverse: #0f1215;
+    --c-ink: #eeebe4;
+    --c-ink-2: #aaa59c;
+    --c-ink-3: #77726a;
+    --c-ink-inverse: #121110;
 
-    --c-action: #47b3bd;
-    --c-action-ink: #061a1c;
-    --c-action-tint: #12363a;
-    --c-action-pressed: #3a99a2;
-    --c-ok: #4fc387;
-    --c-ok-strong: #72d4a1;
-    --c-ok-tint: #173326;
-    --c-mid: #8a939d;
+    --c-action: #eeebe4;
+    --c-action-ink: #121110;
+    --c-action-tint: #2a2724;
+    --c-action-pressed: #ffffff;
+    --c-link: #eeebe4;
+    --c-focus: #95b3ec;
+
+    --c-ok: #6cc596;
+    --c-ok-strong: #8ed7ae;
+    --c-ok-tint: #18291f;
+    --c-mid: #77726a;
     --c-low: #e0a050;
+    --c-low-mark: #d99a3a;
     --c-danger: #f2817a;
-    --c-notice: #3a2a12;
+    --c-danger-tint: #3a1d1b;
+    --c-notice: #33260f;
     --c-notice-ink: #f3d39c;
 
-    --c-in: #f06478;
-    --c-in-tint: #3a1c22;
-    --c-out: #6c9ef2;
-    --c-out-tint: #1a2740;
-    --c-pacer: #7e8893;
-    --c-band: #1e2329;
-    --c-bar: #4a535d;
+    --c-in: #e8644f;
+    --c-in-tint: #3a201a;
+    --c-out: #6f97e0;
+    --c-out-tint: #1b2539;
+    --c-pacer: #77726a;
+    --c-band: #211f1d;
+    --c-bar: #45413c;
 
     --c-series-1: #d95926;
     --c-series-2: #199e70;
@@ -160,10 +189,68 @@
     --c-series-5: #d55181;
     --c-series-6: #008300;
 
-    --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-float: 0 18px 40px -12px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.4);
 
     color-scheme: dark;
   }
+}
+
+/* The same dark values, chosen explicitly on the account page. */
+:root[data-theme="dark"],
+.theme-dark {
+  --c-chrome: #0c0b0a;
+  --c-chrome-2: #191816;
+  --c-chrome-3: #2a2724;
+  --c-chrome-rule: #262421;
+
+  --c-ground: #121110;
+  --c-pane: #191816;
+  --c-paper: #ffffff;
+  --c-rule: #2d2a27;
+  --c-rule-soft: #242220;
+  --c-well: #211f1d;
+
+  --c-ink: #eeebe4;
+  --c-ink-2: #aaa59c;
+  --c-ink-3: #77726a;
+  --c-ink-inverse: #121110;
+
+  --c-action: #eeebe4;
+  --c-action-ink: #121110;
+  --c-action-tint: #2a2724;
+  --c-action-pressed: #ffffff;
+  --c-link: #eeebe4;
+  --c-focus: #95b3ec;
+
+  --c-ok: #6cc596;
+  --c-ok-strong: #8ed7ae;
+  --c-ok-tint: #18291f;
+  --c-mid: #77726a;
+  --c-low: #e0a050;
+  --c-low-mark: #d99a3a;
+  --c-danger: #f2817a;
+  --c-danger-tint: #3a1d1b;
+  --c-notice: #33260f;
+  --c-notice-ink: #f3d39c;
+
+  --c-in: #e8644f;
+  --c-in-tint: #3a201a;
+  --c-out: #6f97e0;
+  --c-out-tint: #1b2539;
+  --c-pacer: #77726a;
+  --c-band: #211f1d;
+  --c-bar: #45413c;
+
+  --c-series-1: #d95926;
+  --c-series-2: #199e70;
+  --c-series-3: #9085e9;
+  --c-series-4: #c98500;
+  --c-series-5: #d55181;
+  --c-series-6: #008300;
+
+  --shadow-float: 0 18px 40px -12px rgb(0 0 0 / 0.6), 0 2px 6px rgb(0 0 0 / 0.4);
+
+  color-scheme: dark;
 }
 
 *,
@@ -177,19 +264,28 @@ body {
   min-height: 100dvh;
   background: var(--c-ground);
   color: var(--c-ink);
-  font: 400 var(--t-15) / 1.45 var(--f-sans);
+  font: 400 var(--t-15) / 1.5 var(--f-sans);
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  caret-color: var(--c-out);
+  scrollbar-color: var(--c-bar) transparent;
 }
 
 ::selection {
-  background: var(--c-action-tint);
-  color: var(--c-ink);
+  background: var(--c-out);
+  color: #ffffff;
 }
 
 a {
-  color: var(--c-action);
-  text-underline-offset: 2px;
+  color: var(--c-link);
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-color: currentColor;
 }
 
 button,
@@ -201,22 +297,33 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid var(--c-action);
+  outline: 2px solid var(--c-focus);
   outline-offset: 2px;
 }
 
 h1 {
-  font: 600 var(--t-24) / 1.15 var(--f-sans);
-  letter-spacing: -0.01em;
+  font: 400 var(--t-28) / 1.1 var(--f-display);
+  letter-spacing: -0.02em;
 }
 
 h2 {
   font: 600 var(--t-15) / 1.3 var(--f-sans);
 }
 
+.display {
+  font-family: var(--f-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.mono {
+  font-family: var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+
 .empty h1 {
-  font: 600 var(--t-17) / 1.3 var(--f-sans);
-  letter-spacing: normal;
+  font: 500 var(--t-20) / 1.25 var(--f-display);
+  letter-spacing: -0.01em;
 }
 
 code {
@@ -277,12 +384,12 @@ code {
 .card {
   background: var(--c-pane);
   border: 1px solid var(--c-rule);
-  border-radius: var(--r-2);
+  border-radius: var(--r-sheet);
 }
 
 .pane-pad,
 .card {
-  padding: var(--s-4) var(--s-5);
+  padding: var(--s-5) var(--s-6);
 }
 
 .pane-h {
@@ -306,45 +413,77 @@ code {
   justify-content: center;
   gap: var(--s-3);
   min-height: 44px;
-  padding: 0 var(--s-5);
+  padding: 0 var(--s-6);
   border: 1px solid var(--c-action);
-  border-radius: var(--r-2);
+  border-radius: var(--r-pill);
   background: var(--c-action);
   color: var(--c-action-ink);
   font: 600 var(--t-15) / 1.15 var(--f-sans);
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
-  transition: background var(--dur-fast) var(--ease-out);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.button:hover {
+  background: var(--c-action-pressed);
+  border-color: var(--c-action-pressed);
 }
 
 .button:active {
-  background: var(--c-action-pressed);
+  transform: scale(0.98);
 }
 
 .button[data-variant="ghost"] {
-  background: var(--c-pane);
+  background: transparent;
   border-color: var(--c-rule);
   color: var(--c-ink);
 }
 
-.button[data-variant="ghost"]:active {
+.button[data-variant="ghost"]:hover {
   background: var(--c-well);
+  border-color: var(--c-ink-3);
 }
 
 .button[data-variant="danger"] {
-  background: var(--c-pane);
+  background: transparent;
   border-color: var(--c-rule);
   color: var(--c-danger);
 }
 
+.button[data-variant="danger"]:hover {
+  background: var(--c-danger-tint);
+  border-color: var(--c-danger);
+}
+
+.button[data-variant="breath"] {
+  background: var(--c-out);
+  border-color: var(--c-out);
+  color: #ffffff;
+}
+
 .button[data-size="small"] {
   min-height: 36px;
-  padding: 0 var(--s-4);
+  padding: 0 var(--s-5);
   font-size: var(--t-13);
 }
 
+.button[data-size="large"] {
+  min-height: 52px;
+  padding: 0 var(--s-8);
+  font-size: var(--t-17);
+}
+
 .button:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button[aria-busy="true"] {
   cursor: progress;
 }
 
@@ -355,21 +494,24 @@ code {
   border: 0;
   background: none;
   padding: 0;
-  font: 500 var(--t-15) / 1.2 var(--f-sans);
-  color: var(--c-action);
-  text-decoration: none;
+  font: 600 var(--t-15) / 1.2 var(--f-sans);
+  color: var(--c-link);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
   cursor: pointer;
 }
 
 .link:hover {
-  text-decoration: underline;
+  text-decoration-color: currentColor;
 }
 
 .field {
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
-  font: 500 var(--t-13) / 1.2 var(--f-cond);
+  font: 600 var(--t-13) / 1.2 var(--f-sans);
   color: var(--c-ink-2);
 }
 
@@ -383,6 +525,18 @@ code {
   background: var(--c-pane);
   color: var(--c-ink);
   font: 400 var(--t-15) / 1.3 var(--f-sans);
+  transition: border-color var(--dur-fast) var(--ease-out);
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  border-color: var(--c-ink-3);
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--c-ink-3);
 }
 
 .field textarea {
@@ -393,9 +547,9 @@ code {
 .field input:focus-visible,
 .field select:focus-visible,
 .field textarea:focus-visible {
-  outline: 2px solid var(--c-action);
+  outline: 2px solid var(--c-focus);
   outline-offset: 0;
-  border-color: var(--c-action);
+  border-color: var(--c-focus);
 }
 
 /* Segmented control: aria-pressed (buttons) or aria-current (links) marks the selected option. */
@@ -403,34 +557,40 @@ code {
   display: inline-grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
+  gap: 2px;
+  padding: 3px;
   border: 1px solid var(--c-rule);
-  border-radius: var(--r-2);
-  overflow: hidden;
-  background: var(--c-pane);
+  border-radius: var(--r-pill);
+  background: var(--c-well);
 }
 
 .seg > * {
   display: grid;
   place-items: center;
-  min-height: 36px;
+  min-height: 32px;
   padding: 0 var(--s-4);
   border: 0;
+  border-radius: var(--r-pill);
   background: none;
-  font: 500 var(--t-13) / 1 var(--f-cond);
+  font: 600 var(--t-13) / 1 var(--f-sans);
   color: var(--c-ink-2);
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
-.seg > * + * {
-  border-left: 1px solid var(--c-rule);
+.seg > :hover {
+  color: var(--c-ink);
 }
 
 .seg > [aria-pressed="true"],
 .seg > [aria-current] {
-  background: var(--c-ink);
-  color: var(--c-ink-inverse);
+  background: var(--c-pane);
+  color: var(--c-ink);
+  box-shadow: 0 1px 2px rgb(18 17 16 / 0.12), 0 0 0 1px var(--c-rule);
 }
 
 .seg > :focus-visible {
@@ -447,7 +607,8 @@ code {
   background: var(--c-notice);
   color: var(--c-notice-ink);
   padding: var(--s-3) var(--s-5);
-  font: 400 var(--t-13) / 1.4 var(--f-cond);
+  border-radius: var(--r-2);
+  font: 400 var(--t-13) / 1.45 var(--f-sans);
 }
 
 .list {
@@ -466,7 +627,7 @@ code {
 }
 
 .table th {
-  font: 400 var(--t-12) / 1.2 var(--f-cond);
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
   color: var(--c-ink-2);
   text-align: left;
   padding: 0 var(--s-4) var(--s-2) 0;

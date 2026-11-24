@@ -130,6 +130,50 @@ const PATHS = {
       <path d="M12 7.5v5.5M12 16v.4" />
     </>
   ),
+  home: <path d="M4.5 10.5 12 4.5l7.5 6V19.5h-5v-5h-5v5h-5Z" />,
+  record: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none" />
+    </>
+  ),
+  band: (
+    <>
+      <rect x="3.5" y="8.5" width="17" height="7" rx="3.5" />
+      <rect x="9" y="9.8" width="6" height="4.4" rx="1.2" />
+    </>
+  ),
+  bluetooth: <path d="m7 7.5 10 9-5 4v-17l5 4-10 9" />,
+  battery: (
+    <>
+      <rect x="3.5" y="8" width="15" height="8" rx="2" />
+      <path d="M21 11v2" />
+    </>
+  ),
+  signal: <path d="M3.5 12h3l2-5 3 10 3-8 2 3h4" />,
+  volume: <path d="M4.5 9.5h3.5l4.5-4v13l-4.5-4H4.5ZM16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11" />,
+  volumeOff: <path d="M4.5 9.5h3.5l4.5-4v13l-4.5-4H4.5ZM16 9.5l5 5M21 9.5l-5 5" />,
+  pause: <path d="M8.5 6v12M15.5 6v12" />,
+  sun: (
+    <>
+      <circle cx="12" cy="12" r="3.8" />
+      <path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6" />
+    </>
+  ),
+  moon: <path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10Z" />,
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3.5v3M12 17.5v3M3.5 12h3M17.5 12h3M6 6l2.1 2.1M15.9 15.9 18 18M6 18l2.1-2.1M15.9 8.1 18 6" />
+    </>
+  ),
+  menu: <path d="M4.5 7h15M4.5 12h15M4.5 17h15" />,
+  timer: (
+    <>
+      <circle cx="12" cy="13" r="7.5" />
+      <path d="M12 9v4l2.5 2M9.5 3.5h5" />
+    </>
+  ),
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof PATHS;
@@ -143,8 +187,8 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
       fill="none"
       stroke="currentColor"
       strokeWidth={1.6}
-      strokeLinecap="square"
-      strokeLinejoin="miter"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
       style={{ flex: "none" }}
@@ -154,16 +198,17 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   );
 }
 
-/** Placeholder BB monogram until the client sends logo files. */
-export function Mark({ size = 26, label = "BreathBand" }: { size?: number; label?: string }) {
+/**
+ * The Breathband mark, shared with the public site until the client's logo
+ * arrives: the pacer ring, red on the way in (right half) and blue on the way
+ * out (left half), with the breath inside it.
+ */
+export function Mark({ size = 26, label = "Breathband" }: { size?: number; label?: string }) {
   return (
-    <svg width={size} height={(size * 22) / 26} viewBox="0 0 26 22" role="img" aria-label={label}>
-      <path d="M5 4h5.5a3.5 3.5 0 0 1 0 7H5V4Zm0 7h6.2a3.8 3.8 0 0 1 0 7.6H5V11Z" fill="currentColor" />
-      <path
-        d="M13 4h5.5a3.5 3.5 0 0 1 0 7H13V4Zm0 7h6.2a3.8 3.8 0 0 1 0 7.6H13V11Z"
-        fill="currentColor"
-        opacity=".55"
-      />
+    <svg width={size} height={size} viewBox="0 0 24 24" role="img" aria-label={label} className="mark">
+      <path d="M12 2.5a9.5 9.5 0 0 1 0 19" fill="none" stroke="var(--c-in)" strokeWidth="2.2" />
+      <path d="M12 21.5a9.5 9.5 0 0 1 0-19" fill="none" stroke="var(--c-out)" strokeWidth="2.2" />
+      <circle cx="12" cy="12" r="5" fill="currentColor" />
     </svg>
   );
 }
