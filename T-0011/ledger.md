@@ -14,6 +14,7 @@
 - 2026-11-24 00:39 prove: proof deferred · test-run: the judge's tier 1 run on the change is the proof (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 00:40 prove: proof passed · test-run (the judge's tier 1 run) (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 00:40 judge: judge needs a human · round 1 · head 201f4a75a543 · the reviewer wasn't shown .env.example · record sha256 ad2362b15b7fb88eb756eb2634a90564ef7000ed54252410fc14e6c11a9e1513 (rivetari judge (for arynbht@gmail.com))
+- 2026-11-24 04:49 ship: draft PR opened: #21 https://github.com/BreathBand/breathband-console/pull/21 · feature/t-0011 at 201f4a75a543 → main (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -59,3 +60,4 @@
 - 2026-11-24 00:40 acceptance A3: met — README covers every route (a test checks it matches HTTP_ROUTES), the auth open decision, that the stub makes no network calls, and activation steps. The diff adds no code comments.
 - 2026-11-24 00:40 acceptance A4: met — Backend['kind'] includes 'http'. backendKind() and createBackend() are covered in http.test.ts for http, firebase and local/''/other, with a fetch stub asserted not called.
 - 2026-11-24 00:40 acceptance A5: unverified — .env.example was withheld from review as a sensitive path, so its contents can't be checked here. The new tests assert both lines (the value list including http, and the commented NEXT_PUBLIC_API_BASE…
+- 2026-11-24 04:49 judge review posted: https://github.com/BreathBand/breathband-console/pull/21#pullrequestreview-6033797850
