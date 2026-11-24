@@ -160,6 +160,7 @@ export function SessionsTab({ ws }: { ws: Workspace }) {
                     return (
                       <tr key={s.id} className="sl-row" onClick={() => router.push(href)}>
                         <td className="sl-date">
+                          <div className="sl-date-in">
                           <span className="sl-day display">{d.getDate()}</span>
                           <span>
                             <Link href={href} className="sl-link" onClick={(e) => e.stopPropagation()}>
@@ -172,6 +173,7 @@ export function SessionsTab({ ws }: { ws: Workspace }) {
                               <span className="sr-only">Not opened yet</span>
                             </i>
                           )}
+                          </div>
                         </td>
                         <td>
                           <span className="sl-mode" data-mode={s.mode}>

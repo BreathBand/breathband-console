@@ -81,7 +81,7 @@
   padding-right: var(--s-6);
 }
 
-.sl-date {
+.sl-date-in {
   display: flex;
   align-items: center;
   gap: var(--s-4);
@@ -94,7 +94,7 @@
   text-align: center;
 }
 
-.sl-date > span:not(.sl-day) {
+.sl-date-in > span:not(.sl-day) {
   display: flex;
   flex-direction: column;
 }
