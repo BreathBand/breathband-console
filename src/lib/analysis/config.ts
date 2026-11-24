@@ -45,6 +45,8 @@ export const FIXED_CONSTANTS = {
   normalIeRatio: { inhale: 1, exhale: 2 },
   maxEventMarkersPerOpenSession: 2,
   deviationHistogram: { minSd: -1, maxSd: 1, stepSd: 0.25, missedOrDoubleBin: true },
+  calibrationPeakCount: 3,
+  calibrationTroughCount: 3,
 } as const;
 
 export const ANALYSIS_CONFIG = {
