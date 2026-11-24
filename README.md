@@ -108,4 +108,5 @@ Firebase Hosting is no longer a target. `firebase.json` and `firebase/` stay in 
 
 ## Related
 
-- Mobile app (Flutter): the `breathband` repo. Session uploads must match `src/lib/domain/types.ts`.
+- Mobile app (Flutter): [BreathBand/breathband-app](https://github.com/BreathBand/breathband-app). Session uploads must match `src/lib/domain/types.ts`.
+- Specs and design docs: [BreathBand/breathband-docs](https://github.com/BreathBand/breathband-docs), including the metrics and scoring spec the app implements.

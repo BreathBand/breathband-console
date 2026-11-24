@@ -1,0 +1,30 @@
+name: Bug report
+description: Something on the website or in the BreathCloud console doesn't work
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Public site (/), BreathCloud console (/cloud)]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Page URL
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+  - type: textarea
+    id: logs
+    attributes:
+      label: Console errors or screenshots
