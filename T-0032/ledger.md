@@ -20,6 +20,9 @@
 - 2026-11-24 10:23 prove: proof passed · test-run (the judge's tier 1 run) (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 10:25 judge: judge passed · round 2 · head 2ea54a78ee3c · record sha256 afe3da8b9cfc167300e56ea84474f794a867ae79e562b04995d1f9bf5bac3829 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 10:25 ship: draft PR opened: #39 https://github.com/BreathBand/breathband-console/pull/39 · feature/t-0032 at 2ea54a78ee3c → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 10:29 close: worktree removed · branch feature/t-0032 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 10:29 close: floorplan updated · 3 call(s) · 323062 tokens · $0.72 (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 10:29 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -87,3 +90,7 @@
 - 2026-11-24 10:25 acceptance A7: met — The new key, the refine tests, and the unrefined I:E < 1.9 check are present, and transitions.ts is untouched. The window rounding defect applies only at sample rates other than 20 Hz.
 - 2026-11-24 10:25 acceptance A8: met — One dated, PROVISIONAL row: quotes l.15 and l.16, gives both readings, 1.81 vs 2.0, and the paced divergence. No other PLAN.md text changes.
 - 2026-11-24 10:25 judge review posted: https://github.com/BreathBand/breathband-console/pull/39#pullrequestreview-6037512870
+
+## Outcome
+
+- 2026-11-24 10:29 PR #39 merged by arynbht 2026-11-24 10:28 · 1h23m · 3974k tokens · $5.15
