@@ -1,0 +1,350 @@
+{
+  "task": "T-0013",
+  "kind": "ui-screenshots",
+  "passed": true,
+  "lines": [
+    "screenshots: /cloud/, /cloud/sessions/?athlete=demo-athlete&tab=sessions, /cloud/sessions/?athlete=demo-athlete&tab=plan, /cloud/session/?athlete=demo-athlete&id=s001, /cloud/session/?id=s001, /cloud/sharing/, /cloud/group/live/, /cloud/report/?athlete=demo-athlete at sm/md/lg, before and after (48 images) in .rivetari/tasks/T-0013/proof/ (not pushed: upload failed: …nUZR42PKQFksBr9QKVXCPusD3OiA/RkQ5kP8qV/Jl1WywAp/6+dcmPM2zL1UrUahe4JqfnWWKXIul3uUbfP8njAFLW1OFr3gdFtZ72cNH+PtQT7/brW+NXqJAHh0y9V8/U/A1U7AfwIMAD7mS3pCbuWJAAAAAElFTkSuQmCC\" /> </a> </div> </body> </html>)",
+    "axe: 0 serious or critical violations",
+    "visual diff: not automated yet; the before/after images are the comparison",
+    "signed in: .rivetari/proof-auth.mjs ran on each side before its shots"
+  ],
+  "shots": [
+    {
+      "page": "/cloud/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-1-cloud-sm.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-1-cloud-md.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-1-cloud-lg.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-2-cloud-sessions-sm.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-2-cloud-sessions-md.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-2-cloud-sessions-lg.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-3-cloud-sessions-sm.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-3-cloud-sessions-md.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-3-cloud-sessions-lg.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s001",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-4-cloud-session-sm.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s001",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-4-cloud-session-md.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s001",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-4-cloud-session-lg.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/session/?id=s001",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-5-cloud-session-sm.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/session/?id=s001",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-5-cloud-session-md.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/session/?id=s001",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-5-cloud-session-lg.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/sharing/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-6-cloud-sharing-sm.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/sharing/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-6-cloud-sharing-md.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/sharing/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-6-cloud-sharing-lg.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/group/live/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-7-cloud-group-live-sm.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/group/live/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-7-cloud-group-live-md.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/group/live/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-7-cloud-group-live-lg.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/report/?athlete=demo-athlete",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-8-cloud-report-sm.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/report/?athlete=demo-athlete",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-8-cloud-report-md.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/report/?athlete=demo-athlete",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\before-8-cloud-report-lg.png",
+      "status": 200,
+      "side": "before"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-1-cloud-sm.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-1-cloud-md.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-1-cloud-lg.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-2-cloud-sessions-sm.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-2-cloud-sessions-md.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-2-cloud-sessions-lg.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-3-cloud-sessions-sm.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-3-cloud-sessions-md.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-3-cloud-sessions-lg.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s001",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-4-cloud-session-sm.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s001",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-4-cloud-session-md.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/session/?athlete=demo-athlete&id=s001",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-4-cloud-session-lg.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/session/?id=s001",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-5-cloud-session-sm.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/session/?id=s001",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-5-cloud-session-md.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/session/?id=s001",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-5-cloud-session-lg.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/sharing/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-6-cloud-sharing-sm.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/sharing/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-6-cloud-sharing-md.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/sharing/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-6-cloud-sharing-lg.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/group/live/",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-7-cloud-group-live-sm.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/group/live/",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-7-cloud-group-live-md.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/group/live/",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-7-cloud-group-live-lg.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/report/?athlete=demo-athlete",
+      "breakpoint": "sm",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-8-cloud-report-sm.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/report/?athlete=demo-athlete",
+      "breakpoint": "md",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-8-cloud-report-md.png",
+      "status": 200,
+      "side": "after"
+    },
+    {
+      "page": "/cloud/report/?athlete=demo-athlete",
+      "breakpoint": "lg",
+      "file": "C:\\Users\\arynb\\Documents\\Projects\\breathband-console\\.rivetari\\tasks\\T-0013\\proof\\after-8-cloud-report-lg.png",
+      "status": 200,
+      "side": "after"
+    }
+  ],
+  "violations": []
+}
