@@ -1,0 +1,90 @@
+id: T-0034
+title: Locate open-session peaks and troughs between samples to remove the
+  residual I:E bias
+type: fix
+source: prompt
+description: >-
+  HELD until Harm answers the transition-timing question recorded as PROVISIONAL
+  in docs/PLAN.md "Decisions" (2026-11-24); his answer may change what is
+  refined. Do not confirm or run this card before then.
+
+
+  B1-4 (PR #39) detects transitions on the filtered signal and moves each to the
+  raw signal's extremum within ±FIXED_CONSTANTS.transitionRefineWindowS. That
+  removes the filter shift when there is no noise (normal I:E 2.0), but under
+  Tier B's noise the normal pattern (1.5 s in, 3.0 s out) still reads I:E about
+  1.85: inhale 1.58 s, exhale 2.92 s. The raw maximum of a fast-rise / slow-fall
+  breath sits on a near-flat top that extends further on the slow side, so with
+  noise the single highest sample is picked about 0.08 s late. The
+  symmetric-ratio deep-fast segment shows almost none (1.98). rivetari-51
+  accepted this as a known limit inside A4's ±0.3, but not for a metric the demo
+  shows.
+
+
+  Method: a least-squares quadratic fit over the raw samples within a small
+  named window around the refined extremum, taking the vertex as the transition
+  time and level. A three-point parabola uses only the noisiest samples, and a
+  centroid is pulled toward the slow side of an asymmetric top. A least-squares
+  fit over several samples averages the noise while still following the local
+  curvature, so it is the method expected to shrink the noise bias. The build
+  may choose differently only if it meets A1 and says why in the PR.
+
+
+  Also fixes the refine window's rounding: open.ts computes the window as
+  Math.round(transitionRefineWindowS × sampleRateHz) samples, which is 0.3 s at
+  10 Hz instead of 0.25 s. Use ceil instead, so the window is never smaller than
+  the constant.
+
+
+  Tier B's timing noise stays at 0.05 s (open-tier-b.ts). In the synth,
+  timingSdS jitters the breath itself, which is a property of the user, not
+  measurement noise. With paced Tier B's 0.5 s the breaths become genuinely
+  irregular, so comparing them against fixed Tier A values says nothing about
+  measurement error.
+acceptance:
+  - id: A1
+    text: Under open-tier-b.ts's unchanged shared setting (seed 3, sampleSdPct 0.05,
+      amplitudeSdPct 0.25, timingSdS 0.05, 20 Hz), the normal pattern through
+      analyzeOpen gives I:E within ±0.05 of 2.0, and inhale and exhale durations
+      within ±0.03 s of 1.5 and 3.0. A new test asserts this, and also the same
+      for the before and after segments of the segmented session.
+    verify: unit
+  - id: A2
+    text: The sub-sample window is a new named FIXED_CONSTANTS key, asserted by a
+      new test. The refine window in samples is ceil(transitionRefineWindowS ×
+      sampleRateHz), and a new test checks the effective window is at least 0.25
+      s and at most one sample wider at 10 Hz, 20 Hz and 25 Hz.
+    verify: unit
+  - id: A3
+    text: "Every existing golden is unchanged and passes: open Tier A (exact lists),
+      the noise-free end-to-end case, open Tier B, the open edge tests, and
+      every paced golden. No expected value or tolerance is edited."
+    verify: unit
+  - id: A4
+    text: "docs/PLAN.md's 2026-11-24 PROVISIONAL row gains one sentence with the
+      before and after: normal I:E under Tier B noise about 1.85 before, the new
+      measured value after. Nothing else in PLAN.md changes. npm run lint,
+      typecheck and test pass."
+    verify: review
+out_of_scope:
+  - Paced scoring and detectTransitions (the held card T-0033 covers making
+    paced match)
+  - Changing Tier B's noise setting or any tolerance
+touches:
+  - src/lib/analysis/open.ts
+  - src/lib/analysis/config.ts
+  - src/lib/analysis/open-subsample.test.ts
+  - docs/PLAN.md
+pages: []
+constraints:
+  - do not start before Harm answers the transition-timing question in
+    docs/PLAN.md
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - config.ts may only gain new FIXED_CONSTANTS keys; existing keys and values
+    stay
+  - no golden expected value or tolerance is edited
+risk: high
+owner: arynbht@gmail.com
+created: 2026-11-24
