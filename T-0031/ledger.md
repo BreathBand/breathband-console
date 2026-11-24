@@ -23,3 +23,4 @@
 ## Stop-and-ask
 
 - 2026-11-24 08:52 asked: budget_exhausted: the plan call reached its 4-turn limit before it replied with a plan; allow to plan again with 8 turns, or deny to plan again within 4
+- 2026-11-24 08:53 answered: allowed — plan budget 8 turns (standing rule from rivetari-51; R-21). For A6's open-edges.test.ts, also include periods formed from non-representable transition times: troughs at 3.3 s and 8.3 s (period 5.000000000000001, rate 11.999999999999998) and troughs at 0.6 s and 4.35 s (period 3.7499999999999996, rate 16.000000000000004); both must count as normal rate. Exact 5.0/3.75 s cases alone don't catch a missing epsilon.
