@@ -1,0 +1,102 @@
+id: T-0013
+title: Clear the axe violations reported on /cloud pages
+type: fix
+source: prompt
+description: "An axe-core run on 26 routes at 1440px and 375px (the coach Lena
+  Vos and the athlete Alex Morgan, saved in axe-report.json) found four rules
+  failing. None has been fixed on main since. (1) aria-prohibited-attr, serious:
+  the .new-dot <i> carries aria-label with no role, at
+  src/app/cloud/SessionsTab.tsx:110 (reported on
+  /cloud/sessions/?athlete=demo-athlete&tab=sessions at 1440 and 375). The same
+  markup is at src/app/cloud/CoachDashboard.tsx:315. (2)
+  scrollable-region-focusable, serious, at 375px only: the .table-scroll around
+  the Earlier table at src/app/cloud/PlanTab.tsx:93
+  (/cloud/sessions/?athlete=demo-athlete&tab=plan) and the .bt-scroll at
+  src/app/cloud/session/Waveform.tsx:299
+  (/cloud/session/?athlete=demo-athlete&id=s001). Neither can take keyboard
+  focus. (3) page-has-heading-one, moderate: page-level empty states render
+  EmptyState, whose title is an h2 (src/components/States.tsx:16-23), so the
+  page has no h1. This shows at src/app/cloud/sharing/page.tsx:25 (a coach on
+  /cloud/sharing/), src/app/cloud/group/live/page.tsx:48 (/cloud/group/live/
+  with no id) and src/app/cloud/session/page.tsx:27 (/cloud/session/?id=s001
+  with no athlete). (4) empty-table-header, minor: in
+  src/app/cloud/report/page.tsx:638 and :644 the 6th and 8th th of the sessions
+  table hold only an aria-hidden Arrow (src/components/Score.tsx:46-52). No new
+  token is expected: .sr-only (src/app/globals.css:211-221) and :focus-visible
+  (globals.css:192) already exist. If a fix does need a colour or size, add it
+  as a token in globals.css, with a dark value."
+acceptance:
+  - id: A1
+    text: axe reports 0 serious or critical violations on every listed page
+    verify: screenshot
+  - id: A2
+    text: at 375px, axe-core (node_modules/axe-core) reports no
+      scrollable-region-focusable on
+      /cloud/sessions/?athlete=demo-athlete&tab=plan or
+      /cloud/session/?athlete=demo-athlete&id=s001; each of those two scrollers
+      takes Tab focus, shows the focus outline, has role=region and an
+      accessible name, and scrolls with the arrow keys
+    verify: manual
+  - id: A3
+    text: neither .new-dot (SessionsTab.tsx, CoachDashboard.tsx) uses aria-label;
+      'Not opened yet' is still announced, as visually hidden text or an element
+      with a role that allows a name, and the dot looks the same in the
+      after-screenshots
+    verify: review
+  - id: A4
+    text: a coach on /cloud/sharing/, /cloud/group/live/ with no id, and
+      /cloud/session/?id=s001 with no athlete each get exactly one h1 (the empty
+      state's title). EmptyState still renders an h2 by default, so its other
+      uses are unchanged
+    verify: review
+  - id: A5
+    text: on /cloud/report/?athlete=demo-athlete every th in the sessions table has
+      text for screen readers (e.g. 'Timing, exhale' and 'Depth, exhale' as
+      sr-only text), and the before and after screenshots of the table look the
+      same
+    verify: review
+out_of_scope:
+  - The Compare page's Side by side table and its .table-scroll (B1-7)
+  - Chart text alternatives, data tables for charts, and the chart tooltip's
+    role=status (B1-10)
+  - Top bar layout (B1-8) and swapping console.css literals for tokens (B1-12)
+  - "The Plan tab being 477px wide at 375px (S3 in 03-console-inventory.md): a
+    layout bug, not an axe rule"
+  - Other .table-scroll wrappers that axe did not flag, and page-level empty
+    states that were not reported (session/page.tsx:40, group/live/page.tsx:176,
+    :185, :250, trends/page.tsx:38)
+  - Any a11y issue in 03a section 8 that axe did not report (alert-rule labels,
+    comment counts, waveform labels)
+touches:
+  - src/app/cloud/SessionsTab.tsx
+  - src/app/cloud/CoachDashboard.tsx
+  - src/app/cloud/PlanTab.tsx
+  - src/app/cloud/session/Waveform.tsx
+  - src/app/cloud/session/page.tsx
+  - src/app/cloud/sharing/page.tsx
+  - src/app/cloud/group/live/page.tsx
+  - src/app/cloud/report/page.tsx
+  - src/components/States.tsx
+  - src/app/globals.css
+pages:
+  - /cloud/
+  - /cloud/sessions/?athlete=demo-athlete&tab=sessions
+  - /cloud/sessions/?athlete=demo-athlete&tab=plan
+  - /cloud/session/?athlete=demo-athlete&id=s001
+  - /cloud/session/?id=s001
+  - /cloud/sharing/
+  - /cloud/group/live/
+  - /cloud/report/?athlete=demo-athlete
+constraints:
+  - no new dependencies
+  - no new code comments (quality.no-new-comments)
+  - do not modify existing tests; add new test files
+  - follow DESIGN.md; colours come from tokens in src/app/globals.css
+  - "static export only (output: export): no server actions, route handlers or
+    dynamic routes"
+  - no new eslint-disable or other suppressions
+  - fix only the reported rules on the reported elements; no visual change
+    beyond the focus outline on the two scrollers
+risk: low
+owner: arynbht@gmail.com
+created: 2026-11-24
