@@ -15,7 +15,7 @@ import { buildSession, MIN_RECORDING_S, type BuiltSession } from "@/lib/recordin
 import { sessionHref } from "../../links";
 import { fitOf } from "../../device/TensionGauge";
 import { stateWords } from "../../device/words";
-import { Balloon } from "./Balloon";
+import { CalibrationRing } from "./CalibrationRing";
 import { BreathLine } from "./BreathLine";
 import { PacerCircle, type PacerFrame } from "./PacerCircle";
 import { Results } from "./Results";
@@ -38,7 +38,7 @@ export default function LivePage() {
 
 /**
  * The recording instrument, full screen and always dark: strap check, the
- * calibration balloon, a countdown, then the session itself (pacer circle or
+ * calibration circle, a countdown, then the session itself (pacer circle or
  * line for paced, the breath line with markers for open), and the score with
  * a note to save. Everything is timed by the band's 20 Hz sample clock, so the
  * pacer and the recording can't drift apart.
@@ -150,7 +150,7 @@ function Instrument() {
     return () => clearInterval(timer);
   }, [phase, device]);
 
-  const balloon = useCallback(() => {
+  const calibrationFill = useCallback(() => {
     const s = calRaw.current;
     if (s.length < 3) return { fill: 0, rising: true };
     let lo = Infinity;
@@ -371,10 +371,13 @@ function Instrument() {
           </section>
         ) : phase === "calibrate" ? (
           <section className="inst-step inst-calibrate">
-            <Balloon read={balloon} />
+            <CalibrationRing read={calibrationFill} />
             <div>
-              <h1>Fill the balloon</h1>
-              <p>Breathe in slowly and deeply until it&rsquo;s full, then let it all out. Five big breaths tell Breathband how far you can breathe.</p>
+              <h1>Five deep breaths</h1>
+              <p>
+                Breathe in slowly until the circle reaches the outer ring, then push every bit of air out until it shrinks to the
+                inner one. Your deepest breaths tell Breathband how far you can breathe, so every score is measured against you.
+              </p>
               <ol className="cal-dots" aria-label={`${calBreaths} of ${CALIBRATION_BREATHS} deep breaths`}>
                 {Array.from({ length: CALIBRATION_BREATHS }, (_, i) => (
                   <li key={i} data-done={i < calBreaths || undefined} />
@@ -413,10 +416,18 @@ function Instrument() {
                 <div className="inst-strip">
                   <BreathLine read={readPct} halfCycleS={half} markers={readMarkers} windowS={20} label="Your breath against the pacer" />
                 </div>
+                <LineLegend paced compact />
               </>
             ) : (
+              <div className="inst-line-wrap">
               <div className="inst-line">
-                <BreathLine read={readPct} halfCycleS={half} markers={readMarkers} label={paced ? "Your breath against the pacer" : "Your breath"} />
+                <BreathLine
+                  read={readPct}
+                  halfCycleS={half}
+                  markers={readMarkers}
+                  annotate
+                  label={paced ? "Your breath against the pacer, with timing and depth for each turn" : "Your breath, with the depth and length of each breath"}
+                />
                 {!paced && (
                   <div className="inst-readout">
                     <span>
@@ -425,6 +436,8 @@ function Instrument() {
                     <small>Last minute</small>
                   </div>
                 )}
+              </div>
+              <LineLegend paced={paced} />
               </div>
             )}
             {signalLost && (
@@ -501,5 +514,38 @@ function StrapMeter({ read }: { read: () => readonly number[] }) {
         Tighten
       </span>
     </div>
+  );
+}
+
+/** What the live chart shows, in words: the colours, the pacer, the target band and the tags. */
+function LineLegend({ paced, compact = false }: { paced: boolean; compact?: boolean }) {
+  return (
+    <ul className="line-legend" data-compact={compact || undefined} aria-label="How to read the chart">
+      <li>
+        <i data-k="in" aria-hidden="true" />
+        Breathing in
+      </li>
+      <li>
+        <i data-k="out" aria-hidden="true" />
+        Breathing out
+      </li>
+      {paced && (
+        <li>
+          <i data-k="pacer" aria-hidden="true" />
+          The pacer to follow
+        </li>
+      )}
+      <li>
+        <i data-k="band" aria-hidden="true" />
+        Target depth, ±3% of your max
+      </li>
+      {!compact && (
+        <li>
+          <i data-k="tag" aria-hidden="true" />
+          {paced ? "Each turn: timing and depth against the pacer" : "Each breath: how deep and how long"}
+          <span className="line-legend-amber"> (amber when well off)</span>
+        </li>
+      )}
+    </ul>
   );
 }

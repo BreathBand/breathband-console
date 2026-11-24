@@ -790,7 +790,32 @@
 
 /* ================================================================ states */
 
+/* Loaded content rises in; a skeleton only shows if loading takes longer than a beat. */
+.page-frame .pane,
+.page-frame .home-last,
+.page-frame .page-head,
+.page-frame .ws-head,
+.page-frame .sl-pane {
+  animation: page-enter 320ms var(--ease-out) both;
+}
+
+.page-frame .pane:nth-child(2),
+.page-frame .home-stats > :nth-child(2) {
+  animation-delay: 30ms;
+}
+
+.page-frame .pane:nth-child(3),
+.page-frame .home-stats > :nth-child(3) {
+  animation-delay: 60ms;
+}
+
+.page-frame .pane:nth-child(n + 4),
+.page-frame .home-stats > :nth-child(4) {
+  animation-delay: 90ms;
+}
+
 .skeleton {
+  animation: skeleton-in 200ms ease-out 260ms both;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1486,8 +1511,18 @@ a.plain {
 
 .ws-head {
   display: flex;
-  align-items: flex-start;
-  gap: var(--s-4);
+  align-items: center;
+  gap: var(--s-5);
+}
+
+.ws-head h1 {
+  font: 400 var(--t-40) / 1.05 var(--f-display);
+  letter-spacing: -0.025em;
+}
+
+.ws-head .avatar.lg {
+  width: 56px;
+  height: 56px;
 }
 
 .ws-title {
@@ -1526,25 +1561,34 @@ a.plain {
   justify-content: flex-end;
 }
 
+/* Workspace tabs: the same pill control as every other choice in the product. */
 .tabs {
-  display: flex;
-  gap: var(--s-1);
-  border-bottom: 1px solid var(--c-rule);
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-pill);
+  background: var(--c-well);
   overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .tabs a {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  min-height: 44px;
-  padding: 0 var(--s-4);
-  margin-bottom: -1px;
-  border-bottom: 2px solid transparent;
+  min-height: 36px;
+  padding: 0 var(--s-5);
+  border-radius: var(--r-pill);
   color: var(--c-ink-2);
-  font: 500 var(--t-15) / 1 var(--f-sans);
+  font: 600 var(--t-15) / 1 var(--f-sans);
   text-decoration: none;
   white-space: nowrap;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .tabs a:hover {
@@ -1552,17 +1596,23 @@ a.plain {
 }
 
 .tabs a[aria-current] {
+  background: var(--c-pane);
   color: var(--c-ink);
-  border-bottom-color: var(--c-action);
+  box-shadow: 0 1px 2px rgb(18 17 16 / 0.12), 0 0 0 1px var(--c-rule);
 }
 
 .tab-count {
   min-width: 20px;
   padding: 2px 6px;
-  border-radius: var(--r-badge);
+  border-radius: var(--r-pill);
   background: var(--c-rule-soft);
-  font: 500 var(--t-12) / 1.2 var(--f-cond);
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
   text-align: center;
+}
+
+.tabs a[aria-current] .tab-count {
+  background: var(--c-ink);
+  color: var(--c-ink-inverse);
 }
 
 .tab-body {

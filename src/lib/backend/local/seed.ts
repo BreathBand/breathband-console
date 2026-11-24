@@ -14,6 +14,7 @@ import {
   type DemoFaultName,
 } from "@/lib/analysis/synth";
 import { SAMPLE_RATE_HZ } from "@/lib/device/config";
+import { defaultPreferences } from "@/lib/domain/preferences";
 import { isLegacyScores } from "@/lib/domain/scores";
 import { buildSession } from "@/lib/recording";
 import {
@@ -39,6 +40,7 @@ export const DEMO_ATHLETE: UserProfile = {
   displayName: "Alex Morgan",
   role: "athlete",
   createdAt: "2026-09-01T09:00:00.000Z",
+  preferences: { ...defaultPreferences("train", "intermediate"), onboardedAt: "2026-09-01T09:00:00.000Z" },
 };
 
 export const DEMO_COACH: UserProfile = {
@@ -47,6 +49,7 @@ export const DEMO_COACH: UserProfile = {
   displayName: "Lena Vos",
   role: "coach",
   createdAt: "2026-09-01T09:00:00.000Z",
+  preferences: { ...defaultPreferences("train", "intermediate"), onboardedAt: "2026-09-01T09:00:00.000Z" },
 };
 
 /** Two more athletes linked to the demo coach, so the roster has people to compare. */
@@ -57,6 +60,7 @@ export const DEMO_TEAM: UserProfile[] = [
     displayName: "Sam Okafor",
     role: "athlete",
     createdAt: "2026-09-08T09:00:00.000Z",
+    preferences: { ...defaultPreferences("train", "beginner"), onboardedAt: "2026-09-08T09:00:00.000Z" },
   },
   {
     uid: "demo-athlete-3",
@@ -64,6 +68,7 @@ export const DEMO_TEAM: UserProfile[] = [
     displayName: "Priya Nair",
     role: "athlete",
     createdAt: "2026-09-20T09:00:00.000Z",
+    preferences: { ...defaultPreferences("calm", "beginner"), onboardedAt: "2026-09-20T09:00:00.000Z" },
   },
   {
     uid: "demo-athlete-4",
@@ -71,6 +76,7 @@ export const DEMO_TEAM: UserProfile[] = [
     displayName: "Maya Chen",
     role: "athlete",
     createdAt: "2026-08-24T09:00:00.000Z",
+    preferences: { ...defaultPreferences("focus", "advanced"), onboardedAt: "2026-08-24T09:00:00.000Z" },
   },
   {
     uid: "demo-athlete-5",
@@ -78,6 +84,7 @@ export const DEMO_TEAM: UserProfile[] = [
     displayName: "Leo Brandt",
     role: "athlete",
     createdAt: "2026-10-28T09:00:00.000Z",
+    preferences: { ...defaultPreferences("train", "intermediate"), onboardedAt: "2026-10-28T09:00:00.000Z" },
   },
 ];
 

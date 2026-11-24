@@ -1,5 +1,5 @@
 import type { SkillLevel } from "@/lib/analysis/config";
-import type { PacerHalfCycle } from "@/lib/domain/types";
+import type { PacerHalfCycle, SessionPreferences, UserPreferences } from "@/lib/domain/types";
 
 /** How a session is set up. Remembered in this browser as the next session's defaults. */
 export interface SessionSetup {
@@ -23,6 +23,7 @@ export const DEFAULT_SETUP: SessionSetup = {
 
 export const LENGTHS = [
   { sec: 120, label: "2 min" },
+  { sec: 180, label: "3 min" },
   { sec: 300, label: "5 min" },
   { sec: 600, label: "10 min" },
   { sec: 0, label: "Until I stop" },
@@ -36,6 +37,23 @@ export const SKILLS: { id: SkillLevel; label: string; detail: string }[] = [
 ];
 
 const KEY = "breathband:session-setup";
+
+/** A session setup from the person's saved preferences (their goal's defaults, as they've adjusted them). */
+export function setupFromPreferences(p: UserPreferences): SessionSetup {
+  return {
+    mode: p.session.mode,
+    pacer: p.session.pacerHalfCycleSec,
+    lengthSec: p.session.durationSec,
+    view: p.session.view,
+    sound: p.session.sound,
+    skill: p.skillLevel,
+  };
+}
+
+/** The session half of preferences from a setup. */
+export function sessionFromSetup(s: SessionSetup): SessionPreferences {
+  return { mode: s.mode, pacerHalfCycleSec: s.pacer, durationSec: s.lengthSec, view: s.view, sound: s.sound };
+}
 
 export function readSetup(): SessionSetup {
   try {

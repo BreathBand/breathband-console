@@ -4,31 +4,238 @@
  * the coach's practice and comments.
  */
 
+/* One screen at 1280 × 800 and up: header, then a two-by-two grid. */
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding-top: var(--s-6);
+  padding-bottom: var(--s-6);
+  max-width: 1360px;
+}
+
 .home-head {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: var(--s-5);
   flex-wrap: wrap;
 }
 
-.home-date {
-  font-weight: 600;
-  color: var(--c-ink-2);
-  margin-bottom: var(--s-2);
+.home-head h1 {
+  font: 400 clamp(30px, 3vw, 40px) / 1.05 var(--f-display);
+  letter-spacing: -0.03em;
 }
 
-.home-head h1 {
-  font: 400 clamp(36px, 4.2vw, 52px) / 1.02 var(--f-display);
-  letter-spacing: -0.03em;
+.home-date {
+  margin-top: var(--s-1);
+  font-weight: 500;
+  color: var(--c-ink-2);
+}
+
+.home-date b {
+  color: var(--c-ink);
+}
+
+.home-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.home-flags li {
+  padding: var(--s-2) var(--s-4);
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr);
+  grid-template-rows: auto auto;
+  gap: var(--s-4);
+}
+
+.home-week {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-5);
+}
+
+.week-strip {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--s-2);
+  text-align: center;
+}
+
+.week-strip li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.ws-day {
+  font: 600 var(--t-12) / 1 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.week-strip i {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-rule);
+  font: 600 var(--t-12) / 1 var(--f-sans);
+  font-style: normal;
+  color: var(--c-ink-inverse);
+}
+
+.week-strip li[data-done] i {
+  background: var(--c-ink);
+  border-color: var(--c-ink);
+}
+
+.week-strip li[data-today] i {
+  box-shadow: 0 0 0 3px var(--c-pane), 0 0 0 4.5px var(--c-in);
+}
+
+.week-strip li[data-today] .ws-day {
+  color: var(--c-in);
+}
+
+.week-strip li[data-future] i {
+  border-style: dashed;
+}
+
+.ws-score {
+  min-height: 1.2em;
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.home-facts {
+  margin: auto 0 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-rule-soft);
+}
+
+.home-facts dt {
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.home-facts dd {
+  margin: var(--s-1) 0 0;
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.home-facts b {
+  font-size: var(--t-28);
+  font-weight: 400;
+  color: var(--c-ink);
+}
+
+.home-small {
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.home-side {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.home-side-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+}
+
+.home-side-block + .home-side-block {
+  border-top: 1px solid var(--c-rule-soft);
+}
+
+.home-plan {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--s-1) var(--s-4);
+  align-items: center;
+}
+
+.home-plan .plan-what {
+  font-weight: 600;
+}
+
+.home-plan .plan-due {
+  grid-column: 1 / -1;
+}
+
+.home-quote {
+  margin: 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-2);
+  background: var(--c-well);
+}
+
+.home-quote blockquote {
+  margin: 0;
+  font-size: var(--t-13);
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.home-quote figcaption {
+  margin-top: var(--s-1);
+}
+
+.home-trend {
+  padding: var(--s-4) var(--s-5);
+}
+
+/* The full trends page has the table view; here the chart stays a glance. */
+.home-trend .viz-data {
+  display: none;
+}
+
+/* On laptop screens and up, the home fits the viewport: the grid takes what's left below the header. */
+@media (min-width: 1101px) and (min-height: 700px) {
+  .home {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .home-grid {
+    flex: 1;
+    min-height: 0;
+    grid-template-rows: minmax(0, auto) minmax(0, 1fr);
+  }
+  .home-grid > * {
+    min-height: 0;
+  }
+  .home-side {
+    overflow: hidden;
+  }
 }
 
 .home-last {
   display: grid;
-  grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.6fr) minmax(200px, 0.8fr);
-  gap: var(--s-7);
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.5fr);
+  gap: var(--s-6);
   align-items: center;
-  padding: var(--s-6) var(--s-7);
+  padding: var(--s-5) var(--s-6);
   border-radius: calc(var(--r-sheet) + 4px);
   border: 1px solid var(--c-rule);
   background: var(--c-ground);
@@ -48,7 +255,7 @@
 }
 
 .last-n {
-  font-size: clamp(72px, 7vw, 104px);
+  font-size: clamp(64px, 5.6vw, 88px);
   line-height: 0.9;
   letter-spacing: -0.05em;
 }
@@ -86,7 +293,7 @@
 }
 
 .last-wave-wait {
-  height: 150px;
+  height: 128px;
   border-radius: var(--r-2);
   background: var(--c-well);
 }
@@ -172,27 +379,6 @@
   font: 400 var(--t-24) / 1.1 var(--f-display);
 }
 
-.home-stats {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--s-4);
-}
-
-.home-stats .stat {
-  padding: var(--s-5);
-  gap: var(--s-1);
-}
-
-.home-stats .progress {
-  margin-top: var(--s-2);
-}
-
-.home-low {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-  gap: var(--s-4);
-  align-items: start;
-}
 
 .recent {
   margin: var(--s-3) 0 0;
@@ -312,20 +498,9 @@
   flex-wrap: wrap;
 }
 
-@media (max-width: 1280px) {
-  .home-last {
-    grid-template-columns: minmax(200px, 0.9fr) minmax(0, 1.6fr);
-  }
-  .last-table {
-    grid-column: 1 / -1;
-  }
-}
 
 @media (max-width: 1100px) {
-  .home-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .home-low {
+  .home-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -342,13 +517,50 @@
   .first-steps {
     grid-template-columns: minmax(0, 1fr);
   }
-  .home-head .button {
-    width: 100%;
-  }
+
 }
 
 @media (max-width: 480px) {
-  .home-stats {
-    grid-template-columns: minmax(0, 1fr);
+  .home-actions {
+    width: 100%;
   }
+  .home-actions .button[data-size="large"] {
+    flex: 1;
+  }
+}
+
+.last-subs {
+  margin: var(--s-2) 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
+}
+
+.last-subs dt {
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.last-subs dd {
+  margin: 2px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font: 400 var(--t-17) / 1.1 var(--f-display);
+}
+
+.home-trend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.home-rate {
+  margin-top: auto;
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-rule-soft);
+}
+
+.home-rate h3 {
+  font: 600 var(--t-13) / 1.2 var(--f-sans);
 }

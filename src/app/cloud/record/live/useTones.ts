@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 
 /** The app's two notes: low at the bottom of a breath, high at the top (the site's pacer uses the same pair). */
 export const TONES = { low: 440, high: 660 } as const;
@@ -48,5 +48,5 @@ export function useTones(enabled: boolean) {
     osc.stop(t + seconds + 0.02);
   }, []);
 
-  return { unlock, play };
+  return useMemo(() => ({ unlock, play }), [unlock, play]);
 }

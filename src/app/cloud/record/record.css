@@ -1,6 +1,6 @@
 /*
  * Recording: the setup page and the instrument (strap check, calibration
- * balloon, countdown, live pacer and line, results). The instrument sits in
+ * circle, countdown, live pacer and line, results). The instrument sits in
  * .theme-dark, so it reads the dark tokens whatever the page theme is.
  */
 
@@ -22,11 +22,32 @@
   min-width: 220px;
 }
 
-.setup-grid {
+/* Session cards and the band side by side, sharing one label line and one height. */
+.setup-top {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: var(--s-6);
-  align-items: start;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: var(--s-4);
+  align-items: stretch;
+}
+
+.setup-top > .choice {
+  display: flex;
+  flex-direction: column;
+}
+
+.setup-top .mode-cards {
+  flex: 1;
+}
+
+.setup-band-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.choice-label {
+  margin-bottom: var(--s-3);
+  font: 600 var(--t-13) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
 }
 
 .setup-main {
@@ -166,8 +187,7 @@
 }
 
 .setup-band {
-  position: sticky;
-  top: var(--s-5);
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--s-4);
@@ -372,37 +392,92 @@
   gap: var(--s-5);
 }
 
-.balloon {
-  width: 260px;
+/* Calibration: the breathing circle, full at the outer ring and empty at the inner one. */
+.cal-ring {
+  position: relative;
+  width: min(420px, 80vw);
   flex: none;
 }
 
-.balloon svg {
+.cal-ring svg {
   width: 100%;
   height: auto;
   overflow: visible;
 }
 
-.balloon-body {
-  fill: var(--c-in);
-  transition: fill 600ms var(--ease-out);
-}
-
-.balloon[data-phase="out"] .balloon-body {
-  fill: var(--c-out);
-}
-
-.balloon-shine {
-  fill: none;
-  stroke: rgb(255 255 255 / 0.4);
-  stroke-width: 6;
-  stroke-linecap: round;
-}
-
-.balloon-string {
+.cr-full,
+.cr-empty {
   fill: none;
   stroke: var(--c-ink-3);
   stroke-width: 2;
+  stroke-dasharray: 4 7;
+  transition:
+    stroke var(--dur-mid) var(--ease-out),
+    stroke-width var(--dur-mid) var(--ease-out);
+}
+
+.cal-ring[data-cue="full"] .cr-full {
+  stroke: var(--c-in);
+  stroke-width: 5;
+  stroke-dasharray: none;
+}
+
+.cal-ring[data-cue="empty"] .cr-empty {
+  stroke: var(--c-out);
+  stroke-width: 5;
+  stroke-dasharray: none;
+}
+
+.cr-disc {
+  fill: color-mix(in srgb, var(--c-in) 26%, transparent);
+  stroke: var(--c-in);
+  stroke-width: 3;
+  transition:
+    fill var(--dur-mid) var(--ease-out),
+    stroke var(--dur-mid) var(--ease-out);
+}
+
+.cal-ring[data-cue="out"] .cr-disc,
+.cal-ring[data-cue="empty"] .cr-disc {
+  fill: color-mix(in srgb, var(--c-out) 26%, transparent);
+  stroke: var(--c-out);
+}
+
+.cr-label {
+  fill: var(--c-ink-2);
+  font: 600 13px var(--f-sans);
+}
+
+.cr-label-empty {
+  font-size: 12px;
+}
+
+.cr-text {
+  margin-top: var(--s-4);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.cr-word {
+  font: 400 clamp(26px, 3vw, 36px) / 1 var(--f-display);
+  letter-spacing: -0.02em;
+}
+
+.cr-hint {
+  font: 600 var(--t-15) / 1.3 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.cal-ring[data-cue="full"] .cr-word,
+.cal-ring[data-cue="fill"] .cr-word {
+  color: var(--c-in);
+}
+
+.cal-ring[data-cue="empty"] .cr-word,
+.cal-ring[data-cue="out"] .cr-word {
+  color: var(--c-out);
 }
 
 .cal-dots {
@@ -443,8 +518,8 @@
 }
 
 .inst-live.with-circle {
-  grid-template-rows: minmax(0, 1fr) 120px;
-  gap: var(--s-4);
+  grid-template-rows: minmax(0, 1fr) 120px auto;
+  gap: var(--s-3);
 }
 
 .pacer-circle {
@@ -514,10 +589,79 @@
   overflow: hidden;
 }
 
+.inst-line-wrap {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--s-3);
+}
+
 .inst-line {
   width: 100%;
   height: 100%;
   min-height: 300px;
+}
+
+.line-legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--s-2) var(--s-5);
+  font: 500 var(--t-13) / 1.3 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.line-legend[data-compact] {
+  font-size: var(--t-12);
+}
+
+.line-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.line-legend i {
+  display: inline-block;
+  width: 18px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--c-in);
+}
+
+.line-legend i[data-k="out"] {
+  background: var(--c-out);
+}
+
+.line-legend i[data-k="pacer"] {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--pacer-line);
+}
+
+.line-legend i[data-k="band"] {
+  height: 12px;
+  border-radius: 2px;
+  background: var(--c-well);
+  border-top: 1px dashed var(--c-ink-3);
+  border-bottom: 1px dashed var(--c-ink-3);
+}
+
+.line-legend i[data-k="tag"] {
+  width: 22px;
+  height: 14px;
+  border-radius: 5px;
+  background: var(--c-pane);
+  border: 1px solid var(--c-rule);
+}
+
+.line-legend-amber {
+  color: var(--c-low-mark);
 }
 
 .breath-line {
@@ -714,12 +858,9 @@
 }
 
 @media (max-width: 900px) {
-  .setup-grid,
+  .setup-top,
   .inst-results {
     grid-template-columns: minmax(0, 1fr);
-  }
-  .setup-band {
-    position: static;
   }
   .inst-calibrate {
     flex-direction: column;
@@ -729,8 +870,8 @@
   .inst-calibrate > div {
     align-items: center;
   }
-  .balloon {
-    width: 180px;
+  .cal-ring {
+    width: min(300px, 80vw);
   }
 }
 
@@ -881,7 +1022,7 @@
 
 .duo-lane {
   position: relative;
-  min-height: 160px;
+  min-height: 200px;
   border: 1px solid var(--c-rule);
   border-radius: var(--r-sheet);
   overflow: hidden;
@@ -890,7 +1031,7 @@
 .duo-tag {
   position: absolute;
   top: var(--s-3);
-  left: var(--s-4);
+  left: 100px;
   z-index: 1;
   display: flex;
   align-items: center;

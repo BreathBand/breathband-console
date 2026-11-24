@@ -1,0 +1,412 @@
+/*
+ * First-run setup: a carbon panel with the steps and a breathing mark beside
+ * one question at a time. Below 900px the panel becomes a slim top bar.
+ */
+
+.welcome {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  background: var(--c-ground);
+}
+
+.welcome-side {
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+  padding: var(--s-8) var(--s-7);
+  background: var(--c-chrome);
+  color: var(--c-ink);
+}
+
+.welcome-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 500 var(--t-20) / 1 var(--f-display);
+}
+
+.welcome-brand sup {
+  font-size: 0.5em;
+}
+
+.welcome-brand .mark path:first-child {
+  stroke: var(--c-chrome-in);
+}
+
+.welcome-brand .mark path:nth-child(2) {
+  stroke: var(--c-chrome-out);
+}
+
+/* The mark breathing: an in-breath ring that fills and empties at a slow 5-5 pace. */
+.welcome-breath {
+  width: 140px;
+  height: 140px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1.5px dashed var(--c-chrome-rule);
+}
+
+.welcome-breath span {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid var(--c-chrome-in);
+  background: color-mix(in srgb, var(--c-chrome-in) 18%, transparent);
+  animation: welcome-breathe 10s ease-in-out infinite;
+}
+
+@keyframes welcome-breathe {
+  0%,
+  100% {
+    transform: scale(0.4);
+    border-color: var(--c-chrome-out);
+    background: color-mix(in srgb, var(--c-chrome-out) 18%, transparent);
+  }
+  50% {
+    transform: scale(1);
+    border-color: var(--c-chrome-in);
+    background: color-mix(in srgb, var(--c-chrome-in) 18%, transparent);
+  }
+}
+
+.welcome-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--s-3);
+}
+
+.welcome-steps li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  font-weight: 600;
+  color: var(--c-ink-3);
+}
+
+.welcome-steps li[data-state="done"] {
+  color: var(--c-ink-2);
+}
+
+.welcome-steps li[data-state="current"] {
+  color: var(--c-ink);
+}
+
+.ws-n {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font: 600 var(--t-13) / 1 var(--f-sans);
+}
+
+.welcome-steps li[data-state="current"] .ws-n {
+  background: var(--c-ink);
+  border-color: var(--c-ink);
+  color: var(--c-ink-inverse);
+}
+
+.welcome-note {
+  margin-top: auto;
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.welcome-main {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding: clamp(32px, 9vh, 120px) clamp(20px, 6vw, 96px) var(--s-9);
+}
+
+.welcome-progress {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--c-rule-soft);
+}
+
+.welcome-progress i {
+  display: block;
+  height: 100%;
+  background: var(--c-ink);
+  transition: width var(--dur-mid) var(--ease-out);
+}
+
+.welcome-step {
+  width: min(760px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+  animation: page-enter 360ms var(--ease-out) both;
+}
+
+.welcome-step > section,
+.welcome-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.welcome-step h1 {
+  font: 400 clamp(36px, 4.4vw, 56px) / 1.03 var(--f-display);
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+
+.welcome-lede {
+  margin-top: calc(-1 * var(--s-3));
+  max-width: 58ch;
+  font-size: var(--t-17);
+  color: var(--c-ink-2);
+}
+
+.welcome-lede b {
+  color: var(--c-ink);
+}
+
+.welcome-field input {
+  min-height: 56px;
+  font-size: var(--t-20);
+}
+
+.welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--s-5);
+  flex-wrap: wrap;
+}
+
+.welcome-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.goal-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.goal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-5) var(--s-5) var(--s-6);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-sheet);
+  background: var(--c-pane);
+  color: var(--c-ink);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.goal-card:hover {
+  border-color: var(--c-ink-3);
+  transform: translateY(-1px);
+}
+
+.goal-card[aria-checked="true"] {
+  border-color: var(--c-ink);
+  box-shadow: inset 0 0 0 1px var(--c-ink);
+}
+
+.goal-card small {
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.goal-card b {
+  font-size: var(--t-36);
+  line-height: 1;
+  font-weight: 400;
+}
+
+.goal-card span {
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.level-list {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.level-opt {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+  background: var(--c-pane);
+  color: var(--c-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.level-opt:hover {
+  border-color: var(--c-ink-3);
+}
+
+.level-opt[aria-checked="true"] {
+  border-color: var(--c-ink);
+  box-shadow: inset 0 0 0 1px var(--c-ink);
+}
+
+.level-opt > span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.level-opt small {
+  color: var(--c-ink-2);
+  font-size: var(--t-13);
+}
+
+.level-radio {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-ink-3);
+}
+
+.level-opt[aria-checked="true"] .level-radio {
+  border: 6px solid var(--c-ink);
+}
+
+.welcome-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-5) var(--s-7);
+}
+
+.welcome-week small {
+  display: block;
+  margin-top: var(--s-2);
+  font-size: var(--t-12);
+  color: var(--c-ink-2);
+}
+
+.band-choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.band-choices .source:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.welcome-band {
+  padding: var(--s-5);
+  border-radius: var(--r-sheet);
+  background: var(--c-ground);
+  color: var(--c-ink);
+  --trace-in: var(--c-in);
+  --trace-out: var(--c-out);
+}
+
+.welcome-band p {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  color: var(--c-ink-2);
+}
+
+.welcome-band-off {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+}
+
+.welcome-band-off p {
+  margin: 0;
+}
+
+.welcome-summary {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.welcome-summary > div {
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-sheet);
+  background: var(--c-pane);
+  border: 1px solid var(--c-rule);
+}
+
+.welcome-summary dt {
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.welcome-summary dd {
+  margin: var(--s-2) 0 0;
+  font: 400 var(--t-20) / 1.2 var(--f-display);
+}
+
+@media (max-width: 900px) {
+  .welcome {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .welcome-side {
+    position: static;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--s-4);
+    padding: var(--s-4) var(--s-5);
+  }
+  .welcome-breath,
+  .welcome-note {
+    display: none;
+  }
+  .welcome-steps {
+    margin-left: auto;
+    display: flex;
+    gap: var(--s-2);
+  }
+  .welcome-steps li {
+    font-size: 0;
+    gap: 0;
+  }
+  .welcome-main {
+    padding-top: var(--s-7);
+  }
+  .goal-cards,
+  .band-choices,
+  .welcome-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-breath span {
+    animation: none;
+    transform: scale(0.7);
+  }
+}

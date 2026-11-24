@@ -16,6 +16,36 @@ export interface UserProfile {
   role: Role;
   /** ISO 8601 */
   createdAt: string;
+  /** Set during onboarding and in Settings; absent until then. Shared with the app. */
+  preferences?: UserPreferences | null;
+}
+
+/** Why someone breathes with Breathband; the site's Train / Focus / Calm. Sets defaults, never scoring. */
+export type BreathGoal = "train" | "focus" | "calm";
+
+/** What a new session starts with, in the app and on the web. */
+export interface SessionPreferences {
+  mode: SessionMode;
+  pacerHalfCycleSec: PacerHalfCycle;
+  /** Seconds; 0 means "until I stop" (open sessions only). */
+  durationSec: number;
+  view: "circle" | "line";
+  sound: boolean;
+}
+
+/**
+ * A person's choices that personalise Breathband: their goal, how experienced
+ * they are (which sets how close to the pacer counts as on target), their
+ * session defaults and a weekly goal. Firestore: users/{uid}.preferences.
+ */
+export interface UserPreferences {
+  goal: BreathGoal;
+  skillLevel: SkillLevel;
+  session: SessionPreferences;
+  /** The athlete's own target; a coach's target for them wins where one is set. */
+  sessionsPerWeek: number;
+  /** ISO 8601; null until onboarding is finished. */
+  onboardedAt: string | null;
 }
 
 export type SessionMode = "paced" | "open";

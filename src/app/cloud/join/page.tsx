@@ -164,7 +164,7 @@ function JoinInvite({ athleteId, code }: { athleteId: string; code: string }) {
               ? "with scores and breathing curves"
               : "with scores only"}
             . You can change this or stop sharing at any time under{" "}
-            <b>Sharing</b>.
+            <b>Settings → Coaches and sharing</b>.
           </p>
           <div className="row">
             <Link className="button" data-size="small" href="/cloud/">
@@ -175,7 +175,7 @@ function JoinInvite({ athleteId, code }: { athleteId: string; code: string }) {
               className="button"
               data-variant="ghost"
               data-size="small"
-              href="/cloud/sharing/"
+              href="/cloud/account/#coaches"
             >
               <Icon name="share" size={16} />
               Review sharing
@@ -195,7 +195,7 @@ function JoinInvite({ athleteId, code }: { athleteId: string; code: string }) {
         >
           <p>
             Nothing was shared. If you change your mind, ask {first} to send a
-            new link, or create an invite code yourself under <b>Sharing</b>.
+            new link, or create an invite code yourself under <b>Settings → Coaches and sharing</b>.
           </p>
           <Actions />
         </Outcome>
@@ -250,7 +250,7 @@ function Closed({
             ? ""
             : "This link can't be used any more. "}
           You can change what {first} sees or stop sharing at any time under{" "}
-          <b>Sharing</b>.
+          <b>Settings → Coaches and sharing</b>.
         </p>
         <Actions sharing />
       </Outcome>
@@ -281,7 +281,7 @@ function Closed({
         <>
           Nothing was shared. If you&apos;ve changed your mind, ask {first} to
           send you a new link, or create an invite code yourself under{" "}
-          <b>Sharing</b>.
+          <b>Settings → Coaches and sharing</b>.
         </>
       ),
     },
@@ -484,7 +484,7 @@ function Consent({
             {link.scope === "curves" ? "scores and curves" : "scores only"},
             since {formatLongDay(link.createdAt)}). Accepting sets what {first}{" "}
             sees to your choice below. You can also change it under{" "}
-            <Link href="/cloud/sharing/">Sharing</Link>.
+            <Link href="/cloud/account/#coaches">Settings</Link>.
           </span>
         </p>
       )}
@@ -560,7 +560,7 @@ function Consent({
           <Icon name="share" size={18} />
           <span>
             You can change what {first} sees, or stop sharing, at any time under{" "}
-            <b>Sharing</b>. Stopping takes effect straight away.
+            <b>Settings → Coaches and sharing</b>. Stopping takes effect straight away.
           </span>
         </p>
         <div className="jn-buttons">
@@ -676,7 +676,7 @@ function Actions({ sharing = false }: { sharing?: boolean }) {
           className="button"
           data-variant="ghost"
           data-size="small"
-          href="/cloud/sharing/"
+          href="/cloud/account/#coaches"
         >
           <Icon name="share" size={16} />
           Sharing

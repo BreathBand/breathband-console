@@ -1,5 +1,6 @@
 import { GROUP_SIZE, pacerAt } from "@/lib/domain/group";
 import { isTransitionScores } from "@/lib/domain/scores";
+import { preferencesProblem } from "@/lib/domain/preferences";
 import {
   DEFAULT_ALERTS,
   type Assignment,
@@ -201,13 +202,19 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       return db.accounts[uid]?.profile ?? null;
     },
 
-    async updateProfile(uid, { displayName }) {
+    async updateProfile(uid, { displayName, preferences }) {
       await delay();
       assertIsSelf(uid);
-      const name = displayName.trim();
-      if (!name) throw new BackendError("invalid-input");
+      const name = displayName?.trim();
+      if (displayName !== undefined && !name) throw new BackendError("invalid-input", "displayName: empty");
+      if (preferences) {
+        const problem = preferencesProblem(preferences);
+        if (problem) throw new BackendError("invalid-input", problem);
+      }
       mutate((db) => {
-        db.accounts[uid].profile.displayName = name.slice(0, 80);
+        const profile = db.accounts[uid].profile;
+        if (name) profile.displayName = name.slice(0, 80);
+        if (preferences !== undefined) profile.preferences = preferences ? structuredClone(preferences) : null;
       });
       const profile = profileOf(uid);
       emit();

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useEffect, type ReactNode } from "react";
+import { Suspense, useEffect, ViewTransition, type ReactNode } from "react";
 import { Icon, Mark, type IconName } from "@/components/Icon";
 import type { Backend } from "@/lib/backend";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
@@ -16,11 +16,22 @@ import { DeviceStatus } from "./device/DeviceStatus";
 const PUBLIC_PATHS = ["/cloud/login/", "/cloud/signup/", "/cloud/reset/"];
 const LANDING = "/cloud/";
 /** Full-screen pages: the recording instrument brings its own frame. */
-const BARE_PATHS = ["/cloud/record/live/", "/cloud/record/duo/"];
+const BARE_PATHS = ["/cloud/record/live/", "/cloud/record/duo/", "/cloud/welcome/"];
+/** Pages a signed-in person can open before finishing setup. */
+const BEFORE_SETUP = ["/cloud/welcome/", "/cloud/join/"];
 
 // Set just before a deliberate sign-out, so the gate sends the visitor to the
 // BreathCloud landing page instead of the login page.
 const exit = { toLanding: false };
+
+// Set when onboarding saves, so the gate doesn't bounce the person back to
+// /cloud/welcome/ in the moment before the refreshed profile arrives.
+const setup = { finished: false };
+
+/** Called by the welcome flow once the person's preferences are saved. */
+export function markSetupFinished(): void {
+  setup.finished = true;
+}
 
 /** Signs out and lands on /cloud/ (rather than bouncing to the login page). */
 export async function signOutToLanding(backend: Backend, reset = false): Promise<void> {
@@ -46,7 +57,7 @@ const ATHLETE_NAV: NavItem[] = [
   { href: "/cloud/record/", label: "Record", icon: "record", match: ["/cloud/record/", "/cloud/record/live/"] },
   { href: "/cloud/sessions/?tab=sessions", label: "Sessions", icon: "history", match: ["/cloud/sessions/", "/cloud/session/"] },
   { href: "/cloud/device/", label: "Band", icon: "band", match: ["/cloud/device/"] },
-  { href: "/cloud/sharing/", label: "Sharing", icon: "share", match: ["/cloud/sharing/"] },
+  { href: "/cloud/account/", label: "Settings", icon: "settings", match: ["/cloud/account/", "/cloud/sharing/"] },
 ];
 
 const COACH_NAV: NavItem[] = [
@@ -82,11 +93,17 @@ export function CloudShell({ children }: { children: ReactNode }) {
       const here = window.location.pathname + window.location.search;
       router.replace(exit.toLanding ? LANDING : `/cloud/login/?next=${encodeURIComponent(here)}`);
     }
-    if (auth.status === "signed-out") exit.toLanding = false;
+    if (auth.status === "signed-out") {
+      exit.toLanding = false;
+      setup.finished = false;
+    }
     if (auth.status === "signed-in" && isPublic) {
       router.replace(safeNext(new URLSearchParams(window.location.search).get("next")));
     }
-  }, [auth.status, isPublic, isLanding, router]);
+    // New accounts set up their goal, level and sessions before anything else.
+    const needsSetup = auth.status === "signed-in" && auth.profile !== null && !auth.profile.preferences?.onboardedAt && !setup.finished;
+    if (needsSetup && !isPublic && !BEFORE_SETUP.includes(pathname)) router.replace("/cloud/welcome/");
+  }, [auth, isPublic, isLanding, pathname, router]);
 
   if (auth.status === "loading") {
     return (
@@ -196,7 +213,12 @@ export function CloudShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </aside>
-      <main className="app-main">{children}</main>
+      <main className="app-main">
+        {/* Each route crossfades in as it changes; the sidebar stays put (view-transition-name in shell.css). */}
+        <ViewTransition key={pathname} enter="page-enter" exit="page-exit" default="none">
+          <div className="page-frame">{children}</div>
+        </ViewTransition>
+      </main>
     </div>
   );
 }

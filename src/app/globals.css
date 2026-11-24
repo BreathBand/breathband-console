@@ -666,3 +666,71 @@ code {
     transition: none !important;
   }
 }
+
+/* ---------------------------------------------------------------- motion between screens */
+
+/*
+ * Route changes: the old page leaves quickly, the new one settles in from a
+ * few pixels below (React <ViewTransition> in CloudShell). Content that
+ * arrives after a load rises in the same way, so nothing pops; skeletons wait
+ * a beat before showing, so quick loads never flash one.
+ */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-old(.page-exit) {
+  animation: 120ms ease-out both vt-fade-out;
+}
+
+::view-transition-new(.page-enter) {
+  animation: 300ms var(--ease-out) 60ms both vt-rise-in;
+}
+
+::view-transition-group(app-side) {
+  animation: none;
+  z-index: 10;
+}
+
+::view-transition-old(app-side) {
+  display: none;
+}
+
+::view-transition-new(app-side) {
+  animation: none;
+}
+
+@keyframes vt-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes vt-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

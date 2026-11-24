@@ -3,19 +3,22 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { Icon } from "@/components/Icon";
+import { RateBars, type TrendPoint } from "@/components/charts";
 import { Measured } from "@/components/Measured";
 import { Progress } from "@/components/Progress";
 import { Arrow, Dot } from "@/components/Score";
 import { TimeTrend, type TimePoint } from "@/components/trendCharts";
-import { useBackend } from "@/lib/backend/BackendProvider";
+import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { useDevice } from "@/lib/device/DeviceProvider";
 import { activity, daysAgoText } from "@/lib/domain/activity";
 import { describeAssignment, dueText, isOpen, timeAgo } from "@/lib/domain/coaching";
 import { describeMode, formatDay, formatDuration, formatTime } from "@/lib/domain/format";
 import { formatScore, headline, isTransitionScores, scoreWord } from "@/lib/domain/scores";
-import type { SessionSummary, Waveform } from "@/lib/domain/types";
+import { goalOf } from "@/lib/domain/preferences";
+import type { SessionSummary, UserPreferences, Waveform } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
 import type { Workspace } from "./AthleteWorkspace";
+import { weekStart } from "./SessionsTab";
 
 const DAY = 86_400_000;
 const TREND_DAYS = 56;
@@ -44,13 +47,16 @@ export function streakDays(sessions: SessionSummary[], now: Date): number {
 }
 
 /**
- * The athlete's home: a greeting and the one primary action, the last session
- * as a dark instrument card (its score, its breath, its breakdown), the week at
- * a glance, the score trend, and what their coach has set and said.
+ * The athlete's home, built to fit one laptop screen: a greeting with the
+ * suggested session as the one primary action, the last session as a dark
+ * instrument card beside the week at a glance, then the score trend beside
+ * what the coach has set and said and the latest sessions.
  */
 export function AthleteHome({ ws }: { ws: Workspace }) {
+  const auth = useAuth();
   const { sessions, now, targets } = ws;
   const first = ws.name.split(" ")[0];
+  const prefs = auth.status === "signed-in" ? auth.profile?.preferences : null;
 
   if (sessions.length === 0) return <FirstRun name={first} now={now} />;
 
@@ -61,138 +67,205 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
   const streak = streakDays(sessions, now);
   const lastOpen = sessions.find((s) => s.mode === "open" && s.respirationRateBpm !== null);
   const open = ws.plans.filter(isOpen);
+  const suggestion = prefs ? suggestedSession(prefs) : "Start a session";
+  const thisWeek = sessions.filter((s) => Date.parse(s.startedAt) >= weekStart(now).getTime()).length;
 
   return (
-    <div className="container page home">
+    <div className="container home">
       <header className="home-head">
         <div>
-          <p className="home-date">{now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
           <h1>
             {greeting(now)}, {first}.
           </h1>
+          <p className="home-date">
+            {now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+            {prefs && (
+              <>
+                {" · "}Goal: <b>{goalOf(prefs.goal).label}</b>, {targets.sessionsPerWeek} sessions a week
+              </>
+            )}
+          </p>
         </div>
-        <Link href="/cloud/record/" className="button" data-size="large">
-          <span className="rec-dot" aria-hidden="true" />
-          Start a session
-        </Link>
+        <div className="home-actions">
+          <Link href="/cloud/device/" className="button" data-variant="ghost">
+            <Icon name="band" size={18} />
+            Band
+          </Link>
+          <Link href="/cloud/record/" className="button" data-size="large">
+            <span className="rec-dot" aria-hidden="true" />
+            {suggestion}
+          </Link>
+        </div>
       </header>
 
       {a.flags.length > 0 && (
-        <ul className="flags" aria-label="Reminders">
-          {a.flags.map((f) => (
+        <ul className="flags home-flags" aria-label="Reminders">
+          {a.flags.slice(0, 2).map((f) => (
             <li key={f.kind} data-kind={f.kind}>
-              <Icon name="info" size={18} />
+              <Icon name="info" size={16} />
               {ownWords(f.text)}
             </li>
           ))}
         </ul>
       )}
 
-      <LastSession session={latest} sessions={sessions} href={ws.sessionHref(latest.id)} />
+      <div className="home-grid">
+        <LastSession session={latest} sessions={sessions} href={ws.sessionHref(latest.id)} />
 
-      <section className="home-stats" aria-label="This week">
-        <div className="pane stat">
-          <span className="lbl">This week</span>
-          <span className="n display">
-            {a.lastWeek}
-            <small> of {targets.sessionsPerWeek}</small>
-          </span>
-          <Progress done={Math.min(a.lastWeek, targets.sessionsPerWeek)} target={targets.sessionsPerWeek} status={a.lastWeek >= targets.sessionsPerWeek ? "done" : "active"} />
-        </div>
-        <div className="pane stat">
-          <span className="lbl">Streak</span>
-          <span className="n display">
-            {streak}
-            <small> {streak === 1 ? "day" : "days"}</small>
-          </span>
-          <span className="d">{streak > 0 ? "In a row, up to today" : `Last session ${daysAgoText(a.daysSince ?? 0).toLowerCase()}`}</span>
-        </div>
-        <div className="pane stat">
-          <span className="lbl">Average, last {recent5.length || 5} paced</span>
-          <span className="n display">{average === null ? "–" : formatScore(Math.round(average * 10) / 10)}</span>
-          <span className="d">Your target is {formatScore(targets.score)}</span>
-        </div>
-        <div className="pane stat">
-          <span className="lbl">Breathing at rest</span>
-          <span className="n display">
-            {lastOpen ? formatScore(lastOpen.respirationRateBpm!) : "–"}
-            <small> br/min</small>
-          </span>
-          <span className="d">{lastOpen ? `Open session, ${formatDay(lastOpen.startedAt, undefined, false)}` : "Record an open session to see it"}</span>
-        </div>
-      </section>
-
-      <ScoreTrend ws={ws} />
-
-      <div className="home-low">
-        <section className="pane pane-pad" aria-labelledby="recent-h">
+        <section className="pane home-week" aria-labelledby="week-h">
           <div className="pane-h">
-            <h2 id="recent-h">Recent sessions</h2>
-            <Link className="link small" href={ws.tabHref("sessions")}>
-              All {sessions.length}
-              <Icon name="chevronRight" size={16} />
-            </Link>
+            <h2 id="week-h">This week</h2>
+            <span className="meta">
+              {thisWeek} of {targets.sessionsPerWeek} done
+            </span>
           </div>
-          <ul className="recent">
-            {sessions.slice(0, 6).map((s) => {
-              const h = headline(s);
-              return (
-                <li key={s.id}>
-                  <Link href={ws.sessionHref(s.id)}>
-                    <span className="recent-what">
-                      <b>{describeMode(s)}</b>
-                      <span>
-                        {formatDay(s.startedAt)} · {formatTime(s.startedAt)} · {formatDuration(s.durationSec)}
-                      </span>
-                    </span>
-                    <span className="recent-score">
-                      <b className="display">{h.text}</b>
-                      <span>
-                        {h.kind === "transition" ? (
-                          <>
-                            <Dot band={h.band} />
-                            {h.word}
-                          </>
-                        ) : h.kind === "rate" ? (
-                          "br/min"
-                        ) : (
-                          "earlier scoring"
-                        )}
-                      </span>
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <WeekStrip sessions={sessions} now={now} />
+          <dl className="home-facts">
+            <div>
+              <dt>Streak</dt>
+              <dd>
+                <b className="display">{streak}</b> {streak === 1 ? "day" : "days"}
+              </dd>
+            </div>
+            <div>
+              <dt>Last 5 paced</dt>
+              <dd>
+                <b className="display">{average === null ? "–" : formatScore(Math.round(average * 10) / 10)}</b> avg
+              </dd>
+            </div>
+            <div>
+              <dt>At rest</dt>
+              <dd>
+                <b className="display">{lastOpen ? formatScore(lastOpen.respirationRateBpm!) : "–"}</b> br/min
+              </dd>
+            </div>
+          </dl>
+          {streak === 0 && a.daysSince !== null && <p className="home-small">Last session {daysAgoText(a.daysSince).toLowerCase()}.</p>}
         </section>
-        <div className="stack">
-          <section className="pane pane-pad" aria-labelledby="practice-h">
+
+        <ScoreTrend ws={ws} />
+
+        <section className="pane home-side" aria-label="Coach and recent sessions">
+          <div className="home-side-block">
             <div className="pane-h">
-              <h2 id="practice-h">From your coach</h2>
+              <h2>From your coach</h2>
               <Link className="link small" href={ws.tabHref("plan")}>
-                See all
+                Practice
                 <Icon name="chevronRight" size={16} />
               </Link>
             </div>
             {open.length === 0 ? (
-              <p className="muted small-text">{ws.coachName ? "Nothing set right now." : "Share with a coach under Sharing and their practice shows up here."}</p>
+              <p className="muted small-text">{ws.coachName ? "Nothing set right now." : "Share with a coach in Settings and their practice shows up here."}</p>
             ) : (
-              <ul className="plans compact">
-                {open.map((p) => (
-                  <li key={p.assignment.id}>
-                    <span className="plan-what">{describeAssignment(p.assignment)}</span>
-                    <Progress done={p.done} target={p.assignment.target} status={p.status} />
-                    <span className="plan-due label">{dueText(p.daysLeft)}</span>
-                  </li>
-                ))}
-              </ul>
+              <div className="home-plan">
+                <span className="plan-what">{describeAssignment(open[0].assignment)}</span>
+                <Progress done={open[0].done} target={open[0].assignment.target} status={open[0].status} />
+                <span className="plan-due label">{dueText(open[0].daysLeft)}</span>
+              </div>
             )}
-          </section>
-          <Conversation ws={ws} />
-        </div>
+            <LatestComment ws={ws} />
+          </div>
+          <div className="home-side-block">
+            <div className="pane-h">
+              <h2>Recent</h2>
+              <Link className="link small" href={ws.tabHref("sessions")}>
+                All {sessions.length}
+                <Icon name="chevronRight" size={16} />
+              </Link>
+            </div>
+            <ul className="recent">
+              {sessions.slice(0, 3).map((s) => {
+                const h = headline(s);
+                return (
+                  <li key={s.id}>
+                    <Link href={ws.sessionHref(s.id)}>
+                      <span className="recent-what">
+                        <b>{describeMode(s)}</b>
+                        <span>
+                          {formatDay(s.startedAt)} · {formatDuration(s.durationSec)}
+                        </span>
+                      </span>
+                      <span className="recent-score">
+                        <b className="display">{h.text}</b>
+                        <span>
+                          {h.kind === "transition" ? (
+                            <>
+                              <Dot band={h.band} />
+                              {h.word}
+                            </>
+                          ) : h.kind === "rate" ? (
+                            "br/min"
+                          ) : (
+                            "earlier scoring"
+                          )}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </section>
       </div>
     </div>
+  );
+}
+
+/** "Start Paced 5-5 · 10 min", from the athlete's saved defaults. */
+export function suggestedSession(p: UserPreferences): string {
+  const s = p.session;
+  const what = s.mode === "paced" ? `Paced ${s.pacerHalfCycleSec}-${s.pacerHalfCycleSec}` : "Open";
+  return `Start ${what}${s.durationSec ? ` · ${Math.round(s.durationSec / 60)} min` : ""}`;
+}
+
+/** Monday to Sunday: a filled dot for each day with a session, today ringed, its best score beneath. */
+function WeekStrip({ sessions, now }: { sessions: SessionSummary[]; now: Date }) {
+  const monday = weekStart(now);
+  const days = Array.from({ length: 7 }, (_, i) => new Date(monday.getTime() + i * DAY));
+  return (
+    <ol className="week-strip" aria-label="Sessions this week">
+      {days.map((d) => {
+        const same = sessions.filter((s) => new Date(s.startedAt).toDateString() === d.toDateString());
+        const best = same.reduce<number | null>((m, s) => (isTransitionScores(s.scores) ? Math.max(m ?? 0, s.scores.total) : m), null);
+        const today = d.toDateString() === now.toDateString();
+        const future = d > now && !today;
+        return (
+          <li key={d.toISOString()} data-done={same.length > 0 || undefined} data-today={today || undefined} data-future={future || undefined}>
+            <span className="ws-day" aria-hidden="true">
+              {d.toLocaleDateString(undefined, { weekday: "narrow" })}
+            </span>
+            <i aria-hidden="true">{same.length > 1 ? same.length : ""}</i>
+            <span className="ws-score" aria-hidden="true">
+              {best !== null ? formatScore(best) : same.length ? "open" : ""}
+            </span>
+            <span className="sr-only">
+              {d.toLocaleDateString(undefined, { weekday: "long" })}: {same.length ? `${same.length} session${same.length > 1 ? "s" : ""}` : "no session"}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function LatestComment({ ws }: { ws: Workspace }) {
+  const c = ws.comments.filter((x) => x.kind === "comment" && x.authorId !== ws.viewerId).slice(-1)[0];
+  if (!c) return null;
+  const s = ws.sessions.find((x) => x.id === c.sessionId);
+  return (
+    <figure className="home-quote">
+      <blockquote>“{c.text}”</blockquote>
+      <figcaption className="label">
+        {c.authorName} · {timeAgo(c.createdAt, ws.now)}
+        {s && (
+          <>
+            {" · "}
+            <Link href={`${ws.sessionHref(s.id)}#comments`}>Reply</Link>
+          </>
+        )}
+      </figcaption>
+    </figure>
   );
 }
 
@@ -224,6 +297,28 @@ function LastSession({ session, sessions, href }: { session: SessionSummary; ses
             "Breathing rate"
           )}
         </p>
+        {scores && (
+          <dl className="last-subs">
+            <div>
+              <dt>Timing</dt>
+              <dd>
+                <Arrow dir="in" size={8} /> {formatScore(scores.timing.inhale)} <Arrow dir="out" size={8} /> {formatScore(scores.timing.exhale)}
+              </dd>
+            </div>
+            <div>
+              <dt>Depth</dt>
+              <dd>
+                <Arrow dir="in" size={8} /> {formatScore(scores.depth.inhale)} <Arrow dir="out" size={8} /> {formatScore(scores.depth.exhale)}
+              </dd>
+            </div>
+            {session.paced && (
+              <div>
+                <dt>On target</dt>
+                <dd>{Math.round((session.paced.onTargetPct.timing + session.paced.onTargetPct.depth) / 2)}%</dd>
+              </div>
+            )}
+          </dl>
+        )}
         <p className="last-meta">
           {describeMode(session)} · {formatDay(session.startedAt)}, {formatTime(session.startedAt)} · {formatDuration(session.durationSec)}
         </p>
@@ -234,7 +329,7 @@ function LastSession({ session, sessions, href }: { session: SessionSummary; ses
       </div>
       <div className="last-wave">
         {wave.status === "ready" ? (
-          <Measured height={150}>{(width) => <BreathStrip waveform={wave.data} width={width} height={150} />}</Measured>
+          <Measured height={128}>{(width) => <BreathStrip waveform={wave.data} width={width} height={128} />}</Measured>
         ) : (
           <div className="last-wave-wait" />
         )}
@@ -245,43 +340,6 @@ function LastSession({ session, sessions, href }: { session: SessionSummary; ses
           <span>First 60 seconds</span>
         </span>
       </div>
-      {scores && (
-        <table className="last-table">
-          <thead>
-            <tr>
-              <th scope="col">
-                <span className="sr-only">Measure</span>
-              </th>
-              <th scope="col">
-                <Arrow dir="in" /> In
-              </th>
-              <th scope="col">
-                <Arrow dir="out" /> Out
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th scope="row">Timing</th>
-              <td>{formatScore(scores.timing.inhale)}</td>
-              <td>{formatScore(scores.timing.exhale)}</td>
-            </tr>
-            <tr>
-              <th scope="row">Depth</th>
-              <td>{formatScore(scores.depth.inhale)}</td>
-              <td>{formatScore(scores.depth.exhale)}</td>
-            </tr>
-            {session.paced && (
-              <tr>
-                <th scope="row">On target</th>
-                <td colSpan={2}>
-                  {Math.round((session.paced.onTargetPct.timing + session.paced.onTargetPct.depth) / 2)}%
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      )}
     </section>
   );
 }
@@ -336,6 +394,15 @@ function ScoreTrend({ ws }: { ws: Workspace }) {
       href: ws.sessionHref(s.id),
     }))
     .reverse();
+  const rates: TrendPoint[] = sessions
+    .filter((s) => s.mode === "open" && s.respirationRateBpm !== null && Date.parse(s.startedAt) >= t0)
+    .slice(0, 12)
+    .reverse()
+    .map((s) => ({
+      value: s.respirationRateBpm!,
+      label: formatDay(s.startedAt, undefined, false),
+      title: `${formatDay(s.startedAt)}: ${formatScore(s.respirationRateBpm!)} br/min`,
+    }));
 
   return (
     <section className="pane pane-pad home-trend" aria-labelledby="trend-h">
@@ -347,7 +414,7 @@ function ScoreTrend({ ws }: { ws: Workspace }) {
         </Link>
       </div>
       {points.length > 1 ? (
-        <Measured height={200}>
+        <Measured height={150}>
           {(width) => (
             <TimeTrend
               points={points}
@@ -358,7 +425,7 @@ function ScoreTrend({ ws }: { ws: Workspace }) {
               yTicks={[2, 4, 6, 8, 10]}
               line={{ v: targets.score, label: `Target ${formatScore(targets.score)}` }}
               width={width}
-              height={200}
+              height={150}
               format={formatScore}
               ariaLabel={`Total Breath Score for ${points.length} paced sessions over the last 8 weeks`}
             />
@@ -367,45 +434,19 @@ function ScoreTrend({ ws }: { ws: Workspace }) {
       ) : (
         <p className="muted chart-empty">Two or more scored sessions draw your trend here.</p>
       )}
-    </section>
-  );
-}
-
-function Conversation({ ws }: { ws: Workspace }) {
-  const latest = ws.comments
-    .filter((c) => c.kind === "comment")
-    .slice(-3)
-    .reverse();
-  return (
-    <section className="pane pane-pad" aria-labelledby="conversation-h">
-      <div className="pane-h">
-        <h2 id="conversation-h">Latest comments</h2>
+      <div className="home-rate">
+        <div className="pane-h">
+          <h3>Breathing rate, open sessions</h3>
+          <span className="meta">
+            br/min, shaded {targets.rateLow}–{targets.rateHigh}
+          </span>
+        </div>
+        {rates.length > 0 ? (
+          <Measured height={96}>{(width) => <RateBars points={rates} lo={targets.rateLow} hi={targets.rateHigh} width={width} height={96} />}</Measured>
+        ) : (
+          <p className="muted small-text">Record an open session to see your resting rate here.</p>
+        )}
       </div>
-      {latest.length === 0 ? (
-        <p className="muted small-text">Comments from your coach show up here.</p>
-      ) : (
-        <ul className="quotes">
-          {latest.map((c) => {
-            const s = ws.sessions.find((x) => x.id === c.sessionId);
-            return (
-              <li key={c.id}>
-                <q>{c.text}</q>
-                <span className="label">
-                  {c.authorId === ws.viewerId ? "You" : c.authorName} · {timeAgo(c.createdAt, ws.now)}
-                  {s && (
-                    <>
-                      {" · "}
-                      <Link href={`${ws.sessionHref(s.id)}#comments`}>
-                        {describeMode(s)}, {formatDay(s.startedAt, undefined, false)}
-                      </Link>
-                    </>
-                  )}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      )}
     </section>
   );
 }
@@ -413,16 +454,27 @@ function Conversation({ ws }: { ws: Workspace }) {
 /** A new athlete with no sessions: three steps from band to first score, with the simulator as a way in. */
 function FirstRun({ name, now }: { name: string; now: Date }) {
   const device = useDevice();
+  const auth = useAuth();
+  const prefs = auth.status === "signed-in" ? auth.profile?.preferences : null;
+  // A minute for the strap check and calibration, then the session itself.
+  const minutes = 1 + Math.round((prefs?.session.durationSec || 180) / 60);
   return (
     <div className="container page home">
       <header className="home-head">
         <div>
-          <p className="home-date">{now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
           <h1>Welcome, {name}.</h1>
+          <p className="home-date">
+            {now.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+            {prefs && (
+              <>
+                {" · "}Goal: <b>{goalOf(prefs.goal).label}</b>
+              </>
+            )}
+          </p>
         </div>
       </header>
       <section className="home-first theme-dark" aria-labelledby="first-h">
-        <h2 id="first-h" className="display">Your first session takes about five minutes.</h2>
+        <h2 id="first-h" className="display">Your first session takes about {minutes} minutes.</h2>
         <ol className="first-steps">
           <li>
             <b>Put on your band</b>
@@ -440,7 +492,7 @@ function FirstRun({ name, now }: { name: string; now: Date }) {
         <div className="first-actions">
           <Link href="/cloud/record/" className="button" data-size="large">
             <span className="rec-dot" aria-hidden="true" />
-            Record your first session
+            {prefs ? suggestedSession(prefs) : "Record your first session"}
           </Link>
           <Link href="/cloud/device/" className="button" data-variant="ghost">
             {device.connected ? "Band connected" : "Set up your band"}

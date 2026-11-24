@@ -6,6 +6,9 @@ import "./console.css";
 import "./shell.css";
 import "./product.css";
 import "./home.css";
+import "./sessions.css";
+import "./welcome/welcome.css";
+import "./settings/settings.css";
 import "./record/record.css";
 import "./session/review.css";
 

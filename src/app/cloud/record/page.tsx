@@ -8,7 +8,7 @@ import { LiveTrace } from "@/components/LiveTrace";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { useDevice } from "@/lib/device/DeviceProvider";
 import { assignmentProgress, describeAssignment, dueText, isOpen } from "@/lib/domain/coaching";
-import { LENGTHS, readSetup, saveSetup, setupQuery, SKILLS, type SessionSetup } from "@/lib/prefs";
+import { LENGTHS, readSetup, saveSetup, setupFromPreferences, setupQuery, SKILLS, type SessionSetup } from "@/lib/prefs";
 import { useLoad } from "@/lib/useLoad";
 import { PERSONAS, stateWords } from "../device/words";
 
@@ -18,7 +18,11 @@ export default function RecordSetupPage() {
   const auth = useAuth();
   const backend = useBackend();
   const device = useDevice();
-  const [setup, setSetup] = useState<SessionSetup>(readSetup);
+  // The person's saved defaults (from onboarding and Settings); this browser's last setup when there are none.
+  const [setup, setSetup] = useState<SessionSetup>(() => {
+    const prefs = auth.status === "signed-in" ? auth.profile?.preferences : null;
+    return prefs ? setupFromPreferences(prefs) : readSetup();
+  });
   const uid = auth.status === "signed-in" ? auth.user.uid : null;
   const isAthlete = auth.status === "signed-in" && auth.profile?.role === "athlete";
 
@@ -77,23 +81,72 @@ export default function RecordSetupPage() {
         </section>
       )}
 
-      <div className="setup-grid">
-        <div className="setup-main">
-          <fieldset className="choice">
-            <legend>Session</legend>
-            <div className="mode-cards">
-              <button type="button" className="mode-card" aria-pressed={setup.mode === "paced"} onClick={() => set({ mode: "paced", lengthSec: setup.lengthSec || 300 })}>
-                <PacedGlyph />
-                <b>Paced</b>
-                <span>Follow the pacer in and out. You get a Total Breath Score from 1 to 10.</span>
-              </button>
-              <button type="button" className="mode-card" aria-pressed={setup.mode === "open"} onClick={() => set({ mode: "open" })}>
-                <OpenGlyph />
-                <b>Open</b>
-                <span>Breathe your own way. You see your rate, rhythm and depth, before and after anything you mark.</span>
-              </button>
-            </div>
-          </fieldset>
+      <div className="setup-main">
+        <div className="setup-top">
+            <fieldset className="choice">
+              <legend>Session</legend>
+              <div className="mode-cards">
+                <button type="button" className="mode-card" aria-pressed={setup.mode === "paced"} onClick={() => set({ mode: "paced", lengthSec: setup.lengthSec || 300 })}>
+                  <PacedGlyph />
+                  <b>Paced</b>
+                  <span>Follow the pacer in and out. You get a Total Breath Score from 1 to 10.</span>
+                </button>
+                <button type="button" className="mode-card" aria-pressed={setup.mode === "open"} onClick={() => set({ mode: "open" })}>
+                  <OpenGlyph />
+                  <b>Open</b>
+                  <span>Breathe your own way. You see your rate, rhythm and depth, before and after anything you mark.</span>
+                </button>
+              </div>
+            </fieldset>
+          <div className="setup-band-col">
+            <h2 className="choice-label" id="band-label">
+              Band
+            </h2>
+            <aside className="setup-band pane" aria-labelledby="band-label">
+              <div className="setup-band-head">
+                <b>{device.kind === "simulated" ? "Simulated band" : (device.status.deviceName ?? "Breathband")}</b>
+                <span className="device-state" data-state={device.status.state}>
+                  <i aria-hidden="true" />
+                  {device.stalled ? "No signal" : stateWords(device.status.state)}
+                </span>
+              </div>
+              {device.connected ? (
+                <>
+                  <div className="setup-band-trace theme-dark">
+                    <LiveTrace read={device.recent} window={240} height={72} label="Live signal" />
+                  </div>
+                  {device.kind === "simulated" && (
+                    <label className="field">
+                      Simulated athlete
+                      <select value={device.persona} onChange={(e) => device.setPersona(e.target.value as typeof device.persona)}>
+                        {PERSONAS.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.label} · {p.detail}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </>
+              ) : (
+                <>
+                  <p className="muted small">
+                    {device.kind === "simulated"
+                      ? "The simulated band will stand in for your Breathband."
+                      : "Turn your Breathband on and keep it close."}
+                  </p>
+                  <button type="button" className="button" data-variant="ghost" disabled={busy} onClick={() => void device.connect()}>
+                    <Icon name={device.kind === "simulated" ? "signal" : "bluetooth"} size={18} />
+                    {busy ? "Connecting…" : device.kind === "simulated" ? "Start the simulated band" : "Connect your band"}
+                  </button>
+                  <Link href="/cloud/device/" className="link small">
+                    Band settings
+                  </Link>
+                </>
+              )}
+            </aside>
+          </div>
+        </div>
 
           {setup.mode === "paced" && (
             <fieldset className="choice">
@@ -162,52 +215,6 @@ export default function RecordSetupPage() {
               </fieldset>
             )}
           </div>
-        </div>
-
-        <aside className="setup-band pane" aria-label="Your band">
-          <div className="setup-band-head">
-            <h2>Band</h2>
-            <span className="device-state" data-state={device.status.state}>
-              <i aria-hidden="true" />
-              {device.stalled ? "No signal" : stateWords(device.status.state)}
-            </span>
-          </div>
-          {device.connected ? (
-            <>
-              <div className="setup-band-trace theme-dark">
-                <LiveTrace read={device.recent} window={240} height={72} label="Live signal" />
-              </div>
-              <p className="muted small">{device.kind === "simulated" ? "Simulated band" : (device.status.deviceName ?? "Breathband")}</p>
-              {device.kind === "simulated" && (
-                <label className="field">
-                  Simulated athlete
-                  <select value={device.persona} onChange={(e) => device.setPersona(e.target.value as typeof device.persona)}>
-                    {PERSONAS.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.label} · {p.detail}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="muted small">
-                {device.kind === "simulated"
-                  ? "The simulated band will stand in for your Breathband."
-                  : "Turn your Breathband on and keep it close."}
-              </p>
-              <button type="button" className="button" data-variant="ghost" disabled={busy} onClick={() => void device.connect()}>
-                <Icon name={device.kind === "simulated" ? "signal" : "bluetooth"} size={18} />
-                {busy ? "Connecting…" : device.kind === "simulated" ? "Start the simulated band" : "Connect your band"}
-              </button>
-              <Link href="/cloud/device/" className="link small">
-                Band settings
-              </Link>
-            </>
-          )}
-        </aside>
       </div>
 
       <div className="setup-go">

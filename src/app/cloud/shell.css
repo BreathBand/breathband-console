@@ -18,6 +18,16 @@
   min-width: 0;
 }
 
+.page-frame {
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-frame * {
+    animation: none !important;
+  }
+}
+
 .boot {
   min-height: 100dvh;
   display: grid;
@@ -41,6 +51,7 @@
 }
 
 .side {
+  view-transition-name: app-side;
   position: sticky;
   top: 0;
   height: 100dvh;

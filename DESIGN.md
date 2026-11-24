@@ -60,7 +60,7 @@ The action colour is ink: `--c-action` is `#121110` on bone (bone `#eeebe4` on c
 
 | Token | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `--c-in` | `#c4442f` | `#e8644f` | Inhale: rising trace, ▲, balloon filling, pacer ring breathing in |
+| `--c-in` | `#c4442f` | `#e8644f` | Inhale: rising trace, ▲, calibration circle filling, pacer ring breathing in |
 | `--c-out` | `#2f5bb0` | `#6f97e0` | Exhale: falling trace, ▼, focus, selection |
 | `--c-in-tint`, `--c-out-tint` | `#f6e2dd`, `#e1e8f5` | `#3a201a`, `#1b2539` | Fills behind breath marks; the coach-practice hint |
 | `--c-pacer` | `#8f897f` | `#77726a` | The pacer curve (wide, translucent) |
@@ -106,7 +106,7 @@ Scale (`--t-*`): 10, 12, 13, 15 (body), 17, 20, 24, 28, 36, 40, 56, 72 px, plus 
 - **Spacing** `--s-1…9`: 4, 6, 8, 12, 16, 20, 24, 32, 48 px. Pages pad 32 px top, 48 px bottom; panes pad 20 × 24.
 - **Radius**: `--r-1` 6 (chips), `--r-2` 10 (fields, nav items, rows), `--r-sheet` 14 (panes, cards), `--r-pill` 999 (buttons, segmented controls). The dark home card and instrument cards are 18.
 - **Elevation**: panes are separated by a 1 px rule, not a shadow. Only floating things get `--shadow-float` (tooltips, the sticky start bar on New session).
-- **Motion**: `--dur-fast` 140 ms and `--dur-mid` 260 ms on `--ease-out` `cubic-bezier(0.23, 1, 0.32, 1)`. Buttons press to 0.98. The one authored motion is the breath itself: the pacer ring, the balloon, the live traces, all driven by the signal, not by CSS timelines. `prefers-reduced-motion` turns transitions off.
+- **Motion**: `--dur-fast` 140 ms and `--dur-mid` 260 ms on `--ease-out` `cubic-bezier(0.23, 1, 0.32, 1)`. Buttons press to 0.98. The one authored motion is the breath itself: the pacer ring, the calibration circle, the live traces, all driven by the signal, not by CSS timelines. `prefers-reduced-motion` turns transitions off.
 - **Controls** are at least 44 px tall (36 px for small buttons; segmented options 32 px inside a 38 px track).
 
 ---
@@ -141,7 +141,7 @@ Scale (`--t-*`): 10, 12, 13, 15 (body), 17, 20, 24, 28, 36, 40, 56, 72 px, plus 
 | Home (`AthleteHome.tsx`) | Greeting and Start a session; the last session as a dark card (score at 72–104 px, the first minute of breath over the pacer, timing and depth); four stats; the 8-week score trend; recent sessions; coach practice and comments. First run: three steps and the simulator as a way in. |
 | Band (`device/page.tsx`) | Source choice (Bluetooth or simulated) as two cards; the live signal on a dark panel; facts (reading, sampling, battery, calibration); the strap gauge (slack / good / tight, in words and colour); simulated personas. |
 | New session (`record/page.tsx`) | Paced or Open as two large cards with glyphs; pacer, length, view, sound and level as segmented controls; the band panel beside; a sticky carbon start bar. |
-| Instrument (`record/live/`) | Dark, full screen. Strap check → balloon calibration (fills red as you breathe in, blue out, five dots) → countdown → circle pacer (ring = pacer, disc = you) with a line strip, or the line view (pacer running ahead of "now"), or open breathing with markers and a live rate → results at 168 px with the breakdown, which way you leaned, and a note. |
+| Instrument (`record/live/`) | Dark, full screen. Strap check → the calibration circle (a disc that fills to an outer "full" ring and empties to an inner "empty" ring, red in, blue out, five dots) → countdown → circle pacer (ring = pacer, disc = you) with a line strip, or the line view (pacer running ahead of "now"), or open breathing with markers and a live rate → results at 168 px with the breakdown, which way you leaned, and a note. |
 | Two-person (`record/duo/`) | Two people's setup cards, joint calibration, two lanes on one timeline, side-by-side results. Identity is by name tag and lane, never colour. |
 | Review (`session/`) | Method C: total, inhale/exhale timing and depth with on-target bars, direction in words, the ±1 SD histogram with the on-target band shaded, the ±3 % band on the graph, and every pacer turn. Open: rate, nine Appendix metrics, and the before/between/after table. |
 

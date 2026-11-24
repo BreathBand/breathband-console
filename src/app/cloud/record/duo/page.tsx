@@ -386,7 +386,7 @@ export default function DuoPage() {
                   <b>{people[i].name}</b>
                   {statuses[i].state !== "connected" && <small>{stateWords(statuses[i].state)}</small>}
                 </span>
-                <BreathLine read={i === 0 ? read0 : read1} halfCycleS={pacer} markers={noMarkers} windowS={24} label={`${people[i].name}'s breath against the pacer`} />
+                <BreathLine read={i === 0 ? read0 : read1} halfCycleS={pacer} markers={noMarkers} windowS={24} annotate label={`${people[i].name}'s breath against the pacer, with timing and depth for each turn`} />
               </div>
             ))}
           </section>

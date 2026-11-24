@@ -26,7 +26,7 @@ A 10-minute walkthrough of Breathband on the web, with no hardware needed. Every
 
 1. In the sidebar, **Band** → **Simulated band** → **Start the simulated band**. Point out the live signal, the battery, and the strap gauge moving into the green as the strap "tightens".
 2. **Start a session**. Tap **Use these settings** on the coach's practice, choose **2 min** to keep it short, and press **Start session**.
-3. The room goes dark. The strap check passes by itself, then **Fill the balloon**: five deep breaths calibrate the band to Alex's range (the Appendix A100 and midline).
+3. The room goes dark. The strap check passes by itself, then **Five deep breaths**: the circle fills to the outer ring on each breath in and empties to the inner ring on each breath out, calibrating the band to Alex's range (the Appendix A100 and midline).
 4. **Begin**. Follow the circle: the ring is the pacer, the filled disc is Alex. Low note at the bottom of each breath, high at the top. The strip below shows the breath against the pacer, with the next turn coming.
 5. At the end: the score (a steady athlete gets about 9), the breakdown, on-target percentages, and which way the breathing leaned. Add a note, **Save session**.
 
