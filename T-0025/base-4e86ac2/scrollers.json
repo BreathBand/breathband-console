@@ -1,0 +1,66 @@
+[
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+  "scroller": ".table-scroll",
+  "data": "text=Earlier",
+  "scrollers": [
+   {
+    "role": null,
+    "name": null,
+    "tabindex": null,
+    "overflows": true,
+    "scroll": "507/309"
+   }
+  ],
+  "tabsToReach": 24,
+  "focused": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "outlineColor": "rgb(15, 110, 120)",
+   "focusVisible": true,
+   "scrollLeftBefore": 0
+  },
+  "scrollLeftAfter": 198,
+  "axe": [
+   {
+    "id": "scrollable-region-focusable",
+    "impact": "serious",
+    "nodes": [
+     ".table-scroll"
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s001",
+  "scroller": ".bt-scroll",
+  "data": ".bt-scroll",
+  "scrollers": [
+   {
+    "role": null,
+    "name": null,
+    "tabindex": null,
+    "overflows": true,
+    "scroll": "337/309"
+   }
+  ],
+  "tabsToReach": 19,
+  "focused": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "outlineColor": "rgb(15, 110, 120)",
+   "focusVisible": true,
+   "scrollLeftBefore": 0
+  },
+  "scrollLeftAfter": 28,
+  "axe": [
+   {
+    "id": "scrollable-region-focusable",
+    "impact": "serious",
+    "nodes": [
+     ".bt-scroll"
+    ]
+   }
+  ]
+ }
+]

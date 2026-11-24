@@ -1,0 +1,231 @@
+[
+ {
+  "route": "/cloud/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud@375.png",
+  "bytes": 181929,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud@1280.png",
+  "bytes": 194409,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_sessions_athlete_demo_athlete_tab_sessions@375.png",
+  "bytes": 139598,
+  "dataSelector": "text=Paced 5-5",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "nav.tabs 436/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_sessions_athlete_demo_athlete_tab_sessions@1280.png",
+  "bytes": 163378,
+  "dataSelector": "text=Paced 5-5",
+  "scrollWidth": 1355,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_sessions_athlete_demo_athlete_tab_plan@375.png",
+  "bytes": 61500,
+  "dataSelector": "text=Earlier",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "nav.tabs 436/343",
+   "div.table-scroll 507/309"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_sessions_athlete_demo_athlete_tab_plan@1280.png",
+  "bytes": 74168,
+  "dataSelector": "text=Earlier",
+  "scrollWidth": 1355,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s001",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_session_athlete_demo_athlete_id_s001@375.png",
+  "bytes": 114661,
+  "dataSelector": ".bt-scroll",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "div.bt-scroll 337/309"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s001",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_session_athlete_demo_athlete_id_s001@1280.png",
+  "bytes": 198496,
+  "dataSelector": ".bt-scroll",
+  "scrollWidth": 1355,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/session/?id=s001",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_session_id_s001@375.png",
+  "bytes": 25133,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/session/?id=s001",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_session_id_s001@1280.png",
+  "bytes": 34715,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 1394,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sharing/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_sharing@375.png",
+  "bytes": 25514,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sharing/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_sharing@1280.png",
+  "bytes": 34303,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/group/live/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_group_live@375.png",
+  "bytes": 23023,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/group/live/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_group_live@1280.png",
+  "bytes": 33084,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/report/?athlete=demo-athlete",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_report_athlete_demo_athlete@375.png",
+  "bytes": 182074,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score for\"]",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "div.table-scroll 717/309"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/report/?athlete=demo-athlete",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/head/cloud_report_athlete_demo_athlete@1280.png",
+  "bytes": 235545,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score for\"]",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ }
+]

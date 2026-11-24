@@ -1,0 +1,50 @@
+[
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+  "scroller": ".table-scroll",
+  "data": "text=Earlier",
+  "scrollers": [
+   {
+    "role": "region",
+    "name": "Earlier practices",
+    "tabindex": "0",
+    "overflows": true,
+    "scroll": "507/309"
+   }
+  ],
+  "tabsToReach": 24,
+  "focused": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "outlineColor": "rgb(15, 110, 120)",
+   "focusVisible": true,
+   "scrollLeftBefore": 0
+  },
+  "scrollLeftAfter": 198,
+  "axe": []
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s001",
+  "scroller": ".bt-scroll",
+  "data": ".bt-scroll",
+  "scrollers": [
+   {
+    "role": "region",
+    "name": "Timing and depth of each breath",
+    "tabindex": "0",
+    "overflows": true,
+    "scroll": "337/309"
+   }
+  ],
+  "tabsToReach": 19,
+  "focused": {
+   "outlineStyle": "solid",
+   "outlineWidth": "2px",
+   "outlineColor": "rgb(15, 110, 120)",
+   "focusVisible": true,
+   "scrollLeftBefore": 0
+  },
+  "scrollLeftAfter": 28,
+  "axe": []
+ }
+]

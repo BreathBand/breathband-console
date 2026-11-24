@@ -1,0 +1,407 @@
+[
+ {
+  "route": "/cloud/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud@375.png",
+  "bytes": 181929,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud@1280.png",
+  "bytes": 194409,
+  "dataSelector": "text=Alex Morgan",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_sessions_athlete_demo_athlete_tab_sessions@375.png",
+  "bytes": 139598,
+  "dataSelector": "text=Paced 5-5",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "nav.tabs 436/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 1,
+  "violations": [
+   {
+    "id": "aria-prohibited-attr",
+    "impact": "serious",
+    "help": "Elements must only use permitted ARIA attributes",
+    "nodes": [
+     {
+      "target": ".clickable:nth-child(1) > td:nth-child(1) > .new-dot[aria-label=\"Not opened yet\"][title=\"You haven't opened this one\"]",
+      "html": "<i class=\"new-dot\" aria-label=\"Not opened yet\" title=\"You haven't opened this one\"></i>",
+      "summary": "Fix all of the following:\n  aria-label attribute cannot be used on \"i\" elements with no valid role attribute."
+     },
+     {
+      "target": ".clickable:nth-child(2) > td:nth-child(1) > .new-dot[aria-label=\"Not opened yet\"][title=\"You haven't opened this one\"]",
+      "html": "<i class=\"new-dot\" aria-label=\"Not opened yet\" title=\"You haven't opened this one\"></i>",
+      "summary": "Fix all of the following:\n  aria-label attribute cannot be used on \"i\" elements with no valid role attribute."
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=sessions",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_sessions_athlete_demo_athlete_tab_sessions@1280.png",
+  "bytes": 163378,
+  "dataSelector": "text=Paced 5-5",
+  "scrollWidth": 1355,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 1,
+  "violations": [
+   {
+    "id": "aria-prohibited-attr",
+    "impact": "serious",
+    "help": "Elements must only use permitted ARIA attributes",
+    "nodes": [
+     {
+      "target": ".clickable:nth-child(1) > td:nth-child(1) > .new-dot[aria-label=\"Not opened yet\"][title=\"You haven't opened this one\"]",
+      "html": "<i class=\"new-dot\" aria-label=\"Not opened yet\" title=\"You haven't opened this one\"></i>",
+      "summary": "Fix all of the following:\n  aria-label attribute cannot be used on \"i\" elements with no valid role attribute."
+     },
+     {
+      "target": ".clickable:nth-child(2) > td:nth-child(1) > .new-dot[aria-label=\"Not opened yet\"][title=\"You haven't opened this one\"]",
+      "html": "<i class=\"new-dot\" aria-label=\"Not opened yet\" title=\"You haven't opened this one\"></i>",
+      "summary": "Fix all of the following:\n  aria-label attribute cannot be used on \"i\" elements with no valid role attribute."
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_sessions_athlete_demo_athlete_tab_plan@375.png",
+  "bytes": 62752,
+  "dataSelector": "text=Earlier",
+  "scrollWidth": 484,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "nav.tabs 436/343",
+   "div.table-scroll 507/309"
+  ],
+  "horizontalScroll": true,
+  "seriousOrCritical": 1,
+  "violations": [
+   {
+    "id": "scrollable-region-focusable",
+    "impact": "serious",
+    "help": "Scrollable region must have keyboard access",
+    "nodes": [
+     {
+      "target": ".table-scroll",
+      "html": "<div class=\"table-scroll\">",
+      "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/sessions/?athlete=demo-athlete&tab=plan",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_sessions_athlete_demo_athlete_tab_plan@1280.png",
+  "bytes": 74168,
+  "dataSelector": "text=Earlier",
+  "scrollWidth": 1355,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s001",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_session_athlete_demo_athlete_id_s001@375.png",
+  "bytes": 114661,
+  "dataSelector": ".bt-scroll",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "div.bt-scroll 337/309"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 1,
+  "violations": [
+   {
+    "id": "scrollable-region-focusable",
+    "impact": "serious",
+    "help": "Scrollable region must have keyboard access",
+    "nodes": [
+     {
+      "target": ".bt-scroll",
+      "html": "<div class=\"bt-scroll\">",
+      "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/session/?athlete=demo-athlete&id=s001",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_session_athlete_demo_athlete_id_s001@1280.png",
+  "bytes": 198496,
+  "dataSelector": ".bt-scroll",
+  "scrollWidth": 1355,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 0,
+  "violations": []
+ },
+ {
+  "route": "/cloud/session/?id=s001",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_session_id_s001@375.png",
+  "bytes": 25133,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "nodes": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\" class=\"ibm_plex_sans_bf0ff9e3-module__9WBl3a__variable ibm_plex_sans_condensed_34dc1783-module__S1n18q__variable\">",
+      "summary": "Fix all of the following:\n  Page must have a level-one heading"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/session/?id=s001",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_session_id_s001@1280.png",
+  "bytes": 34715,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 1394,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": true,
+  "seriousOrCritical": 0,
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "nodes": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\" class=\"ibm_plex_sans_bf0ff9e3-module__9WBl3a__variable ibm_plex_sans_condensed_34dc1783-module__S1n18q__variable\">",
+      "summary": "Fix all of the following:\n  Page must have a level-one heading"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/sharing/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_sharing@375.png",
+  "bytes": 25514,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "nodes": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\" class=\"ibm_plex_sans_bf0ff9e3-module__9WBl3a__variable ibm_plex_sans_condensed_34dc1783-module__S1n18q__variable\">",
+      "summary": "Fix all of the following:\n  Page must have a level-one heading"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/sharing/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_sharing@1280.png",
+  "bytes": 34303,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "nodes": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\" class=\"ibm_plex_sans_bf0ff9e3-module__9WBl3a__variable ibm_plex_sans_condensed_34dc1783-module__S1n18q__variable\">",
+      "summary": "Fix all of the following:\n  Page must have a level-one heading"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/group/live/",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_group_live@375.png",
+  "bytes": 23023,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "nodes": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\" class=\"ibm_plex_sans_bf0ff9e3-module__9WBl3a__variable ibm_plex_sans_condensed_34dc1783-module__S1n18q__variable\">",
+      "summary": "Fix all of the following:\n  Page must have a level-one heading"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/group/live/",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_group_live@1280.png",
+  "bytes": 33084,
+  "dataSelector": "h1, h2",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": [
+   {
+    "id": "page-has-heading-one",
+    "impact": "moderate",
+    "help": "Page should contain a level-one heading",
+    "nodes": [
+     {
+      "target": "html",
+      "html": "<html lang=\"en\" class=\"ibm_plex_sans_bf0ff9e3-module__9WBl3a__variable ibm_plex_sans_condensed_34dc1783-module__S1n18q__variable\">",
+      "summary": "Fix all of the following:\n  Page must have a level-one heading"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/report/?athlete=demo-athlete",
+  "width": 375,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_report_athlete_demo_athlete@375.png",
+  "bytes": 182037,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score for\"]",
+  "scrollWidth": 375,
+  "clientWidth": 375,
+  "overflowingScrollers": [
+   "nav.topnav 503/343",
+   "div.table-scroll 717/309"
+  ],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": [
+   {
+    "id": "empty-table-header",
+    "impact": "minor",
+    "help": "Table header text should not be empty",
+    "nodes": [
+     {
+      "target": "th:nth-child(6)",
+      "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>",
+      "summary": "Fix any of the following:\n  Element does not have text that is visible to screen readers\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+     },
+     {
+      "target": "th:nth-child(8)",
+      "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>",
+      "summary": "Fix any of the following:\n  Element does not have text that is visible to screen readers\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "route": "/cloud/report/?athlete=demo-athlete",
+  "width": 1280,
+  "shot": "C:/Users/arynb/AppData/Local/Temp/claude/C--Users-arynb-Documents-Projects-breathband-console/79746009-459e-4df2-bbd8-a98a3f28898c/scratchpad/ev34/base/cloud_report_athlete_demo_athlete@1280.png",
+  "bytes": 235395,
+  "dataSelector": "svg[aria-label^=\"Total Breath Score for\"]",
+  "scrollWidth": 1280,
+  "clientWidth": 1280,
+  "overflowingScrollers": [],
+  "horizontalScroll": false,
+  "seriousOrCritical": 0,
+  "violations": [
+   {
+    "id": "empty-table-header",
+    "impact": "minor",
+    "help": "Table header text should not be empty",
+    "nodes": [
+     {
+      "target": "th:nth-child(6)",
+      "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>",
+      "summary": "Fix any of the following:\n  Element does not have text that is visible to screen readers\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+     },
+     {
+      "target": "th:nth-child(8)",
+      "html": "<th class=\"num\"><svg width=\"10\" height=\"10\" viewBox=\"0 0 10 10\" aria-hidden=\"true\" style=\"flex: 0 0 auto;\"><path d=\"M5 9 .5 1.5h9Z\" fill=\"var(--c-out)\"></path></svg></th>",
+      "summary": "Fix any of the following:\n  Element does not have text that is visible to screen readers\n  Element's default semantics were not overridden with role=\"none\" or role=\"presentation\""
+     }
+    ]
+   }
+  ]
+ }
+]
