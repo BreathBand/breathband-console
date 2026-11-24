@@ -1,0 +1,137 @@
+{
+  "task": "T-0007",
+  "round": 1,
+  "verdict": "passed",
+  "head": "ab0d4b989945a1a1d86917e83c42b822e0cade10",
+  "base": "7fa76ea1e1d82913590fe367b6e73ea9c9e4ea9a",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "low",
+    "effective": "low",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — Every listed open value is exported in OPEN_CONSTANTS with the exact value given, and fixed values are in a separate FIXED_CONSTANTS group.\n- A2: met — config.test.ts asserts each open value. The test files add no suppressions. Whether npm test passes is left to the deterministic run.\n- A3: unverified — index.ts re-exports config, which is verified. Lint and typecheck results aren't visible in the diff, so they depend on the deterministic checks.\n- A4: met — All three new files are under src/lib/analysis/.\n\n<details><summary>1 suggestion(s), non-blocking</summary>\n\n- Object.hasOwn depends on the ES2022 lib `src/lib/analysis/config.ts:60` — Run npm run typecheck. Only switch to Object.prototype.hasOwnProperty.call if it fails.\n\n</details>\n\n_claude-sonnet-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-sonnet-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "src/lib/analysis/config.ts",
+        "line": 60,
+        "acceptance_id": null,
+        "title": "Object.hasOwn depends on the ES2022 lib",
+        "detail": "Object.hasOwn only typechecks if tsconfig's target or lib includes ES2022. The diff can't show this and tsconfig is a protected path, so check that npm run typecheck passes. If it fails, use Object.prototype.hasOwnProperty.call(OPEN_CONSTANTS, name).",
+        "repro": "",
+        "fix": "Run npm run typecheck. Only switch to Object.prototype.hasOwnProperty.call if it fails.",
+        "pattern": "256b4468d163"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "Every listed open value is exported in OPEN_CONSTANTS with the exact value given, and fixed values are in a separate FIXED_CONSTANTS group."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "config.test.ts asserts each open value. The test files add no suppressions. Whether npm test passes is left to the deterministic run."
+      },
+      {
+        "id": "A3",
+        "status": "unverified",
+        "note": "index.ts re-exports config, which is verified. Lint and typecheck results aren't visible in the diff, so they depend on the deterministic checks."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "All three new files are under src/lib/analysis/."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 11306,
+      "costUsd": 0.045388000000000005
+    }
+  }
+}

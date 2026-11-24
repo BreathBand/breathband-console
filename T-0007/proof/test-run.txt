@@ -1,0 +1,34 @@
+npm test · exit 0 · the judge's tier 1 run on the change
+new tests:
+  src/lib/analysis/config.test.ts: keeps transitions at least 1% of max in prominence and 0.5 s apart
+  src/lib/analysis/config.test.ts: uses k = 1.0, 0.75, 0.5 and 0.25 for the skill bands
+  src/lib/analysis/config.test.ts: gives 10 points for a 0-10% deviation
+  src/lib/analysis/config.test.ts: treats peaks as inhale and troughs as exhale
+  src/lib/analysis/config.test.ts: weights the four Total Breath Score parts equally, summing to 1
+  src/lib/analysis/config.test.ts: sets the normal inhale to 1.25-1.67 s and exhale to 2.5-3.33 s
+  src/lib/analysis/config.test.ts: sets the normal depth band to 6% +/- 25%
+  src/lib/analysis/config.test.ts: holds the fixed Appendix values
+  src/lib/analysis/config.test.ts: never share a name
+  src/lib/analysis/config.test.ts: tells open constants apart from fixed ones
+  src/lib/analysis/config.test.ts: groups both under ANALYSIS_CONFIG
+  src/lib/analysis/config.test.ts: re-exports the config
+
+
+> breathband-console@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254[39m
+
+ [32m✓[39m src/lib/domain/compare-csv.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/domain/targets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/domain/domain.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 83[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m64 passed[39m[22m[90m (64)[39m
+[2m   Start at [22m 19:20:26
+[2m   Duration [22m 511ms[2m (transform 56%, tests 21%, import 19%, worker 4%)[22m
+
+
