@@ -11,6 +11,9 @@
 - 2026-11-24 00:21 isolate: worktree .worktrees/T-0009 · branch chore/t-0009 from origin/main (7fa76ea1e1d8) · port 5177 · db breathband_console_t0009 · env sha256 0d247b819dcacd953dadf8a35d9072d0972c805b98841b00c312c8bd66a3d5ed (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 00:21 build: build started · skills spine only · budget 16 steps / 60k ctx · ~13348 prompt tokens · 4 repo file(s) in context · 144631 tokens · $0.36 · 3 turns (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 00:26 build: build paused: 1 thing(s) to ask about · commit 8d36cc59f5a0 · 2023295 tokens · $1.32 · 41 turns (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 00:36 prove: proof passed · infra-plan (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 00:38 judge: judge passed · round 1 · head 8d36cc59f5a0 · record sha256 2d8cd78b115ac26b6188d263f7400da1ca01a4afc6aa7ac0e57da6c4c38f933f (rivetari judge (for arynbht@gmail.com))
+- 2026-11-24 00:38 ship: draft PR opened: #13 https://github.com/BreathBand/breathband-console/pull/13 · chore/t-0009 at 8d36cc59f5a0 → main (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -39,3 +42,21 @@
 
 - 2026-11-24 00:26 asked: protected_path: package.json — changes package.json scripts (the commands the checks run)
 - 2026-11-24 00:34 answered: allowed — Person approves adding the docker:smoke script to package.json scripts; no dependency changes
+
+## Proof
+
+- 2026-11-24 00:36 infra-plan has no proof runner yet; the test run stands in, and a person attaches the infra-plan proof
+- 2026-11-24 00:36 tests passed (npm run test, exit 0) · new tests: src/lib/dockerSmoke.test.ts: builds with the local backend and maps port 8080; src/lib/dockerSmoke.test.ts: names each container uniquely with the smoke prefix; src/lib/dockerSmoke.test.ts: checks the home page and the console sign-in page; src/lib/dockerSmoke.test.ts: passes a 200 HTML page with the expected text; src/lib/dockerSmoke.test.ts: names the path and status when the status isn't 200; src/lib/dockerSmoke.test.ts: rejects a page that isn't HTML; src/lib/dockerSmoke.test.ts: lists the expected text that is missing; src/lib/dockerSmoke.test.ts: finds each Next.js script once, including ones in the RSC payload; src/lib/dockerSmoke.test.ts: passes when any script carries the expected text; src/lib/dockerSmoke.test.ts: fails when no script carries the expected text; src/lib/dockerSmoke.test.ts: retries until the server answers; src/lib/dockerSmoke.test.ts: names the URL and the last error when it times out; src/lib/dockerSmoke.test.ts: includes the cause and handles non-errors; src/lib/dockerSmoke.test.ts: captures output and the exit code; src/lib/dockerSmoke.test.ts: explains a missing CLI
+- 2026-11-24 00:36 output: …[2m15 tests[22m[2m)[22m[32m 93[2mms[22m[39m [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 75[2mms[22m[39m [2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m [2m Tests [22m [1m[32m67 passed[39m[22m[90m (67)[39m [2m Start at [22m 19:36:37 [2m Duration [22m 359ms[2m (import 36%, transform 34%, tests 26%, worker 3%)[22m
+- 2026-11-24 00:36 evidence: the test run on the evidence branch: https://github.com/BreathBand/breathband-console/blob/evidence/T-0009/test-run.txt?raw=true
+
+## Judge
+
+- 2026-11-24 00:37 tier 1 round 1: pass · 7/8 pass · 1 pre-existing
+- 2026-11-24 00:37 protected: package.json — changes package.json scripts (the commands the checks run) (allowed at build)
+- 2026-11-24 00:38 review round 1: approve; 0 blocking, 3 suggestion(s) (claude-opus-5-5) · 20775 tokens · $0.24
+- 2026-11-24 00:38 acceptance A1: unverified — The script builds with NEXT_PUBLIC_BACKEND=local, runs with -p 8080:8080, polls until ready, checks / and /cloud/login/ for 200 text/html plus page markers, and exits 1 with a message on failure. No e…
+- 2026-11-24 00:38 acceptance A2: met — cleanup() runs in finally and on SIGINT/SIGTERM. container is set before docker run, so a created-but-not-started container is removed too. docker info failure gives a clear daemon message, and a miss…
+- 2026-11-24 00:38 acceptance A3: met — Plain .mjs using node:child_process and global fetch only, no dependency changes, with unit tests in src/lib/dockerSmoke.test.ts. The lint, typecheck and test results come from the deterministic check…
+- 2026-11-24 00:38 acceptance A4: met — Dockerfile and nginx.conf are unchanged, and the port stays 8080. The only image-related change is a minimal .dockerignore addition (.worktrees, .rivetari, coverage). The PR description should explain…
+- 2026-11-24 00:38 judge review posted: https://github.com/BreathBand/breathband-console/pull/13#pullrequestreview-6031829625

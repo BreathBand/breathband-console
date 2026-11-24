@@ -1,0 +1,165 @@
+{
+  "task": "T-0009",
+  "round": 1,
+  "verdict": "passed",
+  "head": "8d36cc59f5a05df5847f0030710993d3f0a038c0",
+  "base": "7fa76ea1e1d82913590fe367b6e73ea9c9e4ea9a",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [
+      {
+        "reason": "scripts",
+        "path": "package.json",
+        "detail": "changes package.json scripts (the commands the checks run)"
+      }
+    ],
+    "notes": []
+  },
+  "risk": {
+    "card": "high",
+    "effective": "high",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: unverified — The script builds with NEXT_PUBLIC_BACKEND=local, runs with -p 8080:8080, polls until ready, checks / and /cloud/login/ for 200 text/html plus page markers, and exits 1 with a message on failure. No e2e run proof is attached to show the real image passes.\n- A2: met — cleanup() runs in finally and on SIGINT/SIGTERM. container is set before docker run, so a created-but-not-started container is removed too. docker info failure gives a clear daemon message, and a missing CLI is reported. Confirmed by reading the code only, not by an e2e run.\n- A3: met — Plain .mjs using node:child_process and global fetch only, no dependency changes, with unit tests in src/lib/dockerSmoke.test.ts. The lint, typecheck and test results come from the deterministic checks and are not shown here.\n- A4: met — Dockerfile and nginx.conf are unchanged, and the port stays 8080. The only image-related change is a minimal .dockerignore addition (.worktrees, .rivetari, coverage). The PR description should explain it.\n\n<details><summary>3 suggestion(s), non-blocking</summary>\n\n- The /cloud/login/ HTML check only matches a title that other /cloud/ pages probably share `scripts/docker-smoke-lib.mjs:15` — Add a login-specific marker that appears in the exported cloud/login/index.html (for example the login form's id or an RSC payload string unique to the page) to route.html.\n- The daemon check trusts only the exit code of docker info --format `scripts/docker-smoke.mjs:87` — Treat an empty info.stdout.trim() the same as a non-zero exit code.\n- The readiness response body is never read or cancelled `scripts/docker-smoke-lib.mjs:79` — In main, call `(await waitUntilReady(...)).body?.cancel()`, or cancel the body inside waitUntilReady and return only the status.\n\n</details>\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "scripts/docker-smoke-lib.mjs",
+        "line": 15,
+        "acceptance_id": "A1",
+        "title": "The /cloud/login/ HTML check only matches a title that other /cloud/ pages probably share",
+        "detail": "The only HTML marker for /cloud/login/ is \"<title>BreathCloud\", which the /cloud/ layout probably sets for every console page. The sign-in heading is only looked for in the JS chunks the page references. If nginx served a different /cloud/ page for the trailing-slash route, the HTML check could still pass and only the chunk scan would catch it. A1 asks for the HTML to contain the page's expected content.",
+        "repro": "Not reproducible from this diff alone. It would happen if nginx's try_files fell back to another /cloud/*/index.html whose chunks happened to include the sign-in copy.",
+        "fix": "Add a login-specific marker that appears in the exported cloud/login/index.html (for example the login form's id or an RSC payload string unique to the page) to route.html.",
+        "pattern": "e5edf147ab76"
+      },
+      {
+        "kind": "suggestion",
+        "file": "scripts/docker-smoke.mjs",
+        "line": 87,
+        "acceptance_id": "A2",
+        "title": "The daemon check trusts only the exit code of docker info --format",
+        "detail": "Some docker CLI versions print the server error to stderr but leave the formatted ServerVersion empty. The script would then log \"Docker ; building ...\" and fail later at docker build with a less clear message.",
+        "repro": "Run `docker info --format {{.ServerVersion}}` with the daemon stopped on a CLI version that exits 0 for server errors.",
+        "fix": "Treat an empty info.stdout.trim() the same as a non-zero exit code.",
+        "pattern": "7bd251da334b"
+      },
+      {
+        "kind": "suggestion",
+        "file": "scripts/docker-smoke-lib.mjs",
+        "line": 79,
+        "acceptance_id": null,
+        "title": "The readiness response body is never read or cancelled",
+        "detail": "waitUntilReady returns the Response and main() ignores it. The body stays unconsumed, which can hold an undici connection open until it is garbage-collected.",
+        "repro": "Any successful run: the first GET / response body is never read.",
+        "fix": "In main, call `(await waitUntilReady(...)).body?.cancel()`, or cancel the body inside waitUntilReady and return only the status.",
+        "pattern": "f366a38bec9b"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "unverified",
+        "note": "The script builds with NEXT_PUBLIC_BACKEND=local, runs with -p 8080:8080, polls until ready, checks / and /cloud/login/ for 200 text/html plus page markers, and exits 1 with a message on failure. No e2e run proof is attached to show the real image passes."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "cleanup() runs in finally and on SIGINT/SIGTERM. container is set before docker run, so a created-but-not-started container is removed too. docker info failure gives a clear daemon message, and a missing CLI is reported. Confirmed by reading the code only, not by an e2e run."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "Plain .mjs using node:child_process and global fetch only, no dependency changes, with unit tests in src/lib/dockerSmoke.test.ts. The lint, typecheck and test results come from the deterministic checks and are not shown here."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "Dockerfile and nginx.conf are unchanged, and the port stays 8080. The only image-related change is a minimal .dockerignore addition (.worktrees, .rivetari, coverage). The PR description should explain it."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 20775,
+      "costUsd": 0.24163600000000002
+    }
+  }
+}
