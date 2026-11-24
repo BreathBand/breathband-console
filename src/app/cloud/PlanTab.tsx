@@ -90,7 +90,7 @@ export function PlanTab({ ws, startOpen }: { ws: Workspace; startOpen: boolean }
           <div className="pane-h">
             <h2 id="past-h">Earlier</h2>
           </div>
-          <div className="table-scroll">
+          <div className="table-scroll" tabIndex={0} role="region" aria-labelledby="past-h">
             <table className="table">
               <thead>
                 <tr>

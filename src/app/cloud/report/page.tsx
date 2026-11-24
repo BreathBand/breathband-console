@@ -637,12 +637,14 @@ function ReportDocument({
                   </th>
                   <th className="num">
                     <Arrow dir="out" />
+                    <span className="sr-only">Timing, exhale</span>
                   </th>
                   <th className="num">
                     Depth <Arrow dir="in" />
                   </th>
                   <th className="num">
                     <Arrow dir="out" />
+                    <span className="sr-only">Depth, exhale</span>
                   </th>
                   <th className="num">Rate</th>
                   <th>Note</th>

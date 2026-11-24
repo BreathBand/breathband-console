@@ -24,7 +24,7 @@ function SessionDetail() {
   if (!athleteId || !sessionId) {
     return (
       <div className="container">
-        <EmptyState title="This link is missing a session">
+        <EmptyState title="This link is missing a session" level={1}>
           <Link href="/cloud/">Back to BreathCloud</Link>
         </EmptyState>
       </div>

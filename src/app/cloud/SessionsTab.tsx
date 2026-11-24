@@ -107,7 +107,11 @@ export function SessionsTab({ ws }: { ws: Workspace }) {
                       <Link href={href} className="row-link" onClick={(e) => e.stopPropagation()}>
                         {formatDay(s.startedAt)}
                       </Link>
-                      {isNew && <i className="new-dot" aria-label="Not opened yet" title="You haven't opened this one" />}
+                      {isNew && (
+                        <i className="new-dot" title="You haven't opened this one">
+                          <span className="sr-only">Not opened yet</span>
+                        </i>
+                      )}
                       <span className="sub-line">{formatTime(s.startedAt)}</span>
                     </td>
                     <td className="sub">

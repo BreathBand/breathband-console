@@ -45,7 +45,7 @@ function GroupLiveRoute() {
   if (!id) {
     return (
       <div className="container">
-        <EmptyState title="This link is missing a group session">
+        <EmptyState title="This link is missing a group session" level={1}>
           <Link href="/cloud/group/">Back to group sessions</Link>
         </EmptyState>
       </div>
