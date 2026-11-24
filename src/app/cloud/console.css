@@ -899,13 +899,11 @@
   }
 }
 
-@media (max-width: 960px) {
+/* With the 248 px sidebar beside it, the session rail only fits from 1280 px. */
+@media (max-width: 1279px) {
   .console {
     display: flex;
     flex-direction: column;
-  }
-  .console-body {
-    padding: var(--s-5);
   }
   .rail {
     position: static;
@@ -920,6 +918,12 @@
   /* On a single column the session review shows a back link instead of the list. */
   .console[data-view="session"] .rail {
     display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .console-body {
+    padding: var(--s-5);
   }
   .low,
   .trends {

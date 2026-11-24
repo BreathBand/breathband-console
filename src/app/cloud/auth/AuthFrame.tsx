@@ -41,7 +41,6 @@ export function AuthFrame({ children }: { children: ReactNode }) {
         </main>
         <aside className="bc-auth-aside" aria-label="About BreathCloud">
           <div className="bc-auth-aside-inner">
-            <p className="bc-eyebrow">BreathCloud</p>
             <p className="bc-auth-pitch">Every Breathband session, reviewed on a bigger screen.</p>
             <BreathTrace />
             <ul className="bc-points">

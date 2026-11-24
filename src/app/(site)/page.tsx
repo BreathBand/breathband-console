@@ -347,17 +347,17 @@ export default function HomePage() {
               <TextLink href="/coaches/">See BreathCloud for coaches</TextLink>
             </div>
           </div>
-          <Window label="BreathCloud · live group session">
+          <Window label="BreathCloud · home">
             <picture>
-              {/* On a phone, only the lined-up panel, large enough to read. */}
-              <source media="(max-width: 700px)" srcSet="/site/cloud-group-aligned-sm.webp" width={1000} height={492} />
+              {/* On a phone, only the last-session card, large enough to read. */}
+              <source media="(max-width: 700px)" srcSet="/site/cloud-home-sm.webp" width={1035} height={501} />
               <img
-                src="/site/cloud-group-aligned.webp"
+                src="/site/cloud-home.webp"
                 width={1800}
-                height={872}
+                height={873}
                 loading="lazy"
                 decoding="async"
-                alt="BreathCloud live group session with demo data: five athletes' breathing lined up on one 30-second clock against the same 5-5 pacer; one athlete shares scores only, so her curve stays private."
+                alt="BreathCloud home with demo data: the last paced session scored 8.3 out of 10 on a dark card, its breath drawn over the pacer, timing and depth for the in- and out-breath, and this week, streak, average and breathing rate below."
               />
             </picture>
           </Window>

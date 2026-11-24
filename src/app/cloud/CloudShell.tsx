@@ -123,10 +123,11 @@ export function CloudShell({ children }: { children: ReactNode }) {
               <span className="brand-sub">BreathCloud</span>
             </span>
           </Link>
-          <Link href="/cloud/account/" className="mbar-account" aria-label={`Your account, ${name}`}>
+          <Link href="/cloud/account/" className="mbar-account">
             <span className="avatar sm" aria-hidden="true">
               {initials(name)}
             </span>
+            <span className="sr-only">Your account</span>
           </Link>
         </div>
 

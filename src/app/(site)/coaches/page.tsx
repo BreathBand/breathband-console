@@ -99,7 +99,7 @@ export default function CoachesPage() {
               src="/site/cloud-review.webp"
               width={1800}
               height={636}
-              alt="One minute of a Paced 5-5 session with demo data: the athlete's line rising in red while breathing in and falling in blue while breathing out, over the grey pacer, with timing and depth marks for each breath below."
+              alt="BreathCloud session review with demo data: a Paced 5-5 session scored 8.3, timing and depth for the in- and out-breath with on-target bars, which way the breathing leaned, and the deviation histogram for timing and depth."
             />
           </Window>
         </div>
@@ -117,12 +117,12 @@ export default function CoachesPage() {
               switch between 5-5 and 2-2 as you go, and watch everyone&apos;s breathing lined up in time.
             </p>
           </div>
-          <Window label="BreathCloud · group session lobby">
+          <Window label="BreathCloud · live group session">
             <Shot
               src="/site/cloud-group-lobby.webp"
               width={1800}
-              height={702}
-              alt="Group session lobby with demo data: Tuesday squad warm-up, Paced 5-5 for 5 minutes, five athletes joined from the app, one sharing scores only, with a Start the session button and the pacer counting down."
+              height={703}
+              alt="BreathCloud live group session with demo data: five athletes lined up on one 30-second clock against the same 5-5 pacer, the pacer circle telling everyone to breathe out, and one athlete who shares scores only, whose curve stays private."
             />
           </Window>
         </div>

@@ -197,7 +197,7 @@
   display: block;
   padding: 0 var(--s-2) var(--s-2);
   font: 600 var(--t-12) / 1 var(--f-sans);
-  color: var(--c-chrome-ink-3);
+  color: var(--c-chrome-ink-2);
 }
 
 .side-picker .picker {
