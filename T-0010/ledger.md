@@ -22,3 +22,4 @@
 ## Stop-and-ask
 
 - 2026-11-24 00:27 asked: budget_exhausted: the plan call reached its 4-turn limit before it replied with a plan; allow to plan again with 8 turns, or deny to plan again within 4
+- 2026-11-24 00:34 answered: allowed — Person approves planning with 8 turns; person also pre-approves @playwright/test as an exact-version devDependency for this card
