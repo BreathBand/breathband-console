@@ -1,0 +1,90 @@
+npm test · exit 0 · the judge's tier 1 run on the change
+new tests:
+  src/lib/analysis/golden/paced-golden.test.ts: matches the per-transition derivation
+  src/lib/analysis/golden/paced-golden.test.ts: matches the timing points per phase
+  src/lib/analysis/golden/paced-golden.test.ts: matches the scores, on target %, direction and counts
+  src/lib/analysis/golden/paced-golden.test.ts: matches the histograms
+  src/lib/analysis/golden/paced-golden.test.ts: puts all 35 early timing values in the [-0.5, -0.25) bin
+  src/lib/analysis/golden/paced-golden.test.ts: finds 6 doubles and no misses on the 9 s cycle, with timing on target 29/35
+  src/lib/analysis/golden/paced-golden.test.ts: reproduces ${name} from synth through detectTransitions
+  src/lib/analysis/golden/paced-golden.test.ts: on time: Total 9.6-10.0
+  src/lib/analysis/golden/paced-golden.test.ts: 0.35 SD early: Timing 6.7-7.3 and Depth 9.4-10.0
+  src/lib/analysis/golden/paced-golden.test.ts: half depth: Depth 5.2-6.1
+  src/lib/analysis/golden/paced-golden.test.ts: 1.8x depth: Depth 2.1-2.7
+  src/lib/analysis/golden/paced-golden.test.ts: +4.5 / -1.5: Depth In 5.3-5.9, Depth Ex 4.9-5.5, direction +0.5 and -0.5 SD
+  src/lib/analysis/golden/paced-golden.test.ts: 9 s cycle: Timing 5.4-6.0 with at least one double
+  src/lib/analysis/paced-config.test.ts: matches user transitions within 1 timing SD of the pacer
+  src/lib/analysis/paced-config.test.ts: gives 1 point for a missed or double transition
+  src/lib/analysis/paced-config.test.ts: keeps points between 1 and 10
+  src/lib/analysis/paced-config.test.ts: keeps the new names out of the open group
+  src/lib/analysis/paced.test.ts: has 35 transitions in a 5-5, 180 s session, odd k peaks at +3 and even k troughs at -3
+  src/lib/analysis/paced.test.ts: stops before the session end
+  src/lib/analysis/paced.test.ts: rejects a half cycle or duration that is not positive
+  src/lib/analysis/paced.test.ts: is half a breath: 2 s for 2-2 and 5 s for 5-5
+  src/lib/analysis/paced.test.ts: scores a pacer transition with no match as missed, 1 and 1
+  src/lib/analysis/paced.test.ts: scores two matches as double, 1 and 1
+  src/lib/analysis/paced.test.ts: only matches user transitions of the same type
+  src/lib/analysis/paced.test.ts: includes a user transition exactly 1 SD away and leaves out one just beyond
+  src/lib/analysis/paced.test.ts: lets one user transition count for two pacer transitions
+  src/lib/analysis/paced.test.ts: is late + and deep + at a peak, early - and shallow - at a trough
+  src/lib/analysis/paced.test.ts: is early - and shallow - at a peak, late + and deep + at a trough
+  src/lib/analysis/paced.test.ts: keeps the phase from the extremum mapping
+  src/lib/analysis/paced.test.ts: gives 10 for e = 0.05, 1 for e = 0.95 and clamps e = 3 to 1
+  src/lib/analysis/paced.test.ts: scores e = 0.05 and e = 0.95 in timing, and e = 3 in depth
+  src/lib/analysis/paced.test.ts: divides by k from OPEN_CONSTANTS.skillBandK for each of the four skill bands
+  src/lib/analysis/paced.test.ts: has 8 bins of 0.25 SD from -1 to +1
+  src/lib/analysis/paced.test.ts: includes the lower edge of each bin and puts +1 in the last bin
+  src/lib/analysis/paced.test.ts: puts depth values beyond 1 SD in the outermost bins
+  src/lib/analysis/paced.test.ts: needs at least one pacer peak and one trough
+  src/lib/analysis/paced.test.ts: scores each pacer transition
+  src/lib/analysis/paced.test.ts: returns the scores, with the total from combineTransitionScores
+  src/lib/analysis/paced.test.ts: counts missed and double as off target
+  src/lib/analysis/paced.test.ts: gives the direction per phase in SD, seconds and % of max
+  src/lib/analysis/paced.test.ts: fills the histograms and the missed/double count
+  src/lib/analysis/paced.test.ts: counts missed, double and pacer transitions
+  src/lib/analysis/paced.test.ts: has no direction for a phase without a single match
+  src/lib/analysis/paced.test.ts: re-exports paced scoring
+
+
+> breathband-console@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254[39m
+
+ [32m✓[39m src/lib/domain/format-dates.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/lib/domain/domain.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/lib/download.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/app/cloud/trends/compare-table.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/domain/coaching-calendar.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/domain/trends-buckets.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/synth-calibration.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/contract.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32m✓[39m src/lib/dockerSmoke.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 112[2mms[22m[39m
+ [32m✓[39m src/lib/domain/compare-csv.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/components/chartTable.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/lib/domain/group.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/app/cloud/session/Waveform.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 96[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/lib/backend/http/http.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/paced.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/calibration.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/components/States.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/filter.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/transitions.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/synth.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32m✓[39m src/lib/domain/helpers-misc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/app/globals.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/domain/total-score.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/domain/targets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config-additions.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/paced-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/golden/paced-golden.test.ts [2m([22m[2m42 tests[22m[2m)[22m[32m 50[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m29 passed[39m[22m[90m (29)[39m
+[2m      Tests [22m [1m[32m365 passed[39m[22m[90m (365)[39m
+[2m   Start at [22m 01:40:11
+[2m   Duration [22m 546ms[2m (transform 45%, import 30%, tests 19%, worker 6%)[22m
+
+
