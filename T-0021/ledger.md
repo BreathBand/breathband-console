@@ -32,6 +32,7 @@
 ## Stop-and-ask
 
 - 2026-11-24 05:39 asked: agent_question: Port 5181 (this worktree's port) is already in use by a process I can't see or stop, so `npm run dev` couldn't serve the proof. Can you stop whatever is listening on 5181 and rerun the proof?
+- 2026-11-24 15:54 answered: allowed — port freed, rerun
 
 ## Proof
 
