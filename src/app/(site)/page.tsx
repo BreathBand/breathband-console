@@ -68,7 +68,7 @@ const STATUS = [
   {
     k: "BreathCloud",
     s: "Built",
-    d: "The coach console runs today on demo data: dashboard, roster, session review and live group sessions.",
+    d: "Runs today in the browser on demo data: record with the band over Bluetooth or the simulated band, review every score, and coach a whole squad.",
   },
   { k: "Waitlist", s: "Open", d: "For people who want to train, coaches, and investors or partners." },
 ];
@@ -88,7 +88,7 @@ const FAQ = [
   },
   {
     q: "Which phones will it work with?",
-    a: "The app is being built for iPhone and Android. The band connects to your phone over Bluetooth.",
+    a: "The app is being built for iPhone and Android, and the band connects to your phone over Bluetooth. You can also record on a computer in BreathCloud, using Chrome or Edge.",
   },
   {
     q: "Who can see my sessions?",
@@ -148,9 +148,9 @@ export default function HomePage() {
             <div className="h-fade h-fade-2">
               <WaitlistForm spot="hero" compact />
               <p className="h-hero-alt">
-                Coaching on BreathCloud already?{" "}
-                <Link href="/cloud/" className="s-link s-link-inline">
-                  BreathCloud sign in
+                See it working now:{" "}
+                <Link href="/cloud/login/" className="s-link s-link-inline">
+                  try BreathCloud with a demo account
                   <ArrowRight size={14} />
                 </Link>
               </p>
@@ -337,12 +337,12 @@ export default function HomePage() {
         <div className="s-wrap">
           <div className="s-head s-head-split">
             <h2 id="cloud-h" className="s-h2">
-              BreathCloud, for coaches and teams.
+              BreathCloud: your breathing on a bigger screen.
             </h2>
             <div>
               <p className="s-p">
-                Athletes choose to share with you. You see who trained and who needs a look, review every breath, and
-                run group sessions with the whole squad on one pacer.
+                Record a session on your computer with the band, review every breath against the pacer, and follow your
+                trend week by week. Share with a coach and they see exactly the numbers you do.
               </p>
               <TextLink href="/coaches/">See BreathCloud for coaches</TextLink>
             </div>
