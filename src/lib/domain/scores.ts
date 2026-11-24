@@ -1,4 +1,5 @@
 import type { SessionScores, SessionSummary, TransitionScores } from "./types";
+import { OPEN_CONSTANTS } from "../analysis/config";
 
 export type Scores = NonNullable<SessionSummary["scores"]>;
 
@@ -57,12 +58,12 @@ export function headline(session: Pick<SessionSummary, "scores" | "respirationRa
   return { kind: "rate", value: rate, text: rate === null ? "–" : `${Math.round(rate)}` };
 }
 
-const mean = (a: number, b: number) => Math.round(((a + b) / 2) * 10) / 10;
-
-/** The combining rule the app uses (approved 16 Nov): total = mean(mean(timing), mean(depth)). */
 export function combineTransitionScores(
   timing: TransitionScores["timing"],
   depth: TransitionScores["depth"],
 ): number {
-  return mean(mean(timing.inhale, timing.exhale), mean(depth.inhale, depth.exhale));
+  const w = OPEN_CONSTANTS.totalBreathScoreWeights;
+  const total =
+    w.timingIn * timing.inhale + w.timingEx * timing.exhale + w.depthIn * depth.inhale + w.depthEx * depth.exhale;
+  return Math.round(total * 10) / 10;
 }
