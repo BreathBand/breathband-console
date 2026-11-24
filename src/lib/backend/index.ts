@@ -1,4 +1,5 @@
 import { createFirebaseBackend } from "./firebase";
+import { createHttpBackend } from "./http";
 import { createLocalBackend } from "./local";
 import type { Backend } from "./types";
 
@@ -9,9 +10,17 @@ export * from "./types";
 export type BackendKind = Backend["kind"];
 
 export function backendKind(): BackendKind {
-  return process.env.NEXT_PUBLIC_BACKEND === "firebase" ? "firebase" : "local";
+  const value = process.env.NEXT_PUBLIC_BACKEND;
+  return value === "http" || value === "firebase" ? value : "local";
 }
 
 export function createBackend(kind: BackendKind = backendKind()): Backend {
-  return kind === "firebase" ? createFirebaseBackend() : createLocalBackend();
+  switch (kind) {
+    case "http":
+      return createHttpBackend();
+    case "firebase":
+      return createFirebaseBackend();
+    default:
+      return createLocalBackend();
+  }
 }

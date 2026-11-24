@@ -194,7 +194,7 @@ export interface DataService {
 
 export interface Backend {
   /** Shown in the UI when not "firebase", so demo data is never mistaken for real data. */
-  kind: "local" | "firebase";
+  kind: "local" | "firebase" | "http";
   auth: AuthService;
   data: DataService;
 }
