@@ -17,6 +17,9 @@
 - 2026-11-24 06:34 prove: proof passed · test-run (the judge's tier 1 run) (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 06:35 judge: judge passed · round 1 · head 77a3ca2258cd · record sha256 e39b49ec9483f84ace9ef77b071b4e739dd46ace9f54875734b4dffb18ec7f30 (rivetari judge (for arynbht@gmail.com))
 - 2026-11-24 06:35 ship: draft PR opened: #36 https://github.com/BreathBand/breathband-console/pull/36 · chore/t-0028 at 77a3ca2258cd → main (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:38 close: worktree removed · branch chore/t-0028 deleted (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:38 close: floorplan updated · 5 call(s) · 518192 tokens · $1.05 (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:38 close: ledger sealed · merged (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -67,3 +70,7 @@
 - 2026-11-24 06:35 acceptance A3: unverified — Two specs match the card (coach /cloud/ then the Athletes heading and region; athlete 'Latest Total Breath Score' region). Passing depends on the post-PR e2e evidence run.
 - 2026-11-24 06:35 acceptance A4: unverified — Playwright output folders are gitignored. Whether vitest excludes e2e/ depends on the unchanged vitest config. Lint and typecheck rely on the judge's deterministic run.
 - 2026-11-24 06:35 judge review posted: https://github.com/BreathBand/breathband-console/pull/36#pullrequestreview-6034729467
+
+## Outcome
+
+- 2026-11-24 06:38 PR #36 merged by arynbht 2026-11-24 06:37 · 14m · 2368k tokens · $2.15
