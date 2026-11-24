@@ -1,0 +1,130 @@
+{
+  "task": "T-0020",
+  "round": 1,
+  "verdict": "passed",
+  "head": "61a0aeeefd012fae9681e939c035584f92025962",
+  "base": "44e6ffb292b5e8694d42498dcb8a3909f27f9e75",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [],
+    "notes": []
+  },
+  "risk": {
+    "card": "high",
+    "effective": "high",
+    "reasons": []
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — Signature unchanged; weighted sum uses OPEN_CONSTANTS.totalBreathScoreWeights (keys timingIn/timingEx/depthIn/depthEx match config.ts:18-23), imported from ../analysis/config, rounded once with Math.round(total * 10) / 10; no intermediate rounding.\n- A2: met — New total-score.test.ts asserts 7.5, 7.8 and 7.1 for the three cases. Hand-checked in IEEE doubles: 7.53→7.5, 7.8→7.8, 7.125→7.1.\n- A3: met — Asserts 7.3 (7.25, exact in binary) and 7.8 (7.75, exact), and checks that the config weights sum to 1 with toBeCloseTo(1, 10).\n- A4: met — The mean helper and the stale JSDoc are removed. Only an import line and the function body are added, with no comments, and no other hunks touch scores.ts.\n- A5: unverified — No existing test files are touched. domain.test.ts:26-29 uses whole numbers, which give the same result under both rules. Lint, typecheck and test were not run in this review; the deterministic check stage confirms them.\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "Signature unchanged; weighted sum uses OPEN_CONSTANTS.totalBreathScoreWeights (keys timingIn/timingEx/depthIn/depthEx match config.ts:18-23), imported from ../analysis/config, rounded once with Math.round(total * 10) / 10; no intermediate rounding."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "New total-score.test.ts asserts 7.5, 7.8 and 7.1 for the three cases. Hand-checked in IEEE doubles: 7.53→7.5, 7.8→7.8, 7.125→7.1."
+      },
+      {
+        "id": "A3",
+        "status": "met",
+        "note": "Asserts 7.3 (7.25, exact in binary) and 7.8 (7.75, exact), and checks that the config weights sum to 1 with toBeCloseTo(1, 10)."
+      },
+      {
+        "id": "A4",
+        "status": "met",
+        "note": "The mean helper and the stale JSDoc are removed. Only an import line and the function body are added, with no comments, and no other hunks touch scores.ts."
+      },
+      {
+        "id": "A5",
+        "status": "unverified",
+        "note": "No existing test files are touched. domain.test.ts:26-29 uses whole numbers, which give the same result under both rules. Lint, typecheck and test were not run in this review; the deterministic check stage confirms them."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 10822,
+      "costUsd": 0.10108800000000001
+    }
+  }
+}
