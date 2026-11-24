@@ -61,7 +61,6 @@ export interface OpenOptions {
 
 const PERCENT = 100;
 const SECONDS_PER_MINUTE = 60;
-const MIDLINE_PCT = 0;
 const SEGMENT_NAMES: readonly (readonly OpenSegmentName[])[] = [[], ["before", "after"], ["before", "between", "after"]];
 
 function mean(values: readonly number[]): number {
@@ -119,8 +118,8 @@ export function openBreaths(transitions: readonly OpenTransition[]): OpenBreath[
       inhaleS: peak.t - trough.t,
       exhaleS: next.t - peak.t,
       depthPct: peak.level - next.level,
-      inhaleDepthPct: peak.level - MIDLINE_PCT,
-      exhaleDepthPct: MIDLINE_PCT - next.level,
+      inhaleDepthPct: peak.level - FIXED_CONSTANTS.depthMidlinePctOfMax,
+      exhaleDepthPct: FIXED_CONSTANTS.depthMidlinePctOfMax - next.level,
     });
   }
   return out;

@@ -53,6 +53,7 @@ export const FIXED_CONSTANTS = {
   bandEdgeEpsilon: 1e-9,
   depthIndexCapPct: 100,
   transitionRefineWindowS: 0.25,
+  depthMidlinePctOfMax: 0,
 } as const;
 
 export const ANALYSIS_CONFIG = {

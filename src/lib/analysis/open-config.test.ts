@@ -10,8 +10,12 @@ describe("FIXED_CONSTANTS for open-session metrics", () => {
     expect(FIXED_CONSTANTS.transitionRefineWindowS).toBe(0.25);
   });
 
+  it("measures inhale and exhale depth from a midline at 0% of max", () => {
+    expect(FIXED_CONSTANTS.depthMidlinePctOfMax).toBe(0);
+  });
+
   it("keeps the new names out of the open group", () => {
-    for (const name of ["depthIndexCapPct", "transitionRefineWindowS"]) {
+    for (const name of ["depthIndexCapPct", "transitionRefineWindowS", "depthMidlinePctOfMax"]) {
       expect(Object.hasOwn(OPEN_CONSTANTS, name)).toBe(false);
     }
   });
