@@ -51,6 +51,8 @@ export const FIXED_CONSTANTS = {
   missedOrDoublePoints: 1,
   pacedPointRange: { min: 1, max: 10 } satisfies Range,
   bandEdgeEpsilon: 1e-9,
+  depthIndexCapPct: 100,
+  transitionRefineWindowS: 0.25,
 } as const;
 
 export const ANALYSIS_CONFIG = {

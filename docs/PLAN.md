@@ -51,6 +51,7 @@ Made by the owner on 2026-11-23. Where older text in this plan disagrees with on
 | 5 | 2026-11-23 | **Web Bluetooth** uses the Nordic UART service UUIDs as a named, labelled assumption, kept in one config file. The simulated sensor is the default. |
 | 6 | 2026-11-23 | **PDF is browser print** with print stylesheets. No server rendering. |
 | 7 | 2026-11-23 | **A UI overhaul is allowed**, but it goes through `DESIGN.md` first. |
+| 8 | 2026-11-24 | **PROVISIONAL, pending Harm. Open-session metrics locate each transition on the raw signal.** The Appendix says "Low-pass the signal (~1 Hz, 4th-order Butterworth, zero-phase)." (l.15) and "Find peaks and troughs with prominence ≥ 1% of max and spacing ≥ 0.5 s." (l.16). It does not say whether a transition's time and level come from the filtered or the raw signal, so two readings fit: (a) the extrema are located on the filtered signal; (b) they are detected on the filtered signal, then located on the raw signal at the extremum of the same type within 0.25 s. The filter moves the extrema of asymmetric breaths: on the noise-free normal pattern (1.5 s in, 3.0 s out), reading (a) gives I:E 1.81 and reading (b) gives 2.0. Open metrics use reading (b) for now (`analyzeOpen` in `src/lib/analysis/open.ts`). Paced scoring (method C) still uses the filtered locations until Harm confirms, so open and paced locate transitions differently until then. |
 
 ## Decisions already made
 
