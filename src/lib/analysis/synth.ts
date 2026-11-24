@@ -379,8 +379,23 @@ export const CALIBRATION_DEFAULTS = {
   troughsPct: [-47, -50, -52, -44, -48],
 } as const;
 
+export const CALIBRATION_KNOT_GRID_TOLERANCE = 1e-9;
+
 function meanOf(values: readonly number[]): number {
   return values.reduce((sum, v) => sum + v, 0) / values.length;
+}
+
+function assertKnotsOnSampleGrid(knots: readonly Knot[], sampleRateHz: number): void {
+  assertPositive("sampleRateHz", sampleRateHz);
+  const offGrid = knots.find((knot) => {
+    const index = knot.t * sampleRateHz;
+    return Math.abs(index - Math.round(index)) > CALIBRATION_KNOT_GRID_TOLERANCE;
+  });
+  if (offGrid) {
+    throw new RangeError(
+      `synth: calibration knot at ${offGrid.t} s does not land on a sample at ${sampleRateHz} Hz, so its level would not be sampled exactly`,
+    );
+  }
 }
 
 export function generateCalibration(options: CalibrationOptions): CalibrationRecording {
@@ -412,6 +427,7 @@ export function generateCalibration(options: CalibrationOptions): CalibrationRec
   knots.push({ t: at, level: 0 });
   at += restS;
   knots.push({ t: at, level: 0 });
+  assertKnotsOnSampleGrid(knots, options.sampleRateHz);
   const t = sampleTimes(at, options.sampleRateHz);
   const pct = new Array<number>(t.length).fill(0);
   render(knots, t, 0, t.length, pct);
