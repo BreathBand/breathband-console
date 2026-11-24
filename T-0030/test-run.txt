@@ -1,0 +1,55 @@
+npm test · exit 0 · the judge's tier 1 run on the change
+new tests:
+  src/lib/analysis/paced-edges.test.ts: is 1e-9 and stays out of the open group
+  src/lib/analysis/paced-edges.test.ts: ${c.name}, ${direction > 0 ? "late" : "early"}: j steps of ${c.step} s give 10 - j points
+  src/lib/analysis/paced-edges.test.ts: peaks at 3 + j x 0.3 % give 10 - j points
+  src/lib/analysis/paced-edges.test.ts: troughs at -3 - j x 0.3 % give 10 - j points
+  src/lib/analysis/paced-edges.test.ts: regression: a user peak at 3.3 % scores 9 points
+  src/lib/analysis/paced-edges.test.ts: regression: a user peak at 5.1 % scores 3 points
+  src/lib/analysis/paced-edges.test.ts: covers -1 to +1 in 0.25 steps
+  src/lib/analysis/paced-edges.test.ts: puts each edge in the bin it opens, and +1 in the last bin, for ${type}s
+
+
+> breathband-console@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254[39m
+
+ [32m✓[39m src/lib/domain/format-dates.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/paced.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/filter.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m src/lib/dockerSmoke.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 138[2mms[22m[39m
+ [32m✓[39m src/lib/domain/domain.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/calibration.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/domain/coaching-calendar.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/contract.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 71[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/transitions.test.ts [2m([22m[2m35 tests[22m[2m)[22m[32m 40[2mms[22m[39m
+ [32m✓[39m src/lib/domain/trends-buckets.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/components/chartTable.test.ts [2m([22m[2m13 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/synth.test.ts [2m([22m[2m31 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+ [32m✓[39m src/app/cloud/trends/compare-table.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/lib/download.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/domain/compare-csv.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/app/cloud/session/Waveform.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/synth-calibration.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/lib/domain/group.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/paced-edges.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m src/lib/backend/http/http.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 120[2mms[22m[39m
+ [32m✓[39m src/components/States.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/golden/paced-golden.test.ts [2m([22m[2m42 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/paced-config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/domain/targets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m src/lib/domain/helpers-misc.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/app/globals.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/domain/total-score.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m src/lib/analysis/config-additions.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m30 passed[39m[22m[90m (30)[39m
+[2m      Tests [22m [1m[32m381 passed[39m[22m[90m (381)[39m
+[2m   Start at [22m 01:48:44
+[2m   Duration [22m 579ms[2m (transform 37%, import 33%, tests 24%, worker 6%)[22m
+
+
