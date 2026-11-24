@@ -1,0 +1,33 @@
+npm test · exit 0 · the judge's tier 1 run on the change
+new tests:
+  src/lib/backend/http/http.test.ts: throws an Error naming the setting and the stub's file
+  src/lib/backend/http/http.test.ts: has one route per AuthService method
+  src/lib/backend/http/http.test.ts: has one route per DataService method
+  src/lib/backend/http/http.test.ts: uses an HTTP verb and a /v1/ path for every route
+  src/lib/backend/http/http.test.ts: matches the route table in the README
+  src/lib/backend/http/http.test.ts: returns http for NEXT_PUBLIC_BACKEND=http
+  src/lib/backend/http/http.test.ts: returns firebase for NEXT_PUBLIC_BACKEND=firebase
+  src/lib/backend/http/http.test.ts: throws the stub's error without calling fetch
+  src/lib/backend/http/http.test.ts: is what an NEXT_PUBLIC_BACKEND=http build creates
+  src/lib/backend/http/http.test.ts: lists http as an allowed NEXT_PUBLIC_BACKEND value
+  src/lib/backend/http/http.test.ts: has a commented placeholder for the API base URL
+
+
+> breathband-console@0.1.0 test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.1.1 [39m[90mC:/Users/arynb/.cache/rivetari/judge/2e909751afdc4254[39m
+
+ [32m✓[39m src/lib/domain/compare-csv.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m src/lib/domain/targets.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m src/lib/domain/domain.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 79[2mms[22m[39m
+ [32m✓[39m src/lib/backend/http/http.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m5 passed[39m[22m[90m (5)[39m
+[2m      Tests [22m [1m[32m66 passed[39m[22m[90m (66)[39m
+[2m   Start at [22m 19:40:07
+[2m   Duration [22m 369ms[2m (tests 33%, import 33%, transform 29%, worker 5%)[22m
+
+
