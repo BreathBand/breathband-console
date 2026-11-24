@@ -38,3 +38,4 @@
 ## Stop-and-ask
 
 - 2026-11-24 00:26 asked: protected_path: package.json — changes package.json scripts (the commands the checks run)
+- 2026-11-24 00:34 answered: allowed — Person approves adding the docker:smoke script to package.json scripts; no dependency changes
