@@ -13,6 +13,10 @@
 - 2026-11-24 06:27 build: build started · skills spine only · budget 12 steps / 60k ctx · ~13598 prompt tokens · 2 repo file(s) in context · 240975 tokens · $0.37 · 7 turns (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 06:29 build: build paused: 1 thing(s) to ask about · commit 77a3ca2258cd · 1063815 tokens · $0.71 · 32 turns (rivetari runtime (for arynbht@gmail.com))
 - 2026-11-24 06:29 build: build paused: 1 thing(s) to ask about · commit 77a3ca2258cd · 862447 tokens · $0.64 · 22 turns (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:33 prove: proof deferred · test-run: the judge's tier 1 run on the change is the proof (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:34 prove: proof passed · test-run (the judge's tier 1 run) (rivetari runtime (for arynbht@gmail.com))
+- 2026-11-24 06:35 judge: judge passed · round 1 · head 77a3ca2258cd · record sha256 e39b49ec9483f84ace9ef77b071b4e739dd46ace9f54875734b4dffb18ec7f30 (rivetari judge (for arynbht@gmail.com))
+- 2026-11-24 06:35 ship: draft PR opened: #36 https://github.com/BreathBand/breathband-console/pull/36 · chore/t-0028 at 77a3ca2258cd → main (rivetari runtime (for arynbht@gmail.com))
 
 ## Plan
 
@@ -45,3 +49,21 @@
 - 2026-11-24 06:29 asked: protected_path: package.json — changes package.json scripts (the commands the checks run)
 - 2026-11-24 06:29 asked: protected_path: package.json — changes package.json scripts (the commands the checks run)
 - 2026-11-24 06:33 answered: allowed — package.json: adds only the e2e script, check and every existing script unchanged; and the card's named devDependency @playwright/test pinned exactly at 1.65.1 (lockfile +46: playwright, playwright-core, optional fsevents). Both allowed by rivetari-51, the pilot's decider
+
+## Proof
+
+- 2026-11-24 06:34 tests passed (npm test, exit 0, in the judge's tier 1 run on the change) · new tests: e2e/auth.ts; e2e/smoke.spec.ts: the coach signs in and sees the Athletes roster; e2e/smoke.spec.ts: the athlete signs in and sees their latest Total Breath Score
+- 2026-11-24 06:34 output: …11 tests[22m[2m)[22m[32m 53[2mms[22m[39m [32m✓[39m src/lib/backend/local/local.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 76[2mms[22m[39m [2m Test Files [22m [1m[32m22 passed[39m[22m[90m (22)[39m [2m Tests [22m [1m[32m226 passed[39m[22m[90m (226)[39m [2m Start at [22m 01:34:30 [2m Duration [22m 514ms[2m (transform 53%, import 30%, tests 13%, worker 4%)[22m
+- 2026-11-24 06:34 evidence: the judge's test run on the evidence branch: https://github.com/BreathBand/breathband-console/blob/evidence/T-0028/test-run.txt?raw=true
+
+## Judge
+
+- 2026-11-24 06:34 tier 1 round 1: pass · 7/8 pass · 1 pre-existing
+- 2026-11-24 06:34 protected: package.json — changes package.json scripts (the commands the checks run) (allowed at build)
+- 2026-11-24 06:34 risk raised to high from the card's medium at the judge: high: auth, billing or payments (e2e/auth.ts)
+- 2026-11-24 06:35 review round 1: approve; 0 blocking, 2 suggestion(s) (claude-opus-5-5) · 12420 tokens · $0.12
+- 2026-11-24 06:35 acceptance A1: met — Exact 1.65.1 pin, e2e script, root playwright.config.ts with testDir e2e, chromium project, BASE_URL defaulting to localhost:PORT/3000, webServer `npm run dev -- --port` only when BASE_URL is unset. L…
+- 2026-11-24 06:35 acceptance A2: met — signInAsCoach/signInAsAthlete click 'Sign in as <name>' on /cloud/login/ until localStorage local-db currentUid matches the uid, then wait for the URL to leave /cloud/login. Ported, nothing imported f…
+- 2026-11-24 06:35 acceptance A3: unverified — Two specs match the card (coach /cloud/ then the Athletes heading and region; athlete 'Latest Total Breath Score' region). Passing depends on the post-PR e2e evidence run.
+- 2026-11-24 06:35 acceptance A4: unverified — Playwright output folders are gitignored. Whether vitest excludes e2e/ depends on the unchanged vitest config. Lint and typecheck rely on the judge's deterministic run.
+- 2026-11-24 06:35 judge review posted: https://github.com/BreathBand/breathband-console/pull/36#pullrequestreview-6034729467

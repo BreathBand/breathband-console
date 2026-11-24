@@ -1,0 +1,156 @@
+{
+  "task": "T-0028",
+  "round": 1,
+  "verdict": "passed",
+  "head": "77a3ca2258cd6e0fc59b75679ba1111d4e9755ac",
+  "base": "4190baa7013225d0e769257d81370f3eeaf1271b",
+  "tier1": {
+    "verdict": "pass",
+    "checks": [
+      {
+        "id": "quality.tests.pass",
+        "title": "Tests pass",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm test` exited 0"
+      },
+      {
+        "id": "quality.boundaries.clean",
+        "title": "Module boundaries hold",
+        "base": "n/a",
+        "head": "n/a",
+        "outcome": "n/a",
+        "message": ""
+      },
+      {
+        "id": "quality.coverage.floor",
+        "title": "Coverage at or above the floor",
+        "base": "red",
+        "head": "red",
+        "outcome": "pre-existing",
+        "message": "coverage isn't configured (see test.coverage-config)"
+      },
+      {
+        "id": "quality.lint.clean",
+        "title": "Lint passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run lint` exited 0"
+      },
+      {
+        "id": "quality.typecheck.clean",
+        "title": "Typecheck passes",
+        "base": "green",
+        "head": "green",
+        "outcome": "pass",
+        "message": "`npm run typecheck` exited 0"
+      },
+      {
+        "id": "diff.no-banned-patterns",
+        "title": "The change adds nothing the repo has banned",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-comments",
+        "title": "The change adds no code comments",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.markdown-in-card",
+        "title": "Every Markdown file the change adds or edits is named in the card",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      },
+      {
+        "id": "diff.no-new-suppressions",
+        "title": "The change adds no check suppressions or skipped tests",
+        "base": "n/a",
+        "head": "green",
+        "outcome": "pass",
+        "message": ""
+      }
+    ],
+    "protected": [
+      {
+        "reason": "scripts",
+        "path": "package.json",
+        "detail": "changes package.json scripts (the commands the checks run)"
+      }
+    ],
+    "notes": []
+  },
+  "risk": {
+    "card": "medium",
+    "effective": "high",
+    "reasons": [
+      "high: auth, billing or payments (e2e/auth.ts)"
+    ]
+  },
+  "review": {
+    "verdict": "approve",
+    "body": "<!-- rivetari-judge-review round=1 -->\n### Rivetari judge · round 1 · approve\n\n#### Acceptance\n- A1: met — Exact 1.65.1 pin, e2e script, root playwright.config.ts with testDir e2e, chromium project, BASE_URL defaulting to localhost:PORT/3000, webServer `npm run dev -- --port` only when BASE_URL is unset. Lockfile is generated and approved as +46.\n- A2: met — signInAsCoach/signInAsAthlete click 'Sign in as <name>' on /cloud/login/ until localStorage local-db currentUid matches the uid, then wait for the URL to leave /cloud/login. Ported, nothing imported from .rivetari.\n- A3: unverified — Two specs match the card (coach /cloud/ then the Athletes heading and region; athlete 'Latest Total Breath Score' region). Passing depends on the post-PR e2e evidence run.\n- A4: unverified — Playwright output folders are gitignored. Whether vitest excludes e2e/ depends on the unchanged vitest config. Lint and typecheck rely on the judge's deterministic run.\n\n<details><summary>2 suggestion(s), non-blocking</summary>\n\n- Nothing in the diff keeps vitest away from e2e/smoke.spec.ts `e2e/smoke.spec.ts:1` — If the vitest config doesn't already restrict include, add `exclude: [...configDefaults.exclude, \"e2e/**\"]` to vitest.config.*.\n- A slow sign-in that navigates after the 3s poll turns the next retry click into a 30s throw `e2e/auth.ts:11` — Before re-clicking, check currentUid (or whether the URL has left /cloud/login) and break if sign-in already happened. Alternatively, wrap the click in the same deadline handling.\n\n</details>\n\n_Not reviewed: `package-lock.json` (generated)._\n\n_claude-opus-5-5 · 1 call(s) · Claude reviews, humans merge._",
+    "model": "claude-opus-5-5",
+    "blocking": [],
+    "suggestions": [
+      {
+        "kind": "suggestion",
+        "file": "e2e/smoke.spec.ts",
+        "line": 1,
+        "acceptance_id": "A4",
+        "title": "Nothing in the diff keeps vitest away from e2e/smoke.spec.ts",
+        "detail": "Vitest's default include pattern matches e2e/smoke.spec.ts. The diff doesn't touch the vitest config, so A4 holds only if the existing config already narrows include or excludes e2e/. If it doesn't, vitest imports @playwright/test's test() outside the Playwright runner and `npm test` fails. The vitest config isn't shown, so I can't confirm the failure; the judge's deterministic `npm test` run settles it.",
+        "repro": "On a clean clone with the default vitest include, run `npm test`. Vitest collects e2e/smoke.spec.ts and fails with 'Playwright Test did not expect test() to be called here'.",
+        "fix": "If the vitest config doesn't already restrict include, add `exclude: [...configDefaults.exclude, \"e2e/**\"]` to vitest.config.*.",
+        "pattern": "1e8a33b5bd25"
+      },
+      {
+        "kind": "suggestion",
+        "file": "e2e/auth.ts",
+        "line": 11,
+        "acceptance_id": null,
+        "title": "A slow sign-in that navigates after the 3s poll turns the next retry click into a 30s throw",
+        "detail": "If a click works but currentUid is written more than 3s later, the loop clicks again. By then the app may have navigated off /cloud/login, so the button is gone. card.click then times out after 30s and throws a generic locator error, which skips both the deadline message and the success path. This only affects test flakiness, not the app.",
+        "repro": "Sign-in that takes about 4s to persist currentUid and then redirects: the second iteration's click waits 30s for a button that no longer exists and throws.",
+        "fix": "Before re-clicking, check currentUid (or whether the URL has left /cloud/login) and break if sign-in already happened. Alternatively, wrap the click in the same deadline handling.",
+        "pattern": "b9ed5c50fb99"
+      }
+    ],
+    "acceptance": [
+      {
+        "id": "A1",
+        "status": "met",
+        "note": "Exact 1.65.1 pin, e2e script, root playwright.config.ts with testDir e2e, chromium project, BASE_URL defaulting to localhost:PORT/3000, webServer `npm run dev -- --port` only when BASE_URL is unset. Lockfile is generated and approved as +46."
+      },
+      {
+        "id": "A2",
+        "status": "met",
+        "note": "signInAsCoach/signInAsAthlete click 'Sign in as <name>' on /cloud/login/ until localStorage local-db currentUid matches the uid, then wait for the URL to leave /cloud/login. Ported, nothing imported from .rivetari."
+      },
+      {
+        "id": "A3",
+        "status": "unverified",
+        "note": "Two specs match the card (coach /cloud/ then the Athletes heading and region; athlete 'Latest Total Breath Score' region). Passing depends on the post-PR e2e evidence run."
+      },
+      {
+        "id": "A4",
+        "status": "unverified",
+        "note": "Playwright output folders are gitignored. Whether vitest excludes e2e/ depends on the unchanged vitest config. Lint and typecheck rely on the judge's deterministic run."
+      }
+    ],
+    "unreviewed": [],
+    "usage": {
+      "tokens": 12420,
+      "costUsd": 0.11868400000000001
+    }
+  }
+}
