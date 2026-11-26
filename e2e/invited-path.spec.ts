@@ -81,10 +81,11 @@ test("a new person opens a clinician's invite, signs up, accepts at the asked sc
   test.setTimeout(240_000);
   const url = await clinicianInvites(page);
 
-  // Signed out, the link goes through sign-in to sign-up, carrying the invite code.
+  // Signed out, the link shows who's asking first (T-0129), then sign-up, carrying the invite code.
   await page.goto(url);
-  await page.waitForURL(/\/cloud\/login\/\?next=/);
-  await page.getByRole("link", { name: "Create an account" }).click();
+  await expect(page.getByRole("heading", { name: "Aoife Byrne (physiotherapist) would like to see your scores." })).toBeVisible();
+  await expect(page.getByRole("note").filter({ hasText: "Aoife has set your first practice: Between visits" })).toBeVisible();
+  await page.getByRole("link", { name: "Sign up to accept" }).click();
   await page.waitForURL(/\/cloud\/signup\/\?next=%2Fcloud%2Fjoin%2F/);
   await expect(page.getByText("You're joining from an invite.", { exact: false })).toBeVisible();
   const email = `jordan${Date.now()}@example.com`;

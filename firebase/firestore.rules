@@ -224,6 +224,18 @@ service cloud.firestore {
     // open them through the getCoachInvite / respondToCoachInvite Cloud
     // Functions, which hide the contact details, add who's asking (kind,
     // profession, scope asked for; T-0123) and create the coach link.
+    //
+    // Signed-out visitors (T-0129) see the invite before sign-up through a
+    // getPublicCoachInvite Cloud Function (Admin SDK, so these rules don't
+    // apply to it), not through a rule: a rule can't rate-limit, can't leave
+    // out fields (a readable document is readable whole, contact and
+    // athleteId included), and `allow get: if true` keyed by code would let
+    // anyone guess codes as fast as they like. The function answers only a
+    // pending, unexpired invite with the minimum (name, kind, profession,
+    // scope asked for, practice), the same "not found" for every other code,
+    // and limits each client (App Check plus a per-IP limit), as the API's
+    // GET /v1/coach-invites/{code}/preview does. So no read rule for anyone
+    // but the coach, signed in or not.
     match /coachInvites/{code} {
       allow read: if signedIn() && resource.data.coachId == request.auth.uid;
       allow create: if signedIn()

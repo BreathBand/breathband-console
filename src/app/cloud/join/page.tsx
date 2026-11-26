@@ -12,13 +12,14 @@ import { inviteHeadline, invitePractice, inviteScope, proTitle } from "@/lib/dom
 import { templateLine } from "@/lib/domain/pro-templates";
 import type { CoachLink, ShareScope } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
+import { PublicJoin } from "./PublicJoin";
 import "./join.css";
 
 // /cloud/join/?code=… — an athlete opens a professional's invite link, sees
 // who's asking in the professional's own terms and exactly what they would
 // see, chooses the scope (starting at what they ask for) and accepts (or
-// declines). Signed-out visitors are sent to sign in or sign up by CloudShell
-// and come back here afterwards. Someone who hasn't finished setting up goes
+// declines). Signed-out visitors see who's asking first (PublicJoin, T-0129),
+// then sign up or sign in and come back here through `?next=`. Someone who hasn't finished setting up goes
 // on to onboarding after accepting, with the goal prefilled from the
 // professional's kind and their practice as the first session (T-0123,
 // planning/v1/02 §3.5); an existing account just confirms the share.
@@ -57,6 +58,8 @@ function Join() {
   const auth = useAuth();
   const params = useSearchParams();
   const code = (params.get("code") ?? "").trim().toUpperCase();
+  // Signed out: who's asking, then sign up to accept (T-0129). CloudShell lets this page through.
+  if (auth.status === "signed-out") return <PublicJoin code={code} />;
   if (auth.status !== "signed-in") return null;
 
   if (!code) {

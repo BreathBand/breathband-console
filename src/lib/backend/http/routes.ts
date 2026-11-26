@@ -77,6 +77,7 @@ export const HTTP_ROUTES: HttpRoutes = {
     listCoachInvites: { method: "GET", path: "/v1/coaches/{coachId}/coach-invites" },
     revokeCoachInvite: { method: "POST", path: "/v1/coaches/{coachId}/coach-invites/{code}/revoke" },
     getCoachInvite: { method: "GET", path: "/v1/coach-invites/{code}" },
+    getPublicCoachInvite: { method: "GET", path: "/v1/coach-invites/{code}/preview" },
     respondToCoachInvite: { method: "POST", path: "/v1/athletes/{athleteId}/coach-invites/{code}/response" },
 
     createGroupSession: { method: "POST", path: "/v1/coaches/{hostId}/group-sessions" },

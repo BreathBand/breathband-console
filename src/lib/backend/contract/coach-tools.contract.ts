@@ -164,6 +164,26 @@ export function describeCoachToolsContract(adapter: string, setup: () => DataCon
         await refusal(h.signedOut().data.getCoachInvite(sent.code), "not-signed-in");
       });
 
+      describe("before sign-up (T-0129)", () => {
+        it("shows anyone, signed out too, only who is asking and what they ask, for a pending invite", async () => {
+          const sent = await invite();
+          const minimum = { coachName: "Cara Coach", coachKind: null, coachProfession: null, scopeRequested: null, practice: null };
+          expect(await h.signedOut().data.getPublicCoachInvite(` ${sent.code.toLowerCase()} `)).toEqual(minimum);
+          expect(await ana.backend.data.getPublicCoachInvite(sent.code)).toEqual(minimum);
+        });
+
+        it("answers null alike for an unknown code and for revoked, declined and accepted invites", async () => {
+          const [revoked, declined, accepted] = [await invite(), await invite(), await invite()];
+          await cara.backend.data.revokeCoachInvite(cara.uid, revoked.code);
+          await ana.backend.data.respondToCoachInvite(ana.uid, declined.code, { accept: false });
+          await ben.backend.data.respondToCoachInvite(ben.uid, accepted.code, { accept: true, scope: "curves" });
+          const out = h.signedOut().data;
+          for (const code of ["ZZZZ2222", revoked.code, declined.code, accepted.code]) {
+            expect(await out.getPublicCoachInvite(code)).toBeNull();
+          }
+        });
+      });
+
       it("links an athlete who accepts, with the scope they choose, once", async () => {
         const sent = await invite();
         const link = await ana.backend.data.respondToCoachInvite(ana.uid, sent.code, { accept: true, scope: "scores" });
@@ -256,6 +276,17 @@ export function describeCoachToolsContract(adapter: string, setup: () => DataCon
             coachKind: "clinician",
             coachProfession: "physiotherapist",
             scopeRequested: physio.scopeRequested,
+          });
+        });
+
+        it("shows a signed-out visitor the professional in their own terms, the scope asked for and the practice (T-0129)", async () => {
+          const sent = await cara.backend.data.createCoachInvite(cara.uid, { athleteName: "Jo", contact: "jo@example.com", practice: "between-visits" });
+          expect(await h.signedOut().data.getPublicCoachInvite(sent.code)).toEqual({
+            coachName: "Cara Coach",
+            coachKind: "clinician",
+            coachProfession: "physiotherapist",
+            scopeRequested: physio.scopeRequested,
+            practice: "between-visits",
           });
         });
 
