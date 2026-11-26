@@ -65,7 +65,8 @@ Lead: review and merge; then the question and the Parked lines below.
 
 ## Questions for me
 
-- [ ] Educators showing a QR code in class (E9: "QR to show in class; group code") need an invite with no name or contact, which `createCoachInvite` refuses today. Add a multi-use "class link" to the backend in a later card? — Recommended: yes, with E9's group code (Later). Options: keep one invite per student; reuse athlete-created `createInvite` codes.
+- [x] Educators showing a QR code in class (E9: "QR to show in class; group code") need an invite with no name or contact, which `createCoachInvite` refuses today. Add a multi-use "class link" to the backend in a later card? — Recommended: yes, with E9's group code (Later). Options: keep one invite per student; reuse athlete-created `createInvite` codes.
+  Answer: yes, with E9's group code (Later)
 
 ## Parked
 
