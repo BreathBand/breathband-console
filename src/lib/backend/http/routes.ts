@@ -10,7 +10,7 @@ export interface HttpRoute<P extends string = string> {
 export interface HttpRoutes {
   /** Served by the API: Better Auth, mounted at /api/auth. */
   auth: Record<keyof AuthService, HttpRoute<`/api/auth/${string}`>>;
-  /** Served by the API under /api (I-08: profile, sessions, waveforms); the rest are proposals until I-09, I-10. */
+  /** Served by the API under /api (I-08: profile, sessions, waveforms; I-09: coaching); the rest are proposals until I-10. */
   data: Record<keyof DataService, HttpRoute<`/v1/${string}`>>;
 }
 
@@ -26,7 +26,7 @@ export const HTTP_ROUTES: HttpRoutes = {
     sendPasswordReset: { method: "POST", path: "/api/auth/request-password-reset" },
     signOut: { method: "POST", path: "/api/auth/sign-out" },
   },
-  // Under /api on the API. Profile, sessions and waveforms are served (I-08); the rest are proposals (I-09, I-10).
+  // Under /api on the API. Profile, sessions and waveforms (I-08) and coaching (I-09) are served; the rest are proposals (I-10).
   data: {
     getProfile: { method: "GET", path: "/v1/users/{uid}" },
     updateProfile: { method: "PATCH", path: "/v1/users/{uid}" },

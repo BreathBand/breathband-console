@@ -3,7 +3,7 @@
 The adapter for the API in `server/` (planning/v1/04-infrastructure.md). It has the same interface as the local adapter (`../types.ts`), so screens don't change when a build sets `NEXT_PUBLIC_BACKEND=http`.
 
 - **AuthService works** (I-07): it talks to Better Auth at `/api/auth/*` (`server/auth.ts`).
-- **DataService, part 1 works** (I-08): profile and preferences, sessions and waveforms, at `/api/v1/*` (`server/routes/data.ts`). The other methods fail with `BackendError("unavailable")` naming I-09 (coaching) and I-10 (squads, alerts, groups, waitlist).
+- **DataService, parts 1 and 2 work**: profile and preferences, sessions and waveforms (I-08), and coaching (I-09: coach links, invites, scope, revoke, assignments, comments and kudos, seen marks, private notes, targets), at `/api/v1/*` (`server/routes/data.ts`, `coaching.ts`, `coaching-feedback.ts`). The other methods fail with `BackendError("unavailable")` naming I-10 (squads, alerts, coach invites, groups, waitlist).
 
 ## Settings
 
@@ -61,11 +61,13 @@ The shared contract suite (`../contract/auth.contract.ts`) names these as traits
 
 ## Data routes
 
-The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}` (`DATA_PREFIX` in `data.ts`). I-08 serves profile and preferences (`getProfile`, `updateProfile`) and sessions and waveforms (`listSessions` … `deleteSession`); the rest are proposals until I-09 and I-10 settle them. They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments (URL-encoded); everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
+The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}` (`DATA_PREFIX` in `data.ts`). I-08 serves profile and preferences (`getProfile`, `updateProfile`) and sessions and waveforms (`listSessions` … `deleteSession`); I-09 serves coaching (`listAthletes` … `setTargets`); the rest are proposals until I-10 settles them. They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments (URL-encoded); everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
 
 - Errors are `{ error: { code, message } }` with this adapter's codes. `not-found` from `getProfile` and `getSession` becomes `null`. A 401 means the session is gone: the adapter counts the person as signed out and tells `onAuthStateChanged` listeners. A 409 from a data route is `invalid-input`, never `email-in-use`.
 - `saveSession` posts `{ session, waveform }` in one request (under 6 MB; the signal under 5 MB). The API stores the signal gzipped through its `StorageService` at `waveforms/{athleteId}/{id}.json.gz` and the summary in `breath_sessions`.
-- `getProfile` for someone else (either side of a coach link) leaves out their `birthYear` and `consents`.
+- `getProfile` for someone else (either side of a coach link) leaves out their `birthYear` and `consents`; so do `listAthletes` and `listCoaches`.
+- Invite codes are stored only as a SHA-256 hash, last 7 days and redeem once (`invite-invalid` otherwise). `getCoachLink` answers `null` for no link. `getCoachNote` reads `{ text }`. `listComments` merges comments and kudos (two tables) oldest first.
+- `markSessionSeen` is stricter than the local adapter: the session has to exist (`not-found`) and the coach has to be linked to the athlete (`permission-denied`).
 
 ### DataService
 
@@ -127,8 +129,8 @@ Data methods that are not a single request:
 
 ## Tests
 
-- `http.test.ts`: the adapter with a fake `fetch` (requests, session state, error mapping, the data paths, the I-09/I-10 gaps) and the route table against this README.
-- `data.http.test.ts`: the profile and sessions contract sections (`../contract/profile.contract.ts`, `../contract/sessions.contract.ts`) against the real API, with a temp `STORAGE_DIR`; `../contract/data.local.test.ts` runs them on the local adapter.
+- `http.test.ts`: the adapter with a fake `fetch` (requests, session state, error mapping, the data paths, the I-10 gaps) and the route table against this README.
+- `data.http.test.ts`: the profile, sessions and coaching contract sections (`../contract/profile.contract.ts`, `../contract/sessions.contract.ts`, `../contract/coaching.contract.ts`) against the real API, with a temp `STORAGE_DIR`; `../contract/data.local.test.ts` runs them on the local adapter.
 - `auth.http.test.ts`: the shared auth contract (`../contract/auth.contract.ts`) against the real API, started in-process on a free port with a temp migrated file database and a mailer that keeps emails in memory, so the tests follow the confirmation and reset links. No Docker. `../contract/auth.local.test.ts` runs the same suite on the local adapter.
 
 Adding an HTTP client library is a new dependency and needs a person's approval first; the browser's `fetch` is enough.

@@ -27,6 +27,14 @@ async function signUpAsProfessional(page: Page, name: string): Promise<string> {
 
 const continueButton = (page: Page) => page.getByRole("button", { name: "Continue" });
 const next = (page: Page) => continueButton(page).click();
+// T-0120 added "Try it yourself" and the first invite after the terms; skipped here,
+// e2e/onboarding-pro-invite.spec.ts covers them.
+async function skipTryAndInvite(page: Page) {
+  await expect(page.getByRole("heading", { name: "Try it yourself" })).toBeVisible();
+  await page.getByRole("button", { name: "Skip for now" }).click();
+  await expect(page.getByRole("heading", { name: /^Invite your first/ })).toBeVisible();
+  await page.getByRole("button", { name: "Skip for now" }).click();
+}
 const pick = (page: Page, question: string, option: string) =>
   page.getByRole("group", { name: question, exact: true }).getByRole("button", { name: option, exact: true }).click();
 
@@ -81,6 +89,7 @@ test("a clinician: defaults and templates, and no finishing without the wellness
   await expect(continueButton(page)).toBeDisabled();
   await page.getByRole("checkbox", { name: WELLNESS }).check();
   await next(page);
+  await skipTryAndInvite(page);
 
   await expect(page.getByRole("heading", { name: "You're set, Lena." })).toBeVisible();
   await expect(page.getByText("5 sessions a week")).toBeVisible();
@@ -126,6 +135,7 @@ test("an educator: scores only, 16+ acknowledgement, and changed sessions a week
   await expect(continueButton(page)).toBeDisabled();
   await page.getByRole("checkbox", { name: "Only invite students aged 16 or over." }).check();
   await next(page);
+  await skipTryAndInvite(page);
   await page.getByRole("button", { name: "Add students" }).click();
   await page.waitForURL((url) => url.pathname === "/cloud/athletes/");
 
@@ -156,6 +166,7 @@ test("a coach: the terms alone, and the coach's targets", async ({ page }) => {
   await expect(page.getByRole("checkbox")).toHaveCount(1);
   await page.getByRole("checkbox", { name: "I agree to the professional terms." }).check();
   await next(page);
+  await skipTryAndInvite(page);
   await page.getByRole("button", { name: "Add athletes" }).click();
   await page.waitForURL((url) => url.pathname === "/cloud/athletes/");
 

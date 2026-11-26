@@ -4,7 +4,7 @@ import type { Role, ShareScope } from "@/lib/domain/types";
 import { BackendError, type Backend, type BackendErrorCode, type SignUpInput } from "../types";
 
 // What the DataService sections of the shared suite need from an adapter
-// (profile.contract.ts, sessions.contract.ts). Each person is a separate
+// (profile.contract.ts, sessions.contract.ts, coaching.contract.ts). Each person is a separate
 // browser on the same data: local shares one store, http one API.
 
 export interface Person {
@@ -21,8 +21,8 @@ export interface DataContractHarness {
   /** A browser where nobody is signed in. */
   signedOut(): Backend;
   /**
-   * Makes, changes (scope) or removes (null: revoked) a coach link directly.
-   * The coaching routes that do this for real are I-09's.
+   * Makes, changes (scope) or removes (null: revoked) a coach link the way people
+   * do (`linkThroughInvites`): both must be people this harness made.
    */
   link(coachId: string, athleteId: string, scope: ShareScope | null): Promise<void>;
   /**
@@ -55,4 +55,19 @@ export async function refusal(promise: Promise<unknown>, code: BackendErrorCode)
   );
   expect(error).toBeInstanceOf(BackendError);
   expect(error).toMatchObject({ code });
+}
+
+/**
+ * `DataContractHarness.link` through DataService itself: the athlete's invite,
+ * redeemed by the coach; then setCoachScope to change it and revokeCoach to end it.
+ * `people` finds each person's browser by uid.
+ */
+export function linkThroughInvites(people: Map<string, Person>): DataContractHarness["link"] {
+  return async (coachId, athleteId, scope) => {
+    const athlete = people.get(athleteId)!.backend.data;
+    if (!scope) return athlete.revokeCoach(athleteId, coachId);
+    if (await athlete.getCoachLink(coachId, athleteId)) return athlete.setCoachScope(athleteId, coachId, scope);
+    const invite = await athlete.createInvite(athleteId, scope);
+    await people.get(coachId)!.backend.data.redeemInvite(coachId, invite.code);
+  };
 }

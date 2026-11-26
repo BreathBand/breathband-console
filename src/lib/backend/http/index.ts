@@ -6,7 +6,7 @@ import { HTTP_ROUTES } from "./routes";
 
 // The adapter for the API in server/ (planning/v1/04-infrastructure.md).
 // AuthService talks to Better Auth (I-07); DataService to /api/v1: profile,
-// preferences, sessions and waveforms (I-08), the rest with I-09 and I-10.
+// preferences, sessions and waveforms (I-08), coaching (I-09), the rest with I-10.
 
 export * from "./routes";
 export { toBackendError } from "./client";
@@ -34,23 +34,16 @@ export function createHttpBackend(options: HttpBackendOptions = {}): Backend {
   return { kind: "http", auth, data: { ...unavailableData(), ...createHttpData(api) } };
 }
 
-/** The API card that serves a method, where it isn't the usual I-09..I-10 range. */
-const SERVED_BY: Partial<Record<keyof DataService, string>> = {
-  // TODO(I-10): mood check-ins (J6), on the server's `mood_checkins` table.
-  saveMoodCheckins: "API card I-10",
-  listMoodCheckins: "API card I-10",
-};
-
 /**
  * The DataService methods the API doesn't serve yet fail with BackendError("unavailable"):
- * coaching arrives with I-09; squads, alerts, coach invites, groups, the waitlist and mood
- * check-ins with I-10.
+ * squads, alerts, coach invites, groups, the waitlist and mood check-ins arrive with I-10.
+ * TODO(I-10): mood check-ins (J6), on the server's `mood_checkins` table.
  */
 function unavailableData(): DataService {
   const notYet = (method: string) =>
     new BackendError(
       "unavailable",
-      `${method}: the API doesn't serve this yet (${SERVED_BY[method as keyof DataService] ?? "I-09..I-10"}). Use NEXT_PUBLIC_BACKEND=local for now.`,
+      `${method}: the API doesn't serve this yet (API card I-10). Use NEXT_PUBLIC_BACKEND=local for now.`,
     );
   const methods = Object.keys(HTTP_ROUTES.data).map((method) => [
     method,

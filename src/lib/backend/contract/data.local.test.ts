@@ -1,7 +1,8 @@
 import { createLocalBackend } from "../local";
 import { createSeededDb, type DbStore, type LocalDb } from "../local/db";
-import type { DataContractHarness } from "./data.harness";
-import { signUpInput } from "./data.harness";
+import { describeCoachingContract } from "./coaching.contract";
+import type { DataContractHarness, Person } from "./data.harness";
+import { linkThroughInvites, signUpInput } from "./data.harness";
 import { describeProfileContract } from "./profile.contract";
 import { describeSessionsContract } from "./sessions.contract";
 
@@ -22,20 +23,19 @@ function localHarness(): DataContractHarness {
     };
   };
   const open = () => createLocalBackend({ store: browser(), latencyMs: 0 });
+  const people = new Map<string, Person>();
 
   return {
     async person(role = "athlete") {
       const backend = open();
       const input = signUpInput(role);
       const user = await backend.auth.signUp(input);
-      return { uid: user.uid, email: user.email, birthYear: input.birthYear, backend };
+      const person = { uid: user.uid, email: user.email, birthYear: input.birthYear, backend };
+      people.set(user.uid, person);
+      return person;
     },
     signedOut: open,
-    async link(coachId, athleteId, scope) {
-      const others = shared.coachLinks.filter((l) => !(l.coachId === coachId && l.athleteId === athleteId));
-      const link = { coachId, athleteId, scope: scope!, createdAt: new Date().toISOString(), targets: null };
-      shared = { ...shared, coachLinks: scope ? [...others, link] : others };
-    },
+    link: linkThroughInvites(people),
     // The local adapter has no route besides DataService that changes an account.
     updateAccount: async () => "refused",
   };
@@ -43,3 +43,4 @@ function localHarness(): DataContractHarness {
 
 describeProfileContract("local", localHarness);
 describeSessionsContract("local", localHarness);
+describeCoachingContract("local", localHarness);

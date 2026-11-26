@@ -1,0 +1,148 @@
+/*
+ * The professional's first dashboard (T-0120): the "getting started"
+ * checklist (.gs-*), the sample person (.sp-*), and the invite's QR code
+ * (.inv-qr, shown in onboarding and on the roster). Tokens from globals.css.
+ */
+
+/* ================================================================ getting started */
+
+.gs {
+  margin-bottom: var(--s-6);
+}
+
+.gs-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--s-3) 0 0;
+}
+
+.gs-list > li {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-3) 0;
+  border-top: 1px solid var(--c-rule-soft);
+}
+
+.gs-mark {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid var(--c-rule);
+  font: 600 var(--t-12) / 1 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.gs-list > li[data-done] .gs-mark {
+  border-color: transparent;
+  background: var(--c-ok-tint);
+  color: var(--c-ok-strong);
+}
+
+.gs-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.gs-body small {
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.gs-list > li[data-done] .gs-body b {
+  color: var(--c-ink-2);
+}
+
+.gs-state {
+  flex: none;
+  text-align: right;
+}
+
+/* ================================================================ sample person */
+
+.sp {
+  margin-top: var(--s-6);
+}
+
+.sp-explain {
+  margin-top: var(--s-2);
+  max-width: 72ch;
+}
+
+.sp-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-top: var(--s-4);
+}
+
+.sp-who {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* ================================================================ invite QR code */
+
+.inv-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--s-4);
+}
+
+.inv-share .inv-link {
+  flex: 1 1 260px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.inv-qr {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  width: 168px;
+  margin: 0;
+}
+
+.inv-qr svg {
+  display: block;
+  width: 168px;
+  height: 168px;
+  border-radius: var(--r-1);
+  border: 1px solid var(--c-rule);
+}
+
+/* Dark on white in both themes: --c-paper and --c-chrome stay white and carbon, so phones can read it. */
+.inv-qr-ground {
+  fill: var(--c-paper);
+}
+
+.inv-qr-ink {
+  fill: var(--c-chrome);
+}
+
+/* Narrow screens: the action goes under the item, lined up with its text. */
+@media (max-width: 640px) {
+  .gs-list > li {
+    flex-wrap: wrap;
+    row-gap: var(--s-2);
+  }
+  .gs-body {
+    flex-basis: calc(100% - 24px - var(--s-4));
+  }
+  .gs-list > li .button,
+  .gs-state {
+    margin-left: calc(24px + var(--s-4));
+    text-align: left;
+  }
+}

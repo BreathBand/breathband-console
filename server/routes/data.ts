@@ -14,6 +14,8 @@ import type { LinkScope } from "../authz";
 import type { Db } from "../db/client";
 import { coachLinks } from "../db/schema";
 import type { StorageService } from "../storage";
+import { coachingRoutes } from "./coaching";
+import { feedbackRoutes } from "./coaching-feedback";
 import { profileRoutes } from "./profile";
 import { sessionRoutes } from "./sessions";
 import { waveformRoutes } from "./waveforms";
@@ -54,6 +56,8 @@ export function dataRoutes(deps: DataDeps) {
   profileRoutes(routes, deps);
   sessionRoutes(routes, deps);
   waveformRoutes(routes, deps);
+  coachingRoutes(routes, deps);
+  feedbackRoutes(routes, deps);
   return routes;
 }
 
