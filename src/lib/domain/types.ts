@@ -22,6 +22,50 @@ export interface UserProfile {
   consents?: ConsentRecord[];
   /** Year of birth, asked at sign-up for the 16+ age gate. Absent on older accounts. */
   birthYear?: number;
+  /** Professionals only (role "coach"): the kind of work they do. Absent until onboarding asks, and on older accounts. */
+  proKind?: ProKind;
+  /** Professionals only: what they told onboarding about their practice. Its `kind` matches `proKind`. */
+  proProfile?: ProProfile;
+}
+
+/** The professional tracks. Every one signs up with role "coach"; this says which kind of work. */
+export type ProKind = "coach" | "clinician" | "educator";
+
+/** What a professional calls the people they work with ("patients" isn't offered in v1). */
+export type PeopleTerm = "athletes" | "clients" | "students";
+
+/** The level a coach works at; youth means 16+ only in v1. */
+export type CoachLevel = "youth" | "amateur" | "collegiate" | "pro";
+export type ClinicianProfession = "physiotherapist" | "respiratory-therapist" | "physician" | "psychologist" | "nurse" | "other";
+export type EducatorRole = "teacher" | "counsellor" | "coach";
+
+export type CoachUseCase = "pre-competition" | "recovery" | "control-under-effort" | "team-warm-ups";
+export type ClinicianUseCase = "between-visits" | "stress-anxiety" | "injury-recovery" | "sports-medicine";
+export type EducatorUseCase = "exam-stress" | "study-focus" | "class-calm";
+export type ProUseCase = CoachUseCase | ClinicianUseCase | EducatorUseCase;
+
+/**
+ * A professional's practice, from onboarding (planning/v1/02 §4.1 steps 2–5).
+ * Fields that don't apply to the kind are null or empty. Server: `pro_profiles`.
+ */
+export interface ProProfile {
+  kind: ProKind;
+  /** Team or club, clinic or practice, school or college; at most 80 characters. */
+  organisation: string | null;
+  /** A clinician's profession or an educator's role; null for a coach. */
+  profession: ClinicianProfession | EducatorRole | null;
+  /** A coach's sports; empty for the other kinds. */
+  sports: TrainSport[];
+  /** Free text when `sports` includes "other"; at most 60 characters. */
+  sportOther?: string;
+  /** Coach only. */
+  level: CoachLevel | null;
+  /** Clinician only, as typed; at most 60 characters. */
+  country: string | null;
+  /** What they'll use Breathband for; at least one, from their kind's list. */
+  useCases: ProUseCase[];
+  /** How they refer to the people they work with. Defaults by kind. */
+  terminology: PeopleTerm;
 }
 
 /** `terms` and `privacy` share one checkbox; `breathing-data` is processing breathing data to give scores. */
