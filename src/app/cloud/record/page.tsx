@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { LiveTrace } from "@/components/LiveTrace";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
@@ -11,28 +11,42 @@ import { assignmentProgress, describeAssignment, dueText, isOpen } from "@/lib/d
 import { LENGTHS, readSetup, saveSetup, setupFromPreferences, setupQuery, SKILLS, type SessionSetup } from "@/lib/prefs";
 import { useLoad } from "@/lib/useLoad";
 import { PERSONAS, stateWords } from "../device/words";
+import { PRO_WORD, withPractice } from "../home/tailor";
 
-/** Set up a session: what kind, which pacer, how long, how it looks and sounds. Then start. */
 export default function RecordSetupPage() {
+  return (
+    <Suspense fallback={null}>
+      <RecordSetup />
+    </Suspense>
+  );
+}
+
+/**
+ * Set up a session: what kind, which pacer, how long, how it looks and sounds. Then start.
+ * Home's start button sends a professional's practice in the query (home/tailor.ts `homeStart`), and it's set here.
+ */
+function RecordSetup() {
   const router = useRouter();
+  const params = useSearchParams();
   const auth = useAuth();
   const backend = useBackend();
   const device = useDevice();
   // The person's saved defaults (from onboarding and Settings); this browser's last setup when there are none.
   const [setup, setSetup] = useState<SessionSetup>(() => {
     const prefs = auth.status === "signed-in" ? auth.profile?.preferences : null;
-    return prefs ? setupFromPreferences(prefs) : readSetup();
+    return withPractice(prefs ? setupFromPreferences(prefs) : readSetup(), new URLSearchParams(params.toString()));
   });
   const uid = auth.status === "signed-in" ? auth.user.uid : null;
   const isAthlete = auth.status === "signed-in" && auth.profile?.role === "athlete";
 
   const practice = useLoad(uid && isAthlete ? `record-practice:${uid}` : null, async () => {
-    const [assignments, sessions] = await Promise.all([
+    const [assignments, sessions, professionals] = await Promise.all([
       backend.data.listAssignments(uid!),
       backend.data.listSessions(uid!, { limit: 200 }),
+      backend.data.listCoaches(uid!),
     ]);
     const now = new Date();
-    return assignments.map((a) => assignmentProgress(a, sessions, now)).filter(isOpen);
+    return { plans: assignments.map((a) => assignmentProgress(a, sessions, now)).filter(isOpen), professionals };
   });
 
   const set = (patch: Partial<SessionSetup>) => setSetup((s) => ({ ...s, ...patch }));
@@ -40,7 +54,10 @@ export default function RecordSetupPage() {
     saveSetup(setup);
     router.push(`/cloud/record/live/?${setupQuery(setup)}`);
   };
-  const plan = practice.status === "ready" ? practice.data[0] : undefined;
+  const plan = practice.status === "ready" ? practice.data.plans[0] : undefined;
+  // Who set it, in the word for their kind: "From your clinician" (older accounts read as a coach).
+  const setBy = plan && practice.status === "ready" ? practice.data.professionals.find((p) => p.uid === plan.assignment.coachId) : undefined;
+  const proWord = PRO_WORD[setBy?.proKind ?? setBy?.proProfile?.kind ?? "coach"];
   const busy = ["requesting", "connecting", "reconnecting"].includes(device.status.state);
 
   return (
@@ -57,10 +74,10 @@ export default function RecordSetupPage() {
       </header>
 
       {plan && (
-        <section className="practice-hint" aria-label="Practice from your coach">
+        <section className="practice-hint" aria-label={`Practice from your ${proWord}`}>
           <Icon name="plan" size={20} />
           <p>
-            <b>From your coach:</b> {describeAssignment(plan.assignment)}. {plan.done} of {plan.assignment.target} done,{" "}
+            <b>From your {proWord}:</b> {describeAssignment(plan.assignment)}. {plan.done} of {plan.assignment.target} done,{" "}
             {dueText(plan.daysLeft).toLowerCase()}.
           </p>
           <button

@@ -16,10 +16,10 @@ import { describeAssignment, dueText, isOpen } from "@/lib/domain/coaching";
 import { describeMode, formatDay, formatDuration, formatTime } from "@/lib/domain/format";
 import { formatScore, headline, isTransitionScores, scoreWord } from "@/lib/domain/scores";
 import { goalOf } from "@/lib/domain/preferences";
-import type { SessionSummary, UserPreferences, Waveform } from "@/lib/domain/types";
+import type { SessionSummary, Waveform } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
 import type { Workspace } from "./AthleteWorkspace";
-import { calmLine, homeLayout, professionalOf, trendPeriod, withMechanics } from "./home/tailor";
+import { calmLine, capital, homeLayout, homeStart, professionalOf, sidePractice, trendPeriod, withMechanics, type SessionShape } from "./home/tailor";
 import { NewMilestones } from "./home/Milestones";
 import { LatestComment, ProfessionalCard } from "./home/ProfessionalCard";
 import { ProgramCard } from "./home/ProgramCard";
@@ -59,7 +59,8 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
   const first = ws.name.split(" ")[0];
   const prefs = auth.status === "signed-in" ? auth.profile?.preferences : null;
 
-  if (sessions.length === 0) return <FirstRun name={first} now={now} />;
+  const open = ws.plans.filter(isOpen);
+  if (sessions.length === 0) return <FirstRun name={first} now={now} practice={open[0]?.assignment ?? null} />;
 
   const professional = professionalOf(ws.coachName, ws.coachKind);
   const mechanics = mechanicsOf(prefs, professional?.kind === "clinician");
@@ -68,9 +69,11 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
   const latest = sessions[0];
   const streak = streakOf(sessions, now);
   const dailyMinutes = dailyMinutesOf(prefs);
-  const ring = layout.slots.includes("calm-ring") ? ringOf(sessions, now, dailyMinutes) : null;
-  const open = ws.plans.filter(isOpen);
-  const suggestion = prefs ? suggestedSession(prefs) : "Start a session";
+  // Today's minutes against the plan: shown as Calm's ring, and what "done for today" means everywhere.
+  const today = ringOf(sessions, now, dailyMinutes);
+  const ring = layout.slots.includes("calm-ring") ? today : null;
+  const start = homeStart(prefs?.session ?? null, open[0]?.assignment ?? null);
+  const side = sidePractice(layout.goal, professional);
   const line =
     layout.line &&
     calmLine({
@@ -78,6 +81,7 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
       doneToday: streak.doneToday,
       minutes: Math.round((prefs?.session.durationSec ?? 180) / 60),
       streak: layout.streak,
+      leftToday: today.closed ? 0 : today.goalMinutes - today.minutes,
     });
 
   return (
@@ -102,9 +106,9 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
             <Icon name="band" size={18} />
             Band
           </Link>
-          <Link href="/cloud/record/" className="button" data-size="large">
+          <Link href={start.href} className="button" data-size="large">
             <span className="rec-dot" aria-hidden="true" />
-            {suggestion}
+            {start.label}
           </Link>
         </div>
       </header>
@@ -133,19 +137,19 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
 
         {layout.trendDays !== null && <ScoreTrend ws={ws} days={layout.trendDays} rate={layout.rate} />}
 
-        <section className="pane home-side" aria-label={layout.professional ? "Recent sessions" : "Coach and recent sessions"}>
+        <section className="pane home-side" aria-label={!layout.professional && side ? `${capital(side.word)} and recent sessions` : "Recent sessions"}>
           {/* With the professional's card leading the page, their practice and comments are there instead. */}
-          {!layout.professional && (
+          {!layout.professional && side && (
             <div className="home-side-block">
               <div className="pane-h">
-                <h2>From your coach</h2>
+                <h2>From your {side.word}</h2>
                 <Link className="link small" href={ws.tabHref("plan")}>
                   Practice
                   <Icon name="chevronRight" size={16} />
                 </Link>
               </div>
               {open.length === 0 ? (
-                <p className="muted small-text">{ws.coachName ? "Nothing set right now." : "Share with a coach in Settings and their practice shows up here."}</p>
+                <p className="muted small-text">{side.empty}</p>
               ) : (
                 <div className="home-plan">
                   <span className="plan-what">{describeAssignment(open[0].assignment)}</span>
@@ -201,13 +205,6 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
       </div>
     </div>
   );
-}
-
-/** "Start Paced 5-5 · 10 min", from the athlete's saved defaults. */
-export function suggestedSession(p: UserPreferences): string {
-  const s = p.session;
-  const what = s.mode === "paced" ? `Paced ${s.pacerHalfCycleSec}-${s.pacerHalfCycleSec}` : "Open";
-  return `Start ${what}${s.durationSec ? ` · ${Math.round(s.durationSec / 60)} min` : ""}`;
 }
 
 /** The last session as an instrument card: score, a strip of the breath itself, and the breakdown. */
@@ -395,12 +392,14 @@ function ScoreTrend({ ws, days, rate }: { ws: Workspace; days: number; rate: boo
 }
 
 /** A new athlete with no sessions: three steps from band to first score, with the simulator as a way in. */
-function FirstRun({ name, now }: { name: string; now: Date }) {
+function FirstRun({ name, now, practice }: { name: string; now: Date; practice: SessionShape | null }) {
   const device = useDevice();
   const auth = useAuth();
   const prefs = auth.status === "signed-in" ? auth.profile?.preferences : null;
+  // Practice a professional set comes first (02 §3.5); otherwise the person's own defaults.
+  const start = homeStart(prefs?.session ?? null, practice);
   // A minute for the strap check and calibration, then the session itself.
-  const minutes = 1 + Math.round((prefs?.session.durationSec || 180) / 60);
+  const minutes = 1 + Math.round(((practice ?? prefs?.session)?.durationSec || 180) / 60);
   return (
     <div className="container page home">
       <header className="home-head">
@@ -433,9 +432,9 @@ function FirstRun({ name, now }: { name: string; now: Date }) {
           </li>
         </ol>
         <div className="first-actions">
-          <Link href="/cloud/record/" className="button" data-size="large">
+          <Link href={start.href} className="button" data-size="large">
             <span className="rec-dot" aria-hidden="true" />
-            {prefs ? suggestedSession(prefs) : "Record your first session"}
+            {prefs || practice ? start.label : "Record your first session"}
           </Link>
           <Link href="/cloud/device/" className="button" data-variant="ghost">
             {device.connected ? "Band connected" : "Set up your band"}

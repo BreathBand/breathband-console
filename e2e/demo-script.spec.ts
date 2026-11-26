@@ -46,7 +46,7 @@ test("2. Same band, different product: Maya (Calm) beside Alex (Train)", async (
   // Alex: dense, the score and its parts, the 8-week trend, the coach's practice; no encouraging line.
   await expect(alex.page.locator(".home")).toHaveAttribute("data-goal", "train", { timeout: 30_000 });
   await expect(alex.page.locator(".home-line")).toHaveCount(0);
-  await expect(alex.page.getByText("Start Paced 5-5 · 10 min")).toBeVisible();
+  await expect(alex.page.getByText("Start Paced 5-5 · 5 min")).toBeVisible();
   await expect(alex.page.getByRole("region", { name: "Last session" })).toContainText("/10");
   await expect(alex.page.getByRole("heading", { name: "Total Breath Score, last 8 weeks" })).toBeVisible();
   await expect(alex.page.getByRole("heading", { name: "From your coach" })).toBeVisible();
