@@ -149,6 +149,18 @@ export interface GamificationPreferences {
   milestones?: boolean;
   /** Milestones already shown, with when (ISO 8601). A milestone in here is never shown again. */
   awarded?: Partial<Record<MilestoneKey, string>>;
+  /** The self-serve program the person follows (J5). Absent until they enrol. */
+  program?: ProgramEnrolment;
+}
+
+/** Self-serve programs (planning/v1/01 §3.8). The content lives in lib/domain/programs.ts. */
+export type ProgramId = "foundations";
+
+/** Enrolment in a program. Its days are done by sessions from `startedAt` on, so only this is stored. */
+export interface ProgramEnrolment {
+  id: ProgramId;
+  /** When the person enrolled (ISO 8601). */
+  startedAt: string;
 }
 
 /**

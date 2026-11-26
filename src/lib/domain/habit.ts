@@ -5,6 +5,7 @@
 // are on and which milestones have already been shown.
 
 import { planDefaults } from "./goal-questions";
+import { PROGRAM_IDS, programProgress } from "./programs";
 import { isTransitionScores } from "./scores";
 import type { BreathGoal, GamificationPreferences, MilestoneKey, SessionSummary, UserPreferences } from "./types";
 
@@ -126,9 +127,13 @@ export const MILESTONE_KEYS = MILESTONES.map((m) => m.key);
 /**
  * Milestones the sessions have earned. Every session starts with a
  * calibration, so the first session is the first calibration. "First program"
- * waits for programs (J5).
+ * is earned when every day of the program the person enrolled in is done.
  */
-export function earnedMilestones(sessions: Pick<SessionSummary, "startedAt" | "mode" | "scores">[], now: Date): MilestoneKey[] {
+export function earnedMilestones(
+  sessions: Pick<SessionSummary, "startedAt" | "mode" | "scores">[],
+  now: Date,
+  g?: GamificationPreferences,
+): MilestoneKey[] {
   const past = sessions.filter((s) => Date.parse(s.startedAt) <= now.getTime());
   const best = streakOf(past, now).best;
   const earned: Record<MilestoneKey, boolean> = {
@@ -138,7 +143,7 @@ export function earnedMilestones(sessions: Pick<SessionSummary, "startedAt" | "m
     "streak-30": best >= 30,
     "sessions-100": past.length >= 100,
     "first-9": past.some((s) => isTransitionScores(s.scores) && s.scores.total >= 9),
-    "first-program": false,
+    "first-program": g?.program ? programProgress(g.program, past, now).finishedAt !== null : false,
   };
   return MILESTONE_KEYS.filter((k) => earned[k]);
 }
@@ -189,7 +194,7 @@ export function gamificationProblem(g: unknown): string | null {
   if (g === undefined) return null;
   if (!isObject(g)) return "gamification: an object";
   for (const key of Object.keys(g)) {
-    if (!["ring", "streak", "milestones", "awarded"].includes(key)) return `gamification: unknown "${key}"`;
+    if (!["ring", "streak", "milestones", "awarded", "program"].includes(key)) return `gamification: unknown "${key}"`;
   }
   for (const key of ["ring", "streak", "milestones"] as const) {
     if (g[key] !== undefined && typeof g[key] !== "boolean") return `gamification.${key}: true or false`;
@@ -200,6 +205,15 @@ export function gamificationProblem(g: unknown): string | null {
       if (!(MILESTONE_KEYS as string[]).includes(key)) return `gamification.awarded: unknown milestone "${key}"`;
       if (typeof at !== "string" || Number.isNaN(Date.parse(at))) return `gamification.awarded.${key}: an ISO date`;
     }
+  }
+  if (g.program !== undefined) {
+    const p = g.program;
+    if (!isObject(p)) return "gamification.program: an object";
+    for (const key of Object.keys(p)) {
+      if (!["id", "startedAt"].includes(key)) return `gamification.program: unknown "${key}"`;
+    }
+    if (!(PROGRAM_IDS as unknown[]).includes(p.id)) return "gamification.program.id: a known program";
+    if (typeof p.startedAt !== "string" || Number.isNaN(Date.parse(p.startedAt))) return "gamification.program.startedAt: an ISO date";
   }
   return null;
 }

@@ -1,35 +1,38 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { award, earnedMilestones, MILESTONES, newMilestones } from "@/lib/domain/habit";
-import type { MilestoneKey, SessionSummary } from "@/lib/domain/types";
+import type { SessionSummary } from "@/lib/domain/types";
+import { useLoad } from "@/lib/useLoad";
+import { changeGamification } from "./gamification";
 
 /**
  * Milestones earned since the last visit (J3), each shown once: what's new is
  * taken when Home opens and marked as shown in `preferences.gamification`
  * straight away, so it stays on screen for this visit and never comes back.
+ * The profile is read afresh: milestones shown or a program finished since
+ * sign-in aren't in the one the app signed in with.
  * No sounds, no confetti.
  */
 export function NewMilestones({ sessions, now }: { sessions: SessionSummary[]; now: Date }) {
   const auth = useAuth();
   const backend = useBackend();
-  const profile = auth.status === "signed-in" ? auth.profile : null;
-  const [fresh] = useState<MilestoneKey[]>(() =>
-    profile?.preferences ? newMilestones(earnedMilestones(sessions, now), profile.preferences.gamification) : [],
-  );
+  const uid = auth.status === "signed-in" ? auth.user.uid : null;
+  const stored = useLoad(uid ? `milestones:${uid}` : null, () => backend.data.getProfile(uid!));
+  const prefs = stored.status === "ready" ? (stored.data?.preferences ?? null) : null;
+  const fresh = useMemo(() => (prefs ? newMilestones(earnedMilestones(sessions, now, prefs.gamification), prefs.gamification) : []), [prefs, sessions, now]);
   const [open, setOpen] = useState(true);
   const saved = useRef(false);
 
   useEffect(() => {
-    const prefs = profile?.preferences;
-    if (saved.current || !profile || !prefs || fresh.length === 0) return;
+    if (saved.current || !uid || fresh.length === 0) return;
     saved.current = true;
     // Not shown again even if this fails: it's a nicety, and the next visit tries again.
-    backend.data.updateProfile(profile.uid, { preferences: { ...prefs, gamification: award(prefs.gamification, fresh, now) } }).catch(() => {
+    changeGamification(backend, uid, (g) => award(g, fresh, now)).catch(() => {
       saved.current = false;
     });
-  }, [backend, profile, fresh, now]);
+  }, [backend, uid, fresh, now]);
 
   if (!open || fresh.length === 0) return null;
   const shown = MILESTONES.filter((m) => fresh.includes(m.key));

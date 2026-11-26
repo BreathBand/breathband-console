@@ -1,7 +1,7 @@
 # T-0124 · feat: one program, Foundations (14 days), with progress
 
-Status: in progress
-Branch: card/T-0124 · Held by: AB_Rouge
+Status: done
+Branch: card/T-0124 · Held by: nobody
 Created: 2026-11-26 · Source: planning/v1/03-launch-checklist.md J5 (Demo: one); 01-product-spec.md §3.8 (programs, "first program" milestone); 02-onboarding-and-tailoring.md §5.1 (Programs promoted: Calm → Foundations (14 d)); 05-demo-plan.md (one program, Foundations)
 
 ## Why
@@ -10,17 +10,17 @@ There are no self-serve programs: Calm's Home has nothing to follow day by day, 
 
 ## Acceptance criteria
 
-- [ ] A1: Foundations is static content: 14 days, each a session preset; day N's preset and its recorder address come from one data module · check: `npx vitest run src/lib/domain/programs.test.ts`
-- [ ] A2: progress from sessions after enrolment: one program day per calendar day, consecutive and missed days (a missed day waits, never skips or resets), today done / next preview, finished · check: `npx vitest run src/lib/domain/programs.test.ts`
-- [ ] A3: finishing awards the "first program" milestone, once · check: `npx vitest run src/lib/domain/habit.test.ts src/lib/domain/programs.test.ts`
-- [ ] A4: enrolment is stored only in `preferences.gamification.program`, validated by the local adapter · check: `npx vitest run src/lib/backend/local`
-- [ ] A5: enrol from Home, start day 1 in one tap with the simulated band, Home shows 1 of 14 · check: `PORT=3203 npx playwright test e2e/program.spec.ts e2e/habit.spec.ts e2e/home-per-goal.spec.ts`
-- [ ] A6: CI passes · check: `npm run check`
+- [x] A1: Foundations is static content: 14 days, each a session preset; day N's preset and its recorder address come from one data module · check: `npx vitest run src/lib/domain/programs.test.ts`
+- [x] A2: progress from sessions after enrolment: one program day per calendar day, consecutive and missed days (a missed day waits, never skips or resets), today done / next preview, finished · check: `npx vitest run src/lib/domain/programs.test.ts`
+- [x] A3: finishing awards the "first program" milestone, once · check: `npx vitest run src/lib/domain/habit.test.ts src/lib/domain/programs.test.ts`
+- [x] A4: enrolment is stored only in `preferences.gamification.program`, validated by the local adapter · check: `npx vitest run src/lib/backend/local`
+- [x] A5: enrol from Home, start day 1 in one tap with the simulated band, Home shows 1 of 14 · check: `PORT=3203 npx playwright test e2e/program.spec.ts e2e/habit.spec.ts e2e/home-per-goal.spec.ts`
+- [x] A6: CI passes · check: `npm run check`
 
 ## Files in scope
 
 - `src/lib/domain/programs.ts`, `src/lib/domain/programs.test.ts` (new)
-- `src/lib/domain/habit.ts` (award "first program"; accept `gamification.program` in its validator), `src/lib/domain/habit.test.ts` (new cases only)
+- `src/lib/domain/habit.ts` (award "first program"; accept `gamification.program` in its validator)
 - `src/lib/domain/types.ts` (additive inside `GamificationPreferences` only)
 - `src/lib/backend/local/program.test.ts` (new)
 - `src/app/cloud/home/**`, `src/app/cloud/AthleteHome.tsx`, `src/app/cloud/home.css`
@@ -44,25 +44,63 @@ There are no self-serve programs: Calm's Home has nothing to follow day by day, 
 
 ## Next step
 
-Build programs.ts and its tests, then the Home card and the e2e.
+Review and merge; then Harry approves or rewrites Foundations' 14 days (J4), and a later card names the program day on the instrument.
 
 ## Decisions
 
 - 2026-11-26: Owner approved 2026-11-26 (overnight note): no dependencies; additive only inside `preferences.gamification`; existing tests may change where stated; never change scoring.
+- 2026-11-26: stored shape `preferences.gamification.program = { id: "foundations", startedAt }` (types `ProgramId`, `ProgramEnrolment`, additive inside `GamificationPreferences`). Days done are read from sessions, not stored. `gamificationProblem` (habit.ts) validates it; the local adapter and `server/routes/profile.ts` already call it, so neither changed. `firestore.rules` has no preferences checks, so unchanged.
+- 2026-11-26: decided for the owner: a program day is done by any session on a calendar day after enrolling, one day per calendar day (alternative: only a session started from the program's link, or one at least the day's length; the instrument is out of scope and doesn't tag sessions).
+- 2026-11-26: decided for the owner: missed days skip nothing and reset nothing; the next day waits, with the line "Day N is waiting for you. A missed day resets nothing: carry on where you left off." (no red, like the paused streak). The enrolment day itself never counts as missed (alternative: days advance by the calendar and missed ones are lost).
+- 2026-11-26: decided for the owner: Foundations' content is drafted in `programs.ts` (open 3 min on days 1-2, 5-5 pacer from day 3 per 02 §3.4, 5 min from day 6, 10 min on day 13, day 14 repeats day 1). Pacer 5-5 only (Harry: 2-2 and 5-5). Pending J4 approval.
+- 2026-11-26: decided for the owner: Calm's Home promotes Foundations (filled "Start Foundations"); Train and Focus see it as a quiet offer (ghost button), since their own programs aren't written; a clinician's client never sees an offer (02 §5.1 "the clinician's plan only"). A finished program stays on Home for 7 days, then hides (alternative: always show the finished card).
+- 2026-11-26: the day link carries `&program=foundations&day=N` after the preset; the instrument ignores them today, so a later card can name the day without changing Home.
+- 2026-11-26: `home/Milestones.tsx` now reads the profile afresh before computing and writing (via new `home/gamification.ts`). Without it, the sign-in profile it wrote from would wipe an enrolment made earlier in the same visit (auth's profile is never refreshed after `updateProfile`). Same files glob; no existing test changed. Validator tests live in `programs.test.ts` and new `backend/local/program.test.ts`; `habit.test.ts` untouched.
 
 ## Questions for me
 
+- [ ] Foundations' 14 days are a draft (src/lib/domain/programs.ts): approve for the demo, or send Harry's version? — Recommended: use the draft for the demo, Harry approves at the 27 Nov check-in. Options: Harry rewrites first; drop to 7 days
+
 ## Parked
+
+- 2026-11-26 [product] The instrument ignores `program`/`day` in its query string: name "Foundations · Day 1" in its bar and on the results · seen on T-0124 · src/app/cloud/record/live/page.tsx
+- 2026-11-26 [product] `useAuth().profile` is never refreshed after `updateProfile`, so Home reads goal and preferences from sign-in until a reload · seen on T-0124 · src/lib/backend/BackendProvider.tsx
+- 2026-11-26 [product] The server types `gamification` as `Record<string, boolean>`; it holds `awarded` and `program` objects · seen on T-0124 · server/db/schema/people.ts
+- 2026-11-26 [product] No way to leave or restart a program · seen on T-0124 · src/app/cloud/home/ProgramCard.tsx
+- 2026-11-26 [product] Seeded "today" sessions can start later than now (hours 6-20), so they're in the future early in the morning · seen on T-0124 · src/lib/backend/local/seed.ts
 
 ## Done
 
-- [ ] Every criterion ticked, with the command run and its result pasted below
-- [ ] Tests, lint and typecheck run; output below
-- [ ] No edits outside "Files in scope" (`git diff --stat` below)
-- [ ] Anything not run is marked UNTESTED, never "verified"
+- [x] Every criterion ticked, with the command run and its result pasted below
+- [x] Tests, lint and typecheck run; output below
+- [x] No edits outside "Files in scope" (`git diff --stat` below)
+- [x] Anything not run is marked UNTESTED, never "verified"
 - [ ] Draft PR opened: # (not tonight: the lead merges)
 
 ### Evidence
 
 ```
+$ npx vitest run src/lib/domain/programs.test.ts src/lib/domain/habit.test.ts      (A1, A2, A3)
+ Test Files  2 passed (2)
+      Tests  45 passed (45)
+$ npx vitest run src/lib/backend/local                                             (A4)
+ Test Files  14 passed (14)
+      Tests  110 passed (110)
+$ PORT=3203 npx playwright test e2e/program.spec.ts e2e/habit.spec.ts e2e/home-per-goal.spec.ts   (A5)
+  ✓ habit.spec.ts › Calm's Home shows the daily ring, and new milestones once
+  ✓ home-per-goal.spec.ts › Home differs for Train, Focus and Calm
+  ✓ home-per-goal.spec.ts › someone linked to a professional sees their card first
+  ✓ habit.spec.ts › a streak pauses after two missed days, in the goal's words and without red
+  ✓ program.spec.ts › enrol in Foundations from Home, do day 1 on the simulated band, see 1 of 14 (1.2m)
+  5 passed (1.2m)
+$ PORT=3203 npx playwright test e2e/demo-path.spec.ts e2e/smoke.spec.ts e2e/results-per-goal.spec.ts   (neighbours on Home)
+  5 passed (2.3m)
+$ npm run check                                                                    (A6: lint, typecheck, test, build)
+ exit 0 · Test Files 93 passed | 1 skipped (94) · Tests 1223 passed | 1 skipped (1224) · 27/27 static pages
+$ git diff --stat main-of-card (80e3f70..working tree)
+ CARD.md, src/app/cloud/AthleteHome.tsx (+3), src/app/cloud/home.css (+82),
+ src/app/cloud/home/Milestones.tsx, src/lib/domain/habit.ts, src/lib/domain/types.ts (+12)
+ new: e2e/program.spec.ts, src/app/cloud/home/ProgramCard.tsx, src/app/cloud/home/gamification.ts,
+      src/lib/backend/local/program.test.ts, src/lib/domain/programs.ts, src/lib/domain/programs.test.ts
+UNTESTED: real Bluetooth band; the http adapter / server path (server/routes/profile.ts uses the same validator, not run tonight); axe not run.
 ```
