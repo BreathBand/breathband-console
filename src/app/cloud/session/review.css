@@ -270,3 +270,85 @@
     break-inside: avoid;
   }
 }
+
+/*
+ * Results per goal (results/tone.ts): the coaching pane, beside the score
+ * when Focus and Calm fold the rest of the numbers away, under it otherwise.
+ */
+.mc-lead {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--s-3);
+}
+
+.mc[data-folded],
+.mc.mc-open[data-folded] {
+  grid-template-columns: 220px minmax(0, 1fr);
+}
+
+.mc[data-folded] .mc-lead {
+  grid-column: auto;
+}
+
+.mc-line {
+  margin: 0;
+  max-width: 62ch;
+  font: 600 var(--t-17) / 1.4 var(--f-sans);
+}
+
+.mc-share {
+  margin: 0;
+  color: var(--c-ink-2);
+}
+
+.mc-share b {
+  margin-right: var(--s-2);
+  font-size: var(--t-36);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--c-ink);
+}
+
+.mc-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  margin: 0;
+  color: var(--c-ink-2);
+}
+
+.mc-tip svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.mc-more {
+  grid-column: 1 / -1;
+}
+
+.mc-more summary {
+  cursor: pointer;
+  width: max-content;
+  font-weight: 600;
+}
+
+.mc-more-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4);
+  margin-top: var(--s-4);
+}
+
+.mc-more-body > .mc-segs {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+  .mc[data-folded],
+  .mc.mc-open[data-folded],
+  .mc-more-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

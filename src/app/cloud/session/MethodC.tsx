@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import { Arrow, Dot } from "@/components/Score";
 import { FIXED_CONSTANTS, OPEN_CONSTANTS } from "@/lib/analysis/config";
 import type { PacedResult } from "@/lib/analysis/paced";
@@ -8,6 +8,7 @@ import { formatDay, formatDuration } from "@/lib/domain/format";
 import { formatScore, isTransitionScores, scoreWord } from "@/lib/domain/scores";
 import type { OpenSpanMetrics, SessionSummary, TransitionScores } from "@/lib/domain/types";
 import type { BreathDeviation } from "@/lib/domain/waveform";
+import type { ResultsEmphasis } from "../results/tone";
 
 const SKILL_WORDS = { beginner: "Beginner", intermediate: "Intermediate", advanced: "Advanced", expert: "Expert" } as const;
 
@@ -48,9 +49,22 @@ function previousTotal(session: SessionSummary, sessions: SessionSummary[]) {
  * Method C's result for a paced session (Appendix, "Paced sessions"): the
  * Total Breath Score, timing and depth for the inhale and the exhale, how much
  * of the session was on target, which way the breathing leaned, and the
- * deviation histogram.
+ * deviation histogram. With `emphasis` from the person's goal, Focus and Calm
+ * keep the score and the coaching pane (`lead`) and fold the rest away.
  */
-export function MethodCScores({ session, sessions, scores }: { session: SessionSummary; sessions: SessionSummary[]; scores: TransitionScores }) {
+export function MethodCScores({
+  session,
+  sessions,
+  scores,
+  emphasis,
+  lead,
+}: {
+  session: SessionSummary;
+  sessions: SessionSummary[];
+  scores: TransitionScores;
+  emphasis?: ResultsEmphasis;
+  lead?: ReactNode;
+}) {
   const details = session.paced;
   const { word, band } = scoreWord(scores.total);
   const prev = previousTotal(session, sessions);
@@ -60,8 +74,10 @@ export function MethodCScores({ session, sessions, scores }: { session: SessionS
   const skill = session.skillLevel ?? "intermediate";
   const k = OPEN_CONSTANTS.skillBandK[skill];
 
+  const folded = emphasis ? !emphasis.detailsOpen : false;
+
   return (
-    <div className="mc">
+    <div className="mc" data-folded={folded || undefined}>
       <section className="pane mc-hero" aria-label="Total Breath Score">
         <span className="lbl">Total Breath Score</span>
         <span className="mc-total display">
@@ -78,86 +94,101 @@ export function MethodCScores({ session, sessions, scores }: { session: SessionS
             : `${delta > 0 ? "+" : delta < 0 ? "−" : "±"}${formatScore(Math.abs(delta))} vs ${formatDay(prev!.startedAt, undefined, false)}`}
         </span>
       </section>
+      {folded && lead}
 
-      <section className="pane pane-pad mc-break" aria-label="Timing and depth">
-        <table className="mc-table">
-          <thead>
-            <tr>
-              <th scope="col">
-                <span className="sr-only">Measure</span>
-              </th>
-              <th scope="col">
-                <Arrow dir="in" /> Inhale
-              </th>
-              <th scope="col">
-                <Arrow dir="out" /> Exhale
-              </th>
-              <th scope="col">On target</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(["timing", "depth"] as const).map((m) => (
-              <tr key={m}>
-                <th scope="row">{m === "timing" ? "Timing" : "Depth"}</th>
-                {(["inhale", "exhale"] as const).map((p) => (
-                  <td key={p}>
-                    <span className="mc-n">{formatScore(scores[m][p])}</span>
-                    <Dot band={scoreWord(scores[m][p]).band} />
-                  </td>
-                ))}
-                <td>
-                  {details ? (
-                    <span className="mc-pct">
-                      <span className="mc-bar" aria-hidden="true">
-                        <i style={{ width: `${details.onTargetPct[m]}%` }} />
-                      </span>
-                      {Math.round(details.onTargetPct[m])}%
-                    </span>
-                  ) : (
-                    "–"
-                  )}
-                </td>
+      <Fold folded={folded}>
+        <section className="pane pane-pad mc-break" aria-label="Timing and depth">
+          <table className="mc-table">
+            <thead>
+              <tr>
+                <th scope="col">
+                  <span className="sr-only">Measure</span>
+                </th>
+                <th scope="col">
+                  <Arrow dir="in" /> Inhale
+                </th>
+                <th scope="col">
+                  <Arrow dir="out" /> Exhale
+                </th>
+                <th scope="col">On target</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {details && (
-          <ul className="mc-lean">
-            <li>
-              <b>Timing:</b> breaths in {timingSentence(details.direction.timing.inhale, sdTime)}, breaths out{" "}
-              {timingSentence(details.direction.timing.exhale, sdTime)}.
-            </li>
-            <li>
-              <b>Depth:</b> breaths in {depthSentence(details.direction.depth.inhale)}, breaths out {depthSentence(details.direction.depth.exhale)}.
-            </li>
-            {details.missed + details.double > 0 && (
+            </thead>
+            <tbody>
+              {(["timing", "depth"] as const).map((m) => (
+                <tr key={m}>
+                  <th scope="row">{m === "timing" ? "Timing" : "Depth"}</th>
+                  {(["inhale", "exhale"] as const).map((p) => (
+                    <td key={p}>
+                      <span className="mc-n">{formatScore(scores[m][p])}</span>
+                      <Dot band={scoreWord(scores[m][p]).band} />
+                    </td>
+                  ))}
+                  <td>
+                    {details ? (
+                      <span className="mc-pct">
+                        <span className="mc-bar" aria-hidden="true">
+                          <i style={{ width: `${details.onTargetPct[m]}%` }} />
+                        </span>
+                        {Math.round(details.onTargetPct[m])}%
+                      </span>
+                    ) : (
+                      "–"
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {details && (
+            <ul className="mc-lean">
               <li>
-                <b>Missed turns:</b> {details.missed} missed and {details.double} doubled of {details.transitions}, each scored 1.
+                <b>Timing:</b> breaths in {timingSentence(details.direction.timing.inhale, sdTime)}, breaths out{" "}
+                {timingSentence(details.direction.timing.exhale, sdTime)}.
               </li>
-            )}
-          </ul>
-        )}
-      </section>
-
-      {details && (
-        <section className="pane pane-pad mc-hist" aria-labelledby="hist-h">
-          <div className="pane-h">
-            <h2 id="hist-h">How close you were</h2>
-            <span className="meta">
-              {SKILL_WORDS[skill]} · on target within ±{k} SD
-            </span>
-          </div>
-          <Histogram label="Timing" words={["early", "late"]} bins={details.histogram.timing} k={k} />
-          <Histogram label="Depth" words={["shallower", "deeper"]} bins={details.histogram.depth} k={k} />
-          <p className="rules">
-            Every turn of the pacer is matched to yours. Timing is measured in steps of half a breath ({sdTime} s here), depth in
-            steps of {FIXED_CONSTANTS.depthSdPctOfMax}% of your maximum. The closer, the more points, up to <b>10</b>; a turn
-            you missed or doubled scores <b>1</b>
-            {details.histogram.missedOrDouble > 0 ? ` (${details.histogram.missedOrDouble} this session)` : ""}.
-          </p>
+              <li>
+                <b>Depth:</b> breaths in {depthSentence(details.direction.depth.inhale)}, breaths out {depthSentence(details.direction.depth.exhale)}.
+              </li>
+              {details.missed + details.double > 0 && (
+                <li>
+                  <b>Missed turns:</b> {details.missed} missed and {details.double} doubled of {details.transitions}, each scored 1.
+                </li>
+              )}
+            </ul>
+          )}
         </section>
-      )}
+
+        {details && (
+          <section className="pane pane-pad mc-hist" aria-labelledby="hist-h">
+            <div className="pane-h">
+              <h2 id="hist-h">How close you were</h2>
+              <span className="meta">
+                {SKILL_WORDS[skill]} · on target within ±{k} SD
+              </span>
+            </div>
+            <Histogram label="Timing" words={["early", "late"]} bins={details.histogram.timing} k={k} />
+            <Histogram label="Depth" words={["shallower", "deeper"]} bins={details.histogram.depth} k={k} />
+            <p className="rules">
+              Every turn of the pacer is matched to yours. Timing is measured in steps of half a breath ({sdTime} s here), depth in
+              steps of {FIXED_CONSTANTS.depthSdPctOfMax}% of your maximum. The closer, the more points, up to <b>10</b>; a turn
+              you missed or doubled scores <b>1</b>
+              {details.histogram.missedOrDouble > 0 ? ` (${details.histogram.missedOrDouble} this session)` : ""}.
+            </p>
+          </section>
+        )}
+      </Fold>
+      {!folded && lead}
     </div>
+  );
+}
+
+/** The numbers a goal doesn't lead with, one click away; as they were when nothing is folded. */
+function Fold({ folded, children }: { folded: boolean; children: ReactNode }) {
+  if (!folded) return <>{children}</>;
+  return (
+    <details className="mc-more">
+      <summary>All the numbers</summary>
+      <div className="mc-more-body">{children}</div>
+    </details>
   );
 }
 
@@ -262,12 +293,13 @@ export function TurnTable({ result, t0, t1 }: { result: PacedResult; t0: number;
 const SEGMENT_WORDS = { before: "Before", between: "Between", after: "After" } as const;
 
 /** The Appendix metrics for an open session, with the marker segments side by side. */
-export function OpenScores({ session }: { session: SessionSummary }) {
+export function OpenScores({ session, emphasis, lead }: { session: SessionSummary; emphasis?: ResultsEmphasis; lead?: ReactNode }) {
   const open = session.open!;
   const m = open.whole;
   const rateOk = m ? m.rateBpm >= FIXED_CONSTANTS.normalRateBpm.min && m.rateBpm <= FIXED_CONSTANTS.normalRateBpm.max : false;
+  const folded = emphasis ? !emphasis.detailsOpen : false;
   return (
-    <div className="mc mc-open">
+    <div className="mc mc-open" data-folded={folded || undefined}>
       <section className="pane mc-hero" aria-label="Breathing rate">
         <span className="lbl">Breathing rate</span>
         <span className="mc-total display">
@@ -288,56 +320,60 @@ export function OpenScores({ session }: { session: SessionSummary }) {
           Normal at rest: {FIXED_CONSTANTS.normalRateBpm.min}–{FIXED_CONSTANTS.normalRateBpm.max} · {open.breaths} breaths
         </span>
       </section>
-      <section className="pane pane-pad mc-metrics" aria-label="Breathing metrics">
-        {m ? <MetricGrid m={m} /> : <p className="muted">Too few breaths to measure rhythm and depth.</p>}
-      </section>
-      {open.segments.length > 0 && (
-        <section className="pane pane-pad mc-segs" aria-labelledby="segs-h">
-          <div className="pane-h">
-            <h2 id="segs-h">Around your markers</h2>
-            <span className="meta">{open.segments.length === 2 ? "Before and after" : "Before, between and after"}</span>
-          </div>
-          <div className="table-scroll">
-            <table className="table segs">
-              <thead>
-                <tr>
-                  <th>Part</th>
-                  <th className="num">Rate</th>
-                  <th className="num">In : out</th>
-                  <th className="num">Depth</th>
-                  <th className="num">Normal rate</th>
-                  <th className="num">Breaths</th>
-                </tr>
-              </thead>
-              <tbody>
-                {open.segments.map((s) => (
-                  <tr key={s.name}>
-                    <td>
-                      <b>{SEGMENT_WORDS[s.name]}</b>{" "}
-                      <span className="muted">
-                        {formatDuration(s.fromS)}–{formatDuration(s.toS)}
-                      </span>
-                    </td>
-                    {s.metrics ? (
-                      <Fragment>
-                        <td className="num">{formatScore(s.metrics.rateBpm)}</td>
-                        <td className="num">1 : {s.metrics.ieRatio.toFixed(1)}</td>
-                        <td className="num">{s.metrics.depthPct.toFixed(1)}%</td>
-                        <td className="num">{Math.round(s.metrics.normalRatePct)}%</td>
-                      </Fragment>
-                    ) : (
-                      <td className="num sub" colSpan={4}>
-                        Too few breaths
-                      </td>
-                    )}
-                    <td className="num">{s.breaths}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {folded && lead}
+      <Fold folded={folded}>
+        <section className="pane pane-pad mc-metrics" aria-label="Breathing metrics">
+          {m ? <MetricGrid m={m} /> : <p className="muted">Too few breaths to measure rhythm and depth.</p>}
         </section>
-      )}
+        {open.segments.length > 0 && (
+          <section className="pane pane-pad mc-segs" aria-labelledby="segs-h">
+            <div className="pane-h">
+              <h2 id="segs-h">Around your markers</h2>
+              <span className="meta">{open.segments.length === 2 ? "Before and after" : "Before, between and after"}</span>
+            </div>
+            <div className="table-scroll">
+              <table className="table segs">
+                <thead>
+                  <tr>
+                    <th>Part</th>
+                    <th className="num">Rate</th>
+                    <th className="num">In : out</th>
+                    <th className="num">Depth</th>
+                    <th className="num">Normal rate</th>
+                    <th className="num">Breaths</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {open.segments.map((s) => (
+                    <tr key={s.name}>
+                      <td>
+                        <b>{SEGMENT_WORDS[s.name]}</b>{" "}
+                        <span className="muted">
+                          {formatDuration(s.fromS)}–{formatDuration(s.toS)}
+                        </span>
+                      </td>
+                      {s.metrics ? (
+                        <Fragment>
+                          <td className="num">{formatScore(s.metrics.rateBpm)}</td>
+                          <td className="num">1 : {s.metrics.ieRatio.toFixed(1)}</td>
+                          <td className="num">{s.metrics.depthPct.toFixed(1)}%</td>
+                          <td className="num">{Math.round(s.metrics.normalRatePct)}%</td>
+                        </Fragment>
+                      ) : (
+                        <td className="num sub" colSpan={4}>
+                          Too few breaths
+                        </td>
+                      )}
+                      <td className="num">{s.breaths}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        )}
+      </Fold>
+      {!folded && lead}
     </div>
   );
 }
