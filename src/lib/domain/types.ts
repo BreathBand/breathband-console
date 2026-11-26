@@ -6,6 +6,7 @@
 // can be told apart (and rescored later if needed).
 
 import type { SkillLevel } from "@/lib/analysis/config";
+import type { ProTemplateId } from "./pro-templates";
 
 export type Role = "athlete" | "coach";
 
@@ -566,4 +567,12 @@ export interface CoachInvite {
   status: "pending" | "accepted" | "declined" | "revoked";
   /** Set once accepted. */
   athleteId: string | null;
+  /**
+   * The first practice the professional set with the invite: one of their
+   * kind's session or plan templates (lib/domain/pro-templates.ts). Accepting
+   * creates it as the person's Assignment, so their first session is that
+   * practice (planning/v1/02 §3.5). Absent when none was chosen, and on
+   * invites made before T-0123.
+   */
+  practice?: ProTemplateId | null;
 }

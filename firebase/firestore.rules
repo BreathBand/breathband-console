@@ -208,7 +208,14 @@ service cloud.firestore {
       allow create: if signedIn()
                     && request.resource.data.coachId == request.auth.uid
                     && request.resource.data.status == 'pending'
-                    && request.resource.data.athleteId == null;
+                    && request.resource.data.athleteId == null
+                    // Practice set with the invite (T-0123): a template id, or absent. The
+                    // Cloud Functions that look up and accept invites check it against the
+                    // professional's kind; accepting writes users/{athleteId}/assignments.
+                    && (!('practice' in request.resource.data)
+                        || request.resource.data.practice == null
+                        || (request.resource.data.practice is string
+                            && request.resource.data.practice.size() <= 40));
       allow update: if signedIn()
                     && resource.data.coachId == request.auth.uid
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])

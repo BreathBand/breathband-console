@@ -1,21 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, type ReactNode } from "react";
 import { Icon, type IconName } from "@/components/Icon";
 import { ErrorState, Skeleton } from "@/components/States";
-import { BackendError } from "@/lib/backend";
+import { BackendError, type CoachInviteLookup } from "@/lib/backend";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { formatLongDay, initials } from "@/lib/domain/format";
-import type { CoachInvite, CoachLink, ShareScope } from "@/lib/domain/types";
+import { inviteHeadline, invitePractice, inviteScope, proTitle } from "@/lib/domain/invite-context";
+import { templateLine } from "@/lib/domain/pro-templates";
+import type { CoachLink, ShareScope } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
 import "./join.css";
 
-// /cloud/join/?code=… — an athlete opens a coach's invite link, sees exactly
-// what the coach would see, chooses the scope and accepts (or declines).
-// Signed-out visitors are sent to sign in or sign up by CloudShell and come
-// back here afterwards.
+// /cloud/join/?code=… — an athlete opens a professional's invite link, sees
+// who's asking in the professional's own terms and exactly what they would
+// see, chooses the scope (starting at what they ask for) and accepts (or
+// declines). Signed-out visitors are sent to sign in or sign up by CloudShell
+// and come back here afterwards. Someone who hasn't finished setting up goes
+// on to onboarding after accepting, with the goal prefilled from the
+// professional's kind and their practice as the first session (T-0123,
+// planning/v1/02 §3.5); an existing account just confirms the share.
 export default function JoinPage() {
   return (
     <Suspense fallback={null}>
@@ -24,10 +30,7 @@ export default function JoinPage() {
   );
 }
 
-type Invite = Pick<
-  CoachInvite,
-  "code" | "coachId" | "coachName" | "expiresAt" | "status"
->;
+type Invite = CoachInviteLookup;
 
 const SCOPES: {
   value: ShareScope;
@@ -97,11 +100,27 @@ function Join() {
       </Frame>
     );
   }
-  return <JoinInvite key={code} athleteId={auth.user.uid} code={code} />;
+  return (
+    <JoinInvite
+      key={code}
+      athleteId={auth.user.uid}
+      code={code}
+      onboarded={Boolean(auth.profile?.preferences?.onboardedAt)}
+    />
+  );
 }
 
-function JoinInvite({ athleteId, code }: { athleteId: string; code: string }) {
+function JoinInvite({
+  athleteId,
+  code,
+  onboarded,
+}: {
+  athleteId: string;
+  code: string;
+  onboarded: boolean;
+}) {
   const backend = useBackend();
+  const router = useRouter();
   const [now] = useState(() => new Date());
   const [answer, setAnswer] = useState<
     | { kind: "accepted"; link: CoachLink | null; scope: ShareScope }
@@ -155,6 +174,16 @@ function JoinInvite({ athleteId, code }: { athleteId: string; code: string }) {
 
   if (answer?.kind === "accepted") {
     const scope = answer.link?.scope ?? answer.scope;
+    if (!onboarded) {
+      // New here: onboarding next, set up from this invite.
+      return (
+        <Frame>
+          <div className="pane pane-pad">
+            <Skeleton lines={3} label="Setting up your account…" />
+          </div>
+        </Frame>
+      );
+    }
     return (
       <Frame>
         <Outcome icon="check" tone="ok" title={`You're sharing with ${coach}`}>
@@ -219,7 +248,12 @@ function JoinInvite({ athleteId, code }: { athleteId: string; code: string }) {
       athleteId={athleteId}
       invite={invite}
       link={link}
-      onAnswered={setAnswer}
+      onAnswered={(a) => {
+        setAnswer(a);
+        if (a.kind === "accepted" && !onboarded) {
+          router.replace(`/cloud/welcome/?invite=${encodeURIComponent(invite.code)}`);
+        }
+      }}
       onInvalid={data.retry}
     />
   );
@@ -322,7 +356,11 @@ function Consent({
   onInvalid: () => void;
 }) {
   const backend = useBackend();
-  const [scope, setScope] = useState<ShareScope>(link?.scope ?? "curves");
+  // Starts at what the professional asks for; the person can lower it before accepting (§3.5).
+  const requested = inviteScope(invite);
+  const [scope, setScope] = useState<ShareScope>(link?.scope ?? requested);
+  const title = proTitle(invite);
+  const practice = invitePractice(invite.coachKind, invite.practice);
   const [busy, setBusy] = useState<"accept" | "decline" | null>(null);
   const [confirmDecline, setConfirmDecline] = useState(false);
   const [error, setError] = useState("");
@@ -464,14 +502,13 @@ function Consent({
           {initials(coach)}
         </span>
         <div className="jn-ask-text">
-          <span className="label">Invitation to share</span>
-          <h1 id="jn-title">
-            {coach} would like to see your Breathband sessions.
-          </h1>
+          <span className="label">Invitation to share from your {title}</span>
+          <h1 id="jn-title">{inviteHeadline(coach, invite, requested)}</h1>
           <p className="muted">
-            Nothing is shared until you accept. Choose what {first} can see,
-            check exactly what that means below, then accept or decline. This
-            link works until {formatLongDay(invite.expiresAt)}.
+            You can change this or stop sharing at any time. Nothing is shared
+            until you accept: choose what {first} can see, check exactly what
+            that means below, then accept or decline. This link works until{" "}
+            {formatLongDay(invite.expiresAt)}.
           </p>
         </div>
       </section>
@@ -485,6 +522,17 @@ function Consent({
             since {formatLongDay(link.createdAt)}). Accepting sets what {first}{" "}
             sees to your choice below. You can also change it under{" "}
             <Link href="/cloud/account/#coaches">Settings</Link>.
+          </span>
+        </p>
+      )}
+
+      {practice && (
+        <p className="jn-notice" role="note">
+          <Icon name="plan" size={18} />
+          <span>
+            {first} has set your first practice: <b>{practice.name}</b> (
+            {templateLine(practice)}). It starts when you accept, and it&apos;s
+            the first session you&apos;ll be offered.
           </span>
         </p>
       )}

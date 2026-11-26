@@ -1,21 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useSyncExternalStore } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState, useSyncExternalStore } from "react";
 import { Icon, Mark, type IconName } from "@/components/Icon";
 import { LiveTrace } from "@/components/LiveTrace";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { useDevice } from "@/lib/device/DeviceProvider";
 import { currentSupport, supportAdvice, UNKNOWN_SUPPORT, type BandSupport } from "@/lib/device/support";
-import { firstSession, firstSessionHref } from "@/lib/domain/first-session";
+import { firstSession, firstSessionHref, suggestedFirstSession } from "@/lib/domain/first-session";
 import { defaultDetails, planDefaults, withOnboardingAnswers, type Plan, type TrackDetails } from "@/lib/domain/goal-questions";
+import { firstAssignment, goalForKind, proTitle } from "@/lib/domain/invite-context";
 import { defaultPreferences, GOALS, goalOf, SKILL_LEVELS, skillBandText } from "@/lib/domain/preferences";
 import { withProDefaults } from "@/lib/domain/pro-defaults";
 import { cleanProProfile, defaultProProfile, practiceProblem, proSummary, usesProblem } from "@/lib/domain/pro-profile";
 import { hasProTerms, proConsents, requiredProConsents } from "@/lib/domain/pro-terms";
 import { peopleNouns } from "@/lib/domain/terminology";
-import type { BandRoute, BreathGoal, CoachInvite, GoalDetails, ProConsentKind, ProKind, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
+import type { Assignment, BandRoute, BreathGoal, CoachInvite, GoalDetails, ProConsentKind, ProKind, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
 import { LENGTHS } from "@/lib/prefs";
+import { useLoad } from "@/lib/useLoad";
 import { markSetupFinished } from "../CloudShell";
 import { stateWords } from "../device/words";
 import { bandSummary, deviceKindFor, finishActions, initialRoute, onboardingFor, ROUTE_OPTIONS, routeAvailable } from "./band-route";
@@ -81,17 +83,62 @@ function savedPlan(p: UserPreferences | null | undefined): Plan | null {
 export default function WelcomePage() {
   const auth = useAuth();
   if (auth.status !== "signed-in" || !auth.profile) return null;
-  return <Welcome key={auth.profile.uid} profile={auth.profile} />;
+  return (
+    <Suspense fallback={null}>
+      <WelcomeFromInvite key={auth.profile.uid} profile={auth.profile} />
+    </Suspense>
+  );
 }
 
-function Welcome({ profile }: { profile: UserProfile }) {
+/** Who invited this person, from the invite they just accepted (T-0123). */
+interface Invited {
+  /** "Aoife Byrne" */
+  name: string;
+  /** "physiotherapist", "coach", "teacher" */
+  title: string;
+  /** The goal their kind starts onboarding with; null when the kind isn't known. */
+  goal: BreathGoal | null;
+  /** The practice they set, which becomes the first session; null when there's none. */
+  assignment: Assignment | null;
+}
+
+/**
+ * `?invite=<code>`: the person arrives from a professional's invite they just
+ * accepted on /cloud/join/ (planning/v1/02 §3.5). Onboarding starts with the
+ * goal prefilled from the professional's kind, and their practice is the
+ * first session. Without the parameter (or for professionals) nothing changes.
+ */
+function WelcomeFromInvite({ profile }: { profile: UserProfile }) {
+  const backend = useBackend();
+  const code = (useSearchParams().get("invite") ?? "").trim().toUpperCase();
+  const key = code && profile.role !== "coach" ? `welcome-invite:${profile.uid}:${code}` : null;
+  const invited = useLoad(key, async (): Promise<Invited | null> => {
+    const invite = await backend.data.getCoachInvite(code);
+    // Only an invite this person accepted sets anything up.
+    if (!invite || invite.status !== "accepted") return null;
+    const assignments = await backend.data.listAssignments(profile.uid);
+    return {
+      name: invite.coachName,
+      title: proTitle(invite),
+      goal: goalForKind(invite.coachKind),
+      assignment: firstAssignment(assignments, invite.coachId, new Date()),
+    };
+  });
+  if (key === null) return <Welcome profile={profile} invited={null} />;
+  if (invited.status === "loading") return null;
+  // An invite that can't be read only loses the prefill; onboarding goes on as usual.
+  return <Welcome profile={profile} invited={invited.status === "ready" ? invited.data : null} />;
+}
+
+function Welcome({ profile, invited }: { profile: UserProfile; invited: Invited | null }) {
   const backend = useBackend();
   const router = useRouter();
   const coach = profile.role === "coach";
   const steps = coach ? COACH_STEPS : ATHLETE_STEPS;
   const [step, setStep] = useState<Step>("name");
   const [name, setName] = useState(profile.displayName);
-  const [prefs, setPrefs] = useState<UserPreferences>(() => profile.preferences ?? defaultPreferences());
+  // Invited by a professional: the goal starts from their kind (§3.5), and can be changed.
+  const [prefs, setPrefs] = useState<UserPreferences>(() => profile.preferences ?? defaultPreferences(invited?.goal ?? undefined));
   // Answers are kept per track while onboarding, so going back to change the goal loses nothing; only the chosen goal's are saved.
   const [answers, setAnswers] = useState<GoalDetails>(() => ({ ...profile.preferences?.goalDetails }));
   // Null until the plan step is touched: until then it follows the track and the answers.
@@ -122,8 +169,11 @@ function Welcome({ profile }: { profile: UserProfile }) {
   const choice = route ? onboardingFor(route, sampleData) : null;
   const answered = withOnboardingAnswers(prefs, answers[prefs.goal] ?? null, plan);
   const final = coach ? prefs : choice ? { ...answered, onboarding: choice } : answered;
-  // With a band in hand, finishing goes straight into fit, calibration and the track's first session (§3.1, order rule).
-  const suggested = firstSession(final);
+  // With a band in hand, finishing goes straight into fit, calibration and the track's first session (§3.1, order rule);
+  // for someone a professional invited, their practice is that first session, locked to its settings (§3.5).
+  const assigned = invited?.assignment ?? null;
+  const suggested = suggestedFirstSession(final, assigned);
+  const invitedFirst = invited?.name.split(" ")[0] ?? "";
   const withBand = choice ? deviceKindFor(choice.bandRoute) !== null : false;
   const actions = finishActions(choice, firstSessionHref(suggested));
   const secondary = actions.secondary;
@@ -238,6 +288,14 @@ function Welcome({ profile }: { profile: UserProfile }) {
             <section>
               <h1>What brings you to Breathband, {first}?</h1>
               <p className="welcome-lede">This sets your starting sessions and weekly goal. It never changes how you&rsquo;re scored.</p>
+              {invited?.goal && (
+                <p className="welcome-hint" role="note">
+                  <Icon name="info" size={16} />
+                  {invited.goal === prefs.goal
+                    ? `Set to ${goalOf(invited.goal).label} because ${invited.name} (${invited.title}) invited you. Change it if another fits you better.`
+                    : `${invited.name} (${invited.title}) invited you; we'd suggested ${goalOf(invited.goal).label}.`}
+                </p>
+              )}
               <div className="goal-cards" role="radiogroup" aria-label="Your goal">
                 {GOALS.map((g) => (
                   <button key={g.id} type="button" role="radio" aria-checked={prefs.goal === g.id} className="goal-card" onClick={() => pickGoal(g.id)}>
@@ -530,8 +588,18 @@ function Welcome({ profile }: { profile: UserProfile }) {
                     <div>
                       <dt>First session</dt>
                       <dd>
-                        {suggested.name} · {suggested.setup.mode === "paced" ? `Paced ${suggested.setup.pacer}-${suggested.setup.pacer}` : "Open"} ·{" "}
+                        {suggested.name}
+                        {assigned ? ` from ${invitedFirst}` : ""} ·{" "}
+                        {suggested.setup.mode === "paced" ? `Paced ${suggested.setup.pacer}-${suggested.setup.pacer}` : "Open"} ·{" "}
                         {Math.round(suggested.setup.lengthSec / 60)} min, after a strap check and calibration
+                      </dd>
+                    </div>
+                  )}
+                  {invited && (
+                    <div>
+                      <dt>Sharing with</dt>
+                      <dd>
+                        {invited.name} ({invited.title})
                       </dd>
                     </div>
                   )}

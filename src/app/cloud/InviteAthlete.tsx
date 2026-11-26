@@ -6,11 +6,13 @@ import { ErrorState, Skeleton } from "@/components/States";
 import { BackendError } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { formatDay } from "@/lib/domain/format";
+import { invitePracticeChoices } from "@/lib/domain/invite-context";
+import { templateLine, type ProTemplateId } from "@/lib/domain/pro-templates";
 import { aPerson } from "@/lib/domain/terminology";
 import type { CoachInvite } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
 import { qrShape } from "./invite-qr";
-import { useTerms } from "./useTerms";
+import { useProKind, useTerms } from "./useTerms";
 import "./join/join.css";
 import "./dashboard/dashboard.css";
 
@@ -191,8 +193,11 @@ export function InviteForm({
 }) {
   const backend = useBackend();
   const t = useTerms();
+  // T-0123: practice set with the invite becomes the person's first session once they accept.
+  const choices = invitePracticeChoices(useProKind());
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
+  const [practice, setPractice] = useState<ProTemplateId | "">("");
   const [status, setStatus] = useState<{ busy: boolean; error: string }>({
     busy: false,
     error: "",
@@ -205,9 +210,11 @@ export function InviteForm({
       const invite = await backend.data.createCoachInvite(coachId, {
         athleteName: name,
         contact,
+        ...(practice ? { practice } : {}),
       });
       setName("");
       setContact("");
+      setPractice("");
       setStatus({ busy: false, error: "" });
       onCreated(invite);
     } catch (err) {
@@ -247,6 +254,19 @@ export function InviteForm({
           aria-describedby={status.error ? "inv-error" : undefined}
         />
       </label>
+      {choices.length > 0 && (
+        <label className="field inv-practice">
+          First practice (optional)
+          <select value={practice} onChange={(e) => setPractice(e.target.value as ProTemplateId | "")}>
+            <option value="">None for now</option>
+            {choices.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name} · {templateLine(c)}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
       <button className="button" type="submit" disabled={status.busy}>
         <Icon name="plus" size={18} />
         {status.busy ? "Creating…" : "Create invite link"}

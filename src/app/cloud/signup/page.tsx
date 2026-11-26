@@ -22,8 +22,11 @@ export default function SignupPage() {
 }
 
 function SignupWithNext() {
-  const { withNext } = useNext();
-  return <SignupForm withNext={withNext} />;
+  const { next, withNext } = useNext();
+  // Arriving from a professional's invite link (T-0123): `?next=` carries the invite code
+  // back to /cloud/join/ once the account exists, where they choose what to share.
+  const invited = next?.startsWith("/cloud/join/") ?? false;
+  return <SignupForm withNext={withNext} invited={invited} />;
 }
 
 type Field = "displayName" | "email" | "password" | "birthYear" | "consentTerms" | "consentData";
@@ -53,7 +56,7 @@ const NEXT_STEP: Record<Role, string> = {
     "You add athletes with invite codes: an athlete creates a one-time code under Sharing and chooses what you see, then you enter it on your Athletes page.",
 };
 
-function SignupForm({ withNext }: { withNext: WithNext }) {
+function SignupForm({ withNext, invited = false }: { withNext: WithNext; invited?: boolean }) {
   const backend = useBackend();
   const [role, setRole] = useState<Role>("athlete");
   const [displayName, setDisplayName] = useState("");
@@ -135,6 +138,16 @@ function SignupForm({ withNext }: { withNext: WithNext }) {
           </Link>
           .
         </p>
+
+        {invited && (
+          <p className="bc-note" role="note">
+            <Icon name="share" size={18} />
+            <span>
+              You&apos;re joining from an invite. Create your account, then you&apos;ll see who invited you and choose exactly what
+              they can see. Nothing is shared until you accept.
+            </span>
+          </p>
+        )}
 
         <form className="bc-form" onSubmit={onSubmit} noValidate aria-busy={busy || undefined}>
           <fieldset className="bc-roles">

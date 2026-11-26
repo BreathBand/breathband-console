@@ -2,12 +2,15 @@ import type {
   AlertRules,
   Assignment,
   AthleteTargets,
+  ClinicianProfession,
   CoachInvite,
   ConsentRecord,
   CoachLink,
+  EducatorRole,
   GroupSession,
   PacerHalfCycle,
   Invite,
+  ProKind,
   SessionComment,
   SessionSummary,
   ShareScope,
@@ -70,6 +73,20 @@ export type NewAssignment = Pick<
   Assignment,
   "athleteId" | "mode" | "pacerHalfCycleSec" | "durationSec" | "target" | "dueAt" | "note"
 >;
+
+/**
+ * What a person sees when they open a professional's invite link (T-0123):
+ * who's asking, in their own terms (kind and profession or role), what they
+ * ask to see, the first practice set with it, and whether it can still be
+ * accepted. Never the contact details. The professional's fields are absent
+ * for accounts from before onboarding asked them.
+ */
+export type CoachInviteLookup = Pick<CoachInvite, "code" | "coachId" | "coachName" | "expiresAt" | "status" | "practice"> & {
+  coachKind?: ProKind | null;
+  coachProfession?: ClinicianProfession | EducatorRole | null;
+  /** The professional's `proProfile.scopeRequested`; absent when they have none (lib/domain/invite-context.ts fills in their kind's). */
+  scopeRequested?: ShareScope | null;
+};
 
 /** A session as the recorder hands it over: everything but what the store assigns. */
 export type NewSession = Omit<SessionSummary, "id" | "athleteId" | "waveformPath">;
@@ -177,8 +194,13 @@ export interface DataService {
   getAlertRules(coachId: string): Promise<AlertRules>;
   saveAlertRules(coachId: string, rules: AlertRules): Promise<void>;
 
-  /** Coaches only: a link to send an athlete, valid for 14 days. */
-  createCoachInvite(coachId: string, input: Pick<CoachInvite, "athleteName" | "contact">): Promise<CoachInvite>;
+  /**
+   * Coaches only: a link to send an athlete, valid for 14 days. `practice`, if
+   * given, is one of the professional's kind's session or plan templates
+   * (lib/domain/invite-context.ts `invitePracticeChoices`); anything else is
+   * "invalid-input".
+   */
+  createCoachInvite(coachId: string, input: Pick<CoachInvite, "athleteName" | "contact" | "practice">): Promise<CoachInvite>;
   /** The coach's invites, newest first. */
   listCoachInvites(coachId: string): Promise<CoachInvite[]>;
   revokeCoachInvite(coachId: string, code: string): Promise<void>;
@@ -186,8 +208,12 @@ export interface DataService {
    * What an athlete sees when they open the link: who's asking, and whether
    * it can still be accepted. Leaves out the contact details.
    */
-  getCoachInvite(code: string): Promise<Pick<CoachInvite, "code" | "coachId" | "coachName" | "expiresAt" | "status"> | null>;
-  /** Athletes only: accept (choosing what to share) or decline. Accepting creates the CoachLink. */
+  getCoachInvite(code: string): Promise<CoachInviteLookup | null>;
+  /**
+   * Athletes only: accept (choosing what to share) or decline. Accepting
+   * creates the CoachLink and, when the invite carries practice, the
+   * Assignment it describes (set by the professional, due from today).
+   */
   respondToCoachInvite(
     athleteId: string,
     code: string,

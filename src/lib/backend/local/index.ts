@@ -3,6 +3,7 @@ import { GROUP_SIZE, pacerAt } from "@/lib/domain/group";
 import { isTransitionScores } from "@/lib/domain/scores";
 import { goalPlanProblem } from "@/lib/domain/goal-questions";
 import { gamificationProblem } from "@/lib/domain/habit";
+import { invitePractice, practiceAssignment } from "@/lib/domain/invite-context";
 import { onboardingProblem } from "@/lib/domain/onboarding";
 import { proProblem } from "@/lib/domain/pro-profile";
 import { proTermsProblem } from "@/lib/domain/pro-terms";
@@ -643,7 +644,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       });
     },
 
-    async createCoachInvite(coachId, { athleteName, contact }) {
+    async createCoachInvite(coachId, { athleteName, contact, practice }) {
       await delay();
       assertIsSelf(coachId);
       const coach = profileOf(coachId);
@@ -651,6 +652,9 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       const name = athleteName.trim().slice(0, 80);
       const to = contact.trim().slice(0, 120);
       if (!name || !(EMAIL_PATTERN.test(to) || /^\+?[\d\s()-]{7,}$/.test(to))) throw new BackendError("invalid-input");
+      // Practice set with the invite must be one of the professional's kind's session or plan templates.
+      const template = practice == null ? null : invitePractice(coach.proKind ?? coach.proProfile?.kind, practice);
+      if (practice != null && !template) throw new BackendError("invalid-input", "practice: one of your kind's session or plan templates");
       const invite: CoachInvite = {
         code: inviteCode(),
         coachId,
@@ -661,6 +665,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
         expiresAt: new Date(now().getTime() + COACH_INVITE_TTL_MS).toISOString(),
         status: "pending",
         athleteId: null,
+        ...(template ? { practice: template.id } : {}),
       };
       mutate((db) => {
         db.coachInvites = [invite, ...db.coachInvites];
@@ -689,7 +694,21 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       const invite = store.read().coachInvites.find((i) => i.code === code.trim().toUpperCase());
       if (!invite) return null;
       const { coachId, coachName, expiresAt, status } = invite;
-      return { code: invite.code, coachId, coachName, expiresAt, status };
+      // Who's asking, in their own terms, and what they ask to see (T-0123). In production the
+      // Cloud Function that serves the lookup reads these from the professional's profile.
+      const coach = store.read().accounts[coachId]?.profile;
+      const coachKind = coach?.proKind ?? coach?.proProfile?.kind ?? null;
+      return {
+        code: invite.code,
+        coachId,
+        coachName,
+        expiresAt,
+        status,
+        practice: invite.practice ?? null,
+        coachKind,
+        coachProfession: coach?.proProfile?.profession ?? null,
+        scopeRequested: coach?.proProfile?.scopeRequested ?? null,
+      };
     },
 
     // In production this runs in a Cloud Function, like redeemInvite.
@@ -714,6 +733,19 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
         scope: answer.scope,
         createdAt: now().toISOString(),
       };
+      // Practice set with the invite becomes the person's assignment, set by the professional, due from today.
+      const coach = store.read().accounts[invite.coachId]?.profile;
+      const template = invitePractice(coach?.proKind ?? coach?.proProfile?.kind, invite.practice);
+      const assignment: Assignment | null = template
+        ? {
+            ...practiceAssignment(template, now()),
+            id: newId("a"),
+            coachId: invite.coachId,
+            athleteId,
+            createdAt: now().toISOString(),
+            cancelled: false,
+          }
+        : null;
       mutate((db) => {
         const i = db.coachInvites.find((x) => x.code === normalized)!;
         i.status = "accepted";
@@ -721,6 +753,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
         const existing = findLink(db, invite.coachId, athleteId);
         if (existing) existing.scope = answer.scope;
         else db.coachLinks.push(link);
+        if (assignment) db.assignments[athleteId] = [assignment, ...(db.assignments[athleteId] ?? [])];
       });
       return findLink(store.read(), invite.coachId, athleteId) ?? link;
     },
