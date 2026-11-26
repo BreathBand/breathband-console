@@ -4,6 +4,10 @@ import { createSeededDb, memoryStore } from "./db";
 import { createLocalBackend } from "./index";
 import { DEFAULT_ALERTS } from "@/lib/domain/types";
 import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, generateWaveform } from "./seed";
+import { currentConsents } from "@/lib/domain/consent";
+
+// Sign-up needs the consents and a 16+ birth year since T-0103.
+const ADULT = { consents: currentConsents(), birthYear: 1990 };
 
 // These tests pin down the behaviour every adapter must have. When the
 // Firebase adapter lands, run the same cases against the emulators.
@@ -40,6 +44,7 @@ describe("auth", () => {
 
   it("signs up a new athlete with an empty history", async () => {
     const user = await backend.auth.signUp({
+      ...ADULT,
       email: "New@Example.com",
       password: "long-enough",
       displayName: "New Person",
@@ -51,9 +56,9 @@ describe("auth", () => {
 
   it("refuses duplicate emails and short passwords", async () => {
     const base = { password: "long-enough", displayName: "X", role: "athlete" as const };
-    await expectCode(backend.auth.signUp({ ...base, email: DEMO_COACH.email }), "email-in-use");
+    await expectCode(backend.auth.signUp({ ...ADULT, ...base, email: DEMO_COACH.email }), "email-in-use");
     await expectCode(
-      backend.auth.signUp({ ...base, email: "a@b.co", password: "short" }),
+      backend.auth.signUp({ ...ADULT, ...base, email: "a@b.co", password: "short" }),
       "weak-password",
     );
   });
@@ -83,6 +88,7 @@ describe("access rules", () => {
 
   it("blocks an unlinked user", async () => {
     await backend.auth.signUp({
+      ...ADULT,
       email: "stranger@example.com",
       password: "long-enough",
       displayName: "Stranger",
@@ -99,6 +105,7 @@ describe("coach invites", () => {
     expect(invite.code).toMatch(/^[A-Z2-9]{8}$/);
 
     const coach = await backend.auth.signUp({
+      ...ADULT,
       email: "coach2@example.com",
       password: "long-enough",
       displayName: "Coach Two",
@@ -134,7 +141,7 @@ describe("sharing scope", () => {
   it("starts a redeemed link with the invite's scope", async () => {
     await backend.auth.signIn(DEMO_ATHLETE.email, DEMO_PASSWORD);
     const invite = await backend.data.createInvite(DEMO_ATHLETE.uid, "scores");
-    const coach = await backend.auth.signUp({ email: "c3@example.com", password: "long-enough", displayName: "C", role: "coach" });
+    const coach = await backend.auth.signUp({ ...ADULT, email: "c3@example.com", password: "long-enough", displayName: "C", role: "coach" });
     expect(await backend.data.redeemInvite(coach.uid, invite.code)).toMatchObject({ scope: "scores" });
   });
 });
@@ -172,7 +179,7 @@ describe("assignments", () => {
     await expectCode(backend.data.createAssignment(DEMO_COACH.uid, { ...input, pacerHalfCycleSec: null }), "invalid-input");
     await expectCode(backend.data.createAssignment(DEMO_COACH.uid, { ...input, dueAt: "2026-11-01T00:00:00.000Z" }), "invalid-input");
 
-    const stranger = await backend.auth.signUp({ email: "s@example.com", password: "long-enough", displayName: "S", role: "coach" });
+    const stranger = await backend.auth.signUp({ ...ADULT, email: "s@example.com", password: "long-enough", displayName: "S", role: "coach" });
     await expectCode(backend.data.createAssignment(stranger.uid, input), "permission-denied");
   });
 });
@@ -193,7 +200,7 @@ describe("comments", () => {
     expect(thread.map((c) => c.authorRole)).toEqual(["coach", "coach", "athlete"]);
     await expectCode(backend.data.deleteComment(DEMO_ATHLETE.uid, session.id, mine.id), "permission-denied");
 
-    const stranger = await backend.auth.signUp({ email: "s@example.com", password: "long-enough", displayName: "S", role: "coach" });
+    const stranger = await backend.auth.signUp({ ...ADULT, email: "s@example.com", password: "long-enough", displayName: "S", role: "coach" });
     await expectCode(backend.data.listComments(DEMO_ATHLETE.uid), "permission-denied");
     await expectCode(backend.data.addComment(DEMO_ATHLETE.uid, session.id, { kind: "kudos", text: "" }), "permission-denied");
     expect(stranger.uid).toBeTruthy();
@@ -291,7 +298,7 @@ describe("group sessions", () => {
     await expectCode(live.data.startGroupSession(group.id), "permission-denied");
     expect(() => live.data.watchGroupLive(group.id, { onPresence() {}, onFrame() {} })).toThrow(BackendError);
 
-    await live.auth.signUp({ email: "x@example.com", password: "long-enough", displayName: "X", role: "athlete" });
+    await live.auth.signUp({ ...ADULT, email: "x@example.com", password: "long-enough", displayName: "X", role: "athlete" });
     await expectCode(live.data.getGroupSession(group.id), "permission-denied");
   });
 
@@ -346,7 +353,7 @@ describe("coach tools", () => {
     const invite = await backend.data.createCoachInvite(DEMO_COACH.uid, { athleteName: "Jo", contact: "jo@example.com" });
     await expectCode(backend.data.createCoachInvite(DEMO_COACH.uid, { athleteName: "Jo", contact: "nope" }), "invalid-input");
 
-    const jo = await backend.auth.signUp({ email: "jo@example.com", password: "long-enough", displayName: "Jo", role: "athlete" });
+    const jo = await backend.auth.signUp({ ...ADULT, email: "jo@example.com", password: "long-enough", displayName: "Jo", role: "athlete" });
     const seen = await backend.data.getCoachInvite(invite.code.toLowerCase());
     expect(seen).toMatchObject({ coachName: DEMO_COACH.displayName, status: "pending" });
     expect(seen).not.toHaveProperty("contact");

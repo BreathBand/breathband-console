@@ -5,6 +5,7 @@ import { Suspense, useRef, useState, type FormEvent } from "react";
 import { Icon, type IconName } from "@/components/Icon";
 import { BackendError, type BackendErrorCode } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
+import { ageGateProblem, currentConsents, UNDER_AGE_MESSAGE } from "@/lib/domain/consent";
 import type { Role } from "@/lib/domain/types";
 import { AuthFrame } from "../auth/AuthFrame";
 import { EMAIL_SHAPE, FormError, PasswordField, SubmitButton, TextField } from "../auth/fields";
@@ -25,14 +26,20 @@ function SignupWithNext() {
   return <SignupForm withNext={withNext} />;
 }
 
-type Field = "displayName" | "email" | "password";
+type Field = "displayName" | "email" | "password" | "birthYear" | "consentTerms" | "consentData";
 type Problem = { field?: Field; message: string; signInLink?: boolean };
 
 const ERRORS: Partial<Record<BackendErrorCode, Problem>> = {
   "email-in-use": { field: "email", message: "An account with that email already exists.", signInLink: true },
   "weak-password": { field: "password", message: "Use at least 8 characters for your password." },
   "invalid-email": { field: "email", message: "That email address doesn't look right." },
+  "under-age": { field: "birthYear", message: UNDER_AGE_MESSAGE },
 };
+
+// DRAFT consent wording, for counsel to review before launch. The versions it
+// records are in lib/domain/consent.ts; change both together.
+const CONSENT_TERMS = "I agree to the terms of use and the privacy notice.";
+const CONSENT_DATA = "Process my breathing data to give me scores.";
 
 const ROLES: { value: Role; title: string; line: string; icon: IconName }[] = [
   { value: "athlete", title: "Athlete", line: "I use a Breathband", icon: "lungs" },
@@ -52,6 +59,9 @@ function SignupForm({ withNext }: { withNext: WithNext }) {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [birthYear, setBirthYear] = useState("");
+  const [termsOk, setTermsOk] = useState(false);
+  const [dataOk, setDataOk] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [busy, setBusy] = useState(false);
   const fieldsRef = useRef<HTMLDivElement>(null);
@@ -66,6 +76,8 @@ function SignupForm({ withNext }: { withNext: WithNext }) {
     if (busy) return;
     const name = displayName.trim();
     const address = email.trim();
+    const year = Number(birthYear.trim());
+    const gate = birthYear.trim() ? ageGateProblem(year, new Date()) : null;
     const check: Problem | null = !name
       ? { field: "displayName", message: "Enter your name." }
       : !address
@@ -74,13 +86,28 @@ function SignupForm({ withNext }: { withNext: WithNext }) {
           ? ERRORS["invalid-email"]!
           : password.length < 8
             ? ERRORS["weak-password"]!
-            : null;
+            : !birthYear.trim()
+              ? { field: "birthYear", message: "Enter the year you were born." }
+              : gate
+                ? { field: "birthYear", message: gate.message }
+                : !termsOk
+                  ? { field: "consentTerms", message: "Agree to the terms and privacy notice to create an account." }
+                  : !dataOk
+                    ? { field: "consentData", message: "Breathband needs this to score your sessions." }
+                    : null;
     if (check) return show(check);
 
     setBusy(true);
     setProblem(null);
     try {
-      await backend.auth.signUp({ email: address, password, displayName: name, role });
+      await backend.auth.signUp({
+        email: address,
+        password,
+        displayName: name,
+        role,
+        birthYear: year,
+        consents: currentConsents(),
+      });
       // CloudShell redirects once the new account is signed in; stay busy until then.
     } catch (e) {
       setBusy(false);
@@ -187,6 +214,36 @@ function SignupForm({ withNext }: { withNext: WithNext }) {
               hint="At least 8 characters."
               error={fieldError("password")}
             />
+            <TextField
+              id="birthYear"
+              label="Year of birth"
+              inputMode="numeric"
+              autoComplete="bday-year"
+              value={birthYear}
+              onChange={setBirthYear}
+              readOnly={busy}
+              hint="Breathband is for people 16 and over. Normal breathing ranges change with age."
+              error={fieldError("birthYear")}
+            />
+            <fieldset className="bc-consents">
+              <legend>Your agreement</legend>
+              <ConsentBox
+                id="consentTerms"
+                label={CONSENT_TERMS}
+                checked={termsOk}
+                onChange={setTermsOk}
+                disabled={busy}
+                error={fieldError("consentTerms")}
+              />
+              <ConsentBox
+                id="consentData"
+                label={CONSENT_DATA}
+                checked={dataOk}
+                onChange={setDataOk}
+                disabled={busy}
+                error={fieldError("consentData")}
+              />
+            </fieldset>
           </div>
 
           {problem && !problem.field && <FormError id="signup-error">{problem.message}</FormError>}
@@ -200,6 +257,46 @@ function SignupForm({ withNext }: { withNext: WithNext }) {
           </Link>
         </p>
       </section>
+    </div>
+  );
+}
+
+function ConsentBox({
+  id,
+  label,
+  checked,
+  onChange,
+  disabled,
+  error,
+}: {
+  id: Field;
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  disabled: boolean;
+  error?: string;
+}) {
+  return (
+    <div>
+      <label className="bc-consent" htmlFor={id}>
+        <input
+          id={id}
+          name={id}
+          type="checkbox"
+          checked={checked}
+          disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <span>{label}</span>
+      </label>
+      {error && (
+        <p className="bc-field-error" id={`${id}-error`} role="alert">
+          <Icon name="alert" size={16} />
+          {error}
+        </p>
+      )}
     </div>
   );
 }
