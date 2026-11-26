@@ -69,7 +69,8 @@ Lead reviews and opens the draft PR; owner answers the questions below.
 
 - [x] Reminders default to on (spec: skip default = track defaults). OK while nothing sends them, given the app asks notification permission after the first session? — Recommended: keep on, so the time is set when sending ships. Options: default off until sending exists.
   Answer: keep on, so the time is set when sending ships
-- [ ] Should mood check-ins be a top-level `preferences.moodCheckins` (spec §7) rather than inside `goalDetails.focus`? — Recommended: move it when the mood check-in is built, as an additive field. Options: approve the top-level field now.
+- [x] Should mood check-ins be a top-level `preferences.moodCheckins` (spec §7) rather than inside `goalDetails.focus`? — Recommended: move it when the mood check-in is built, as an additive field. Options: approve the top-level field now.
+  Answer: move it when the mood check-in is built, as an additive field
 
 ## Parked
 
