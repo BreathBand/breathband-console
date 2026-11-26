@@ -34,7 +34,9 @@ const PHONE = /^\+?[\d\s()-]{7,}$/;
  * 10,000 pending invites about one guess in 100 million finds one. 30 at once
  * still lets a class open a teacher's QR code together from one school network.
  * The public lookup is limited per client IP, the signed-in one per person
- * (an account would otherwise be a way round the public limit).
+ * (an account would otherwise be a way round the public limit). Answering an
+ * invite by code tells as much (a miss is "invite-invalid"), so it shares the
+ * signed-in lookup's budget (T-0133): together, 30 a minute per person.
  */
 export const PUBLIC_LOOKUP_LIMIT = { limit: 30, windowMs: 60_000 } as const;
 export const SIGNED_IN_LOOKUP_LIMIT = { limit: 30, windowMs: 60_000 } as const;
@@ -85,7 +87,9 @@ export function publicCoachInviteRoutes(routes: DataApp, { db }: DataDeps) {
 }
 
 export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
-  const lookups = createRateLimiter(SIGNED_IN_LOOKUP_LIMIT);
+  // One budget per person for everything that takes a code from them: the lookup and the answer (T-0133).
+  const byCode = createRateLimiter(SIGNED_IN_LOOKUP_LIMIT);
+  const perPerson = rateLimit<DataEnv>(byCode, (c) => c.get("uid"));
 
   /** The code for the coach's invite created at `createdAt`. Rotating AUTH_SECRET changes it: older links stop working. */
   const codeOf = (coachId: string, createdAt: Date) =>
@@ -152,7 +156,7 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
   // asking in their own terms and what they ask to see are read from the professional's profile now,
   // as the local adapter does (T-0123).
   // Limited per person (T-0129), so an account isn't a way round the public lookup's limit.
-  routes.get("/coach-invites/:code", rateLimit<DataEnv>(lookups, (c) => c.get("uid")), async (c) => {
+  routes.get("/coach-invites/:code", perPerson, async (c) => {
     const code = normaliseCode(c.req.param("code"));
     const [invite] = await db.select().from(coachInvites).where(eq(coachInvites.codeHash, hashCode(code)));
     if (!invite) fail("not-found");
@@ -172,7 +176,8 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
     return c.json(lookup);
   });
 
-  routes.post("/athletes/:athleteId/coach-invites/:code/response", async (c) => {
+  // Limited per person with the lookup (T-0133): each answer is a guess at a code too.
+  routes.post("/athletes/:athleteId/coach-invites/:code/response", perPerson, async (c) => {
     const { athleteId } = c.req.param();
     const viewer = c.get("uid");
     const athlete = viewer === athleteId ? await loadProfile(db, athleteId, false) : null;

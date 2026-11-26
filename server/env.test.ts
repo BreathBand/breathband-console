@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_DATABASE_URL } from "./db/env";
-import { readEnv } from "./env";
+import { readEnv, trustedProxyHops } from "./env";
 
 describe("readEnv", () => {
   it("defaults to production on 8787 with the local file database", () => {
@@ -68,5 +68,21 @@ describe("readEnv", () => {
     ["SMTP_PORT", "mail"],
   ])("refuses %s=%s, naming the variable", (name, value) => {
     expect(() => readEnv({ [name]: value })).toThrow(name);
+  });
+
+  // T-0133: how many proxies' X-Forwarded-For entries the rate limits believe.
+  it("reads TRUSTED_PROXY_HOPS as a whole number, 0 unless set", () => {
+    expect(trustedProxyHops({})).toBe(0);
+    expect(trustedProxyHops({ TRUSTED_PROXY_HOPS: "" })).toBe(0);
+    expect(trustedProxyHops({ TRUSTED_PROXY_HOPS: "1" })).toBe(1);
+    expect(trustedProxyHops({ TRUSTED_PROXY_HOPS: "2" })).toBe(2);
+  });
+
+  it("refuses a TRUSTED_PROXY_HOPS that isn't a whole number from 0 to 10, at startup too", () => {
+    for (const value of ["-1", "1.5", "two", "11"]) {
+      expect(() => trustedProxyHops({ TRUSTED_PROXY_HOPS: value }), value).toThrow(/TRUSTED_PROXY_HOPS/);
+      expect(() => readEnv({ TRUSTED_PROXY_HOPS: value }), value).toThrow(/TRUSTED_PROXY_HOPS/);
+    }
+    expect(() => readEnv({ TRUSTED_PROXY_HOPS: "2" })).not.toThrow();
   });
 });

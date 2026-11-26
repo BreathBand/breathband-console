@@ -11,6 +11,12 @@ export type Mode = "development" | "test" | "production";
 
 const blankAsUndefined = (value: unknown) => (value === "" ? undefined : value);
 
+// How many proxies in front of the API append to X-Forwarded-For (T-0133). 0, the default, trusts none:
+// the rate limits key on the socket's address, since without a proxy a client writes that header itself.
+// Cloud Run alone is 1 (its front end appends the client's address); behind a load balancer as well, 2.
+// The deploy sets it (I-16). Read per request by clientIp() in server/rate-limit.ts.
+const trustedProxyHopsSchema = z.preprocess(blankAsUndefined, z.coerce.number().int().min(0).max(10).default(0));
+
 const schema = z.object({
   // Unset means production: no stack traces in errors and no CORS unless asked for.
   NODE_ENV: z.preprocess(blankAsUndefined, z.enum(["development", "test", "production"]).default("production")),
@@ -29,6 +35,8 @@ const schema = z.object({
   AUTH_SECRET: z.preprocess(blankAsUndefined, z.string().optional()),
   // The API's public address; links in auth emails point here. See authBaseUrl() in server/auth.ts.
   API_URL: z.preprocess(blankAsUndefined, z.url().optional()),
+  // Validated at startup with the rest; read through trustedProxyHops() below.
+  TRUSTED_PROXY_HOPS: trustedProxyHopsSchema,
 });
 
 export type Env = {
@@ -67,4 +75,15 @@ export function readEnv(source: Record<string, string | undefined> = process.env
     authSecret: env.AUTH_SECRET,
     apiUrl: env.API_URL,
   };
+}
+
+/**
+ * TRUSTED_PROXY_HOPS (see trustedProxyHopsSchema): 0 unless set. Not part of
+ * `Env`: the rate limits read it where they key a request, so it needs no
+ * threading through the app. readEnv() still validates it at startup.
+ */
+export function trustedProxyHops(source: Record<string, string | undefined> = process.env): number {
+  const parsed = trustedProxyHopsSchema.safeParse(source.TRUSTED_PROXY_HOPS);
+  if (!parsed.success) throw new Error(`Invalid environment: TRUSTED_PROXY_HOPS: ${z.prettifyError(parsed.error)}`);
+  return parsed.data;
 }
