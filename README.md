@@ -2,18 +2,40 @@
 
 The Breathband website (`/`) and BreathCloud (`/cloud/`): a web product where athletes record breathing sessions with the Breathband over Bluetooth (or a simulated band), get them scored, review every breath and share them with a coach, and where coaches follow their athletes.
 
-**Status:** local development. The console runs on a local demo backend. The deploy target is Google Cloud Run, prepared but not deployed. The roadmap and the decisions behind it are in [docs/PLAN.md](docs/PLAN.md#decisions).
+**Status:** local development. In development the console talks to the API in `server/` (the `http` backend); the investor demo runs on the browser-only `local` backend. The deploy target is Google Cloud Run, prepared but not deployed. The roadmap and the decisions behind it are in [docs/PLAN.md](docs/PLAN.md#decisions).
 
 ## Quick start
 
 ### Run locally
 
+Development runs the web app on the `http` backend (the default in `.env.example`) against the API on a file database:
+
 ```bash
-nvm use            # Node 22
+nvm use               # Node 22
 npm install
-cp .env.example .env.local
-npm run dev        # http://localhost:3000
+cp .env.example .env.local   # NEXT_PUBLIC_BACKEND=http, NEXT_PUBLIC_API_BASE_URL=http://localhost:8787
+npm run infra:up      # optional: Mailpit, to read auth emails in an inbox (see below)
+npm run db:migrate    # creates data/breathband.db and applies the migrations
+npm run db:seed       # the demo people, password `breathband`
+npm run api:dev       # terminal 1: the API on http://localhost:8787, reloads on change
+npm run dev           # terminal 2: the web app on http://localhost:3000
 ```
+
+- **Two processes, two terminals.** There is no combined script. The web app calls the API cross-origin; in development the API allows `APP_URL`'s origin (default `http://localhost:3000`) with cookies, so if the web app runs on another port, start the API with that `APP_URL`.
+- **The API doesn't read `.env.local`.** `api:dev` loads only `server/development.env` (`NODE_ENV=development`), and the `db:*` scripts read the process environment, so everything uses the file database `data/breathband.db` and the dev-only auth secret unless you pass values in. `.env.local` can hold Turso credentials; nothing here picks them up by accident.
+- **Auth emails** (confirm your address, reset your password) print in the API's terminal. To get them in Mailpit instead, run `npm run infra:up` and start the API with `SMTP_HOST=localhost SMTP_PORT=1025 npm run api:dev`; the inbox is <http://localhost:8025>. A new account signs in only after its confirmation link.
+- **Start over** with `npm run db:reset && npm run db:seed`.
+
+### The local fallback (no API)
+
+The `local` backend needs nothing but the web app: accounts and data live in the browser's localStorage, seeded with the same demo people, and the login page has one-click demo buttons. It is what the investor demo runs ([docs/DEMO.md](docs/DEMO.md)), and what a build gets when `NEXT_PUBLIC_BACKEND` is unset.
+
+```bash
+NEXT_PUBLIC_BACKEND=local npm run dev     # or set it in .env.local
+NEXT_PUBLIC_BACKEND=local npm run build   # the demo build; npm run preview serves it
+```
+
+A value in the environment wins over `.env.local`. The local adapter enforces the same access rules as the API (the shared contract tests run on both), so most screen work can be done on either.
 
 ### Run in a container
 
@@ -27,13 +49,13 @@ Then open <http://localhost:8080/> (emails land in Mailpit on <http://localhost:
 
 The image builds with `NEXT_PUBLIC_BACKEND=http` and an empty API base URL (same origin); `--build-arg NEXT_PUBLIC_BACKEND=local` builds the demo fallback instead. At run time it needs `AUTH_SECRET` (32+ characters) and `SMTP_HOST`; `TURSO_DATABASE_URL` defaults to `file:/app/data/breathband.db`. Behind a proxy, set `TRUSTED_PROXY_HOPS` to how many proxies append to `X-Forwarded-For`: expected 1 for Cloud Run alone and 2 behind an external load balancer, but confirm the real count before deploying (an open question in [docs/deploy.md](docs/deploy.md#open-questions-for-the-owner)). Set it too high and clients can choose their own rate-limit bucket; set it too low and everyone behind the proxy shares one. It defaults to 0, which keys the API's rate limits on the connection's address and ignores the header (see `.env.example`).
 
-Open <http://localhost:3000/cloud/> and sign in with a demo account (password `breathband`, or use the one-click buttons on the sign-in page):
+Open <http://localhost:3000/cloud/> and sign in with a demo account (password `breathband`; on the local fallback, the one-click buttons on the sign-in page):
 
 - `coach@demo.local` (Lena Vos): a coach with five athletes. Lands on the dashboard.
 - `athlete@demo.local` (Alex Morgan): 8 weeks of sessions scored with method C (the five oldest with the legacy 0–100% way), including the five demo faults (early, shallow, too deep, too fast, lost then recovered) and open sessions with markers. Lands on their home.
 - `sam@demo.local` and `priya@demo.local`: the coach's other athletes (one with a score drop, one who hasn't trained for a week).
 
-Demo data lives in your browser's localStorage. Use **Reset** in the sidebar to start over. To record without a band, open **Band**, keep **Simulated band** and press **Start the simulated band**, then **Start a session**. The walkthrough for a demo is in [docs/DEMO.md](docs/DEMO.md).
+On `http` the demo data is in the database (`db:reset` then `db:seed` starts over); on `local` it lives in your browser's localStorage and **Reset** in the sidebar starts over. To record without a band, open **Band**, keep **Simulated band** and press **Start the simulated band**, then **Start a session**. The walkthrough for a demo is in [docs/DEMO.md](docs/DEMO.md).
 
 ### What's in the console
 
@@ -72,7 +94,7 @@ Sessions carry legacy 0–100% scores (`legacy-v1`) or the 1–10 per-transition
 
 ## Local infrastructure
 
-The web app on the local adapter needs none of this. It is for the API (`server/`, see [planning/v1/04-infrastructure.md](planning/v1/04-infrastructure.md)): a database, an SMTP inbox and the environment names every card shares.
+The web app on the local fallback needs none of this. It is for the API (`server/`, see [planning/v1/04-infrastructure.md](planning/v1/04-infrastructure.md)): a database, an SMTP inbox and the environment names every card shares.
 
 ```bash
 cp .env.example .env.local   # once; keeps the defaults below
@@ -107,6 +129,7 @@ Ports: 1025 (SMTP), 8025 (Mailpit UI), 8081 (sqld, only with its profile). Port 
 | `npm run db:seed`   | Writes the demo people into the database (`db:reset` starts it over) |
 | `npm run build:server` | Compiles the API to `build/server/` for the image    |
 | `npm run docker:smoke` | Builds, runs and checks the production image         |
+| `npm run e2e:http`  | The demo e2e on the `http` backend: a fresh seeded file DB (`data/e2e-http.db`), the API on :8797 and the web app on `$PORT` (default 3001); see `playwright.http.config.ts` |
 
 ## How it's put together
 
@@ -135,7 +158,7 @@ Dockerfile                    Cloud Run image: the API serving /api/* and the st
 ```
 
 - **The web build is fully static.** `next build` emits HTML/JS/CSS only. The browser talks to the API in `server/`, and access control lives there (`server/authz.ts`), not in the web app. The local adapter enforces the same rules, and the shared contract tests run against both, so permission errors show up in development.
-- **Screens never import an adapter.** They call `useBackend()`; `NEXT_PUBLIC_BACKEND` picks `local` or `http` at build time. No page changes are needed to switch.
+- **Screens never import an adapter.** They call `useBackend()`; `NEXT_PUBLIC_BACKEND` picks `http` or `local` at build time (unset means `local`). No page changes are needed to switch.
 
 ## Deploy target: Cloud Run (prepared, not deployed)
 

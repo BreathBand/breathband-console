@@ -4,7 +4,8 @@ About 12 minutes, on the laptop, offline. The story is **one product that fits e
 different tracks, a new Calm user set up live, a clinician who onboards, invites, assigns and reviews, and a coach.
 
 This follows `planning/v1/05-demo-plan.md` ("Demo script v2") and uses only what the app does today on the **local**
-backend (accounts and data live in the browser). Where the plan asks for something the app doesn't do yet, the step says
+backend (accounts and data live in the browser; no API, no network). Development now defaults to the `http` backend
+(`.env.example`), so the demo build names `local` explicitly: see "Before the demo", step 1. Where the plan asks for something the app doesn't do yet, the step says
 **not built** with its id in `planning/v1/03-launch-checklist.md`. Skip those parts; don't talk around them.
 
 `e2e/demo-script.spec.ts` walks this script, one test per part. If you change a step here, change the spec in the same
@@ -31,9 +32,12 @@ makes them 16 or over.
 
 On the demo laptop, in this order, the day before and again on the morning.
 
-1. **Build and serve the demo build.** In the repo, with `NEXT_PUBLIC_BACKEND` unset or `local` in `.env.local`:
-   `npm ci`, `npm run build`, then `npm run preview` (serves `out/` at <http://localhost:3000/>). `preview` fetches
-   `serve@14.2.4` through npx the first time, so run it once while online. Leave it running.
+1. **Build and serve the demo build, on the local backend.** In the repo: `npm ci`, then
+   `NEXT_PUBLIC_BACKEND=local npm run build` (in PowerShell: `$env:NEXT_PUBLIC_BACKEND="local"; npm run build`), then
+   `npm run preview` (serves `out/` at <http://localhost:3000/>). Name the backend on the command: a value there wins
+   over `.env.local`, which now defaults to `http` and would build a console that needs the API. To check, the login
+   page must show **Try a demo account**; without it, the build is on `http`. `preview` fetches `serve@14.2.4` through
+   npx the first time, so run it once while online. Leave it running.
    *Not built: one command that does all of this, offline (U3).*
 2. **Run the e2e against it.** In a second terminal:
    `npx playwright test e2e/demo-script.spec.ts e2e/demo-path.spec.ts e2e/demo-people.spec.ts e2e/smoke.spec.ts`.
@@ -125,33 +129,42 @@ Window A: **Sign out** (bottom of the sidebar), then **Create account** (top rig
 10. **Try it yourself** → **Skip for now**.
 11. **Invite your first client**: Client's name "Sean Murphy", an email, **First practice**: "Between visits · Paced 5-5
     · 5 min · daily for 14 days" → **Create invite link**. The link and its **QR code** appear (a client scans it in
-    the room) → **Continue**.
+    the room). Say so, but **don't scan it live**: the link points at `localhost` on this laptop, so a phone can't open
+    it. Press **Copy link** (step 13 uses it) → **Continue**.
 12. **You're set, Aoife.** → **Go to the dashboard**: a **Getting started** checklist for a clinician, and **Sample
     client: Riley**, clearly marked, until a real client joins.
+13. **What Sean sees.** **Sign out**, then paste the copied link into the address bar of the **same window** and open
+    it. Signed out, the invite says who's asking first: "Aoife Byrne (physiotherapist) would like to see your …" (the
+    scope she asked for), her first practice, and **Sign up to accept**. Stop there; don't sign Sean up. It must be
+    the same window: on the local backend the invite exists only in this browser's data, so window B or a phone shows
+    "This invite isn't available".
 
-Now a clinician three weeks in. **Sign out** → **Sign in** → **Sign in as Jordan Lee** (Ana's client, already joined through her
-invite):
+Now a clinician three weeks in. Open <http://localhost:3000/cloud/login/> (not **I already have an account** on the
+invite, which would accept it) → **Sign in as Jordan Lee** (Ana's client, already joined through her invite):
 
-13. Home leads with **From Ana**: "Ana Ruiz, your clinician", "Ana has set your practice: Paced 5-5 · 5:00 · 14 times",
+14. Home leads with **From Ana**: "Ana Ruiz, your clinician", "Ana has set your practice: Paced 5-5 · 5:00 · 14 times",
     10 of 14 done, and her comment. Note the score under **Last session** (6.5 in a fresh seed).
-14. **Record** (sidebar) → **Use these settings** on Ana's practice: Paced, 5 min. Don't start it: that's the assigned
+15. **Record** (sidebar) → **Use these settings** on Ana's practice: Paced, 5 min. Don't start it: that's the assigned
     session.
 
 **Sign out** → **Sign in** → **Sign in as Ana Ruiz**:
 
-15. **Dashboard**: "2 clients"; **Needs a look** (Jordan's comment to answer, Tom behind on his plan); sessions **To
-    review**; the 14-day grid; **Practice due**.
-16. **Clients** → **Jordan Lee** → **Plan**: the practice and its adherence: 10 of 14 sessions done, On track, and the
+16. **Dashboard**: "2 clients"; **Needs a look** (Jordan's comment to answer, and Tom: "N days since the last session",
+    about four in a fresh seed). A clinician starts with the missed-days flag only (`src/lib/domain/default-flags.ts`),
+    so the screen doesn't say "behind on his plan"; don't promise that flag. Then sessions **To review**; the 14-day
+    grid; **Practice due**.
+17. **Clients** → **Jordan Lee** → **Plan**: the practice and its adherence: 10 of 14 sessions done, On track, and the
     days that counted.
-17. **Sessions** → the newest session: exactly Jordan's numbers (the score on his Home), timing and depth, the curve.
+18. **Sessions** → the newest session: exactly Jordan's numbers (the score on his Home), timing and depth, the curve.
     Under **Comments**, write "Steady again, Jordan. Keep the evenings." → **Comment**.
-18. **Clients** → **Jordan Lee** → **Report**: the **Breathing progress report**, prepared by "Ana Ruiz, clinician",
+19. **Clients** → **Jordan Lee** → **Report**: the **Breathing progress report**, prepared by "Ana Ruiz, clinician",
     with **Print or save as PDF**.
 
 **Say:** it's a wellness product; clinicians use it for breathing practice between visits.
 
-*Not built here:* the private-notes hint on a client's **Notes** tab (E14; only the terms step mentions it). The invite
-page for someone who hasn't signed up yet is in progress (T-0129), so the script shows Jordan already joined.
+*Not built here:* the private-notes hint on a client's **Notes** tab (E14; only the terms step mentions it). Step 13
+stops at **Sign up to accept**; Jordan, already joined, stands in for the rest of the invited path (sign-up, accept,
+first practice), which `e2e/invited-path.spec.ts` walks.
 
 ## 5. A coach (2 min)
 
@@ -168,7 +181,8 @@ page for someone who hasn't signed up yet is in progress (T-0129), so the script
 ## 6. What's next (1 min)
 
 Talk only; nothing on screen. The phone app on the same account (*not built: the app syncing with this console's
-backend, T4, V5*); the real backend on Cloud Run (*not in this demo, which runs on the local adapter; Q5*); the beta.
+backend, T4, V5*); the real backend on Cloud Run (*not in this demo, which runs on the local adapter; the same demo people can be seeded
+into the API with `npm run db:seed`, and `npm run e2e:http` runs the demo e2e there; Q5*); the beta.
 
 ## Don't open
 
