@@ -9,10 +9,10 @@
 //
 // While a deletion waits, these are the only data routes the person can use.
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, gt } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { account, accountDeletions, session } from "../db/schema";
-import { deleteAfter } from "../jobs/deletion";
+import { DELETION_DELAY_MS, deleteAfter } from "../jobs/deletion";
 import { exportAccount } from "./account-export";
 import { fail, jsonObject, type DataApp, type DataDeps } from "./data";
 
@@ -55,12 +55,15 @@ export function accountRoutes(routes: DataApp, { db, auth, storage }: DataDeps) 
 
   routes.post("/account/delete/cancel", async (c) => {
     const uid = c.get("uid");
-    const status = await deletionStatus(db, uid);
-    if (!status) fail("not-found", "No deletion is waiting.");
-    if (Date.now() >= new Date(status.deleteAfter).getTime()) {
-      fail("permission-denied", "The 24 hours are up: the account is being deleted.");
+    // One conditional delete: a request the job has claimed (or whose 24 h are up) stays.
+    const cancelled = await db
+      .delete(accountDeletions)
+      .where(and(eq(accountDeletions.userId, uid), gt(accountDeletions.requestedAt, new Date(Date.now() - DELETION_DELAY_MS))))
+      .returning({ userId: accountDeletions.userId });
+    if (cancelled.length === 0) {
+      if (await deletionStatus(db, uid)) fail("permission-denied", "The 24 hours are up: the account is being deleted.");
+      fail("not-found", "No deletion is waiting.");
     }
-    await db.delete(accountDeletions).where(eq(accountDeletions.userId, uid));
     return c.json({ deletion: null });
   });
 

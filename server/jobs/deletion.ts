@@ -4,7 +4,7 @@
 // their waitlist entry). Tests call deleteDueAccounts() with their own clock;
 // main.ts runs it every few minutes with startDeletionJob().
 
-import { eq, inArray, lte, or } from "drizzle-orm";
+import { and, eq, exists, inArray, lte, notExists, or } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { accountDeletions, breathSessions, user, verification, waitlist } from "../db/schema";
 import type { StorageService } from "../storage";
@@ -39,12 +39,11 @@ export async function deleteDueAccounts(deps: DeletionDeps, now: Date = new Date
   const due = await deps.db
     .select({ userId: accountDeletions.userId })
     .from(accountDeletions)
-    .where(lte(accountDeletions.requestedAt, new Date(now.getTime() - DELETION_DELAY_MS)));
+    .where(lte(accountDeletions.requestedAt, dueBefore(now)));
   const run: DeletionRun = { deleted: [], failed: [] };
   for (const { userId } of due) {
     try {
-      await deleteAccount(deps, userId);
-      run.deleted.push(userId);
+      if (await deleteAccount(deps, userId, now)) run.deleted.push(userId);
     } catch (error) {
       run.failed.push({ userId, error });
     }
@@ -52,11 +51,32 @@ export async function deleteDueAccounts(deps: DeletionDeps, now: Date = new Date
   return run;
 }
 
+/** Requests made at or before this are due at `now`. */
+function dueBefore(now: Date): Date {
+  return new Date(now.getTime() - DELETION_DELAY_MS);
+}
+
 /**
- * Deletes the account now. Blobs first: deleting one is idempotent, so a run that
- * fails half way leaves the rows (and the request) for the next run to finish.
+ * A claimed request's `requested_at`: due for every clock, so no cancel (routes/account.ts
+ * deletes only a request newer than 24 h) can remove it once the job has started on it,
+ * and a run that fails half way is claimed again and finished by the next.
  */
-export async function deleteAccount({ db, storage }: DeletionDeps, uid: string): Promise<void> {
+const CLAIMED = new Date(0);
+
+/**
+ * Deletes the account if its request is still due at `now`; false if it was cancelled
+ * meanwhile. The request is claimed before anything is deleted. Blobs next: deleting one
+ * is idempotent, so a run that fails there leaves the claimed request for the next run.
+ * Then one batch, which deletes nothing unless the claimed request is still there.
+ */
+export async function deleteAccount({ db, storage }: DeletionDeps, uid: string, now: Date = new Date()): Promise<boolean> {
+  const claimed = await db
+    .update(accountDeletions)
+    .set({ requestedAt: CLAIMED })
+    .where(and(eq(accountDeletions.userId, uid), lte(accountDeletions.requestedAt, dueBefore(now))))
+    .returning({ userId: accountDeletions.userId });
+  if (claimed.length !== 1) return false;
+
   const [person] = await db.select({ email: user.email }).from(user).where(eq(user.id, uid));
   const blobs = await db.select({ path: breathSessions.waveformPath }).from(breathSessions).where(eq(breathSessions.athleteId, uid));
   for (const { path } of blobs) await storage.delete(path);
@@ -67,13 +87,17 @@ export async function deleteAccount({ db, storage }: DeletionDeps, uid: string):
   const theirs = email
     ? or(eq(verification.value, uid), eq(verification.identifier, email), eq(verification.value, email))
     : eq(verification.value, uid);
+  const stillClaimed = exists(
+    db.select({ userId: accountDeletions.userId }).from(accountDeletions).where(and(eq(accountDeletions.userId, uid), eq(accountDeletions.requestedAt, CLAIMED))),
+  );
+  const userGone = notExists(db.select({ id: user.id }).from(user).where(eq(user.id, uid)));
   await db.batch([
-    db.delete(verification).where(theirs),
-    db.delete(accountDeletions).where(eq(accountDeletions.userId, uid)),
-    // Everything else that names the user goes with the row (foreign keys cascade).
-    db.delete(user).where(eq(user.id, uid)),
-    ...(email ? [db.delete(waitlist).where(eq(waitlist.email, email))] : []),
+    // Everything that names the user goes with the row (foreign keys cascade), the request included.
+    db.delete(user).where(and(eq(user.id, uid), stillClaimed)),
+    db.delete(verification).where(and(theirs, userGone)),
+    ...(email ? [db.delete(waitlist).where(and(eq(waitlist.email, email), userGone))] : []),
   ]);
+  return true;
 }
 
 export type DeletionJobOptions = {

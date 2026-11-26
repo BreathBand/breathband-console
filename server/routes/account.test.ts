@@ -182,7 +182,7 @@ describe("account routes", () => {
     for (const path of anaPaths) expect((await call(app, "GET", path, { cookie: cole.cookie })).status, path).toBe(404);
     expect(await colesAthletes()).toEqual([]);
     const seen = await call(app, "PUT", `/api/v1/coaches/${cole.uid}/seen/${ana.uid}/${saved.id}`, { cookie: cole.cookie });
-    expect(seen.status).toBe(403);
+    expect(seen.status).toBe(404);
 
     const cancelled = await call(app, "POST", "/api/v1/account/delete/cancel", { cookie: back2 });
     expect(cancelled.status).toBe(200);
@@ -216,6 +216,29 @@ describe("account routes", () => {
     expect((await call(app, "GET", "/api/v1/account/delete", { cookie: back })).status).toBe(401);
     const signIn2 = await call(app, "POST", "/api/auth/sign-in/email", { body: { email: ben.email, password: PASSWORD } });
     expect(signIn2.status).toBe(401);
+  });
+
+  it("refuse a cancel once the job has claimed the request, even from a clock behind the job's", async () => {
+    const app = build();
+    const ivy = await signedUp(app, "Ivy");
+    const saved = await json<{ waveformPath: string }>(call(app, "POST", `/api/v1/athletes/${ivy.uid}/sessions`, { cookie: ivy.cookie, body: { session: newSession, waveform } }));
+    expect((await call(app, "POST", "/api/v1/account/delete", { cookie: ivy.cookie, body: { password: PASSWORD } })).status).toBe(200);
+
+    // A job whose clock runs a day ahead claims the request, then stalls on the blobs.
+    const stalled: StorageService = { ...storage, delete: () => Promise.reject(new Error("bucket down")) };
+    const run = await deleteDueAccounts({ db, storage: stalled }, new Date(Date.now() + DELETION_DELAY_MS + 1000));
+    expect(run.failed.map((f) => f.userId)).toEqual([ivy.uid]);
+
+    // By this clock Ivy is inside her 24 h, but the claimed request can't be cancelled.
+    const back = await signIn(app, ivy.email);
+    const cancel = await call(app, "POST", "/api/v1/account/delete/cancel", { cookie: back });
+    expect(cancel.status).toBe(403);
+    expect(await cancel.json()).toMatchObject({ error: { code: "permission-denied" } });
+
+    // The next run finishes it.
+    expect((await deleteDueAccounts({ db, storage })).deleted).toContain(ivy.uid);
+    expect(await db.select().from(user).where(eq(user.id, ivy.uid))).toEqual([]);
+    expect(await storage.getJson(saved.waveformPath)).toBeNull();
   });
 
   it("export every table's rows for the person, with their waveforms, and no one else's private data", async () => {

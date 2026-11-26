@@ -63,6 +63,8 @@ Lead: review and merge into night/2026-11-26; apply migration 0003 (one new tabl
 - 2026-11-26: decided for the owner: cancel is refused (403) once 24 h have passed even if the job hasn't run yet; asking twice keeps the first request's time.
 - 2026-11-26: decided for the owner: the job deletes blobs first (idempotent), then in one batch the verification rows (`value` = user id, as Better Auth's reset-password/delete-account rows store it, or `identifier`/`value` = email, the T-0107 park), the request row, the `user` row (everything else cascades, `access_log` included) and the waitlist row with their email (alternative: keep the waitlist entry as a separate sign-up). One failing account doesn't stop the others; it retries next run. Runs every 10 min from `main.ts`, at start too, never overlapping, `unref`'d, stopped on shutdown.
 - 2026-11-26: decided for the owner: the export is JSON (`format: "breathband-export-v1"`, `tables` keyed by SQL table name, camelCase fields, `waveforms` by session id). In: everything the person owns, both sides of what they share (links, assignments, comments, kudos, coach invites, group sessions they host or joined, access log both ways), and their own coach working data (notes, seen marks, squads, alert rules). Out: other people's private data about them (a coach's notes, seen marks, squads), `verification` and `programs` (listed in `NOT_EXPORTED` with reasons), secrets (session tokens, password hash and OAuth tokens, invite code hashes), and the method per product spec principle 7 (`calibrations.a100/midline`; a waveform's calibration keeps only min and max). Alternative: export calibration values in full as the person's own data.
+- 2026-11-26: fix round (review): the job claims a request before deleting anything (conditional UPDATE of a due `account_deletions` row to `requested_at` = epoch 0, proceed only on exactly one row), blobs only after the claim, and the final batch deletes the user only while the claimed row exists (verification/waitlist only once the user is gone). Cancel is one conditional DELETE of a request newer than 24 h; 0 rows → 403 if a request remains, else 404. A claimed request reads as requested at 1970 until the run finishes (decided for the owner; alternative: a `claimed_at` column, a schema change).
+- 2026-11-26: `peopleInPath` also names `/coaches/{id}/seen/{athleteId}` (a coach's seen mark on a pending athlete now answers 404, was 403; my own test updated). `/coach-invites/{code}` needs a lookup, not a path match: parked.
 
 ## Questions for me
 
@@ -74,6 +76,7 @@ Lead: review and merge into night/2026-11-26; apply migration 0003 (one new tabl
 - 2026-11-26 [product] the "account deleted" email and the spec's "confirm by email" are not sent: needs a mailer template (L2) and the mailer in DataDeps · seen on T-0126 · server/mailer.ts
 - 2026-11-26 [product] "Download my data" CSV of sessions (01 §3.1) not built; the JSON export is built in memory (up to 5 MB per waveform), stream it for large accounts · seen on T-0126 · server/routes/account-export.ts
 - 2026-11-26 [product] while an account waits for deletion, routes that don't name the person still show their id: a group session's `athleteIds`, a coach's squad members; a pending coach's group session stays readable by its athletes · seen on T-0126 · server/routes/group.ts, squads.ts
+- 2026-11-26 [product] `/coach-invites/{code}` (read, respond) still works for an invite from a coach whose account waits for deletion: the coach is found by looking the code up, not in the path · seen on T-0126 · server/routes/coach-invites.ts
 - 2026-11-26 [product] `POST /account/delete` checks the password with no rate limit of its own (Better Auth's limits cover /api/auth only) · seen on T-0126 · server/routes/account.ts
 - 2026-11-26 [product] a coach invite sent to a deleted person by contact (email) stays with the coach (`coach_invites.contact`), as the coach's record · seen on T-0126 · server/db/schema/coaching.ts
 
@@ -117,6 +120,17 @@ exit=0
 ✓ Compiled successfully
 ✓ Generating static pages using 23 workers (27/27)
 (lint and typecheck printed no problems)
+
+Fix round (claim + conditional cancel):
+$ npx vitest run server
+ Test Files  16 passed | 1 skipped (17)
+      Tests  193 passed | 1 skipped (194)
+ (new: "deletes nothing when the request was cancelled after the run picked the account",
+  "deletes nothing for a request that isn't due by the run's clock",
+  "refuse a cancel once the job has claimed the request, even from a clock behind the job's")
+ Mutation: without the claim check (and a never-due sentinel) 4 tests fail.
+$ rm -rf playwright-report test-results; npm run check → exit=0, 1345 passed | 1 skipped, build OK
+$ npm run db:check → Everything's fine
 
 e2e: not run (no user flow changed; no screen uses these routes yet). UNTESTED: the job inside a running
 `npm run api:start` (main.ts wiring is covered by typecheck only).

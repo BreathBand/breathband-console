@@ -12,7 +12,7 @@ import { MIGRATIONS_DIR } from "../db/env";
 import { assertLocalDatabaseUrl } from "../db/guard";
 import { accountDeletions, user } from "../db/schema";
 import { createFsStorage, waveformKey, type StorageService } from "../storage";
-import { DELETION_DELAY_MS, deleteDueAccounts, pendingDeletions, startDeletionJob } from "./deletion";
+import { DELETION_DELAY_MS, deleteAccount, deleteDueAccounts, pendingDeletions, startDeletionJob } from "./deletion";
 import { ALL_TABLES, allRows, seedEverything } from "./fixture";
 
 const dir = mkdtempSync(join(tmpdir(), "breathband-deletion-"));
@@ -104,6 +104,29 @@ describe("deleteDueAccounts", () => {
     const run = await deleteDueAccounts({ db, storage }, at(10 * DELETION_DELAY_MS));
     expect(run.deleted).not.toContain(dee.id);
     expect(await db.select().from(user).where(eq(user.id, dee.id))).toHaveLength(1);
+  });
+
+  it("deletes nothing when the request was cancelled after the run picked the account", async () => {
+    const [ida, jon] = [await person("ida"), await person("jon")];
+    const seeded = await seedEverything(db, storage, ida.id, ida.email, jon.id);
+    await db.insert(accountDeletions).values({ userId: ida.id, requestedAt: T0 });
+    const before = await allRows(db);
+
+    // The run has selected Ida; her cancel lands before it deletes anything.
+    await db.delete(accountDeletions).where(eq(accountDeletions.userId, ida.id));
+    expect(await deleteAccount({ db, storage }, ida.id, at(DELETION_DELAY_MS))).toBe(false);
+
+    expect({ ...(await allRows(db)), account_deletions: [] }).toEqual({ ...before, account_deletions: [] });
+    for (const id of seeded.mySessions) expect(await storage.getJson(waveformKey(ida.id, id))).not.toBeNull();
+  });
+
+  it("deletes nothing for a request that isn't due by the run's clock", async () => {
+    const kim = await person("kim");
+    await db.insert(accountDeletions).values({ userId: kim.id, requestedAt: T0 });
+    expect(await deleteAccount({ db, storage }, kim.id, at(DELETION_DELAY_MS - 1))).toBe(false);
+    expect(await pendingDeletions(db, [kim.id])).toEqual(new Set([kim.id]));
+    expect(await db.select().from(user).where(eq(user.id, kim.id))).toHaveLength(1);
+    await db.delete(accountDeletions).where(eq(accountDeletions.userId, kim.id));
   });
 
   it("carries on past an account that fails, and finishes it on a later run", async () => {

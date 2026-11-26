@@ -124,9 +124,9 @@ export async function linkScope(db: Db, coachId: string, athleteId: string): Pro
   return link?.scope ?? null;
 }
 
-/** The people a data path names: `/users/{uid}`, `/athletes/{id}`, `/coaches/{id}`, `/coach-links/{coachId}/{athleteId}`. */
+/** The people a data path names: `/users/{uid}`, `/athletes/{id}`, `/coaches/{id}`, `/coaches/{id}/seen/{athleteId}`, `/coach-links/{coachId}/{athleteId}`. */
 export function peopleInPath(path: string): string[] {
-  const ids = [...path.matchAll(/\/(?:users|athletes|coaches)\/([^/]+)/g)].map((m) => m[1]);
+  const ids = [...path.matchAll(/\/(?:users|athletes|coaches|seen)\/([^/]+)/g)].map((m) => m[1]);
   const link = path.match(/\/coach-links\/([^/]+)\/([^/]+)/);
   if (link) ids.push(link[1], link[2]);
   return ids.map((id) => {
