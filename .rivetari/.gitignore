@@ -1,8 +1,0 @@
-tasks/
-ai-usage.log
-cache/
-*.bak
-*.bak.*
-# rivetari skills (managed by `rivetari skills sync`)
-skills.state.json
-# end rivetari skills

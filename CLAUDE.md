@@ -20,8 +20,8 @@ Next.js: this version has breaking changes (APIs, conventions, file structure). 
 relevant guide in `node_modules/next/dist/docs/` before writing Next.js code, and heed
 deprecation notices.
 
-`AGENTS.md` is Rivetari's archived contract (kept by the owner's choice). Don't follow it:
-the rules below replace it. `next dev` still maintains its Next.js block there.
+`AGENTS.md` repeats the house rules above for other agents and holds the Next.js block
+that `next dev` maintains. The rules below are how work is done here.
 
 ## How work is done here
 
