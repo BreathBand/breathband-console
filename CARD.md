@@ -33,6 +33,7 @@ Today shows 0 of 3 min.
 - `src/lib/domain/terminology.ts` (new helper only) and its test
 - `e2e/demo-script.spec.ts`, `e2e/p1-*.spec.ts` (only where they assert the old behaviour)
 - new `e2e/demo-polish.spec.ts`
+- `docs/DEMO.md` (added by the lead after T-0136 merged: only the lines describing this card's fixes)
 - `CARD.md`
 
 ## Out of scope
@@ -57,19 +58,7 @@ Today shows 0 of 3 min.
 
 ## Next step
 
-Done: for the lead to review and merge. After T-0136 merges, apply these to `docs/DEMO.md` (the specs already match):
-
-- Part 2, Alex bullet: replace "The band card offers **Start Paced 5-5 · 10 min**;" with "The band card offers
-  **Start Paced 5-5 · 5 min**, Lena's practice;"
-- Part 3, step 14: replace with "**Home** (sidebar): **Streak 1 day**, Today **0 of 3 min** with the line "Good start.
-  Three more minutes finishes today.", the session under **Last session**, and a "First calibration" milestone."
-- Part 4, step 13: append "The start button reads **Start Paced 5-5 · 5 min**: Ana's practice, not Jordan's own
-  Open · 3 min."
-- Part 4, step 14: replace with "**Record** (sidebar) → **Use these settings** under "From your clinician": Paced,
-  5 min (Home's **Start Paced 5-5 · 5 min** opens New session already set to it). Don't start it: that's the assigned
-  session."
-- "Don't open", second sentence: replace with "Don't linger where a clinician's client still sees a coach's words:
-  "· coach" after Ana's name on her comments, and the **From your coach** tab under Sessions (E4)."
+Done: for the lead to review and merge. `docs/DEMO.md` already carries this card's lines (merged on top of T-0136).
 
 ## Decisions
 
@@ -82,6 +71,7 @@ Done: for the lead to review and merge. After T-0136 merges, apply these to `doc
 - 2026-11-26: decided for the owner: Home's side pane follows 02 §5.1 "Sharing default": Calm with no professional shows no practice block; Train keeps "From your coach / Share with a coach in Settings…"; Focus reads "From your teacher / Share with a teacher or counsellor in Settings…"; a linked professional's kind names it (alternative: keep "coach" for Focus too).
 - 2026-11-26: decided for the owner: with a session today but the ring's minutes not met, Calm's line reads "Good start. N more minutes finishes today." (or "N days in a row. N more minutes finishes today."); "Done for today" waits for the minutes; the streak still counts any session (T-0113). Uses today's minutes against `dailyMinutes` even where the ring is hidden (alternative: only where the ring shows).
 - 2026-11-26: `suggestedSession` (AthleteHome) replaced by `startLabel` in `home/tailor.ts`; it had no other users.
+- 2026-11-26: scope widened by the lead after T-0136 merged: DEMO.md lines that describe this card's fixes. Merged origin/night/2026-11-26 (bfa1bd3) keeping all of T-0136; then changed only Part 2 (Alex's start button), Part 3 step 14 (Today and the "Good start" line), Part 4 steps 14 and 15 (numbered 13 and 14 before T-0136: the start button; "Use these settings" under "From your clinician") and the "Don't open" list. Part 3 step 13 (the results screen's "Done for today. Nice.") stays: that screen is unchanged (parked). `e2e/demo-script.spec.ts` needed no further change.
 
 ## Questions for me
 
@@ -141,6 +131,12 @@ Dev server on 3203 stopped; nothing listening on 3203 afterwards. Nothing run ag
 $ git diff --stat 86291b3..HEAD (all in scope)
  CARD.md, e2e/demo-polish.spec.ts (new), e2e/demo-script.spec.ts (1 line), src/app/cloud/AthleteHome.tsx,
  src/app/cloud/home/tailor.ts, src/app/cloud/home/tailor.test.ts, src/app/cloud/record/page.tsx
+
+After merging night (bfa1bd3) and editing DEMO.md:
+$ rm -rf playwright-report test-results && npm run check
+check-exit=0 · lint clean · typecheck clean · Test Files 110 passed | 1 skipped · Tests 1547 passed | 1 skipped · 27/27 static pages
+$ PORT=3203 npx playwright test e2e/demo-polish.spec.ts e2e/demo-script.spec.ts e2e/p1-invite-to-review.spec.ts e2e/smoke.spec.ts
+  12 passed (3.8m)   # demo-polish 4, demo-script 5, p1-invite-to-review 1, smoke 2. Nothing listening on 3203 afterwards.
 
 UNTESTED: the remaining e2e specs (onboarding*, mood, signup-consents, join-public, onboarding-pro*); the static build
 served by `npm run preview`; a person reading the changed screens at 1280 px.

@@ -73,7 +73,7 @@ On the demo laptop, in this order, the day before and again on the morning.
    - **Maya (Calm)**: one warm line ("Ten days in a row. Three minutes today keeps it going."), the band card offers
      **Start Open · 3 min**, a **New milestone** ("Seven days in a row"), **Foundations** at 10 of 14 days done, and her
      last session as a breathing rate. No score charts.
-   - **Alex (Train)**: dense. The band card offers **Start Paced 5-5 · 10 min**; the last session's Total Breath Score
+   - **Alex (Train)**: dense. The band card offers **Start Paced 5-5 · 5 min**, Lena's practice; the last session's Total Breath Score
      with timing and depth for each breath; the week against his plan; **Total Breath Score, last 8 weeks** with the
      target line; the breathing-rate chart; **From your coach** (Lena's practice and her comment).
 
@@ -107,7 +107,8 @@ Window A: **Sign out** (bottom of the sidebar), then **Create account** (top rig
     about 40 seconds press **Stop early**.
 13. **The result**: the breathing rate (about 14 br/min), its word ("In the normal range"), one line ("Done for today.
     Nice.") and one tip ("Same again next time."). → **Save session** opens the review.
-14. **Home** (sidebar): **Streak 1 day**, the session under **Last session**, and a "First calibration" milestone.
+14. **Home** (sidebar): **Streak 1 day**, Today **0 of 3 min** with the line "Good start. Three more minutes finishes
+    today.", the session under **Last session**, and a "First calibration" milestone.
 
 **Say:** a couple of minutes from sign-up to a scored session, guided the whole way.
 
@@ -143,9 +144,10 @@ Now a clinician three weeks in. Open <http://localhost:3000/cloud/login/> (not *
 invite, which would accept it) → **Sign in as Jordan Lee** (Ana's client, already joined through her invite):
 
 14. Home leads with **From Ana**: "Ana Ruiz, your clinician", "Ana has set your practice: Paced 5-5 · 5:00 · 14 times",
-    10 of 14 done, and her comment. Note the score under **Last session** (6.5 in a fresh seed).
-15. **Record** (sidebar) → **Use these settings** on Ana's practice: Paced, 5 min. Don't start it: that's the assigned
-    session.
+    10 of 14 done, and her comment. Note the score under **Last session** (6.5 in a fresh seed). The start button reads
+    **Start Paced 5-5 · 5 min**: Ana's practice, not Jordan's own Open · 3 min.
+15. **Record** (sidebar) → **Use these settings** under "From your clinician": Paced, 5 min (Home's **Start Paced 5-5 ·
+    5 min** opens New session already set to it). Don't start it: that's the assigned session.
 
 **Sign out** → **Sign in** → **Sign in as Ana Ruiz**:
 
@@ -187,8 +189,7 @@ into the API with `npm run db:seed`, and `npm run e2e:http` runs the demo e2e th
 ## Don't open
 
 Settings, **Live group**, Sam and Chris, or anything marked Later. Don't linger where a clinician's client still sees a
-coach's words: "From your coach" above Jordan's practice on **Record**, and "· coach" after Ana's name on her comments
-(E4). Nothing clinical, no condition, never "patient"; never the calibration percentage or scoring internals.
+coach's words: "· coach" after Ana's name on her comments, and the **From your coach** tab under Sessions (E4). Nothing clinical, no condition, never "patient"; never the calibration percentage or scoring internals.
 
 ## If something goes wrong
 
