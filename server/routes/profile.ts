@@ -4,7 +4,7 @@
 // store the consent records, wired into Better Auth by server/auth.ts.
 
 import { APIError } from "better-auth/api";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { ageGateProblem, CONSENT_KINDS, consentsProblem, PRO_CONSENT_KINDS } from "@/lib/domain/consent";
 import { goalPlanProblem } from "@/lib/domain/goal-questions";
 import { gamificationProblem } from "@/lib/domain/habit";
@@ -15,7 +15,7 @@ import { proTermsProblem } from "@/lib/domain/pro-terms";
 import type { ConsentRecord, ProKind, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
 import { canReadPrivateProfile, canReadProfile, canSetProFields, canWriteOwn } from "../authz";
 import type { Db } from "../db/client";
-import { consents, profiles, proProfiles, user } from "../db/schema";
+import { accountDeletions, consents, profiles, proProfiles, user } from "../db/schema";
 import type { ProfilePreferences } from "../db/schema/people";
 import { fail, jsonObject, linkScope, type DataApp, type DataDeps } from "./data";
 
@@ -123,14 +123,18 @@ async function saveProProfile(db: Db, uid: string, p: ProProfile) {
     .onConflictDoUpdate({ target: proProfiles.userId, set: { ...row, updatedAt: new Date() } });
 }
 
-/** The UserProfile for `uid`; birth year and consents only when `withPrivate`. Null if there's no such user. */
+/**
+ * The UserProfile for `uid`; birth year and consents only when `withPrivate`. Null if there's
+ * no such user, or their account is waiting to be deleted (hidden, routes/account.ts).
+ */
 export async function loadProfile(db: Db, uid: string, withPrivate: boolean): Promise<UserProfile | null> {
   const [row] = await db
     .select({ user, profile: profiles, pro: proProfiles })
     .from(user)
     .leftJoin(profiles, eq(profiles.userId, user.id))
     .leftJoin(proProfiles, eq(proProfiles.userId, user.id))
-    .where(eq(user.id, uid));
+    .leftJoin(accountDeletions, eq(accountDeletions.userId, user.id))
+    .where(and(eq(user.id, uid), isNull(accountDeletions.userId)));
   if (!row) return null;
   const { user: u, profile, pro } = row;
 

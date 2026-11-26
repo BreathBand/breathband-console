@@ -22,6 +22,7 @@ import type { Workspace } from "./AthleteWorkspace";
 import { calmLine, homeLayout, professionalOf, trendPeriod, withMechanics } from "./home/tailor";
 import { NewMilestones } from "./home/Milestones";
 import { LatestComment, ProfessionalCard } from "./home/ProfessionalCard";
+import { ProgramCard } from "./home/ProgramCard";
 import { WeekCard } from "./home/WeekCard";
 
 const DAY = 86_400_000;
@@ -122,6 +123,8 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
       {mechanics.milestones && <NewMilestones sessions={sessions} now={now} />}
 
       {layout.professional && <ProfessionalCard ws={ws} pro={layout.professional} />}
+
+      <ProgramCard sessions={sessions} now={now} clinicianClient={professional?.kind === "clinician"} />
 
       <div className="home-grid">
         <LastSession session={latest} sessions={sessions} href={ws.sessionHref(latest.id)} />
