@@ -21,10 +21,12 @@ import {
   pacerValue,
 } from "@/lib/domain/group";
 import { isTransitionScores } from "@/lib/domain/scores";
+import { countPeople } from "@/lib/domain/terminology";
 import type { GroupSession, PacerHalfCycle, SessionSummary, ShareScope } from "@/lib/domain/types";
 import { breathDeviations, waveFrame, type BreathDeviation } from "@/lib/domain/waveform";
 import { useLoad } from "@/lib/useLoad";
 import { sessionHref } from "../../links";
+import { useTerms } from "../../useTerms";
 import { AlignedLanes, MiniRing, MiniTrace, PacerRing, type Lane } from "../LiveCharts";
 import "../group.css";
 
@@ -105,6 +107,7 @@ function lastBreath(b: Buffer, id: string, g: GroupSession): BreathDeviation | u
 
 function GroupLive({ id, viewerId }: { id: string; viewerId: string }) {
   const backend = useBackend();
+  const terms = useTerms();
   const loaded = useLoad(`group:${id}`, () => backend.data.getGroupSession(id));
   const people = useLoad(`group-people:${viewerId}`, async () => {
     const list = await backend.data.listAthletes(viewerId);
@@ -193,7 +196,7 @@ function GroupLive({ id, viewerId }: { id: string; viewerId: string }) {
   }
 
   const names = people.status === "ready" ? people.data : new Map<string, Person>();
-  const person = (uid: string): Person => names.get(uid) ?? { name: "Athlete", scope: "scores" };
+  const person = (uid: string): Person => names.get(uid) ?? { name: terms.One, scope: "scores" };
 
   return (
     <div className="container review group-room" data-status={g.status}>
@@ -211,7 +214,7 @@ function GroupLive({ id, viewerId }: { id: string; viewerId: string }) {
           </span>
         )}
         <span>
-          {formatDay(g.createdAt)} · {describePacer(g)} · {formatDuration(g.durationSec)} planned · {g.athleteIds.length} athletes
+          {formatDay(g.createdAt)} · {describePacer(g)} · {formatDuration(g.durationSec)} planned · {countPeople(g.athleteIds.length, terms)}
         </span>
       </div>
       {error && (
@@ -357,6 +360,7 @@ function LiveRoom({
   onEnd: () => void;
 }) {
   const [view, setView] = useState<"grid" | "aligned">("grid");
+  const terms = useTerms();
   const [confirmEnd, setConfirmEnd] = useState(false);
   const t = buffer.t[buffer.t.length - 1] ?? 0;
   const half = pacerAt(g, t);
@@ -429,7 +433,7 @@ function LiveRoom({
           </div>
         </section>
 
-        <section className="pane pane-pad room-main" aria-label="Athletes">
+        <section className="pane pane-pad room-main" aria-label={terms.Many}>
           <div className="pane-h">
             <h2>{view === "grid" ? "Everyone, live" : "Lined up in time · last 30 s"}</h2>
             <div className="seg" role="group" aria-label="View">
@@ -450,7 +454,7 @@ function LiveRoom({
           ) : (
             <>
               <p className="label">
-                Each athlete&apos;s breathing on one shared clock, against the same pacer, so you can compare them breath by breath.
+                Each {terms.one}&apos;s breathing on one shared clock, against the same pacer, so you can compare them breath by breath.
               </p>
               <Measured height={g.athleteIds.length * 64 + 30}>
                 {(width) => (
@@ -551,6 +555,7 @@ function AthleteCard({
 
 function Results({ g, person }: { g: GroupSession; person: (uid: string) => Person }) {
   const backend = useBackend();
+  const terms = useTerms();
   const sessions = useLoad(`group-results:${g.id}`, async () => {
     const entries = Object.entries(g.results);
     const found = await Promise.all(entries.map(([athleteId, sid]) => backend.data.getSession(athleteId, sid)));
@@ -573,7 +578,7 @@ function Results({ g, person }: { g: GroupSession; person: (uid: string) => Pers
             {took}
             <small> of {g.athleteIds.length}</small>
           </span>
-          <span className="d">athletes</span>
+          <span className="d">{terms.many}</span>
         </section>
         <section className="pane stat">
           <span className="lbl">Length</span>
@@ -599,7 +604,7 @@ function Results({ g, person }: { g: GroupSession; person: (uid: string) => Pers
 
       <section className="pane pane-pad" aria-labelledby="results-h">
         <div className="pane-h">
-          <h2 id="results-h">Each athlete</h2>
+          <h2 id="results-h">Each {terms.one}</h2>
           <span className="meta">Saved to their history as a paced session</span>
         </div>
         {sessions.status === "loading" ? (
@@ -611,7 +616,7 @@ function Results({ g, person }: { g: GroupSession; person: (uid: string) => Pers
             <table className="table">
               <thead>
                 <tr>
-                  <th>Athlete</th>
+                  <th>{terms.One}</th>
                   <th className="num">Total Breath Score</th>
                   <th className="num">Timing in · out</th>
                   <th className="num">Depth in · out</th>

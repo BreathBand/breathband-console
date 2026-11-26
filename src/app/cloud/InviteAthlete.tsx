@@ -6,8 +6,10 @@ import { ErrorState, Skeleton } from "@/components/States";
 import { BackendError } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { formatDay } from "@/lib/domain/format";
+import { aPerson } from "@/lib/domain/terminology";
 import type { CoachInvite } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
+import { useTerms } from "./useTerms";
 import "./join/join.css";
 
 type InviteState = CoachInvite["status"] | "expired";
@@ -65,6 +67,7 @@ export function InviteAthlete({
   onChange: () => void;
 }) {
   const backend = useBackend();
+  const t = useTerms();
   const [now, setNow] = useState(() => new Date());
   const invites = useLoad(`coach-invites:${coachId}`, () =>
     backend.data.listCoachInvites(coachId),
@@ -107,11 +110,11 @@ export function InviteAthlete({
       id="invite-athlete"
     >
       <div className="pane-h">
-        <h2 id="invite-athlete-h">Invite an athlete by text or email</h2>
+        <h2 id="invite-athlete-h">Invite {aPerson(t)} by text or email</h2>
         <span className="meta">Links last 14 days</span>
       </div>
       <p className="muted small-text inv-explain">
-        Nothing is shared until the athlete opens the link, sees exactly what
+        Nothing is shared until the {t.one} opens the link, sees exactly what
         you&apos;ll see, chooses whether you get their breathing curves or
         scores only, and accepts.
       </p>
@@ -145,7 +148,7 @@ export function InviteAthlete({
             <table className="table inv-table">
               <thead>
                 <tr>
-                  <th>Athlete</th>
+                  <th>{t.One}</th>
                   <th>Sent to</th>
                   <th>Sent</th>
                   <th>Status</th>
@@ -185,6 +188,7 @@ function InviteForm({
   onCreated: (invite: CoachInvite) => void;
 }) {
   const backend = useBackend();
+  const t = useTerms();
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [status, setStatus] = useState<{ busy: boolean; error: string }>({
@@ -209,7 +213,7 @@ function InviteForm({
         busy: false,
         error:
           err instanceof BackendError && err.code === "invalid-input"
-            ? "Enter the athlete's name and a valid email address or phone number."
+            ? `Enter the ${t.one}'s name and a valid email address or phone number.`
             : "Couldn't create the invite. Try again.",
       });
     }
@@ -218,7 +222,7 @@ function InviteForm({
   return (
     <form className="inv-form" onSubmit={submit} noValidate>
       <label className="field inv-name">
-        Athlete&apos;s name
+        {t.One}&apos;s name
         <input
           required
           value={name}

@@ -6,8 +6,9 @@ import { ErrorState, Skeleton } from "@/components/States";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { DEFAULT_ALERTS, type AlertRules } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
+import { useTerms } from "../useTerms";
 
-/** What puts an athlete under "Needs a look" on the coach's dashboard and roster. */
+/** What puts someone under "Needs a look" on the coach's dashboard and roster. */
 export function AlertRulesSection({ coachId }: { coachId: string }) {
   const backend = useBackend();
   const rules = useLoad(`alerts:${coachId}`, () => backend.data.getAlertRules(coachId));
@@ -30,6 +31,7 @@ export function AlertRulesSection({ coachId }: { coachId: string }) {
 
 function RulesForm({ coachId, initial }: { coachId: string; initial: AlertRules }) {
   const backend = useBackend();
+  const t = useTerms();
   const [r, setR] = useState(initial);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const dirty = JSON.stringify(r) !== JSON.stringify(initial) && status !== "saved";
@@ -92,7 +94,7 @@ function RulesForm({ coachId, initial }: { coachId: string; initial: AlertRules 
         {boolRule("rateOutOfRange", "An open session with a breathing rate outside their target range")}
         {boolRule("practiceBehind", "Practice falling behind its pace")}
       </ul>
-      <p className="label">Comments waiting for your reply always show. Each athlete&apos;s targets are on their Trends tab.</p>
+      <p className="label">Comments waiting for your reply always show. Each {t.one}&apos;s targets are on their Trends tab.</p>
       <div className="row">
         <button type="submit" className="button" data-size="small" disabled={!dirty || status === "saving"}>
           {status === "saving" ? "Saving…" : "Save"}

@@ -14,6 +14,7 @@ import { bucketAverage, bucketRate, buckets, inPeriod, periodStats, type PeriodS
 import { downloadText, slug } from "@/lib/download";
 import { athleteHref } from "../links";
 import { useTeam, type TeamMember } from "../useTeam";
+import { useTerms } from "../useTerms";
 
 const MAX = 6;
 const PERIODS = [
@@ -49,6 +50,7 @@ export default function TrendsPage() {
 function Compare({ coachId }: { coachId: string }) {
   const [now] = useState(() => new Date());
   const team = useTeam(coachId, now);
+  const terms = useTerms();
   const [days, setDays] = useState<number>(91);
   const [metric, setMetric] = useState<Metric>("score");
   // athleteId → colour slot. Slots stick to the athlete while they stay picked,
@@ -58,14 +60,14 @@ function Compare({ coachId }: { coachId: string }) {
   if (team.status === "loading") {
     return (
       <div className="container review">
-        <Skeleton lines={8} label="Loading your athletes…" />
+        <Skeleton lines={8} label={`Loading your ${terms.many}…`} />
       </div>
     );
   }
   if (team.status === "error") {
     return (
       <div className="container review">
-        <ErrorState error={team.error} what="your athletes" onRetry={team.retry} />
+        <ErrorState error={team.error} what={`your ${terms.many}`} onRetry={team.retry} />
       </div>
     );
   }
@@ -118,8 +120,8 @@ function Compare({ coachId }: { coachId: string }) {
   return (
     <div className="container review">
       <div className="title-row">
-        <h1>Compare athletes</h1>
-        <span>Up to {MAX} athletes week by week, on one chart.</span>
+        <h1>Compare {terms.many}</h1>
+        <span>Up to {MAX} {terms.many} week by week, on one chart.</span>
       </div>
 
       <section className="pane pane-pad compare-controls" aria-label="What to compare">
@@ -141,7 +143,7 @@ function Compare({ coachId }: { coachId: string }) {
         </div>
         <fieldset className="field">
           <legend>
-            Athletes ({chosen.size} of {MAX} at most)
+            {terms.Many} ({chosen.size} of {MAX} at most)
           </legend>
           <div className="chip-picks">
             {members.map((m) => {
@@ -173,7 +175,7 @@ function Compare({ coachId }: { coachId: string }) {
           <span className="meta">{info.note}</span>
         </div>
         {series.length === 0 ? (
-          <p className="muted dash-empty">Pick at least one athlete.</p>
+          <p className="muted dash-empty">Pick at least one {terms.one}.</p>
         ) : (
           <>
             <SeriesKey series={series} />
@@ -199,7 +201,7 @@ function Compare({ coachId }: { coachId: string }) {
       <section className="pane pane-pad" aria-labelledby="compare-table-h">
         <div className="pane-h">
           <h2 id="compare-table-h">Side by side</h2>
-          <span className="meta">Over the last {periodLabel}, against each athlete&apos;s own targets</span>
+          <span className="meta">Over the last {periodLabel}, against each {terms.one}&apos;s own targets</span>
           <button
             type="button"
             className="button toolbar-end"
@@ -216,7 +218,7 @@ function Compare({ coachId }: { coachId: string }) {
           <table className="table compare-table">
             <thead>
               <tr>
-                <th>Athlete</th>
+                <th>{terms.One}</th>
                 <th className="num">Sessions</th>
                 <th className="num">A week</th>
                 <th className="num">Average score</th>
@@ -256,9 +258,10 @@ function compareRows(members: TeamMember[], chosen: Map<string, number>, now: Da
 }
 
 function CompareRow({ m, cur, change }: CompareRowData) {
+  const terms = useTerms();
   return (
     <tr>
-      <Cell label="Athlete">
+      <Cell label={terms.One}>
         <Link className="row-link" href={athleteHref(m.profile.uid, "trends")}>
           {m.profile.displayName}
         </Link>

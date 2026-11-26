@@ -10,7 +10,7 @@ import { assignmentProgress, isOpen, type AssignmentProgress } from "@/lib/domai
 import { sessionsCsv } from "@/lib/domain/csv";
 import { formatLongDay, initials } from "@/lib/domain/format";
 import { targetsFor } from "@/lib/domain/targets";
-import { DEFAULT_ALERTS, type AlertRules, type AthleteTargets, type CoachLink, type SessionComment } from "@/lib/domain/types";
+import { DEFAULT_ALERTS, type AlertRules, type AthleteTargets, type CoachLink, type ProKind, type SessionComment } from "@/lib/domain/types";
 import { downloadText, slug } from "@/lib/download";
 import { useLoad } from "@/lib/useLoad";
 import type { ConsoleContext } from "./AthleteConsole";
@@ -21,6 +21,7 @@ import { NotesTab } from "./NotesTab";
 import { PlanTab } from "./PlanTab";
 import { SessionsTab } from "./SessionsTab";
 import { reportHref, TrendsTab } from "./TrendsTab";
+import { termsOf } from "./useTerms";
 
 /** Everything one athlete's workspace shows, loaded once and shared by the tabs. */
 export interface Workspace extends ConsoleContext {
@@ -36,6 +37,8 @@ export interface Workspace extends ConsoleContext {
   rules: AlertRules;
   targets: AthleteTargets;
   coachName?: string;
+  /** What kind of professional `coachName` is; unset for older accounts (read as a coach). */
+  coachKind?: ProKind;
   now: Date;
   tabHref: (tab: AthleteTab, assign?: boolean) => string;
   reload: () => void;
@@ -56,7 +59,9 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
   const data = useLoad(`workspace:${athleteId}`, async () => {
     const firstCoach = async () => {
       const [coach] = await backend.data.listCoaches(athleteId);
-      return coach ? { name: coach.displayName, link: await backend.data.getCoachLink(coach.uid, athleteId) } : null;
+      return coach
+        ? { name: coach.displayName, kind: coach.proKind ?? coach.proProfile?.kind, link: await backend.data.getCoachLink(coach.uid, athleteId) }
+        : null;
     };
     const [sessions, profile, assignments, comments, link, rules, coach] = await Promise.all([
       backend.data.listSessions(athleteId, { limit: 200 }),
@@ -86,8 +91,9 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
   }
 
   const { sessions, profile, assignments, comments, link, rules, coach } = data.data;
+  const terms = termsOf(auth);
   const ownPreferences = auth.status === "signed-in" ? auth.profile?.preferences : null;
-  const name = (self ? auth.status === "signed-in" && auth.profile?.displayName : profile?.displayName) || "Athlete";
+  const name = (self ? auth.status === "signed-in" && auth.profile?.displayName : profile?.displayName) || (self ? "Athlete" : terms.One);
   const tabHref = (t: AthleteTab, open = false) =>
     self ? (t === "overview" && !open ? "/cloud/" : `/cloud/sessions/?tab=${t}${open ? "&assign=1" : ""}`) : athleteHref(athleteId, t, open);
 
@@ -105,6 +111,7 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
     rules,
     targets: targetsFor(self ? coach?.link : link, self ? ownPreferences : profile?.preferences),
     coachName: coach?.name,
+    coachKind: coach?.kind,
     now,
     tabHref,
     reload: data.retry,
@@ -134,7 +141,7 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
         <nav className="crumbs" aria-label="Breadcrumb">
           <Link href="/cloud/athletes/" className="link">
             <Icon name="chevronLeft" size={18} />
-            Athletes
+            {terms.Many}
           </Link>
         </nav>
       )}
