@@ -59,11 +59,11 @@ test("Home differs for Train, Focus and Calm", async ({ page }, info) => {
   await snap(page, info, "home-calm");
 });
 
-// Maya is linked to Lena, who hasn't set her any practice yet: Lena's card leads her Home.
+// Hana is linked to Lena, who hasn't set her any practice yet: Lena's card leads her Home.
 test("someone linked to a professional sees their card first", async ({ page }, info) => {
   test.setTimeout(120_000);
   await page.goto("/cloud/login/");
-  await page.getByRole("button", { name: /Sign in as Maya Chen/ }).click({ timeout: 30_000 });
+  await page.getByRole("button", { name: /Sign in as Hana Mori/ }).click({ timeout: 30_000 });
   await page.waitForURL((url) => !url.pathname.startsWith("/cloud/login"), { timeout: 60_000 });
 
   const card = page.getByRole("region", { name: "From Lena" });

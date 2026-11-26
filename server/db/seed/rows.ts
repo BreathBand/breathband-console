@@ -8,7 +8,7 @@
 
 import { createHmac } from "node:crypto";
 import { createSeededDb } from "@/lib/backend/local/db";
-import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, DEMO_TEAM, generateWaveform } from "@/lib/backend/local/seed";
+import { DEMO_PASSWORD, DEMO_PEOPLE, generateWaveform } from "@/lib/backend/local/seed";
 import { isTransitionScores } from "@/lib/domain/scores";
 import type { SessionSummary, UserProfile, Waveform } from "@/lib/domain/types";
 import { codeFrom, hashCode } from "../../routes/codes";
@@ -19,9 +19,11 @@ import {
   coachLinks,
   coachNotes,
   comments,
+  consents,
   kudos,
   moodCheckins,
   profiles,
+  proProfiles,
   seenSessions,
   squadMembers,
   squads,
@@ -47,6 +49,10 @@ export interface DemoSession {
 
 export interface DemoRows {
   people: { profile: UserProfile; user: typeof user.$inferInsert; profileRow: typeof profiles.$inferInsert }[];
+  /** The professionals' onboarding answers (Ana, Chris). */
+  proProfiles: (typeof proProfiles.$inferInsert)[];
+  /** Sign-up's and professional onboarding's consent records, for the people seeded with them. */
+  consents: (typeof consents.$inferInsert & { id: string })[];
   sessions: DemoSession[];
   coachLinks: (typeof coachLinks.$inferInsert)[];
   assignments: (typeof assignments.$inferInsert)[];
@@ -61,7 +67,7 @@ export interface DemoRows {
 }
 
 /** Every uid the demo seed owns: the local seed's accounts. */
-export const DEMO_UIDS: readonly string[] = [DEMO_ATHLETE, ...DEMO_TEAM, DEMO_COACH].map((p) => p.uid);
+export const DEMO_UIDS: readonly string[] = DEMO_PEOPLE.map((p) => p.uid);
 
 /**
  * A coach invite's code, as routes/coach-invites.ts derives it (T-0122): an HMAC
@@ -103,6 +109,41 @@ export function demoRows(now: Date, secret: string): DemoRows {
     },
   }));
 
+  // As routes/profile.ts saves a professional profile and keeps consent records.
+  const proProfileRows = people.flatMap(({ profile }) => {
+    const p = profile.proProfile;
+    if (!p) return [];
+    return [
+      {
+        userId: profile.uid,
+        kind: p.kind,
+        organisation: p.organisation,
+        profession: p.profession,
+        sports: p.sports,
+        sportOther: p.sportOther ?? null,
+        level: p.level,
+        country: p.country,
+        useCases: p.useCases,
+        terminology: p.terminology,
+        defaultTargets: p.defaultTargets ?? null,
+        scopeRequested: p.scopeRequested ?? "scores",
+        createdAt: at(profile.createdAt),
+        updatedAt: at(profile.createdAt),
+      },
+    ];
+  });
+  const consentRows = people.flatMap(({ profile }) =>
+    (profile.consents ?? []).map((c) => ({
+      id: demoId(`${profile.uid}-consent-${c.kind}`),
+      userId: profile.uid,
+      kind: c.kind,
+      version: c.version,
+      acceptedAt: at(c.acceptedAt),
+      createdAt: at(c.acceptedAt),
+      updatedAt: at(c.acceptedAt),
+    })),
+  );
+
   const sessions = Object.values(local.sessions)
     .flat()
     .map((s): DemoSession => {
@@ -126,6 +167,8 @@ export function demoRows(now: Date, secret: string): DemoRows {
 
   return {
     people,
+    proProfiles: proProfileRows,
+    consents: consentRows,
     sessions,
     coachLinks: local.coachLinks.map((l) => ({
       coachId: l.coachId,
@@ -170,7 +213,7 @@ export function demoRows(now: Date, secret: string): DemoRows {
     squadMembers: Object.entries(local.squads).flatMap(([coachId, list]) =>
       list.flatMap((q) => q.athleteIds.map((athleteId) => ({ squadId: demoId(q.id), athleteId, coachId }))),
     ),
-    // The local code ("JRDN7K2Q") can't be kept: the API derives a coach invite's code (see coachInviteCode).
+    // The local codes ("RBHL7K2Q", Ana's) can't be kept: the API derives a coach invite's code (see coachInviteCode).
     coachInvites: local.coachInvites.map((i) => ({
       codeHash: hashCode(coachInviteCode(secret, i.coachId, at(i.createdAt))),
       coachId: i.coachId,

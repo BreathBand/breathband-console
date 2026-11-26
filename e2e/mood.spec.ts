@@ -3,15 +3,15 @@ import { signInAsAthlete } from "./auth";
 
 // Focus's mood check-in (J6): five faces before Begin and on the results; the
 // change joins Focus's results line and the trend sits in Home's Focus slot.
-// Maya's goal is Focus and her check-in is on (the default); Alex trains and
+// Hana's goal is Focus and her check-in is on (the default); Alex trains and
 // is never asked. Real time: the simulated band breathes at human speed.
 
 const DB_KEY = "breathband-console:local-db";
-const MAYA = "demo-athlete-4";
+const HANA = "demo-athlete-4";
 
-async function signInAsMaya(page: Page) {
+async function signInAsHana(page: Page) {
   await page.goto("/cloud/login/");
-  await page.getByRole("button", { name: /Sign in as Maya Chen/ }).click({ timeout: 30_000 });
+  await page.getByRole("button", { name: /Sign in as Hana Mori/ }).click({ timeout: 30_000 });
   await page.waitForURL((url) => !url.pathname.startsWith("/cloud/login"), { timeout: 60_000 });
 }
 
@@ -40,9 +40,9 @@ async function snap(page: Page, info: TestInfo, name: string) {
 
 test("a Focus session asks the mood before and after, and the change shows on the results and Home", async ({ page }, info) => {
   test.setTimeout(360_000);
-  await signInAsMaya(page);
+  await signInAsHana(page);
 
-  // Home's Focus slot: the trend from Maya's check-ins of the last two weeks.
+  // Home's Focus slot: the trend from Hana's check-ins of the last two weeks.
   const week = page.getByRole("region", { name: "This week" });
   await expect(week).toContainText(/Your mood (rises|dips|holds steady)/, { timeout: 30_000 });
   await expect(week.getByRole("img", { name: /^Before and after, oldest first/ })).toBeVisible();
@@ -58,7 +58,7 @@ test("a Focus session asks the mood before and after, and the change shows on th
       };
       localStorage.setItem(key, JSON.stringify(db));
     },
-    [DB_KEY, MAYA, examDate] as const,
+    [DB_KEY, HANA, examDate] as const,
   );
   await page.reload();
   await expect(week).toContainText(/Exam in 1[01] days\./, { timeout: 30_000 });
@@ -93,7 +93,7 @@ test("a Focus session asks the mood before and after, and the change shows on th
   expect(sessionId).toBeTruthy();
   const stored = await page.evaluate(
     ([key, uid]) => JSON.parse(localStorage.getItem(key)!).moodCheckins[uid] as { sessionId: string | null; phase: string; mood: number }[],
-    [DB_KEY, MAYA] as const,
+    [DB_KEY, HANA] as const,
   );
   const mine = stored.filter((c) => c.sessionId === sessionId);
   expect(mine.map((c) => [c.phase, c.mood]).sort()).toEqual([

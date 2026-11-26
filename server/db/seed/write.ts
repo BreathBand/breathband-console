@@ -17,9 +17,11 @@ import {
   coachLinks,
   coachNotes,
   comments,
+  consents,
   kudos,
   moodCheckins,
   profiles,
+  proProfiles,
   seenSessions,
   squadMembers,
   squads,
@@ -31,6 +33,8 @@ export const SEED_TABLES = [
   "user",
   "account",
   "profiles",
+  "pro_profiles",
+  "consents",
   "breath_sessions",
   "coach_links",
   "assignments",
@@ -109,6 +113,14 @@ export async function seedDemo({ db, storage, now = new Date(), refresh = false,
   }
 
   const has = (...uids: (string | null | undefined)[]) => uids.every((uid) => !uid || present.has(uid));
+
+  // What professional onboarding and sign-up record: the pro profile, the consent records.
+  await add("pro_profiles", rows.proProfiles.filter((p) => has(p.userId)), (v) =>
+    db.insert(proProfiles).values(v).onConflictDoNothing().returning({ id: proProfiles.userId }),
+  );
+  await add("consents", rows.consents.filter((c) => has(c.userId)), (v) =>
+    db.insert(consents).values(v).onConflictDoNothing().returning({ id: consents.id }),
+  );
 
   // Sessions: the signal first, then the row (as the API saves one).
   const sessions = rows.sessions.filter((s) => has(s.row.athleteId));

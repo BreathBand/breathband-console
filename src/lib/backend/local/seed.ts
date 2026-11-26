@@ -173,7 +173,7 @@ export const DEMO_CLINICIAN: UserProfile = {
     sports: [],
     level: null,
     country: "Ireland",
-    useCases: ["between-visits", "stress-anxiety"],
+    useCases: ["between-visits"],
     terminology: "clients",
     defaultTargets: CLINICIAN_DEFAULTS.defaultTargets,
     scopeRequested: CLINICIAN_DEFAULTS.scopeRequested,
@@ -763,9 +763,10 @@ export function nextExamDay(now: Date): string {
 
 /**
  * The demo people's profiles as seeded on `now`, from their sessions: Sam's
- * exam date, and the milestones already shown. Maya has earned more than she
- * has been shown, so one ("Seven days in a row") waits for her on Home; Ana's
- * clients have seen all theirs, so Jordan's Home opens on Ana's card.
+ * exam date, Maya's Foundations enrolment, and the milestones already shown.
+ * Maya has earned more than she has been shown, so one ("Seven days in a row")
+ * waits for her on Home; Ana's clients have seen all theirs, so Jordan's Home
+ * opens on Ana's card.
  */
 export function seedProfiles(sessions: Record<string, SessionSummary[]>, now: Date): UserProfile[] {
   const shown = (uid: string, keep: (key: MilestoneKey) => boolean) => {
@@ -780,7 +781,12 @@ export function seedProfiles(sessions: Record<string, SessionSummary[]>, now: Da
     const prefs = profile.preferences;
     if (!prefs) return profile;
     if (profile.uid === DEMO_FOCUS.uid && prefs.goalDetails?.focus) prefs.goalDetails.focus.examDates = [nextExamDay(now)];
-    if (profile.uid === DEMO_CALM.uid) prefs.gamification = { ...prefs.gamification, awarded: shown(profile.uid, (k) => k !== "streak-7") };
+    if (profile.uid === DEMO_CALM.uid) {
+      // Enrolled in Foundations (Calm's program) just before her first session, so Home shows her ten days of fourteen.
+      const first = sessions[profile.uid]?.at(-1)?.startedAt;
+      const program = first ? { id: "foundations" as const, startedAt: new Date(Date.parse(first) - 5 * 60_000).toISOString() } : undefined;
+      prefs.gamification = { ...prefs.gamification, awarded: shown(profile.uid, (k) => k !== "streak-7"), ...(program && { program }) };
+    }
     if (DEMO_CLIENTS.some((c) => c.uid === profile.uid)) prefs.gamification = { ...prefs.gamification, awarded: shown(profile.uid, () => true) };
     return profile;
   });

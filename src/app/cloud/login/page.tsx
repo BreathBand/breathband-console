@@ -6,7 +6,17 @@ import { Icon } from "@/components/Icon";
 import { BackendError } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
 // The one screen allowed to import from an adapter: demo sign-in for the local build.
-import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, DEMO_TEAM } from "@/lib/backend/local/seed";
+import {
+  DEMO_ATHLETE,
+  DEMO_CALM,
+  DEMO_CLIENT,
+  DEMO_CLINICIAN,
+  DEMO_COACH,
+  DEMO_EDUCATOR,
+  DEMO_FOCUS,
+  DEMO_PASSWORD,
+  DEMO_TEAM,
+} from "@/lib/backend/local/seed";
 import { AuthFrame } from "../auth/AuthFrame";
 import { EMAIL_SHAPE, FormError, PasswordField, SubmitButton, TextField } from "../auth/fields";
 import { noNext, useNext, type WithNext } from "../auth/useNext";
@@ -28,10 +38,20 @@ function LoginWithNext() {
 
 type Problem = { field?: "email" | "password"; message: string };
 
+// The demo plan's people first (one per track), then the rest of Lena's squad.
 const DEMO = [
   { profile: DEMO_COACH, role: "Coach", about: "Dashboard, roster, practice plans and group sessions" },
   { profile: DEMO_ATHLETE, role: "Athlete", about: "Sessions, trends and sharing with a coach" },
-  ...DEMO_TEAM.map((profile) => ({ profile, role: "Athlete", about: `Another of ${DEMO_COACH.displayName}'s athletes` })),
+  { profile: DEMO_CALM, role: "Calm", about: "A daily habit: ten days in a row and Foundations under way" },
+  { profile: DEMO_FOCUS, role: "Focus", about: "Exams coming up, with mood check-ins around sessions" },
+  { profile: DEMO_CLINICIAN, role: "Clinician", about: "Clients on a between-visits plan" },
+  { profile: DEMO_CLIENT, role: `${DEMO_CLINICIAN.displayName}'s client`, about: "Joined through an invite; follows the plan" },
+  { profile: DEMO_EDUCATOR, role: "Educator", about: "A class of six students" },
+  ...DEMO_TEAM.filter((p) => p.uid !== DEMO_FOCUS.uid).map((profile) => ({
+    profile,
+    role: "Athlete",
+    about: `Another of ${DEMO_COACH.displayName}'s athletes`,
+  })),
 ];
 
 function LoginForm({ withNext }: { withNext: WithNext }) {

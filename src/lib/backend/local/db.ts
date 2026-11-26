@@ -178,7 +178,11 @@ function addDemoPeople(stored: StoredDb, now: Date): LocalDb | null {
   }
 
   const sam = db.accounts[DEMO_FOCUS.uid]?.profile;
-  if (sam?.preferences?.goal === "train" && !sam.preferences.goalDetails) sam.preferences = structuredClone(seeded(sam.uid).preferences);
+  // Sam moves to Focus only while his preferences are still the v9 seed's (Train, no goal answers); what he was shown stays.
+  if (sam?.preferences?.goal === "train" && !sam.preferences.goalDetails) {
+    const shown = sam.preferences.gamification;
+    sam.preferences = { ...structuredClone(seeded(sam.uid).preferences!), ...(shown && { gamification: shown }) };
+  }
   if (sam && !db.moodCheckins[sam.uid]?.length) {
     const moods = seedMoodCheckins(seededOnly({ [sam.uid]: db.sessions[sam.uid] ?? [] }), now)[sam.uid];
     if (moods?.length) db.moodCheckins[sam.uid] = moods;

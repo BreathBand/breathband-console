@@ -39,3 +39,25 @@ export function signInAsCoach(page: Page): Promise<void> {
 export function signInAsAthlete(page: Page): Promise<void> {
   return signInAs(page, "Alex Morgan", "demo-athlete");
 }
+
+// The demo plan's people (planning/v1/05, T-0127).
+
+export function signInAsCalm(page: Page): Promise<void> {
+  return signInAs(page, "Maya Brooks", "demo-maya");
+}
+
+export function signInAsFocus(page: Page): Promise<void> {
+  return signInAs(page, "Sam Okafor", "demo-athlete-2");
+}
+
+export function signInAsClinician(page: Page): Promise<void> {
+  return signInAs(page, "Ana Ruiz", "demo-ana");
+}
+
+export function signInAsClient(page: Page): Promise<void> {
+  return signInAs(page, "Jordan Lee", "demo-jordan");
+}
+
+export function signInAsEducator(page: Page): Promise<void> {
+  return signInAs(page, "Chris Park", "demo-chris");
+}
