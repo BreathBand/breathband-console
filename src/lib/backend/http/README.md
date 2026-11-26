@@ -76,6 +76,8 @@ These are proposals, not a published API; I-08..I-10 settle them. They are copie
 | `updateSessionNote` | `PUT` | `/v1/athletes/{athleteId}/sessions/{sessionId}/note` |
 | `saveSession` | `POST` | `/v1/athletes/{athleteId}/sessions` |
 | `deleteSession` | `DELETE` | `/v1/athletes/{athleteId}/sessions/{sessionId}` |
+| `saveMoodCheckins` | `PUT` | `/v1/athletes/{athleteId}/sessions/{sessionId}/mood` |
+| `listMoodCheckins` | `GET` | `/v1/athletes/{athleteId}/mood-checkins` |
 | `listAthletes` | `GET` | `/v1/coaches/{coachId}/athletes` |
 | `listCoaches` | `GET` | `/v1/athletes/{athleteId}/coaches` |
 | `getCoachLink` | `GET` | `/v1/coach-links/{coachId}/{athleteId}` |

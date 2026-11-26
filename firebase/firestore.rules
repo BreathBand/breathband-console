@@ -109,6 +109,26 @@ service cloud.firestore {
                       && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['cancelled']);
         allow delete: if false;
       }
+
+      // Mood check-ins around a session (Focus, J6): the person's own, and no one
+      // else's, not even a linked coach's. Replacing a session's check-ins is a
+      // delete and a create. When the session is deleted, only `sessionId` may
+      // change, to null.
+      match /moodCheckins/{checkinId} {
+        allow read, delete: if isSelf(uid);
+        allow create: if isSelf(uid)
+                      && request.resource.data.keys().hasOnly(['id', 'athleteId', 'sessionId', 'phase', 'mood', 'createdAt'])
+                      && request.resource.data.athleteId == uid
+                      && request.resource.data.sessionId is string
+                      && exists(/databases/$(database)/documents/users/$(uid)/sessions/$(request.resource.data.sessionId))
+                      && request.resource.data.phase in ['before', 'after']
+                      && request.resource.data.mood is int
+                      && request.resource.data.mood >= 1
+                      && request.resource.data.mood <= 5;
+        allow update: if isSelf(uid)
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sessionId'])
+                      && request.resource.data.sessionId == null;
+      }
     }
 
     // Coach links: created only by the redeemInvite Cloud Function (Admin SDK

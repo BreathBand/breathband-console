@@ -5,6 +5,7 @@ import type {
   CoachLink,
   GroupSession,
   Invite,
+  MoodCheckin,
   SessionComment,
   SessionSummary,
   Squad,
@@ -12,7 +13,7 @@ import type {
   WaitlistEntry,
   Waveform,
 } from "@/lib/domain/types";
-import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, DEMO_TEAM, seedCoaching, seedSessions } from "./seed";
+import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, DEMO_TEAM, seedCoaching, seedMoodCheckins, seedSessions } from "./seed";
 
 // The local adapter's "database": one JSON document, persisted to
 // localStorage in the browser and kept in memory everywhere else (tests,
@@ -24,7 +25,7 @@ export interface LocalAccount {
 }
 
 // Bump when the seed or the shape changes, so browsers holding older demo data reseed.
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 
 export interface LocalDb {
   version: typeof DB_VERSION;
@@ -48,6 +49,8 @@ export interface LocalDb {
   coachInvites: CoachInvite[];
   /** Newest first. */
   groupSessions: GroupSession[];
+  /** By athlete id, newest first: mood check-ins around sessions (Focus, J6). */
+  moodCheckins: Record<string, MoodCheckin[]>;
   /** Signals saved by group sessions, by waveformPath. Other sessions' signals are generated from the seed. */
   recordedWaveforms: Record<string, Waveform>;
   waitlist: (WaitlistEntry & { createdAt: string })[];
@@ -78,6 +81,7 @@ export function createSeededDb(now = new Date()): LocalDb {
     ...seedCoaching(sessions, now),
     alertRules: {},
     groupSessions: [],
+    moodCheckins: seedMoodCheckins(sessions, now),
     recordedWaveforms: {},
     waitlist: [],
     currentUid: null,

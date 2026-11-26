@@ -37,6 +37,10 @@ export const HTTP_ROUTES: HttpRoutes = {
     updateSessionNote: { method: "PUT", path: "/v1/athletes/{athleteId}/sessions/{sessionId}/note" },
     saveSession: { method: "POST", path: "/v1/athletes/{athleteId}/sessions" },
     deleteSession: { method: "DELETE", path: "/v1/athletes/{athleteId}/sessions/{sessionId}" },
+    // TODO(I-08): mood check-ins (J6) ride on the sessions routes; until the API
+    // serves them (server table `mood_checkins`), both fail as "unavailable".
+    saveMoodCheckins: { method: "PUT", path: "/v1/athletes/{athleteId}/sessions/{sessionId}/mood" },
+    listMoodCheckins: { method: "GET", path: "/v1/athletes/{athleteId}/mood-checkins" },
 
     listAthletes: { method: "GET", path: "/v1/coaches/{coachId}/athletes" },
     listCoaches: { method: "GET", path: "/v1/athletes/{athleteId}/coaches" },
