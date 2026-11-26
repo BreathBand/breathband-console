@@ -92,7 +92,8 @@ $ PORT=3203 npx playwright test e2e/habit.spec.ts e2e/home-per-goal.spec.ts e2e/
   ✓  e2e\home-per-goal.spec.ts › Home differs for Train, Focus and Calm (8.6s)
   ✓  e2e\home-per-goal.spec.ts › someone linked to a professional sees their card first (2.2s)
   ✓  e2e\habit.spec.ts › a streak pauses after two missed days, in the goal's words and without red (9.7s)
-  ✓  e2eesults-per-goal.spec.ts › the results differ for Train and Calm: what leads, and the coaching line (2.2m)
+  ✓  e2e
+esults-per-goal.spec.ts › the results differ for Train and Calm: what leads, and the coaching line (2.2m)
   5 passed (2.3m)
   (screenshots attached in the Playwright report: habit-calm-ring-milestones, habit-calm-paused, habit-train-paused, habit-calm-375)
 
