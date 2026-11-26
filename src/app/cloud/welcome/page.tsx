@@ -9,18 +9,22 @@ import { useDevice } from "@/lib/device/DeviceProvider";
 import { currentSupport, supportAdvice, UNKNOWN_SUPPORT, type BandSupport } from "@/lib/device/support";
 import { defaultDetails, planDefaults, withOnboardingAnswers, type Plan, type TrackDetails } from "@/lib/domain/goal-questions";
 import { defaultPreferences, GOALS, goalOf, SKILL_LEVELS, skillBandText } from "@/lib/domain/preferences";
-import type { BandRoute, BreathGoal, GoalDetails, UserPreferences, UserProfile } from "@/lib/domain/types";
+import { cleanProProfile, defaultProProfile, practiceProblem, proSummary, usesProblem } from "@/lib/domain/pro-profile";
+import { peopleNouns } from "@/lib/domain/terminology";
+import type { BandRoute, BreathGoal, GoalDetails, ProKind, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
 import { LENGTHS } from "@/lib/prefs";
 import { markSetupFinished } from "../CloudShell";
 import { stateWords } from "../device/words";
 import { bandSummary, deviceKindFor, finishActions, initialRoute, onboardingFor, ROUTE_OPTIONS, routeAvailable } from "./band-route";
 import { GoalQuestions } from "./GoalQuestions";
 import { daysText, PlanStep } from "./PlanStep";
+import { KindStep, PeopleStep, PracticeStep, UsesStep } from "./ProSteps";
 import { Waitlist } from "./Waitlist";
 
-type Step = "name" | "goal" | "questions" | "level" | "sessions" | "plan" | "band" | "done";
+type Step = "name" | "goal" | "questions" | "level" | "sessions" | "plan" | "band" | "kind" | "practice" | "uses" | "people" | "done";
 const ATHLETE_STEPS: Step[] = ["name", "goal", "questions", "level", "sessions", "plan", "band", "done"];
-const COACH_STEPS: Step[] = ["name", "done"];
+// Professionals sign up with role "coach"; the kind step says which kind of work (planning/v1/02 §4.1).
+const COACH_STEPS: Step[] = ["name", "kind", "practice", "uses", "people", "done"];
 const STEP_LABELS: Record<Step, string> = {
   name: "You",
   goal: "Your goal",
@@ -29,6 +33,10 @@ const STEP_LABELS: Record<Step, string> = {
   sessions: "Your sessions",
   plan: "Your plan",
   band: "Your band",
+  kind: "Your work",
+  practice: "Your practice",
+  uses: "What it's for",
+  people: "Your people",
   done: "Ready",
 };
 
@@ -63,6 +71,11 @@ function Welcome({ profile }: { profile: UserProfile }) {
   // The band step's choice: null until a route is picked (or when skipped).
   const [route, setRoute] = useState<BandRoute | null>(() => initialRoute(profile.preferences?.onboarding, currentSupport()));
   const [sampleData, setSampleData] = useState(() => profile.preferences?.onboarding?.sampleData ?? true);
+  // Professionals: the kind, and answers kept per kind so going back to change it loses nothing; only the chosen kind's are saved.
+  const [proKind, setProKind] = useState<ProKind | null>(() => profile.proKind ?? null);
+  const [proAnswers, setProAnswers] = useState<Partial<Record<ProKind, ProProfile>>>(() =>
+    profile.proProfile ? { [profile.proProfile.kind]: profile.proProfile } : {},
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const index = steps.indexOf(step);
@@ -75,6 +88,10 @@ function Welcome({ profile }: { profile: UserProfile }) {
   const final = coach ? prefs : choice ? { ...answered, onboarding: choice } : answered;
   const actions = finishActions(choice);
   const secondary = actions.secondary;
+  const pro = proKind ? cleanProProfile(proAnswers[proKind] ?? defaultProProfile(proKind)) : null;
+  const shownPro = proKind ? (proAnswers[proKind] ?? defaultProProfile(proKind)) : null;
+  const setPro = (next: ProProfile) => setProAnswers((a) => ({ ...a, [next.kind]: next }));
+  const nouns = peopleNouns(pro ? { proKind: pro.kind, proProfile: pro } : profile);
 
   const go = (delta: number) => setStep(steps[Math.max(0, Math.min(steps.length - 1, index + delta))]);
   const pickGoal = (goal: BreathGoal) => {
@@ -89,6 +106,7 @@ function Welcome({ profile }: { profile: UserProfile }) {
       await backend.data.updateProfile(profile.uid, {
         displayName: name.trim() || profile.displayName,
         preferences: { ...final, onboardedAt: new Date().toISOString() },
+        ...(coach && pro ? { proKind: pro.kind, proProfile: pro } : {}),
       });
       markSetupFinished();
       router.replace(next);
@@ -138,7 +156,7 @@ function Welcome({ profile }: { profile: UserProfile }) {
               <h1>{coach ? "Welcome to BreathCloud." : "Welcome to Breathband."}</h1>
               <p className="welcome-lede">
                 {coach
-                  ? "BreathCloud shows you the athletes who share their sessions with you: who trained, who needs a look, and every breath against the pacer."
+                  ? "BreathCloud shows you the people who share their sessions with you: who practised, who needs a look, and every breath against the pacer. A few questions first, about a minute."
                   : "A few questions so your sessions, scores and goals fit you. It takes about a minute."}
               </p>
               <label className="field welcome-field">
@@ -183,6 +201,34 @@ function Welcome({ profile }: { profile: UserProfile }) {
                   go(1);
                 }}
               />
+            </section>
+          )}
+
+          {step === "kind" && (
+            <section>
+              <KindStep kind={proKind} onPick={setProKind} first={first} />
+              <Nav onBack={() => go(-1)} onNext={() => go(1)} nextDisabled={!proKind} />
+            </section>
+          )}
+
+          {step === "practice" && shownPro && pro && (
+            <section>
+              <PracticeStep value={shownPro} onChange={setPro} />
+              <Nav onBack={() => go(-1)} onNext={() => go(1)} nextDisabled={practiceProblem(pro) !== null} />
+            </section>
+          )}
+
+          {step === "uses" && shownPro && pro && (
+            <section>
+              <UsesStep value={shownPro} onChange={setPro} />
+              <Nav onBack={() => go(-1)} onNext={() => go(1)} nextDisabled={usesProblem(pro) !== null} />
+            </section>
+          )}
+
+          {step === "people" && shownPro && (
+            <section>
+              <PeopleStep value={shownPro} onChange={setPro} />
+              <Nav onBack={() => go(-1)} onNext={() => go(1)} />
             </section>
           )}
 
@@ -316,7 +362,21 @@ function Welcome({ profile }: { profile: UserProfile }) {
             <section>
               <h1>{coach ? `You're set, ${first}.` : `You're ready, ${first}.`}</h1>
               {coach ? (
-                <p className="welcome-lede">Add your first athletes by sending them a link or entering the code they give you.</p>
+                <>
+                  <p className="welcome-lede">
+                    Add your first {nouns.many} by sending them a link or entering the code they give you.
+                  </p>
+                  {pro && (
+                    <dl className="welcome-summary">
+                      {proSummary(pro).map(([term, detail]) => (
+                        <div key={term}>
+                          <dt>{term}</dt>
+                          <dd>{detail}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  )}
+                </>
               ) : (
                 <dl className="welcome-summary">
                   <div>
@@ -360,7 +420,7 @@ function Welcome({ profile }: { profile: UserProfile }) {
               <div className="welcome-actions">
                 {coach ? (
                   <button type="button" className="button" data-size="large" disabled={saving} onClick={() => finish("/cloud/athletes/")}>
-                    {saving ? "Saving…" : "Add athletes"}
+                    {saving ? "Saving…" : `Add ${nouns.many}`}
                     <Icon name="arrowRight" size={18} />
                   </button>
                 ) : (

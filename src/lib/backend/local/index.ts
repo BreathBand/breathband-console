@@ -3,6 +3,7 @@ import { GROUP_SIZE, pacerAt } from "@/lib/domain/group";
 import { isTransitionScores } from "@/lib/domain/scores";
 import { goalPlanProblem } from "@/lib/domain/goal-questions";
 import { onboardingProblem } from "@/lib/domain/onboarding";
+import { proProblem } from "@/lib/domain/pro-profile";
 import { preferencesProblem } from "@/lib/domain/preferences";
 import {
   DEFAULT_ALERTS,
@@ -217,7 +218,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       return db.accounts[uid]?.profile ?? null;
     },
 
-    async updateProfile(uid, { displayName, preferences }) {
+    async updateProfile(uid, { displayName, preferences, proKind, proProfile }) {
       await delay();
       assertIsSelf(uid);
       const name = displayName?.trim();
@@ -226,10 +227,19 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
         const problem = preferencesProblem(preferences) ?? goalPlanProblem(preferences) ?? onboardingProblem(preferences.onboarding);
         if (problem) throw new BackendError("invalid-input", problem);
       }
+      if (proKind !== undefined || proProfile !== undefined) {
+        // Mirrors the users/{uid} update rule: professionals only, and the profile's kind matches.
+        const current = profileOf(uid);
+        if (current.role !== "coach") throw new BackendError("permission-denied", "proKind, proProfile: professionals only");
+        const problem = proProblem(proKind ?? current.proKind, proProfile ?? current.proProfile);
+        if (problem) throw new BackendError("invalid-input", problem);
+      }
       mutate((db) => {
         const profile = db.accounts[uid].profile;
         if (name) profile.displayName = name.slice(0, 80);
         if (preferences !== undefined) profile.preferences = preferences ? structuredClone(preferences) : null;
+        if (proKind !== undefined) profile.proKind = proKind;
+        if (proProfile !== undefined) profile.proProfile = structuredClone(proProfile);
       });
       const profile = profileOf(uid);
       emit();

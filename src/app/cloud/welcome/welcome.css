@@ -359,7 +359,7 @@
     color var(--dur-fast) var(--ease-out);
 }
 
-.welcome-chips > button:hover:not(:disabled) {
+.welcome-chips > button:hover:not(:disabled, [aria-pressed="true"]) {
   border-color: var(--c-ink-3);
   color: var(--c-ink);
 }

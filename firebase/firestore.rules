@@ -23,6 +23,16 @@ service cloud.firestore {
       return isSelf(athleteId) || (signedIn() && coachLinked(request.auth.uid, athleteId));
     }
 
+    // A professional's kind and practice (lib/domain/types.ts `proKind`, `proProfile`).
+    function proFieldsOk(before, after) {
+      return (after.get('proKind', null) == null && after.get('proProfile', null) == null)
+          || (before.role == 'coach'
+              && after.get('proKind', null) in ['coach', 'clinician', 'educator']
+              && (after.get('proProfile', null) == null
+                  || (after.proProfile.kind == after.proKind
+                      && after.proProfile.terminology in ['athletes', 'clients', 'students'])));
+    }
+
     // Profiles: readable by the owner and by either side of a coach link.
     match /users/{uid} {
       allow read: if canReadAthlete(uid)
@@ -41,11 +51,15 @@ service cloud.firestore {
                     && request.resource.data.consents[1].kind == 'privacy'
                     && request.resource.data.consents[2].kind == 'breathing-data';
       // Role, email, consents and birth year are fixed after sign-up.
+      // proKind and proProfile are for professionals (role "coach") only, and the
+      // profile's kind matches proKind; the rest of proProfile is checked by the
+      // client and adapter (lib/domain/pro-profile.ts), not here.
       allow update: if isSelf(uid)
                     && request.resource.data.role == resource.data.role
                     && request.resource.data.email == resource.data.email
                     && request.resource.data.get('consents', null) == resource.data.get('consents', null)
-                    && request.resource.data.get('birthYear', null) == resource.data.get('birthYear', null);
+                    && request.resource.data.get('birthYear', null) == resource.data.get('birthYear', null)
+                    && proFieldsOk(resource.data, request.resource.data);
       allow delete: if false; // Account deletion runs in a Cloud Function.
 
       // Sessions: written by the athlete's app, read by them and linked coaches.
