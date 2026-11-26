@@ -257,7 +257,18 @@ describe("Focus: calm minutes and the number that shows it", () => {
         streakDays: 1,
         rates: { from: 13, to: 17 },
       }).line,
-    ).toBe("Three minutes done. Rate rose from 13 to 17. Same again next time.");
+    ).toBe("Three minutes done. Rate rose from 13 to 17.");
+  });
+  it("open: no praise when the rate dropped but the session as a whole was faster than normal", () => {
+    // 22 -> 15 at the end, but the headline reads 18 br/min, "Faster than normal": no "calm".
+    const line = coaching({ goal: "focus", session: open(18), streakDays: 1, rates: { from: 22, to: 15 } }).line;
+    expect(line).toBe("Three minutes done. Rate dropped from 22 to 15.");
+    expect(line).not.toMatch(PRAISE);
+  });
+  it("open: a rising rate over a fast session ends with the tip", () => {
+    expect(coaching({ goal: "focus", session: open(19), streakDays: 1, rates: { from: 15, to: 20 } }).line).toBe(
+      "Three minutes done. Rate rose from 15 to 20. Next time, try a slower, longer breath out.",
+    );
   });
   it("open without a start and end rate: the whole session's rate", () => {
     expect(

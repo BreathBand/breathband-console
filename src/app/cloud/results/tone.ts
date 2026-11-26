@@ -276,10 +276,13 @@ function focusLine(session: ResultsSession, band: ScoreBand | null, rates: Coach
     const m = session.open?.whole;
     if (!m) return `${done}. Too few breaths to measure this time.`;
     if (rates && rates.to < rates.from) {
-      return `${rates.to <= RATE.max ? calm : done}. Rate dropped from ${rates.from} to ${rates.to}.`;
+      // "Calm" follows the session's own rate (the headline), not the last third's.
+      return `${m.rateBpm <= RATE.max ? calm : done}. Rate dropped from ${rates.from} to ${rates.to}.`;
     }
     const rate = Math.round(m.rateBpm);
-    if (rates && rates.to > rates.from) return `${done}. Rate rose from ${rates.from} to ${rates.to}. ${tipFor(session)}`;
+    if (rates && rates.to > rates.from) {
+      return `${done}. Rate rose from ${rates.from} to ${rates.to}.${m.rateBpm > RATE.max ? ` ${tipFor(session)}` : ""}`;
+    }
     return m.rateBpm <= RATE.max ? `${calm}, at ${rate} breaths a minute.` : `${done}, at ${rate} breaths a minute. ${tipFor(session)}`;
   }
   if (band === null) return null;

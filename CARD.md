@@ -63,6 +63,8 @@ Appended by the session, one line each, newest last.
 - 2026-11-26: decided for the owner: "no line contradicts the score" = praise words (Nice, calm, good…) only when the Total is in the ok band (7+), or an open session's rate is at or under 16; Train always names the weakest part's own number (alternative: praise for showing up regardless).
 - 2026-11-26: decided for the owner: a coach looking at an athlete's review sees today's full view and no coaching line (the line is written to the person).
 - 2026-11-26: no existing test changed.
+- 2026-11-26: review fix: Focus's open-session line says "calm" only when the session's own rate (the headline) is at or under 16, not the last third's; new test for 22 → 15 at 18 br/min.
+- 2026-11-26: review suggestion: a rising rate over a session at a normal rate no longer ends with "Same again next time." (it read as approval of the rise); the tip stays when the session was fast. Updated the one Focus assertion in my own new tone.test.ts to match.
 
 ## Questions for me
 
@@ -104,5 +106,6 @@ $ npm run check                    # lint, typecheck, tests, build
 ✓ Generating static pages (26/26)
 EXIT 0
 
+Fix round: npx vitest run src/app/cloud/results src/app/cloud/home -> 64 passed; npm run check -> EXIT 0 (60 files, 670 tests after the night merge; build compiled).
 UNTESTED: Focus in the browser (unit-tested only); the rate-drop line on a real open session of 60 s or more (unit-tested with a synthetic signal).
 ```
