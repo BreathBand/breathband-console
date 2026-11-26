@@ -65,9 +65,12 @@ Lead: review and merge into night/2026-11-26. I-08 adds the data routes, stores 
 
 ## Questions for me
 
-- [ ] The spec (04 "Local workflow") names the build-time base URL `NEXT_PUBLIC_API_URL`; the adapter and `http.test.ts` use the existing `NEXT_PUBLIC_API_BASE_URL`, and `.env.example` now carries both. Which name wins? — Recommended: keep `NEXT_PUBLIC_API_BASE_URL` and drop the `NEXT_PUBLIC_API_URL` line from `.env.example` (and say so in 04). Options: rename to `NEXT_PUBLIC_API_URL` everywhere.
-- [ ] Add an `email-not-verified` code to `BackendErrorCode` (types.ts, a public type) so the login page can say "check your email" instead of the generic error? — Recommended: yes, with the onboarding/login card that builds the "check your email" screen. Options: keep `permission-denied` with a specific message.
-- [ ] The API enforces neither the 16+ rule (it validates `birthYear` as a year only) nor stores consents at sign-up; today only the adapter checks them, so a direct API call skips both. — Recommended: I-08 adds both server-side (a `databaseHooks.user.create.before` age check in `server/auth.ts`, and consents written with the profile). Options: a separate card before I-08.
+- [x] The spec (04 "Local workflow") names the build-time base URL `NEXT_PUBLIC_API_URL`; the adapter and `http.test.ts` use the existing `NEXT_PUBLIC_API_BASE_URL`, and `.env.example` now carries both. Which name wins? — Recommended: keep `NEXT_PUBLIC_API_BASE_URL` and drop the `NEXT_PUBLIC_API_URL` line from `.env.example` (and say so in 04). Options: rename to `NEXT_PUBLIC_API_URL` everywhere.
+  Answer: keep `NEXT_PUBLIC_API_BASE_URL` and drop the `NEXT_PUBLIC_API_URL` line from `.env.example` (and say so in 04)
+- [x] Add an `email-not-verified` code to `BackendErrorCode` (types.ts, a public type) so the login page can say "check your email" instead of the generic error? — Recommended: yes, with the onboarding/login card that builds the "check your email" screen. Options: keep `permission-denied` with a specific message.
+  Answer: yes, with the onboarding/login card that builds the "check your email" screen
+- [x] The API enforces neither the 16+ rule (it validates `birthYear` as a year only) nor stores consents at sign-up; today only the adapter checks them, so a direct API call skips both. — Recommended: I-08 adds both server-side (a `databaseHooks.user.create.before` age check in `server/auth.ts`, and consents written with the profile). Options: a separate card before I-08.
+  Answer: I-08 adds both server-side (a `databaseHooks.user.create.before` age check in `server/auth.ts`, and consents written with the profile)
 
 ## Parked
 
