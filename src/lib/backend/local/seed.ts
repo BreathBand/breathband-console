@@ -907,7 +907,6 @@ export function seedProfessionals(
           comment(jordanSessions[1], 2, ana, "kudos"),
         ]
       : [],
-    [tom.uid]: [],
     ...(studentSession ? { [studentSession.athleteId]: [comment(studentSession, 1, chris, "kudos")] } : {}),
   };
 

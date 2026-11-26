@@ -9,10 +9,12 @@ import type {
   SessionComment,
   SessionSummary,
   Squad,
+  UserPreferences,
   UserProfile,
   WaitlistEntry,
   Waveform,
 } from "@/lib/domain/types";
+import { defaultPreferences } from "@/lib/domain/preferences";
 import {
   DEMO_ATHLETE,
   DEMO_COACH,
@@ -151,8 +153,29 @@ export function migrateDb(stored: unknown, now = new Date()): LocalDb | null {
   if (db.version === DB_VERSION) return db as LocalDb;
   if (db.version !== 8 && db.version !== 9) return null;
   if (!isRecord(db.sessions) || !Object.values(db.sessions).every(Array.isArray)) return null;
-  const v9 = db.version === 8 ? { ...db, version: 9, moodCheckins: db.moodCheckins ?? seedMoodCheckins(seededOnly(db.sessions), now) } : db;
+  // 8 → 9 seeds only what v9 seeded (Hana's check-ins); Sam's come with his move to Focus in 9 → 10.
+  const v9Moods = (): LocalDb["moodCheckins"] => {
+    const hana = seedMoodCheckins(seededOnly(db.sessions), now)["demo-athlete-4"];
+    return hana ? { "demo-athlete-4": hana } : {};
+  };
+  const v9 = db.version === 8 ? { ...db, version: 9, moodCheckins: db.moodCheckins ?? v9Moods() } : db;
   return addDemoPeople(v9, now);
+}
+
+/** Sam's preferences as the v9 seed made them (Train, before T-0127 moved him to Focus). */
+const V9_SAM_PREFERENCES: UserPreferences = { ...defaultPreferences("train", "beginner"), onboardedAt: "2026-09-08T09:00:00.000Z" };
+
+const withoutGamification = (p: UserPreferences): Omit<UserPreferences, "gamification"> => {
+  const rest = { ...p };
+  delete rest.gamification;
+  return rest;
+};
+
+/** Equal as JSON, whatever the key order. */
+function sameJson(a: unknown, b: unknown): boolean {
+  const canon = (v: unknown): unknown =>
+    Array.isArray(v) ? v.map(canon) : isRecord(v) ? Object.fromEntries(Object.keys(v).sort().map((k) => [k, canon(v[k])])) : v;
+  return JSON.stringify(canon(a)) === JSON.stringify(canon(b));
 }
 
 /**
@@ -170,22 +193,30 @@ function addDemoPeople(stored: StoredDb, now: Date): LocalDb | null {
   const seed = createSeededDb(now);
   const seeded = (uid: string) => seed.accounts[uid].profile;
 
+  const emailTaken = (email: string, except?: string) =>
+    Object.values(db.accounts).some((a) => a.profile.uid !== except && a.profile.email.toLowerCase() === email.toLowerCase());
+
+  // Hana: only while still the v9 seed's Maya Chen, and only when nobody here holds her new email. If she
+  // stays, so does maya@demo.local, and the new Maya isn't added (her email is taken; see below).
   const hana = db.accounts["demo-athlete-4"]?.profile;
   if (hana?.email === "maya@demo.local" && hana.displayName === "Maya Chen") {
     const { email, displayName } = seeded(hana.uid);
-    Object.assign(hana, { email, displayName });
-    for (const c of Object.values(db.comments).flat()) if (c.authorId === hana.uid) c.authorName = displayName;
+    if (!emailTaken(email, hana.uid)) {
+      Object.assign(hana, { email, displayName });
+      for (const c of Object.values(db.comments).flat()) if (c.authorId === hana.uid) c.authorName = displayName;
+    }
   }
 
+  // Sam moves to Focus, with his seeded check-ins, only while his preferences are still exactly the v9
+  // seed's (what he was shown on Home, `gamification`, aside, and kept). Edited in this browser: he stays as he is.
   const sam = db.accounts[DEMO_FOCUS.uid]?.profile;
-  // Sam moves to Focus only while his preferences are still the v9 seed's (Train, no goal answers); what he was shown stays.
-  if (sam?.preferences?.goal === "train" && !sam.preferences.goalDetails) {
+  if (sam?.preferences && sameJson(withoutGamification(sam.preferences), V9_SAM_PREFERENCES)) {
     const shown = sam.preferences.gamification;
     sam.preferences = { ...structuredClone(seeded(sam.uid).preferences!), ...(shown && { gamification: shown }) };
-  }
-  if (sam && !db.moodCheckins[sam.uid]?.length) {
-    const moods = seedMoodCheckins(seededOnly({ [sam.uid]: db.sessions[sam.uid] ?? [] }), now)[sam.uid];
-    if (moods?.length) db.moodCheckins[sam.uid] = moods;
+    if (!db.moodCheckins[sam.uid]?.length) {
+      const moods = seedMoodCheckins(seededOnly({ [sam.uid]: db.sessions[sam.uid] ?? [] }), now)[sam.uid];
+      if (moods?.length) db.moodCheckins[sam.uid] = moods;
+    }
   }
 
   for (const invite of db.coachInvites) {

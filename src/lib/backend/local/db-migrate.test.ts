@@ -189,6 +189,61 @@ describe("migrateDb 9 → 10", () => {
     expect(after.coachLinks.some((l) => l.coachId === DEMO_CLINICIAN.uid)).toBe(true);
   });
 
+  it("leaves Hana as Maya Chen when someone signed up here as hana@demo.local, and the new Maya out", () => {
+    const before = v9Db();
+    const hanaHere = { uid: "u-hana", email: "hana@demo.local", displayName: "Hana Here", role: "athlete" as const, createdAt: "2026-11-20T09:00:00.000Z" };
+    before.accounts["u-hana"] = { password: "secret-pass", profile: hanaHere };
+    const after = migrateDb(before, NOW)!;
+    expect(after.accounts["u-hana"].profile).toEqual(hanaHere);
+    expect(after.accounts[MAYA].profile).toMatchObject({ email: "maya@demo.local", displayName: "Maya Chen" });
+    expect(Object.values(after.comments).flat().filter((c) => c.authorId === MAYA).every((c) => c.authorName === "Maya Chen")).toBe(true);
+    // Each email still belongs to one account only, so both sign in as themselves.
+    const emails = Object.values(after.accounts).map((a) => a.profile.email.toLowerCase());
+    expect(new Set(emails).size).toBe(emails.length);
+    expect(after.accounts[DEMO_CALM.uid]).toBeUndefined();
+    expect(after.sessions[DEMO_CALM.uid]).toBeUndefined();
+    // Everyone else still arrives.
+    expect(after.accounts[DEMO_CLINICIAN.uid]).toBeDefined();
+  });
+
+  it("leaves Sam on Train, without seeded check-ins, when his preferences were edited here", () => {
+    const before = v9Db();
+    const edited = { ...before.accounts[DEMO_FOCUS.uid].profile.preferences!, dailyMinutes: 10, reminders: { enabled: true, time: "07:15", days: ["mon" as const], timeZone: "Europe/London" } };
+    before.accounts[DEMO_FOCUS.uid].profile.preferences = edited;
+    const after = migrateDb(structuredClone(before), NOW)!;
+    expect(after.accounts[DEMO_FOCUS.uid].profile.preferences).toEqual(edited);
+    expect(after.moodCheckins[DEMO_FOCUS.uid] ?? []).toEqual([]);
+  });
+
+  it("moves Sam while only what he was shown on Home changed, and keeps that", () => {
+    const before = v9Db();
+    const shown = { awarded: { "first-calibration": "2026-10-01T09:00:00.000Z" } };
+    before.accounts[DEMO_FOCUS.uid].profile.preferences!.gamification = shown;
+    const after = migrateDb(before, NOW)!;
+    expect(after.accounts[DEMO_FOCUS.uid].profile.preferences?.goal).toBe("focus");
+    expect(after.accounts[DEMO_FOCUS.uid].profile.preferences?.gamification).toEqual(shown);
+    expect(after.moodCheckins[DEMO_FOCUS.uid].length).toBeGreaterThan(0);
+  });
+
+  it("takes a v8 database (Maya Chen, Sam on Train, no check-ins) straight to a fresh seed's v10", () => {
+    const v8: Partial<ReturnType<typeof v9Db>> = v9Db();
+    delete v8.moodCheckins;
+    const after = migrateDb({ ...v8, version: 8 }, NOW)!;
+    expect(after).toEqual({ ...createSeededDb(NOW), coachInvites: after.coachInvites });
+    // Lena's invite keeps its v9 code under Ruby Hale's name (a fresh seed's is RBHL7K2Q).
+    expect(after.coachInvites.find((i) => i.coachId === DEMO_COACH.uid && i.status === "pending")).toMatchObject({ code: "JRDN7K2Q", athleteName: "Ruby Hale" });
+  });
+
+  it("gives Sam no check-ins on the way from v8 when his preferences were edited", () => {
+    const v8: Partial<ReturnType<typeof v9Db>> = v9Db();
+    delete v8.moodCheckins;
+    v8.accounts![DEMO_FOCUS.uid].profile.preferences!.dailyMinutes = 10;
+    const after = migrateDb({ ...v8, version: 8 }, NOW)!;
+    expect(after.accounts[DEMO_FOCUS.uid].profile.preferences?.goal).toBe("train");
+    expect(after.moodCheckins[DEMO_FOCUS.uid] ?? []).toEqual([]);
+    expect(after.moodCheckins[MAYA].length).toBeGreaterThan(0);
+  });
+
   it("is a no-op the second time and reseeds a v9 database it can't extend", () => {
     const once = migrateDb(v9Db(), NOW)!;
     expect(migrateDb(once, NOW)).toBe(once);
