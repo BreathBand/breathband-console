@@ -101,7 +101,7 @@ Rivetari opens draft PRs. It never merges, and neither does any agent.
 
 ## This repo
 
-- **breathband-console**: web-app, phase build. The public site (`/`) and the BreathCloud console (`/cloud/`) for the Breathband Flutter app. The roadmap is in `docs/PLAN.md`; check which phase a change belongs to.
+- **breathband-console**: web-app, phase build. The BreathCloud console (`/cloud/`) for the Breathband Flutter app. The public site (`/`, `/coaches/`) is the separate breathband-site repo. The roadmap is in `docs/PLAN.md`; check which phase a change belongs to.
 - Stack: Next.js, React, TypeScript on Node 22, npm
 - Flags: public-facing, has-users, handles-pii
 - Commands: install `npm install` · lint `npm run lint` · typecheck `npm run typecheck` · test `npm run test` · all of CI `npm run check`

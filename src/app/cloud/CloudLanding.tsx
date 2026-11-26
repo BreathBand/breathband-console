@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Icon, type IconName } from "@/components/Icon";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { Brand } from "./auth/Brand";
+import { SITE_HOME } from "./links";
 import "./auth.css";
 
 // The BreathCloud landing page: what signed-out visitors see at /cloud/.
@@ -24,9 +25,9 @@ export function CloudLanding() {
         <div className="bc-bar-row">
           <Brand />
           <nav className="bc-bar-nav" aria-label="BreathCloud">
-            <Link href="/" className="bc-bar-link bc-hide-md">
+            <a href={SITE_HOME} className="bc-bar-link bc-hide-md">
               Breathband home
-            </Link>
+            </a>
             <Link href="/cloud/login/" className="bc-bar-button">
               Sign in
             </Link>
@@ -269,7 +270,7 @@ export function CloudLanding() {
           <nav aria-label="Footer">
             <ul>
               <li>
-                <Link href="/">Breathband home</Link>
+                <a href={SITE_HOME}>Breathband home</a>
               </li>
               <li>
                 <Link href="/cloud/login/">Sign in</Link>

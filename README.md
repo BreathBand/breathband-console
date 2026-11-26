@@ -1,6 +1,8 @@
 # Breathband Console
 
-The Breathband website (`/`) and BreathCloud (`/cloud/`): a web product where athletes record breathing sessions with the Breathband over Bluetooth (or a simulated band), get them scored, review every breath and share them with a coach, and where coaches follow their athletes.
+BreathCloud (`/cloud/`): a web product where athletes record breathing sessions with the Breathband over Bluetooth (or a simulated band), get them scored, review every breath and share them with a coach, and where coaches follow their athletes.
+
+The public Breathband website (`/`, `/coaches/`) is its own repo, [breathband-site](https://github.com/BreathBand/breathband-site). It moved out in November 2026. Where one domain serves both, route `/cloud/*` here and everything else to the site; this build's own `/` just sends people on to `/cloud/`. Set `NEXT_PUBLIC_SITE_URL` when the site is on another host, so "Breathband home" links reach it.
 
 **Status:** local development. The console runs on a local demo backend. The deploy target is Google Cloud Run, prepared but not deployed. The roadmap and the decisions behind it are in [docs/PLAN.md](docs/PLAN.md#decisions).
 
@@ -36,11 +38,10 @@ Demo data lives in your browser's localStorage. Use **Reset** in the sidebar to 
 
 ### What's in the console
 
-The look is **Carbon & Breath**, shared with the public site: a carbon sidebar, bone and carbon neutrals, Funnel Display and Funnel Sans, and the breath (red in, blue out) as the only colour. Recording happens on a full-screen dark instrument. See [DESIGN.md](DESIGN.md).
+The look is **Carbon & Breath**, shared with the public site (each repo keeps a copy of the tokens and DESIGN.md): a carbon sidebar, bone and carbon neutrals, Funnel Display and Funnel Sans, and the breath (red in, blue out) as the only colour. Recording happens on a full-screen dark instrument. See [DESIGN.md](DESIGN.md).
 
 | Route | Who | What |
 | --- | --- | --- |
-| `/`, `/coaches/` | Anyone | Public site with its own identity ("Carbon & Breath": warm carbon and bone, Funnel Display/Sans and Geist Mono; the only colour is the breath, red in and blue out). One concise home page (live breathing instrument, why it's different, a session in three steps, the score, who it's for, BreathCloud, where Breathband is today, FAQ) and a BreathCloud page for coaches. The waitlist asks who's joining (athlete, coach, investor or partner) and stores it in `source`. Code in `src/app/(site)/`; set `NEXT_PUBLIC_SITE_URL` for canonical and Open Graph links |
 | `/cloud/` | Signed out | BreathCloud landing page: what it is, athletes and coaches, how the app syncs, sharing controls |
 | `/cloud/login/`, `/cloud/signup/`, `/cloud/reset/` | Signed out | Sign in (with demo accounts locally), create an account (athlete or coach), password reset. `?next=` returns people to the page they asked for |
 | `/cloud/` | Coach | Dashboard: team numbers, "Needs a look" (replies owed, score drops, practice behind, missed days), sessions not yet opened, a 14-day training grid, practice due, recent notes and comments |
@@ -86,7 +87,7 @@ Sessions carry legacy 0–100% scores (`legacy-v1`) or the 1–10 per-transition
 ```
 src/
 ├── app/                      routes (static export)
-│   ├── page.tsx              /            public site (placeholder)
+│   ├── page.tsx              /            sends people on to /cloud/ (the site is breathband-site)
 │   └── cloud/                /cloud/...   console, behind a client-side auth gate
 ├── lib/
 │   ├── domain/types.ts       data contract shared with the Flutter app

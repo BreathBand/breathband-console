@@ -11,8 +11,8 @@ A 10-minute walkthrough of Breathband on the web, with no hardware needed. Every
 
 ## 1. The product in one screen (1 min)
 
-1. Open <http://localhost:3000/>. The site explains the band: wear it on your belly, follow the pacer, get a score from 1 to 10. Scroll to the score card and "Where Breathband is today".
-2. Click **try BreathCloud with a demo account**, then **Sign in as Alex Morgan** (athlete).
+1. Open the site. It's the breathband-site repo: run it on port 3000 with `NEXT_PUBLIC_CONSOLE_URL=http://localhost:3001/cloud/`, and run this console with `npm run dev -- --port 3001`. The site explains the band: wear it on your belly, follow the pacer, get a score from 1 to 10. Scroll to the score card and "Where Breathband is today".
+2. Click **try BreathCloud with a demo account**, then **Sign in as Alex Morgan** (athlete). Without the site, start at <http://localhost:3000/cloud/login/>.
 
 **Say:** the app and the web share one account; BreathCloud is where you review, train on a computer, and share with a coach.
 

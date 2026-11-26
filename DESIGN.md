@@ -2,6 +2,8 @@
 
 The Breathband design system: one visual world, **Carbon & Breath**, shared by the public site (`/`, `/coaches/`) and BreathCloud (`/cloud/…`). This file describes what is built. When the code and this file disagree, fix one of them in the same change.
 
+The site and BreathCloud now live in two repos (breathband-site and breathband-console), and each keeps a copy of this file and of the tokens in `src/app/globals.css`. Rows that point at `src/app/(site)/…` describe files in breathband-site. When the shared parts change, change both copies.
+
 It replaces the earlier two-identity setup (a "Coach Console" look for the console, "Carbon & Breath" for the site). Decision 7 in `docs/PLAN.md` allowed the overhaul; this is its result.
 
 ---
@@ -165,5 +167,5 @@ Use these and no others in new CSS: **1280** (dense grids drop a column), **1100
 ## Known gaps
 
 - The logo is a placeholder (the pacer-ring mark).
-- Public-site and BreathCloud screenshots in `public/site/` and `public/cloud/` are captured from the demo data and must be retaken when screens change.
+- Public-site screenshots (`public/site/`, in breathband-site) and BreathCloud ones (`public/cloud/`) are captured from the demo data and must be retaken when screens change.
 - Group-session results are still scored with the earlier per-transition formula (`transition-v1`): method C scores against one pacer, and a group session can switch pacers mid-way.

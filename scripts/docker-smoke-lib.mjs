@@ -11,7 +11,7 @@ export const SMOKE = {
 };
 
 export const ROUTES = [
-  { path: "/", html: ['<h1 id="hero-h"', "breathing."], scripts: [] },
+  { path: "/", html: ['<meta http-equiv="refresh" content="0; url=/cloud/"/>'], scripts: [] },
   { path: "/cloud/login/", html: ["<title>BreathCloud"], scripts: ["Sign in to BreathCloud"] },
 ];
 
