@@ -12,6 +12,7 @@ import { authBaseUrl, authSecret, createAuth } from "./auth";
 import { createDb } from "./db/client";
 import { readEnv } from "./env";
 import { createApp } from "./index";
+import { startDeletionJob } from "./jobs/deletion";
 import { createMailer } from "./mailer";
 import { createFsStorage } from "./storage";
 
@@ -35,6 +36,8 @@ const auth = createAuth({
   mailer: createMailer(env.mode, env.smtp),
 });
 
+const storage = createFsStorage(env.storageDir);
+
 const app = createApp({
   db,
   mode: env.mode,
@@ -42,8 +45,11 @@ const app = createApp({
   staticDir: production ? STATIC_DIR : undefined,
   log: env.mode !== "test",
   auth,
-  storage: createFsStorage(env.storageDir),
+  storage,
 });
+
+// Accounts whose 24 h are up (server/jobs/deletion.ts). Cloud Scheduler takes this over later.
+const stopDeletionJob = startDeletionJob({ db, storage });
 
 const server = serve({ fetch: app.fetch, port: env.port }, (info) => {
   console.log(`API (${env.mode}) listening on http://localhost:${info.port}`);
@@ -54,6 +60,7 @@ let stopping = false;
 function shutdown(signal: NodeJS.Signals): void {
   if (stopping) return;
   stopping = true;
+  stopDeletionJob();
   console.log(`${signal}: closing the server`);
   const force = setTimeout(() => {
     console.error("Open connections did not close in time; exiting.");

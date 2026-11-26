@@ -7,3 +7,4 @@ export * from "./group";
 export * from "./site";
 export * from "./audit";
 export * from "./habit";
+export * from "./deletion";
