@@ -9,6 +9,7 @@ import { analyzeOpenRecording } from "@/lib/analysis/session";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { useDevice } from "@/lib/device/DeviceProvider";
 import { BAND_COMMANDS, SAMPLE_RATE_HZ, STRAP_TENSION } from "@/lib/device/config";
+import { firstSessionName } from "@/lib/domain/first-session";
 import { formatDuration } from "@/lib/domain/format";
 import { parseSetup } from "@/lib/prefs";
 import { buildSession, MIN_RECORDING_S, type BuiltSession } from "@/lib/recording";
@@ -45,6 +46,8 @@ export default function LivePage() {
 function Instrument() {
   const params = useSearchParams();
   const setup = useMemo(() => parseSetup(new URLSearchParams(params.toString())), [params]);
+  // Onboarding's first suggested session (T-0115): named in the bar, and leaving it means "later", so it goes Home.
+  const firstSession = useMemo(() => firstSessionName(new URLSearchParams(params.toString())), [params]);
   const router = useRouter();
   const auth = useAuth();
   const backend = useBackend();
@@ -300,10 +303,11 @@ function Instrument() {
   const exit = () => {
     if (phase === "live" && !window.confirm("Stop recording and leave? This session won't be saved.")) return;
     device.follow(null);
-    router.push("/cloud/record/");
+    router.push(firstSession ? "/cloud/" : "/cloud/record/");
   };
 
-  const title = paced ? `Paced ${setup.pacer}-${setup.pacer}` : "Open session";
+  const kind = paced ? `Paced ${setup.pacer}-${setup.pacer}` : "Open session";
+  const title = firstSession ?? kind;
   const remaining = setup.lengthSec > 0 ? Math.max(0, setup.lengthSec - elapsed) : null;
   const signalLost = phase === "live" && (!device.connected || device.stalled);
   const needsBand = !device.connected && phase !== "review" && phase !== "live";
@@ -319,7 +323,10 @@ function Instrument() {
           <Mark size={22} label="" />
           <span>
             {title}
-            <small>{setup.lengthSec ? formatDuration(setup.lengthSec) : "Until you stop"}</small>
+            <small>
+              {firstSession ? `Your first session · ${kind} · ` : ""}
+              {setup.lengthSec ? formatDuration(setup.lengthSec) : "Until you stop"}
+            </small>
           </span>
         </div>
         <div className="inst-tools">
@@ -375,6 +382,11 @@ function Instrument() {
                   ? "You calibrated when you put the band on. If it has stayed on since, keep that calibration; if you took it off, calibrate again."
                   : "Wrap the band around your belly, just below the ribs, and tighten it until the marker sits in the green.")}
             </p>
+            {firstSession && !calError && (
+              <p className="inst-small">
+                Your first session: fit the strap, calibrate for 20 seconds, then {firstSession} for {Math.round(setup.lengthSec / 60)} minutes.
+              </p>
+            )}
             <StrapMeter read={device.recent} />
             <div className="inst-actions">
               {reuse ? (
