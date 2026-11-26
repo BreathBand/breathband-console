@@ -15,7 +15,7 @@ import { aPerson } from "@/lib/domain/terminology";
 import type { SessionSummary } from "@/lib/domain/types";
 import { athleteHref, sessionHref } from "./links";
 import { inSquad, SquadFilter } from "./SquadFilter";
-import { useTerms } from "./useTerms";
+import { useProKind, useTerms } from "./useTerms";
 import { REVIEW_WINDOW_DAYS, useTeam, type Team, type TeamMember } from "./useTeam";
 
 const DAY_MS = 86_400_000;
@@ -126,6 +126,7 @@ function TeamStats({ members, now }: { members: TeamMember[]; now: Date }) {
   const unseen = members.reduce((n, m) => n + m.unseen.length, 0);
   const round1 = (n: number) => Math.round(n * 10) / 10;
   const t = useTerms();
+  const kind = useProKind();
 
   return (
     <div className="stats">
@@ -134,7 +135,7 @@ function TeamStats({ members, now }: { members: TeamMember[]; now: Date }) {
         <span className="n">{thisWeek.length}</span>
         <span className="d">
           {lastWeek.length} the week before · {members.filter((m) => m.activity.lastWeek > 0).length} of {members.length}{" "}
-          {t.many} practised
+          {t.many} {kind === "clinician" || kind === "educator" ? "practised" : "trained"}
         </span>
       </section>
       <section className="pane stat">

@@ -8,7 +8,6 @@ import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { activity } from "@/lib/domain/activity";
 import { assignmentProgress, isOpen, type AssignmentProgress } from "@/lib/domain/coaching";
 import { sessionsCsv } from "@/lib/domain/csv";
-import { rulesInForce } from "@/lib/domain/default-flags";
 import { formatLongDay, initials } from "@/lib/domain/format";
 import { targetsFor } from "@/lib/domain/targets";
 import { DEFAULT_ALERTS, type AlertRules, type AthleteTargets, type CoachLink, type ProKind, type SessionComment } from "@/lib/domain/types";
@@ -22,7 +21,7 @@ import { NotesTab } from "./NotesTab";
 import { PlanTab } from "./PlanTab";
 import { SessionsTab } from "./SessionsTab";
 import { reportHref, TrendsTab } from "./TrendsTab";
-import { proKindOf, termsOf } from "./useTerms";
+import { termsOf } from "./useTerms";
 
 /** Everything one athlete's workspace shows, loaded once and shared by the tabs. */
 export interface Workspace extends ConsoleContext {
@@ -109,7 +108,7 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
     link,
     plans: assignments.map((a) => assignmentProgress(a, sessions, now)),
     comments,
-    rules: self ? rules : rulesInForce(rules, proKindOf(auth)),
+    rules,
     targets: targetsFor(self ? coach?.link : link, self ? ownPreferences : profile?.preferences),
     coachName: coach?.name,
     coachKind: coach?.kind,

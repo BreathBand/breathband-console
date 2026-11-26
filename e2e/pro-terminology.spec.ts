@@ -2,8 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAsCoach } from "./auth";
 
 // T-0116: the coach UI uses the professional's own word for the people they
-// work with (planning/v1/02 §5.2), and their kind's "Needs a look" defaults
-// (§4.1 step 7) until they save their own.
+// work with (planning/v1/02 §5.2). "Needs a look" defaults are the same for
+// every kind until the backend can say whether rules were ever saved.
 
 const DB_KEY = "breathband-console:local-db";
 
@@ -32,12 +32,13 @@ const nav = (page: Page) => page.getByRole("navigation", { name: "Main" });
 const scoreDropRule = (page: Page) => page.getByRole("checkbox", { name: /below their recent average/ });
 const missedDaysRule = (page: Page) => page.getByRole("checkbox", { name: /No session for/ });
 
-test("a clinician sees clients across the dashboard, roster and invite, and starts with the missed-days flag only", async ({ page }) => {
+test("a clinician sees clients across the dashboard, roster and invite; flags are unchanged", async ({ page }) => {
   await signInAsCoach(page);
   await becomeClinician(page);
 
   await expect(page.getByRole("heading", { level: 2, name: "From your clients" })).toBeVisible();
   await expect(page.locator(".title-row span").first()).toContainText(/\d+ clients?$/);
+  await expect(page.getByText(/clients practised$/)).toBeVisible();
   await expect(nav(page).getByRole("link", { name: "Clients" })).toBeVisible();
   await expect(nav(page).getByRole("link", { name: "Athletes" })).toHaveCount(0);
 
@@ -55,14 +56,16 @@ test("a clinician sees clients across the dashboard, roster and invite, and star
 
   await page.goto("/cloud/account/#alerts");
   await expect(missedDaysRule(page)).toBeChecked();
-  await expect(scoreDropRule(page)).not.toBeChecked();
+  await expect(scoreDropRule(page)).toBeChecked();
+  await expect(page.getByText("Each client's targets are on their Trends tab.", { exact: false })).toBeVisible();
 });
 
-test("the demo coach still sees athletes, and the coach's full set of flags", async ({ page }) => {
+test("the demo coach still sees athletes, worded as before, and the full set of flags", async ({ page }) => {
   await signInAsCoach(page);
 
   await expect(page.getByRole("heading", { level: 2, name: "From your athletes" })).toBeVisible();
   await expect(nav(page).getByRole("link", { name: "Athletes" })).toBeVisible();
+  await expect(page.getByText(/athletes trained$/)).toBeVisible();
 
   await page.goto("/cloud/athletes/");
   await expect(page.getByRole("heading", { level: 1, name: "Athletes" })).toBeVisible();

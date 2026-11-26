@@ -4,16 +4,14 @@ import { useState, type FormEvent } from "react";
 import { Icon } from "@/components/Icon";
 import { ErrorState, Skeleton } from "@/components/States";
 import { useBackend } from "@/lib/backend/BackendProvider";
-import { defaultFlags, rulesInForce } from "@/lib/domain/default-flags";
 import { DEFAULT_ALERTS, type AlertRules } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
-import { useProKind, useTerms } from "../useTerms";
+import { useTerms } from "../useTerms";
 
 /** What puts someone under "Needs a look" on the coach's dashboard and roster. */
 export function AlertRulesSection({ coachId }: { coachId: string }) {
   const backend = useBackend();
-  const kind = useProKind();
-  const rules = useLoad(`alerts:${coachId}:${kind}`, async () => rulesInForce(await backend.data.getAlertRules(coachId), kind));
+  const rules = useLoad(`alerts:${coachId}`, () => backend.data.getAlertRules(coachId));
   return (
     <section className="pane pane-pad" aria-labelledby="alerts-h" id="alerts">
       <div className="pane-h">
@@ -33,7 +31,6 @@ export function AlertRulesSection({ coachId }: { coachId: string }) {
 
 function RulesForm({ coachId, initial }: { coachId: string; initial: AlertRules }) {
   const backend = useBackend();
-  const kind = useProKind();
   const t = useTerms();
   const [r, setR] = useState(initial);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
@@ -102,7 +99,7 @@ function RulesForm({ coachId, initial }: { coachId: string; initial: AlertRules 
         <button type="submit" className="button" data-size="small" disabled={!dirty || status === "saving"}>
           {status === "saving" ? "Saving…" : "Save"}
         </button>
-        <button type="button" className="button" data-variant="ghost" data-size="small" onClick={() => change(defaultFlags(kind))}>
+        <button type="button" className="button" data-variant="ghost" data-size="small" onClick={() => change(DEFAULT_ALERTS)}>
           Back to defaults
         </button>
         {status === "saved" && (

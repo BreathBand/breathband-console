@@ -3,7 +3,6 @@
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { activity, type Activity } from "@/lib/domain/activity";
 import { assignmentProgress, awaitingReply, type AssignmentProgress } from "@/lib/domain/coaching";
-import { rulesInForce } from "@/lib/domain/default-flags";
 import {
   DEFAULT_TARGETS,
   type AlertRules,
@@ -15,7 +14,6 @@ import {
   type UserProfile,
 } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
-import { useProKind } from "./useTerms";
 
 /** How far back the dashboard looks for sessions to review. */
 export const REVIEW_WINDOW_DAYS = 14;
@@ -42,7 +40,6 @@ export interface Team {
   members: TeamMember[];
   seen: Set<string>;
   squads: Squad[];
-  /** The rules in force: the coach's saved ones, else their kind's defaults. */
   rules: AlertRules;
 }
 
@@ -56,15 +53,13 @@ export interface Team {
  */
 export function useTeam(coachId: string, now: Date) {
   const backend = useBackend();
-  const kind = useProKind();
-  return useLoad<Team>(`team:${coachId}:${kind}`, async () => {
-    const [athletes, seenKeys, squads, saved] = await Promise.all([
+  return useLoad<Team>(`team:${coachId}`, async () => {
+    const [athletes, seenKeys, squads, rules] = await Promise.all([
       backend.data.listAthletes(coachId),
       backend.data.listSeenSessions(coachId),
       backend.data.listSquads(coachId),
       backend.data.getAlertRules(coachId),
     ]);
-    const rules = rulesInForce(saved, kind);
     const seen = new Set(seenKeys);
     const since = now.getTime() - REVIEW_WINDOW_DAYS * 86_400_000;
     const members = await Promise.all(

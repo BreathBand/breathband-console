@@ -1,4 +1,4 @@
-# T-0116 · feat: professional terminology across the coach UI and default flags per kind
+# T-0116 · feat: professional terminology across the coach UI and default flags per kind (flags held back)
 
 Status: done
 Branch: card/T-0116 · Held by: nobody
@@ -14,8 +14,8 @@ educator with none.
 ## Acceptance criteria
 
 - [x] A1: `useTerms()` gives the signed-in professional's nouns (kind default, then their own choice; "athletes" for older accounts) · check: `npx vitest run src/app/cloud/useTerms.test.ts src/lib/domain/terminology.test.ts`
-- [x] A2: default flags per kind: coach keeps `DEFAULT_ALERTS`, clinician 3 missed days only, educator off; used when no rules were saved · check: `npx vitest run src/lib/domain/default-flags.test.ts`
-- [x] A3: a clinician sees "clients" across dashboard, roster and invite; the demo coach still sees "athletes" · check: `PORT=3203 npx playwright test e2e/pro-terminology.spec.ts e2e/smoke.spec.ts`
+- [x] A2: default flags per kind exist as a tested, unwired helper (coach keeps `DEFAULT_ALERTS`, clinician 3 missed days only, educator off); every kind still gets `DEFAULT_ALERTS` until the backend can say whether rules were saved (see Questions) · check: `npx vitest run src/lib/domain/default-flags.test.ts`
+- [x] A3: a clinician sees "clients" across dashboard, roster and invite; the demo coach still sees "athletes", worded as before; flags unchanged for every kind · check: `PORT=3203 npx playwright test e2e/pro-terminology.spec.ts e2e/smoke.spec.ts e2e/home-per-goal.spec.ts e2e/demo-path.spec.ts`
 - [x] A4: everything else still passes · check: `npm run check`
 
 ## Files in scope
@@ -50,7 +50,7 @@ educator with none.
 
 ## Next step
 
-Lead reviews and opens the draft PR; parked items go to BACKLOG.md.
+Owner answers the default-flags question; then a card wires `src/lib/domain/default-flags.ts` in behind the backend change.
 
 ## Decisions
 
@@ -58,19 +58,21 @@ Appended by the session, one line each, newest last.
 
 - 2026-11-26: Owner approved 2026-11-26 (overnight note): no dependencies; no contract changes; existing tests may change only where wording assertions change; don't touch types.ts, backend, record/**, welcome/** (except the caveat line), package.json, server/**.
 
-- 2026-11-26: decided for the owner: saved alert rules equal to `DEFAULT_ALERTS` are read as "never saved", so a non-coach gets their kind's defaults (alternative: the backend says whether a row exists; that's `src/lib/backend/**`, out of this card). Side effect: a clinician or educator who saves exactly the coach's full set sees their kind's defaults again. Parked.
-- 2026-11-26: decided for the owner: a coach (and an account of unknown kind) keeps the full `DEFAULT_ALERTS`, a superset of the spec's "3 missed days, Total down 2", so existing coaches see no change (alternative: switch coaches to just those two).
-- 2026-11-26: decided for the owner: "N of M athletes trained" became "N of M {people} practised", since "clients trained" reads wrong (alternative: keep "trained" for coaches only).
-- 2026-11-26: decided for the owner: the report's "Prepared by" reads "Name, coach / clinician / teacher" from the kind (`PRO_WORD`); the live-group chart's aria-label says "people" instead of "athletes".
+- 2026-11-26: in `defaultFlags()`, a coach (and an account of unknown kind) keeps the full `DEFAULT_ALERTS`, a superset of the spec's "3 missed days, Total down 2" (alternative: just those two).
+- 2026-11-26: the report's "Prepared by" reads "Name, coach / clinician / teacher" from the kind (`PRO_WORD`).
+- 2026-11-26: review fix round (lead's decision): default flags taken out of the screens. The DEFAULT_ALERTS-equality heuristic hit this card's own stop-and-ask, so `rulesInForce` / `defaultFlags` are unwired from useTeam, AlertRulesForm and the workspace; behaviour is as before for every kind ("Back to defaults" is `DEFAULT_ALERTS`). The helper and its tests stay. Question below.
+- 2026-11-26: review fix round: coach wording unchanged. "N of M athletes trained" stays for a coach or unknown kind ("practised" only for clinician/educator); the live-group chart's aria-label uses the professional's word, so "athletes" for coaches.
 - 2026-11-26: T-0105's `professionalOf()` now takes the linked professional's `proKind` (read from `listCoaches()`'s profile, already loaded); needed one line in `src/app/cloud/AthleteHome.tsx` (pass `ws.coachKind`), outside the listed scope but invited by the lead.
 - 2026-11-26: existing test changed for wording only: `src/app/cloud/trends/compare-table.test.ts` reads the page source, so its first header is now `{terms.One}` and its label regex also accepts `label={...}`; the header/label order check is unchanged.
 - 2026-11-26: added `aPerson()` ("an athlete" / "a client") to `src/lib/domain/terminology.ts` and `proKindOf()` / `useProKind()` beside `useTerms()`.
 
 ## Questions for me
 
+- [ ] Default flags per kind need to know whether rules were ever saved — Recommended: getAlertRules returns null when nothing is saved (backend types + local adapter + tests + rules + http). Options: accept the DEFAULT_ALERTS-equality heuristic; store a flag in proProfile.
+
 ## Parked
 
-- 2026-11-26 [product] Alert rules: the API can't say "nothing saved", so a non-coach who saves exactly the coach's full set falls back to their kind's defaults; `getAlertRules` could return null (or the kind's defaults server-side, `pro_profiles.default_flags` exists) · seen on T-0116 · src/lib/backend/local/index.ts getAlertRules
+- 2026-11-26 [product] Default flags per kind (E6/§4.1 step 7) are built but unwired: `src/lib/domain/default-flags.ts` waits on `getAlertRules` saying "nothing saved" (see Questions; `pro_profiles.default_flags` exists server-side) · seen on T-0116 · src/lib/backend/local/index.ts getAlertRules
 - 2026-11-26 [product] Compare CSV header still says "Athlete" for every professional · seen on T-0116 · src/lib/domain/csv.ts compareCsv
 - 2026-11-26 [product] Two-person recording (`record/duo`) and the open-session note in SessionReview ("the athlete tapped") still say athlete to a professional · seen on T-0116 · src/app/cloud/record/duo, src/app/cloud/session/SessionReview.tsx
 - 2026-11-26 [product] The role label under the name (sidebar) and "Account type" in Settings say "Coach" for a clinician or educator · seen on T-0116 · src/app/cloud/CloudShell.tsx, src/app/cloud/account/page.tsx
@@ -87,6 +89,36 @@ Appended by the session, one line each, newest last.
 - [ ] Draft PR opened: # (the lead opens it)
 
 ### Evidence
+
+Fix round (after the review block), on 249de0d + fix:
+
+```
+$ npx vitest run src/app/cloud src/lib/domain
+ Test Files  27 passed (27)
+      Tests  289 passed (289)
+
+$ npm run check   (playwright-report/ and test-results/ removed first)
+check-exit=0
+ Test Files  75 passed | 1 skipped (76)
+      Tests  894 passed | 1 skipped (895)
+✓ Compiled successfully
+
+$ PORT=3203 npx playwright test e2e/pro-terminology.spec.ts e2e/smoke.spec.ts e2e/home-per-goal.spec.ts e2e/demo-path.spec.ts
+  ✓ smoke › the coach signs in and sees the Athletes roster
+  ✓ smoke › the athlete signs in and sees their last session on the home page
+  ✓ pro-terminology › a clinician sees clients across the dashboard, roster and invite; flags are unchanged
+  ✓ pro-terminology › the demo coach still sees athletes, worded as before, and the full set of flags
+  ✓ pro-terminology › a new clinician who signs up lands on a dashboard waiting for their first client
+  ✓ home-per-goal › Home differs for Train, Focus and Calm
+  ✓ home-per-goal › someone linked to a professional sees their card first
+  ✓ demo-path › athlete records, saves and reviews a paced session; the coach sees the same score
+  ✓ demo-path › athlete records an open session with two markers and gets the segment metrics
+  9 passed (2.3m)
+
+UNTESTED: the remaining e2e specs (habit, onboarding*, results-per-goal, signup-consents) in this round.
+```
+
+First round:
 
 ```
 $ npx vitest run src/app/cloud/useTerms.test.ts src/lib/domain/terminology.test.ts src/lib/domain/default-flags.test.ts src/app/cloud/home/tailor.test.ts src/app/cloud/trends/compare-table.test.ts
