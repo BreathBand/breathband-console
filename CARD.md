@@ -63,6 +63,8 @@ Lead: review and merge into night/2026-11-26. Before a rehearsal, note Maya's "S
 - 2026-11-26: decided for the owner: Ana has the plan's two clients (Jordan, and Tom Becker, quiet for four days so "needs a look" has someone); her use cases are "between-visits" only. The night build also had "stress-anxiety" ("Stress and anxiety skills"), dropped because 05 says nothing clinical or condition-like on screen (alternative: keep it).
 - 2026-11-26: decided for the owner: Chris's class is six Focus students born 2009/2010 (all 16+ this year, `ageGateProblem` passes), sharing scores only (his scopeRequested), in one group "Year 12 wellbeing"; Ana and Chris each have one session of their own.
 - 2026-11-26: Migration 9 → 10 (`addDemoPeople` in db.ts): adds each new person only when their uid and email are free in that browser, and only the links, invites, plans, comments, notes and squad members whose people were all added; renames Hana, moves Sam (keeping any milestones he was shown) and renames Lena's invite only while each is still as the v9 seed left it. A stored v9 shape it can't extend reseeds.
+- 2026-11-26: Fix round (reviewer block): Hana is renamed only when no other account holds hana@demo.local (else she stays Maya Chen at maya@demo.local, and the new Maya isn't added, so every email stays with one account); Sam moves to Focus only when his preferences, `gamification` aside, still equal the v9 seed's exactly, and his seeded check-ins come only with that move. The 8 → 9 step now seeds only Hana's check-ins (what v9 seeded). Tom's empty comment list dropped from the seed so a migrated DB equals a fresh one. Regression tests in db-migrate.test.ts: hana@demo.local taken, Sam edited (v9 and v8), Sam with only `gamification` changed, v8 straight to v10.
+- 2026-11-26: An upgraded browser keeps Lena's pending invite code JRDN7K2Q under the name Ruby Hale; a fresh seed has RBHL7K2Q for it. Codes are opaque, so both work; only the letters differ.
 - 2026-11-26: Server seed parity: rows.ts now writes `pro_profiles` and `consents` (fixed ids `demo-<uid>-consent-<kind>`, so reruns add nothing) and DEMO_UIDS is every seeded person; both tables joined SEED_TABLES. Ana's invites, like Lena's, get codes derived under AUTH_SECRET (seed with the API's secret).
 - 2026-11-26: Existing tests changed (owner approval above, names/counts only): `db-migrate.test.ts` version literals 9 → 10 in four asserts (the bump); `e2e/home-per-goal.spec.ts` and `e2e/mood.spec.ts` "Maya Chen" → "Hana Mori" (and the MAYA const/helper renamed); `server/db/seed.test.ts` people counts 6 → `DEMO_PEOPLE.length` (18), 5 → 17, the skipped-coach link count 0 → 8 (Ana's and Chris's links still land), Lena's pending invite name Jordan Lee → Ruby Hale. New cases added in db-migrate.test.ts and seed.test.ts.
 
@@ -71,6 +73,7 @@ Lead: review and merge into night/2026-11-26. Before a rehearsal, note Maya's "S
 ## Parked
 
 - Home's Milestones card marks a milestone shown the first time it renders, so Maya's waiting "Seven days in a row" is spent on the first sign-in in a browser (a rehearsal uses it up); the demo laptop needs a fresh local DB (clear site data) before the real run, or a "reset demo" action (U3).
+- (reviewer) Seed-time dates go stale in a long-lived browser: Sam's check-ins fall out of the 14-day mood window, the exam date passes, Maya's streak breaks, Jordan's plan runs out. The seed is placed relative to the day it was made; a reseed (or a "reset demo") refreshes them.
 
 ## Done
 
@@ -83,40 +86,29 @@ Lead: review and merge into night/2026-11-26. Before a rehearsal, note Maya's "S
 ### Evidence
 
 ```
+(after merging origin/night/2026-11-26 again, with T-0123; package-lock.json unchanged; DB version 10)
+
 $ npx vitest run src/lib/backend/local/seed-demo-people.test.ts          (A1, A2)
- Test Files  1 passed (1)
       Tests  10 passed (10)
 
 $ npx vitest run src/lib/backend/local/db-migrate.test.ts src/lib/backend/local/seed-demo-people.test.ts   (A3)
  Test Files  2 passed (2)
-      Tests  19 passed (19)
+      Tests  24 passed (24)
 
 $ PORT=3203 npx playwright test e2e/demo-people.spec.ts e2e/smoke.spec.ts e2e/demo-path.spec.ts e2e/home-per-goal.spec.ts e2e/pro-terminology.spec.ts e2e/mood.spec.ts   (A4)
-  17 passed (2.5m)
+  17 passed (2.3m)
 
 $ npx vitest run server/db          (A5)
  Test Files  4 passed (4)
       Tests  35 passed (35)
 
 $ rm -rf playwright-report test-results && npm run check          (A6: lint, typecheck, tests, build)
- exit 0
- Test Files  100 passed | 1 skipped (101)
-      Tests  1385 passed | 1 skipped (1386)
+ exit 0 (lint clean)
+ Test Files  102 passed | 1 skipped (103)
+      Tests  1419 passed | 1 skipped (1420)
  ✓ Compiled successfully; static export
 
-$ git diff --stat ff93706   (this card's work after the merge, before the card commit)
- e2e/auth.ts                              |  22 ++
- e2e/home-per-goal.spec.ts                |   4 +-
- e2e/mood.spec.ts                         |  16 +-
- server/db/seed.test.ts                   |  73 +++-
- server/db/seed.ts                        |   9 +-
- server/db/seed/rows.ts                   |  49 ++-
- server/db/seed/write.ts                  |  12 +
- src/app/cloud/login/page.tsx             |  24 +-
- src/lib/backend/local/db-migrate.test.ts | 119 +++++-
- src/lib/backend/local/db.ts              |   6 +-
- src/lib/backend/local/seed.ts            |  16 +-
- new: e2e/demo-people.spec.ts, src/lib/backend/local/seed-demo-people.test.ts
- (plus 849143d: db.ts +159, seed.ts +484, the interrupted night build)
- src/lib/domain/types.ts: untouched by this card.
+Files this card touches (all in scope): src/lib/backend/local/{seed,db}.ts, seed-demo-people.test.ts (new),
+db-migrate.test.ts, src/app/cloud/login/page.tsx, e2e/{auth.ts,demo-people.spec.ts (new),home-per-goal.spec.ts,mood.spec.ts},
+server/db/{seed.ts,seed/rows.ts,seed/write.ts,seed.test.ts}, CARD.md. src/lib/domain/types.ts untouched.
 ```
