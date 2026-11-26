@@ -1,6 +1,6 @@
 # T-0123 · feat: the invited path: invite page with scope choice, goal prefilled from the professional's kind, the assignment as the first session
 
-Status: done <!-- draft | ready | in progress | blocked | done -->
+Status: blocked <!-- draft | ready | in progress | blocked | done -->
 Branch: card/T-0123 · Held by: nobody
 Created: 2026-11-26 · Source: planning/v1/02-onboarding-and-tailoring.md §2 (invite row), §3.5; 03-launch-checklist.md D12
 
@@ -62,7 +62,7 @@ the professional set.
 
 ## Next step
 
-Lead: review and merge card/T-0123; then the Question and the Parked lines below.
+Held for the owner: approve `CoachInvite.practice` (Questions). Once approved, a follow-up merges night/2026-11-26 into card/T-0123 and resolves the conflicts in `src/lib/backend/local/index.ts` and `src/lib/backend/types.ts` (T-0119 mood check-ins), then integrates `CoachInviteLookup` with T-0122 (I-10): the server and http `getCoachInvite` return coachKind, coachProfession, scopeRequested and practice, `createCoachInvite` stores `practice`, and accepting creates the assignment.
 
 ## Decisions
 
@@ -78,6 +78,7 @@ Lead: review and merge card/T-0123; then the Question and the Parked lines below
 
 ## Questions for me
 
+- [ ] Approve the additive contract field CoachInvite.practice?: ProTemplateId | null (needed so an invite can carry the first practice to someone not yet linked) — Recommended: approve; then a follow-up integrates with T-0119 (local adapter) and T-0122 (server + http getCoachInvite returning coachKind/profession/scopeRequested/practice). Options: carry the practice another way (e.g. create the assignment on accept from the pro's defaults, no contract change); drop the practice from the invite.
 - [ ] Show the invite page to signed-out visitors before sign-up (§2: "who invited them … then sign up")? Today CloudShell sends them to sign in with `?next=`, and the lookup needs a signed-in user. — Recommended: yes, in a card that adds `/cloud/join/` to CloudShell's public paths and a public, rate-limited lookup on the server. Options: keep sign-in first; show only a generic "joining from an invite" note on sign-up (today).
 
 ## Parked
