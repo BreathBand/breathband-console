@@ -536,3 +536,9 @@
     width: 100%;
   }
 }
+
+/* ================================================================ signed out: the invite before sign-up (T-0129) */
+
+.jn-public .jn-avatar {
+  align-self: flex-start;
+}

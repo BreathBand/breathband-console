@@ -12,12 +12,13 @@ import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { invitePractice, practiceAssignment } from "@/lib/domain/invite-context";
 import type { CoachInvite, CoachLink, ShareScope, UserProfile } from "@/lib/domain/types";
-import type { CoachInviteLookup } from "@/lib/backend/types";
+import type { CoachInviteLookup, PublicCoachInvite } from "@/lib/backend/types";
 import { canAnswerCoachInvite, canInviteAthlete, canUseCoachData } from "../authz";
 import { assignments, coachInvites, coachLinks } from "../db/schema";
 import { SHARE_SCOPES } from "../db/schema/people";
+import { clientIp, createRateLimiter, rateLimit } from "../rate-limit";
 import { codeFrom, hashCode, normaliseCode, withFreshCode } from "./codes";
-import { fail, jsonObject, type DataApp, type DataDeps } from "./data";
+import { fail, jsonObject, type DataApp, type DataDeps, type DataEnv } from "./data";
 import { loadProfile } from "./profile";
 
 /** As the local adapter: a coach's invite lasts 14 days; the name keeps 80 characters, the contact 120. */
@@ -26,6 +27,19 @@ const MAX_NAME = 80;
 const MAX_CONTACT = 120;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE = /^\+?[\d\s()-]{7,}$/;
+
+/**
+ * Lookups by code (T-0129). Codes are 8 characters from 32 (40 bits), so at 30
+ * a minute a client would need about 70,000 years to try every code, and with
+ * 10,000 pending invites about one guess in 100 million finds one. 30 at once
+ * still lets a class open a teacher's QR code together from one school network.
+ * The public lookup is limited per client IP, the signed-in one per person
+ * (an account would otherwise be a way round the public limit). Answering an
+ * invite by code tells as much (a miss is "invite-invalid"), so it shares the
+ * signed-in lookup's budget (T-0133): together, 30 a minute per person.
+ */
+export const PUBLIC_LOOKUP_LIMIT = { limit: 30, windowMs: 60_000 } as const;
+export const SIGNED_IN_LOOKUP_LIMIT = { limit: 30, windowMs: 60_000 } as const;
 
 const newInviteSchema = z.object({ athleteName: z.string(), contact: z.string(), practice: z.string().nullish() });
 
@@ -39,7 +53,44 @@ const answerSchema = z.discriminatedUnion("accept", [
 
 type InviteRow = typeof coachInvites.$inferSelect;
 
+/**
+ * The invite page before sign-up (T-0129): anyone, signed in or not. Registered
+ * before the data routes' session check, like the waitlist. Only a pending,
+ * unexpired invite answers, with the minimum (name, kind, profession, scope
+ * asked for, practice); every other code is the same 404, so a guess learns
+ * nothing about used or cancelled codes. Every request counts against the
+ * client's limit, before the lookup.
+ */
+export function publicCoachInviteRoutes(routes: DataApp, { db }: DataDeps) {
+  const limiter = createRateLimiter(PUBLIC_LOOKUP_LIMIT);
+  routes.get(
+    "/coach-invites/:code/preview",
+    rateLimit<DataEnv>(limiter, (c) => clientIp(c)),
+    async (c) => {
+      const code = normaliseCode(c.req.param("code"));
+      const [invite] = await db
+        .select({ coachId: coachInvites.coachId, coachName: coachInvites.coachName, practice: coachInvites.practice })
+        .from(coachInvites)
+        .where(and(eq(coachInvites.codeHash, hashCode(code)), eq(coachInvites.status, "pending"), gt(coachInvites.expiresAt, new Date())));
+      if (!invite) fail("not-found");
+      const coach = await loadProfile(db, invite.coachId, false);
+      const preview: PublicCoachInvite = {
+        coachName: invite.coachName,
+        coachKind: kindOf(coach),
+        coachProfession: coach?.proProfile?.profession ?? null,
+        scopeRequested: coach?.proProfile?.scopeRequested ?? null,
+        practice: invite.practice ?? null,
+      };
+      return c.json(preview);
+    },
+  );
+}
+
 export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
+  // One budget per person for everything that takes a code from them: the lookup and the answer (T-0133).
+  const byCode = createRateLimiter(SIGNED_IN_LOOKUP_LIMIT);
+  const perPerson = rateLimit<DataEnv>(byCode, (c) => c.get("uid"));
+
   /** The code for the coach's invite created at `createdAt`. Rotating AUTH_SECRET changes it: older links stop working. */
   const codeOf = (coachId: string, createdAt: Date) =>
     codeFrom(createHmac("sha256", auth.options.secret).update(`coach-invite\0${coachId}\0${createdAt.getTime()}`).digest());
@@ -104,7 +155,8 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
   // What the athlete sees on opening the link: anyone signed in, without the contact details. Who's
   // asking in their own terms and what they ask to see are read from the professional's profile now,
   // as the local adapter does (T-0123).
-  routes.get("/coach-invites/:code", async (c) => {
+  // Limited per person (T-0129), so an account isn't a way round the public lookup's limit.
+  routes.get("/coach-invites/:code", perPerson, async (c) => {
     const code = normaliseCode(c.req.param("code"));
     const [invite] = await db.select().from(coachInvites).where(eq(coachInvites.codeHash, hashCode(code)));
     if (!invite) fail("not-found");
@@ -124,7 +176,8 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
     return c.json(lookup);
   });
 
-  routes.post("/athletes/:athleteId/coach-invites/:code/response", async (c) => {
+  // Limited per person with the lookup (T-0133): each answer is a guess at a code too.
+  routes.post("/athletes/:athleteId/coach-invites/:code/response", perPerson, async (c) => {
     const { athleteId } = c.req.param();
     const viewer = c.get("uid");
     const athlete = viewer === athleteId ? await loadProfile(db, athleteId, false) : null;

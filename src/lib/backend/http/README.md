@@ -72,7 +72,8 @@ The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}
 - `getAlertRules` answers `DEFAULT_ALERTS` until the coach saves their own (one row per coach).
 - A coach's invite codes are stored only as a SHA-256 hash too, and last 14 days. The coach lists them with the code (to copy the link or revoke it), so each code is derived rather than random: an HMAC of the coach's id and the moment of creation under `AUTH_SECRET`. Rotating the secret breaks the links of invites still pending. `getCoachInvite` answers `null` for an unknown code; accepting or declining claims the invite in one conditional update (pending and unexpired), so it is answered once.
 - Group sessions are state only. `endGroupSession` ends the session with empty `results` and a null `groupAverage`: athletes take part (and save their sessions) over the realtime channel, which isn't built yet.
-- `joinWaitlist` is the one route without a session. The address is trimmed and lower-cased, stored once (a repeat answers the same), at most 254 characters; `source` at most 32.
+- `getPublicCoachInvite` (T-0129) needs no session either: the invite page before sign-up. It answers only a pending, unexpired invite, with the professional's name, kind, profession, the scope they ask for and the practice; every other code is the same `not-found` (`null`). It is limited to 30 lookups a minute per client IP (`server/rate-limit.ts`, in memory per instance), and the signed-in `getCoachInvite` to 30 a minute per person, so neither can be used to guess codes.
+- `joinWaitlist` is the other route without a session. The address is trimmed and lower-cased, stored once (a repeat answers the same), at most 254 characters; `source` at most 32.
 
 ### DataService
 
@@ -115,6 +116,7 @@ The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}
 | `listCoachInvites` | `GET` | `/v1/coaches/{coachId}/coach-invites` |
 | `revokeCoachInvite` | `POST` | `/v1/coaches/{coachId}/coach-invites/{code}/revoke` |
 | `getCoachInvite` | `GET` | `/v1/coach-invites/{code}` |
+| `getPublicCoachInvite` | `GET` | `/v1/coach-invites/{code}/preview` |
 | `respondToCoachInvite` | `POST` | `/v1/athletes/{athleteId}/coach-invites/{code}/response` |
 | `createGroupSession` | `POST` | `/v1/coaches/{hostId}/group-sessions` |
 | `getGroupSession` | `GET` | `/v1/group-sessions/{id}` |

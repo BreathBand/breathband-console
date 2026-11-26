@@ -744,6 +744,24 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       };
     },
 
+    // Anyone, signed in or not (T-0129). Only a pending, unexpired invite answers, with the minimum;
+    // every other code is null. In production a rate-limited endpoint serves it (the API per IP; on
+    // Firebase a Cloud Function, since firestore.rules can't rate-limit a read).
+    async getPublicCoachInvite(code) {
+      await delay();
+      const db = store.read();
+      const invite = db.coachInvites.find((i) => i.code === code.trim().toUpperCase());
+      if (!invite || invite.status !== "pending" || invite.expiresAt <= now().toISOString()) return null;
+      const coach = db.accounts[invite.coachId]?.profile;
+      return {
+        coachName: invite.coachName,
+        coachKind: coach?.proKind ?? coach?.proProfile?.kind ?? null,
+        coachProfession: coach?.proProfile?.profession ?? null,
+        scopeRequested: coach?.proProfile?.scopeRequested ?? null,
+        practice: invite.practice ?? null,
+      };
+    },
+
     // In production this runs in a Cloud Function, like redeemInvite.
     async respondToCoachInvite(athleteId, code, answer) {
       await delay();

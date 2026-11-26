@@ -118,6 +118,8 @@ export function createHttpData(api: ApiClient): DataService {
       await call(R.revokeCoachInvite, { coachId, code });
     },
     getCoachInvite: (code) => orNull(call(R.getCoachInvite, { code })),
+    // Public (T-0129): no session needed; the API answers "not-found" for every code that isn't a pending invite.
+    getPublicCoachInvite: (code) => orNull(call(R.getPublicCoachInvite, { code })),
     respondToCoachInvite: (athleteId, code, answer) => call(R.respondToCoachInvite, { athleteId, code }, answer),
 
     createGroupSession: (hostId, input) => call(R.createGroupSession, { hostId }, input),
