@@ -15,6 +15,13 @@
       "when": 1795677414561,
       "tag": "0001_coaching_group_site_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795680488787,
+      "tag": "0002_pro_profile_details",
+      "breakpoints": true
     }
   ]
 }
