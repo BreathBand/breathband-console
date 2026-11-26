@@ -5,6 +5,8 @@
 import { z } from "zod";
 import { databaseAuthToken, databaseUrl } from "./db/env";
 
+export const DEFAULT_API_PORT = 8787;
+
 export type Mode = "development" | "test" | "production";
 
 const blankAsUndefined = (value: unknown) => (value === "" ? undefined : value);
@@ -12,7 +14,10 @@ const blankAsUndefined = (value: unknown) => (value === "" ? undefined : value);
 const schema = z.object({
   // Unset means production: no stack traces in errors and no CORS unless asked for.
   NODE_ENV: z.preprocess(blankAsUndefined, z.enum(["development", "test", "production"]).default("production")),
-  API_PORT: z.preprocess(blankAsUndefined, z.coerce.number().int().min(1).max(65535).default(8787)),
+  // The API's port. When it is unset, production falls back to PORT (Cloud Run
+  // sets it), then 8787. Outside production PORT is ignored: it is Next's dev port.
+  API_PORT: z.preprocess(blankAsUndefined, z.coerce.number().int().min(1).max(65535).optional()),
+  PORT: z.preprocess(blankAsUndefined, z.coerce.number().int().min(1).max(65535).optional()),
   APP_URL: z.preprocess(blankAsUndefined, z.url().default("http://localhost:3000")),
   STORAGE_DIR: z.preprocess(blankAsUndefined, z.string().default("./data/blobs")),
   SMTP_HOST: z.preprocess(blankAsUndefined, z.string().optional()),
@@ -53,7 +58,7 @@ export function readEnv(source: Record<string, string | undefined> = process.env
   };
   return {
     mode: env.NODE_ENV,
-    port: env.API_PORT,
+    port: env.API_PORT ?? (env.NODE_ENV === "production" ? env.PORT : undefined) ?? DEFAULT_API_PORT,
     appUrl: env.APP_URL,
     databaseUrl: databaseUrl(database),
     databaseAuthToken: databaseAuthToken(database),

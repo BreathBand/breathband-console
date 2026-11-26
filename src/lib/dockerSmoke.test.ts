@@ -1,21 +1,32 @@
 import { describe, expect, it } from "vitest";
+import { SECURITY_HEADERS as SERVER_SECURITY_HEADERS } from "../../server/index";
+import { IMMUTABLE as SERVER_IMMUTABLE } from "../../server/static";
 import {
+  CONTAINER_ENV,
+  HEALTH,
+  IMMUTABLE,
+  PAGES,
   ROUTES,
+  SECURITY_HEADERS,
   SMOKE,
   baseUrl,
   buildArgs,
   checkResponse,
   checkScripts,
+  checkSecurityHeaders,
+  checkStaticCaching,
   containerName,
   describeError,
+  execArgs,
   run,
   runArgs,
   scriptPaths,
+  smokeSecretEnv,
   waitUntilReady,
 } from "../../scripts/docker-smoke-lib.mjs";
 
-const login = ROUTES.find((route) => route.path === "/cloud/login/")!;
-const home = ROUTES.find((route) => route.path === "/")!;
+const login = PAGES.find((route) => route.path === "/cloud/login/")!;
+const home = PAGES.find((route) => route.path === "/")!;
 
 const loginHtml =
   '<!DOCTYPE html><html><head><title>BreathCloud · Breathband</title></head><body>' +
@@ -24,16 +35,32 @@ const loginHtml =
   '<script src="/_next/static/chunks/a1.js"></script></body></html>';
 
 describe("docker smoke config", () => {
-  it("builds with the local backend and maps port 8080", () => {
+  it("builds the production image with the http backend and maps port 8080", () => {
     expect(buildArgs("/repo")).toEqual([
       "build",
       "--build-arg",
-      "NEXT_PUBLIC_BACKEND=local",
+      "NEXT_PUBLIC_BACKEND=http",
       "-t",
       "breathband-console:smoke",
       "/repo",
     ]);
-    expect(runArgs("smoke-1")).toEqual(["run", "-d", "--name", "smoke-1", "-p", "8080:8080", "breathband-console:smoke"]);
+    expect(runArgs("smoke-1")).toEqual([
+      "run",
+      "-d",
+      "--name",
+      "smoke-1",
+      "-p",
+      "8080:8080",
+      "-e",
+      "APP_URL=http://localhost:8080",
+      "-e",
+      "SMTP_HOST=127.0.0.1",
+      "-e",
+      "SMTP_PORT=1025",
+      "-e",
+      "AUTH_SECRET",
+      "breathband-console:smoke",
+    ]);
     expect(baseUrl()).toBe("http://localhost:8080");
     expect(SMOKE.port).toBe(8080);
   });
@@ -42,9 +69,77 @@ describe("docker smoke config", () => {
     expect(containerName(42, 1000)).toBe("breathband-smoke-42-1000");
   });
 
-  it("checks the home page and the console sign-in page", () => {
-    expect(ROUTES.map((route) => route.path)).toEqual(["/", "/cloud/login/"]);
+  it("checks the API's health, the home page and the console sign-in page", () => {
+    expect(ROUTES.map((route) => route.path)).toEqual(["/api/health", "/", "/cloud/login/"]);
+    expect(HEALTH.json).toEqual({ ok: true, db: "up" });
     expect(login.scripts).toContain("Sign in to BreathCloud");
+  });
+
+  it("runs the migrations inside the container", () => {
+    expect(execArgs("smoke-1")).toEqual(["exec", "smoke-1", "node", "build/server/migrate.mjs"]);
+  });
+
+  it("passes AUTH_SECRET through the docker CLI's environment, never on the command line", () => {
+    const env = smokeSecretEnv({ PATH: "/bin" }, Buffer.alloc(32, 7));
+    expect(env).toEqual({ PATH: "/bin", AUTH_SECRET: Buffer.alloc(32, 7).toString("base64") });
+    expect(env.AUTH_SECRET.length).toBeGreaterThanOrEqual(32);
+    expect(smokeSecretEnv({}).AUTH_SECRET).not.toBe(smokeSecretEnv({}).AUTH_SECRET);
+    expect(runArgs("smoke-1").join(" ")).not.toContain(env.AUTH_SECRET);
+    expect(Object.keys(CONTAINER_ENV)).not.toContain("AUTH_SECRET");
+  });
+
+  it("expects the headers and caching the API actually sends", () => {
+    expect(SECURITY_HEADERS).toEqual(
+      Object.fromEntries(Object.entries(SERVER_SECURITY_HEADERS).map(([name, value]) => [name.toLowerCase(), value])),
+    );
+    expect(IMMUTABLE).toBe(SERVER_IMMUTABLE);
+  });
+});
+
+describe("health check", () => {
+  const ok = { status: 200, contentType: "application/json", body: '{"ok":true,"db":"up"}' };
+
+  it("passes when the database is up", () => {
+    expect(checkResponse(ok, HEALTH)).toBeNull();
+    expect(checkResponse({ ...ok, contentType: "application/json; charset=UTF-8" }, HEALTH)).toBeNull();
+  });
+
+  it("fails when the database is down, the body isn't JSON or the status is wrong", () => {
+    expect(checkResponse({ ...ok, body: '{"ok":false,"db":"down"}' }, HEALTH)).toBe(
+      '/api/health: expected {"ok":true,"db":"up"}, got {"ok":false,"db":"down"}',
+    );
+    expect(checkResponse({ ...ok, body: "<html>" }, HEALTH)).toMatch(/^\/api\/health: body isn't JSON/);
+    expect(checkResponse({ ...ok, contentType: "text/html" }, HEALTH)).toMatch(/expected a JSON content-type/);
+    expect(checkResponse({ ...ok, status: 503 }, HEALTH)).toBe("/api/health: expected status 200, got 503");
+  });
+});
+
+describe("headers", () => {
+  const secure = new Headers({
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "X-Frame-Options": "DENY",
+  });
+
+  it("passes a response with every security header", () => {
+    expect(checkSecurityHeaders(secure, "/")).toBeNull();
+  });
+
+  it("names each missing or wrong header", () => {
+    const headers = new Headers(secure);
+    headers.delete("x-frame-options");
+    headers.set("referrer-policy", "no-referrer");
+    expect(checkSecurityHeaders(headers, "/")).toBe(
+      '/: referrer-policy should be "strict-origin-when-cross-origin", got "no-referrer"; ' +
+        'x-frame-options should be "DENY", got null',
+    );
+  });
+
+  it("wants hashed static files cached for good", () => {
+    expect(checkStaticCaching(new Headers({ "Cache-Control": IMMUTABLE }), "/_next/static/a.js")).toBeNull();
+    expect(checkStaticCaching(new Headers(), "/_next/static/a.js")).toBe(
+      '/_next/static/a.js: expected Cache-Control "public, max-age=31536000, immutable", got null',
+    );
   });
 });
 

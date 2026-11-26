@@ -3,6 +3,14 @@
 #   npm run infra:up     # Mailpit, waits until healthy
 #   npm run infra:down
 #
+# Production-like, the image Cloud Run will run (Dockerfile), on :8080:
+#
+#   AUTH_SECRET=$(openssl rand -base64 32) docker compose --profile full up --build
+#
+# runs Mailpit, a one-shot `migrate`, then `app` against a file database in
+# the breathband_app-data volume. AUTH_SECRET comes from your shell, never
+# from this file; without it the app refuses to start.
+#
 # The database needs no container: the default is a libSQL file database,
 # TURSO_DATABASE_URL=file:./data/breathband.db (see .env.example).
 #
@@ -58,8 +66,49 @@ services:
       retries: 10
       start_period: 5s
 
-  # Placeholder: card I-13 adds the `full` profile here (a one-shot migrate
-  # service and the production app image on 8080). Not built yet.
+  # The production image's migration runner, once per `up`; `app` waits for it.
+  migrate:
+    profiles: ["full"]
+    build: .
+    image: breathband-console:full
+    command: ["node", "build/server/migrate.mjs"]
+    volumes:
+      - app-data:/app/data
+
+  # The production image: the API and the static export on one origin.
+  # The image defaults TURSO_DATABASE_URL to file:/app/data/breathband.db.
+  app:
+    profiles: ["full"]
+    build: .
+    image: breathband-console:full
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # From your shell; empty makes the app exit with "AUTH_SECRET is required".
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      APP_URL: http://localhost:8080
+      SMTP_HOST: mail
+      SMTP_PORT: "1025"
+      SMTP_FROM: "Breathband <no-reply@breathband.local>"
+    volumes:
+      - app-data:/app/data
+    depends_on:
+      mail:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8080/api/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
 
 volumes:
   sqld-data:
+  app-data:

@@ -1,16 +1,27 @@
+// npm run docker:smoke: builds the production image (Dockerfile), runs it,
+// applies the migrations inside it, checks /api/health, the home page and the
+// console sign-in page (with their scripts), the security headers and the
+// /_next/static/ caching, then removes the container. Plain Node and the docker
+// CLI, no shell, so it runs the same from Git Bash on Windows and POSIX shells.
+
 import { fileURLToPath } from "node:url";
 import {
+  HEALTH,
   ROUTES,
   SMOKE,
   baseUrl,
   buildArgs,
   checkResponse,
   checkScripts,
+  checkSecurityHeaders,
+  checkStaticCaching,
   containerName,
   describeError,
+  execArgs,
   run,
   runArgs,
   scriptPaths,
+  smokeSecretEnv,
   waitUntilReady,
 } from "./docker-smoke-lib.mjs";
 
@@ -49,30 +60,44 @@ for (const [signal, code] of [
 
 async function fetchText(url) {
   const response = await fetch(url, { redirect: "manual", signal: AbortSignal.timeout(SMOKE.requestTimeoutMs) });
-  return { status: response.status, contentType: response.headers.get("content-type"), body: await response.text() };
+  return {
+    status: response.status,
+    contentType: response.headers.get("content-type"),
+    headers: response.headers,
+    body: await response.text(),
+  };
 }
 
+/** Every problem with one route: status, body, headers, and its scripts' status, headers and caching. */
 async function checkRoute(route) {
   const base = baseUrl();
   let page;
   try {
     page = await fetchText(new URL(route.path, base));
   } catch (error) {
-    return `${route.path}: request failed: ${describeError(error)}`;
+    return [`${route.path}: request failed: ${describeError(error)}`];
   }
-  const problem = checkResponse(page, route);
-  if (problem || route.scripts.length === 0) return problem;
+  const problems = [checkResponse(page, route), checkSecurityHeaders(page.headers, route.path)];
+  if (!route.html) return problems.filter(Boolean);
+
   const sources = [];
-  for (const path of scriptPaths(page.body)) {
+  const paths = scriptPaths(page.body);
+  if (paths.length === 0) problems.push(`${route.path}: no /_next/static/ scripts found in the page`);
+  for (const path of paths) {
     try {
       const script = await fetchText(new URL(path, base));
-      if (script.status !== 200) return `${route.path}: script ${path} returned ${script.status}`;
+      if (script.status !== 200) {
+        problems.push(`${route.path}: script ${path} returned ${script.status}`);
+        continue;
+      }
+      problems.push(checkSecurityHeaders(script.headers, path), checkStaticCaching(script.headers, path));
       sources.push(script.body);
     } catch (error) {
-      return `${route.path}: script ${path} request failed: ${describeError(error)}`;
+      problems.push(`${route.path}: script ${path} request failed: ${describeError(error)}`);
     }
   }
-  return checkScripts(sources, route);
+  if (route.scripts.length > 0) problems.push(checkScripts(sources, route));
+  return problems.filter(Boolean);
 }
 
 async function printLogs(name) {
@@ -96,31 +121,37 @@ async function main() {
 
   const name = containerName();
   container = name;
-  const started = await run("docker", runArgs(name));
+  const started = await run("docker", runArgs(name), { env: smokeSecretEnv() });
   if (started.code !== 0) {
     const stderr = started.stderr.trim();
     const portInUse = /port is already allocated|ports are not available|address already in use/i.test(stderr);
     throw new Error(
       portInUse
-        ? `port ${SMOKE.port} is already in use; stop whatever is listening on it and retry: ${stderr}`
+        ? `port ${SMOKE.port} is already in use (is \`docker compose --profile full\` up?); stop it and retry: ${stderr}`
         : `docker run failed with exit code ${started.code}: ${stderr}`,
     );
   }
   console.log(`Started container ${name} on ${baseUrl()}`);
 
-  await waitUntilReady(`${baseUrl()}/`);
+  await waitUntilReady(`${baseUrl()}${HEALTH.path}`);
 
-  const failures = [];
+  const migrated = await run("docker", execArgs(name));
+  if (migrated.code !== 0) {
+    throw new Error(`migrations failed with exit code ${migrated.code}: ${(migrated.stdout + migrated.stderr).trim()}`);
+  }
+  console.log(`✓ ${migrated.stdout.trim()}`);
+
+  let failed = 0;
   for (const route of ROUTES) {
-    const failure = await checkRoute(route);
-    if (failure) {
-      failures.push(failure);
-      console.error(`✗ ${failure}`);
+    const problems = await checkRoute(route);
+    if (problems.length > 0) {
+      failed += 1;
+      for (const problem of problems) console.error(`✗ ${problem}`);
     } else {
-      console.log(`✓ ${route.path}`);
+      console.log(`✓ ${route.path}${route.html ? " (security headers; scripts cached immutable)" : " (security headers)"}`);
     }
   }
-  if (failures.length > 0) throw new Error(`${failures.length} of ${ROUTES.length} route checks failed`);
+  if (failed > 0) throw new Error(`${failed} of ${ROUTES.length} route checks failed`);
 }
 
 try {

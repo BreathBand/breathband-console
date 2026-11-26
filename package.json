@@ -22,7 +22,9 @@
     "db:studio": "drizzle-kit studio",
     "db:check": "drizzle-kit check",
     "api:dev": "tsx watch --env-file=server/development.env server/main.ts",
-    "api:start": "tsx server/main.ts"
+    "api:start": "tsx server/main.ts",
+    "build:server": "node scripts/build-server.mjs",
+    "start": "node build/server/main.mjs"
   },
   "dependencies": {
     "@hono/node-server": "2.1.11",
