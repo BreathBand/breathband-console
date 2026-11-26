@@ -7,6 +7,7 @@ import { LiveTrace } from "@/components/LiveTrace";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { useDevice } from "@/lib/device/DeviceProvider";
 import { currentSupport, supportAdvice, UNKNOWN_SUPPORT, type BandSupport } from "@/lib/device/support";
+import { firstSession, firstSessionHref } from "@/lib/domain/first-session";
 import { defaultDetails, planDefaults, withOnboardingAnswers, type Plan, type TrackDetails } from "@/lib/domain/goal-questions";
 import { defaultPreferences, GOALS, goalOf, SKILL_LEVELS, skillBandText } from "@/lib/domain/preferences";
 import { cleanProProfile, defaultProProfile, practiceProblem, proSummary, usesProblem } from "@/lib/domain/pro-profile";
@@ -86,7 +87,10 @@ function Welcome({ profile }: { profile: UserProfile }) {
   const choice = route ? onboardingFor(route, sampleData) : null;
   const answered = withOnboardingAnswers(prefs, answers[prefs.goal] ?? null, plan);
   const final = coach ? prefs : choice ? { ...answered, onboarding: choice } : answered;
-  const actions = finishActions(choice);
+  // With a band in hand, finishing goes straight into fit, calibration and the track's first session (§3.1, order rule).
+  const suggested = firstSession(final);
+  const withBand = choice ? deviceKindFor(choice.bandRoute) !== null : false;
+  const actions = finishActions(choice, firstSessionHref(suggested));
   const secondary = actions.secondary;
   const pro = proKind ? cleanProProfile(proAnswers[proKind] ?? defaultProProfile(proKind)) : null;
   const shownPro = proKind ? (proAnswers[proKind] ?? defaultProProfile(proKind)) : null;
@@ -410,6 +414,15 @@ function Welcome({ profile }: { profile: UserProfile }) {
                     <dt>Band</dt>
                     <dd>{bandSummary(choice)}</dd>
                   </div>
+                  {withBand && (
+                    <div>
+                      <dt>First session</dt>
+                      <dd>
+                        {suggested.name} · {suggested.setup.mode === "paced" ? `Paced ${suggested.setup.pacer}-${suggested.setup.pacer}` : "Open"} ·{" "}
+                        {Math.round(suggested.setup.lengthSec / 60)} min, after a strap check and calibration
+                      </dd>
+                    </div>
+                  )}
                 </dl>
               )}
               {error && (
