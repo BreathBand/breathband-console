@@ -16,12 +16,14 @@ import { authSecret, createAuth } from "../../../../server/auth";
 import { createDb } from "../../../../server/db/client";
 import { MIGRATIONS_DIR } from "../../../../server/db/env";
 import { assertLocalDatabaseUrl } from "../../../../server/db/guard";
-import { coachLinks, consents, user as userTable } from "../../../../server/db/schema";
+import { coachLinks, consents, invites, user as userTable } from "../../../../server/db/schema";
 import { createApp } from "../../../../server/index";
+import { hashCode } from "../../../../server/routes/coaching";
 import type { Email, Mailer } from "../../../../server/mailer";
 import { createFsStorage } from "../../../../server/storage";
-import type { DataContractHarness } from "../contract/data.harness";
-import { PASSWORD, refusal, signUpInput, uniqueEmail } from "../contract/data.harness";
+import { describeCoachingContract } from "../contract/coaching.contract";
+import type { DataContractHarness, Person } from "../contract/data.harness";
+import { linkThroughInvites, PASSWORD, refusal, signUpInput, uniqueEmail } from "../contract/data.harness";
 import { describeProfileContract } from "../contract/profile.contract";
 import { describeSessionsContract } from "../contract/sessions.contract";
 import type { AuthUser } from "../types";
@@ -104,7 +106,8 @@ async function confirmEmail(address: string) {
   const email = outbox.filter((e) => e.to === address && /confirm your email/i.test(e.subject)).at(-1);
   const link = email?.text.match(/https?:\/\/\S+/)?.[0];
   if (!link) throw new Error(`no confirmation email to ${address}`);
-  const confirmed = await fetch(link, { redirect: "manual" });
+  // Its own client IP, like every request here: Better Auth rate-limits per IP, and the coaching sections confirm many people.
+  const confirmed = await fetch(link, { redirect: "manual", headers: { "X-Forwarded-For": nextIp() } });
   if (confirmed.status !== 302) throw new Error(`confirming ${address} failed: ${confirmed.status}`);
 }
 
@@ -121,6 +124,9 @@ const updateUser = (uid: string, fields: Record<string, unknown>) =>
     body: JSON.stringify(fields),
   });
 
+/** Every person made so far, by uid, so `link` can act in each one's browser. */
+const people = new Map<string, Person>();
+
 const harness = (): DataContractHarness => ({
   async person(role = "athlete") {
     const fetchImpl = browser();
@@ -130,21 +136,20 @@ const harness = (): DataContractHarness => ({
     await confirmEmail(input.email);
     const user = await backend.auth.signIn(input.email, input.password);
     browsers.set(user.uid, fetchImpl);
-    return { uid: user.uid, email: user.email, birthYear: input.birthYear, backend };
+    const person = { uid: user.uid, email: user.email, birthYear: input.birthYear, backend };
+    people.set(user.uid, person);
+    return person;
   },
   async updateAccount(person, fields) {
     return (await updateUser(person.uid, fields)).ok ? "accepted" : "refused";
   },
   signedOut: () => open(),
-  async link(coachId, athleteId, scope) {
-    const where = and(eq(coachLinks.coachId, coachId), eq(coachLinks.athleteId, athleteId));
-    if (!scope) await handle.db.delete(coachLinks).where(where);
-    else await handle.db.insert(coachLinks).values({ coachId, athleteId, scope }).onConflictDoUpdate({ target: [coachLinks.coachId, coachLinks.athleteId], set: { scope } });
-  },
+  link: linkThroughInvites(people),
 });
 
 describeProfileContract("http", harness);
 describeSessionsContract("http", harness);
+describeCoachingContract("http", harness);
 
 describe("the API behind the http DataService", () => {
   const post = (path: string, body: unknown) =>
@@ -240,5 +245,57 @@ describe("the API behind the http DataService", () => {
     expect(existsSync(blob)).toBe(true);
     await person.backend.data.deleteSession(person.uid, saved.id);
     expect(existsSync(blob)).toBe(false);
+  });
+});
+
+describe("the coaching API behind the http DataService", () => {
+  const people = async () => Promise.all([harness().person(), harness().person("coach")]);
+  const inviteRows = async (athleteId: string) => handle.db.select().from(invites).where(eq(invites.athleteId, athleteId));
+
+  it("stores only a hash of an invite code, and marks it redeemed", async () => {
+    const [ana, cara] = await people();
+    const invite = await ana.backend.data.createInvite(ana.uid, "scores");
+    const [row] = await inviteRows(ana.uid);
+    expect(row).toMatchObject({ codeHash: hashCode(invite.code), scope: "scores", status: "pending" });
+    expect(JSON.stringify(row)).not.toContain(invite.code);
+    expect(row.expiresAt.toISOString()).toBe(invite.expiresAt);
+
+    await cara.backend.data.redeemInvite(cara.uid, invite.code);
+    expect((await inviteRows(ana.uid))[0].status).toBe("redeemed");
+    const [link] = await handle.db.select().from(coachLinks).where(and(eq(coachLinks.coachId, cara.uid), eq(coachLinks.athleteId, ana.uid)));
+    expect(link).toMatchObject({ scope: "scores", targets: null });
+  });
+
+  it("refuses an expired invite and makes no link", async () => {
+    const [ana, cara] = await people();
+    const invite = await ana.backend.data.createInvite(ana.uid);
+    await handle.db.update(invites).set({ expiresAt: new Date(Date.now() - 1000) }).where(eq(invites.codeHash, hashCode(invite.code)));
+    await refusal(cara.backend.data.redeemInvite(cara.uid, invite.code), "invite-invalid");
+    expect(await cara.backend.data.getCoachLink(cara.uid, ana.uid)).toBeNull();
+  });
+
+  it("lets one of two coaches racing for the same code have it", async () => {
+    const [ana, cara] = await people();
+    const other = await harness().person("coach");
+    const invite = await ana.backend.data.createInvite(ana.uid);
+    const results = await Promise.allSettled([cara, other].map((c) => c.backend.data.redeemInvite(c.uid, invite.code)));
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
+    expect(results.find((r) => r.status === "rejected")).toMatchObject({ reason: { code: "invite-invalid" } });
+    expect(await ana.backend.data.listCoaches(ana.uid)).toHaveLength(1);
+  });
+
+  // The local adapter accepts any key here; the API stores marks only for sessions the coach can read.
+  it("marks only a session that exists, of an athlete the coach is linked to", async () => {
+    const [ana, cara] = await people();
+    const saved = await ana.backend.data.saveSession(
+      ana.uid,
+      { startedAt: "2026-11-24T08:00:00.000Z", durationSec: 60, mode: "open", pacerHalfCycleSec: null, scores: null, scoringVersion: "transition-v1", respirationRateBpm: null, note: "", appVersion: "web" },
+      { sampleIntervalMs: 50, user: [0, 1, 0], pacer: null, markers: [], calibration: { min: 0, max: 1 } },
+    );
+    await refusal(cara.backend.data.markSessionSeen(cara.uid, ana.uid, saved.id), "permission-denied");
+    const invite = await ana.backend.data.createInvite(ana.uid);
+    await cara.backend.data.redeemInvite(cara.uid, invite.code);
+    await refusal(cara.backend.data.markSessionSeen(cara.uid, ana.uid, "no-such-session"), "not-found");
+    expect(await cara.backend.data.listSeenSessions(cara.uid)).toEqual([]);
   });
 });

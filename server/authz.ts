@@ -2,7 +2,7 @@
 // functions. Routes look up who is asking and the coach link, then ask here.
 // The local adapter (src/lib/backend/local) enforces the same rules in the browser.
 //
-// I-08 covers profiles, sessions and waveforms; coaching (I-09) adds its own.
+// I-08 covers profiles, sessions and waveforms; I-09 coaching (below).
 
 import type { Role, ShareScope } from "@/lib/domain/types";
 
@@ -51,4 +51,49 @@ export function canWriteOwn(viewerId: string, ownerId: string): boolean {
 /** `proFieldsOk`: `proKind` and `proProfile` are for professionals (role "coach") only. */
 export function canSetProFields(role: Role): boolean {
   return role === "coach";
+}
+
+// Coaching (I-09): links, invites, practice, comments and a coach's own working data.
+
+/** `coachLinks` read: either side of the link. */
+export function canReadLink(viewerId: string, coachId: string, athleteId: string): boolean {
+  return isSelf(viewerId, coachId) || isSelf(viewerId, athleteId);
+}
+
+/** `coachLinks` update (scope) and delete (revoke), and creating an invite: the athlete only. */
+export function canManageSharing(viewerId: string, athleteId: string): boolean {
+  return isSelf(viewerId, athleteId);
+}
+
+/** The redeemInvite function: the redeemer acts as themselves, never on their own invite. */
+export function canRedeemInvite(viewerId: string, coachId: string, inviteAthleteId: string): boolean {
+  return isSelf(viewerId, coachId) && coachId !== inviteAthleteId;
+}
+
+/**
+ * A linked coach acting as themselves on the athlete: setting practice, targets,
+ * a private note. `link` is the coach's link to the athlete (null: none or revoked).
+ */
+export function canCoach(viewerId: string, coachId: string, link: LinkScope): boolean {
+  return isSelf(viewerId, coachId) && link !== null;
+}
+
+/** Assignment update (cancel): the coach who set it, linked or not. */
+export function canCancelAssignment(viewerId: string, setById: string): boolean {
+  return isSelf(viewerId, setById);
+}
+
+/** Comment and kudos create: whoever can read the athlete (the athlete, or a linked coach in any scope). */
+export function canComment(viewerId: string, athleteId: string, link: LinkScope): boolean {
+  return canReadAthlete(viewerId, athleteId, link);
+}
+
+/** Comment delete: its author only. */
+export function canDeleteComment(viewerId: string, authorId: string): boolean {
+  return isSelf(viewerId, authorId);
+}
+
+/** `coaches/{coachId}/...` (seen marks, private notes): the coach only. Nobody else reads them, the athlete included. */
+export function canUseCoachData(viewerId: string, coachId: string): boolean {
+  return isSelf(viewerId, coachId);
 }

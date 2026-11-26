@@ -6,7 +6,7 @@ import { backendKind, createBackend } from "../index";
 import { createSeededDb, memoryStore } from "../local/db";
 import { createLocalBackend } from "../local";
 import type { SessionSummary, Waveform } from "@/lib/domain/types";
-import { BackendError, type BackendErrorCode, type NewSession, type SignUpInput } from "../types";
+import { BackendError, type BackendErrorCode, type NewAssignment, type NewSession, type SignUpInput } from "../types";
 import { createHttpBackend, HTTP_METHODS, HTTP_ROUTES, toBackendError } from "./index";
 
 const NOW = new Date("2026-11-18T12:00:00.000Z");
@@ -196,6 +196,11 @@ describe("toBackendError", () => {
 
 describe("http DataService", () => {
   const SERVED = ["getProfile", "updateProfile", "listSessions", "getSession", "getWaveform", "updateSessionNote", "saveSession", "deleteSession"];
+  const COACHING = [
+    "listAthletes", "listCoaches", "getCoachLink", "setCoachScope", "createInvite", "redeemInvite", "revokeCoach",
+    "listAssignments", "createAssignment", "cancelAssignment", "listComments", "addComment", "deleteComment",
+    "listSeenSessions", "markSessionSeen", "getCoachNote", "saveCoachNote", "setTargets",
+  ];
   const session = { id: "s 1", athleteId: "a/1" } as SessionSummary;
 
   it("I-08: serves profile, sessions and waveforms under /api/v1, path parameters encoded", async () => {
@@ -239,10 +244,65 @@ describe("http DataService", () => {
     await expect(httpBackend(fetch).data.getProfile("u-1")).rejects.toMatchObject({ code: "invalid-input" });
   });
 
-  it("I-09/I-10: every other method fails with BackendError('unavailable') until the API serves it", async () => {
+  it("I-09: serves coaching under /api/v1: verbs, encoded path parameters and bodies", async () => {
+    const { fetch, calls } = fakeFetch();
+    const { data } = httpBackend(fetch);
+    const targets = { score: 8, rateLow: 10, rateHigh: 14, sessionsPerWeek: 4 };
+    const assignment = { athleteId: "a/1" } as NewAssignment;
+    await data.listAthletes("c 1");
+    await data.listCoaches("a/1");
+    await data.getCoachLink("c 1", "a/1");
+    await data.setCoachScope("a/1", "c 1", "scores");
+    await data.createInvite("a/1", "curves");
+    await data.redeemInvite("c 1", "ABCD2345");
+    await data.revokeCoach("a/1", "c 1");
+    await data.listAssignments("a/1");
+    await data.createAssignment("c 1", assignment);
+    await data.cancelAssignment("a/1", "x 1");
+    await data.listComments("a/1", "s 1");
+    await data.addComment("a/1", "s 1", { kind: "comment", text: "Nice" });
+    await data.deleteComment("a/1", "s 1", "m 1");
+    await data.listSeenSessions("c 1");
+    await data.markSessionSeen("c 1", "a/1", "s 1");
+    await data.saveCoachNote("c 1", "a/1", "private");
+    await data.setTargets("c 1", "a/1", targets);
+    expect(calls.map((c) => `${c.init.method} ${c.url}`)).toEqual([
+      `GET ${API}/api/v1/coaches/c%201/athletes`,
+      `GET ${API}/api/v1/athletes/a%2F1/coaches`,
+      `GET ${API}/api/v1/coach-links/c%201/a%2F1`,
+      `PATCH ${API}/api/v1/athletes/a%2F1/coaches/c%201/scope`,
+      `POST ${API}/api/v1/athletes/a%2F1/invites`,
+      `POST ${API}/api/v1/coaches/c%201/invites/redeem`,
+      `DELETE ${API}/api/v1/athletes/a%2F1/coaches/c%201`,
+      `GET ${API}/api/v1/athletes/a%2F1/assignments`,
+      `POST ${API}/api/v1/coaches/c%201/assignments`,
+      `POST ${API}/api/v1/athletes/a%2F1/assignments/x%201/cancel`,
+      `GET ${API}/api/v1/athletes/a%2F1/comments?sessionId=s+1`,
+      `POST ${API}/api/v1/athletes/a%2F1/sessions/s%201/comments`,
+      `DELETE ${API}/api/v1/athletes/a%2F1/sessions/s%201/comments/m%201`,
+      `GET ${API}/api/v1/coaches/c%201/seen`,
+      `PUT ${API}/api/v1/coaches/c%201/seen/a%2F1/s%201`,
+      `PUT ${API}/api/v1/coaches/c%201/athletes/a%2F1/note`,
+      `PUT ${API}/api/v1/coaches/c%201/athletes/a%2F1/targets`,
+    ]);
+    expect(calls.map((c) => c.body)).toEqual([
+      null, null, null, { scope: "scores" }, { scope: "curves" }, { code: "ABCD2345" }, {},
+      null, assignment, {}, null, { kind: "comment", text: "Nice" }, {},
+      null, {}, { text: "private" }, targets,
+    ]);
+  });
+
+  it("I-09: reads a coach note out of its answer, and a missing link as null", async () => {
+    const { fetch } = fakeFetch(json({ text: "private" }), json({ error: { code: "not-found", message: "Not found" } }, 404));
+    const { data } = httpBackend(fetch);
+    expect(await data.getCoachNote("c-1", "a-1")).toBe("private");
+    expect(await data.getCoachLink("c-1", "a-1")).toBeNull();
+  });
+
+  it("I-10: every other method fails with BackendError('unavailable') until the API serves it", async () => {
     const { fetch } = fakeFetch();
     const { data } = httpBackend(fetch);
-    for (const method of (Object.keys(HTTP_ROUTES.data) as (keyof typeof data)[]).filter((m) => !SERVED.includes(m))) {
+    for (const method of (Object.keys(HTTP_ROUTES.data) as (keyof typeof data)[]).filter((m) => !SERVED.includes(m) && !COACHING.includes(m))) {
       let error: unknown;
       try {
         await (data[method] as () => unknown)();
@@ -250,7 +310,7 @@ describe("http DataService", () => {
         error = e;
       }
       expect(error, method).toBeInstanceOf(BackendError);
-      expect(error, method).toMatchObject({ code: "unavailable", message: expect.stringContaining("I-09") });
+      expect(error, method).toMatchObject({ code: "unavailable", message: expect.stringContaining("I-10") });
     }
     expect(fetch).not.toHaveBeenCalled();
   });

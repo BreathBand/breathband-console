@@ -1,10 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
+  canCancelAssignment,
+  canCoach,
+  canComment,
+  canDeleteComment,
+  canManageSharing,
   canReadAthlete,
   canReadCurves,
   canReadPrivateProfile,
+  canReadLink,
   canReadProfile,
+  canRedeemInvite,
   canSetProFields,
+  canUseCoachData,
   canWriteOwn,
   type LinkScope,
 } from "./authz";
@@ -65,5 +73,71 @@ describe("professional fields", () => {
   it("are for role coach only", () => {
     expect(canSetProFields("coach")).toBe(true);
     expect(canSetProFields("athlete")).toBe(false);
+  });
+});
+
+describe("coach links and invites (I-09)", () => {
+  it("lets either side read the link, and nobody else", () => {
+    expect(canReadLink(COACH, COACH, ATHLETE)).toBe(true);
+    expect(canReadLink(ATHLETE, COACH, ATHLETE)).toBe(true);
+    expect(canReadLink(STRANGER, COACH, ATHLETE)).toBe(false);
+  });
+
+  it("leaves invites, scope and revoking to the athlete", () => {
+    expect(canManageSharing(ATHLETE, ATHLETE)).toBe(true);
+    expect(canManageSharing(COACH, ATHLETE)).toBe(false);
+    expect(canManageSharing(STRANGER, ATHLETE)).toBe(false);
+  });
+
+  it("redeems an invite only as yourself, and never your own", () => {
+    expect(canRedeemInvite(COACH, COACH, ATHLETE)).toBe(true);
+    expect(canRedeemInvite(STRANGER, COACH, ATHLETE)).toBe(false);
+    expect(canRedeemInvite(ATHLETE, ATHLETE, ATHLETE)).toBe(false);
+  });
+});
+
+describe("coaching a linked athlete (I-09)", () => {
+  it.each<[LinkScope, boolean]>([
+    ["scores", true],
+    ["curves", true],
+    [null, false],
+  ])("sets practice, targets and notes with a %s link: %s", (link, allowed) => {
+    expect(canCoach(COACH, COACH, link)).toBe(allowed);
+  });
+
+  it("never lets someone coach in another's name, linked or not", () => {
+    expect(canCoach(ATHLETE, COACH, "curves")).toBe(false);
+    expect(canCoach(STRANGER, COACH, "curves")).toBe(false);
+  });
+
+  it("lets only the coach who set practice cancel it, even after a revoke", () => {
+    expect(canCancelAssignment(COACH, COACH)).toBe(true);
+    expect(canCancelAssignment(ATHLETE, COACH)).toBe(false);
+    expect(canCancelAssignment(STRANGER, COACH)).toBe(false);
+  });
+});
+
+describe("comments and kudos (I-09)", () => {
+  it.each<[string, string, LinkScope, boolean]>([
+    ["the athlete", ATHLETE, null, true],
+    ["a scores-only coach", COACH, "scores", true],
+    ["a curves coach", COACH, "curves", true],
+    ["a revoked coach", COACH, null, false],
+    ["a stranger", STRANGER, null, false],
+  ])("%s may comment: %s", (_, viewer, link, allowed) => {
+    expect(canComment(viewer, ATHLETE, link)).toBe(allowed);
+  });
+
+  it("lets only the author delete one", () => {
+    expect(canDeleteComment(COACH, COACH)).toBe(true);
+    expect(canDeleteComment(ATHLETE, COACH)).toBe(false);
+  });
+});
+
+describe("a coach's own working data (I-09)", () => {
+  it("is the coach's alone: the athlete never reads the seen marks or the private notes", () => {
+    expect(canUseCoachData(COACH, COACH)).toBe(true);
+    expect(canUseCoachData(ATHLETE, COACH)).toBe(false);
+    expect(canUseCoachData(STRANGER, COACH)).toBe(false);
   });
 });
