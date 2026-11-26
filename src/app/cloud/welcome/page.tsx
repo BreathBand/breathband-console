@@ -14,7 +14,7 @@ import { withProDefaults } from "@/lib/domain/pro-defaults";
 import { cleanProProfile, defaultProProfile, practiceProblem, proSummary, usesProblem } from "@/lib/domain/pro-profile";
 import { hasProTerms, proConsents, requiredProConsents } from "@/lib/domain/pro-terms";
 import { peopleNouns } from "@/lib/domain/terminology";
-import type { BandRoute, BreathGoal, GoalDetails, ProConsentKind, ProKind, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
+import type { BandRoute, BreathGoal, CoachInvite, GoalDetails, ProConsentKind, ProKind, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
 import { LENGTHS } from "@/lib/prefs";
 import { markSetupFinished } from "../CloudShell";
 import { stateWords } from "../device/words";
@@ -22,6 +22,7 @@ import { bandSummary, deviceKindFor, finishActions, initialRoute, onboardingFor,
 import { GoalQuestions } from "./GoalQuestions";
 import { daysText, PlanStep } from "./PlanStep";
 import { DefaultsStep, TemplatesStep, termsAgreed, TermsStep } from "./ProFinishSteps";
+import { InviteStep, TryStep } from "./ProStartSteps";
 import { KindStep, PeopleStep, PracticeStep, UsesStep } from "./ProSteps";
 import { Waitlist } from "./Waitlist";
 
@@ -40,11 +41,14 @@ type Step =
   | "defaults"
   | "templates"
   | "terms"
+  | "try"
+  | "invite"
   | "done";
 const ATHLETE_STEPS: Step[] = ["name", "goal", "questions", "level", "sessions", "plan", "band", "done"];
 // Professionals sign up with role "coach"; the kind step says which kind of work (planning/v1/02 §4.1).
-// The terms come last, just before Finish, so they're agreed with everything else in view.
-const COACH_STEPS: Step[] = ["name", "kind", "practice", "uses", "people", "defaults", "templates", "terms", "done"];
+// The terms come after the questions, so they're agreed with everything else in view. Agreeing saves the
+// profile; trying a session and the first invite (T-0120) follow, as the professional they now are.
+const COACH_STEPS: Step[] = ["name", "kind", "practice", "uses", "people", "defaults", "templates", "terms", "try", "invite", "done"];
 const STEP_LABELS: Record<Step, string> = {
   name: "You",
   goal: "Your goal",
@@ -60,6 +64,8 @@ const STEP_LABELS: Record<Step, string> = {
   defaults: "Defaults",
   templates: "Templates",
   terms: "Terms",
+  try: "Try it",
+  invite: "Invite",
   done: "Ready",
 };
 
@@ -105,6 +111,9 @@ function Welcome({ profile }: { profile: UserProfile }) {
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Professionals: whether the profile is saved (at the terms step), and the invite made on the invite step.
+  const [saved, setSaved] = useState(false);
+  const [invite, setInvite] = useState<CoachInvite | null>(null);
   const index = steps.indexOf(step);
   const first = name.trim().split(" ")[0] || "there";
 
@@ -130,11 +139,12 @@ function Welcome({ profile }: { profile: UserProfile }) {
     setPrefs((p) => ({ ...p, goal, session: { ...g.session }, sessionsPerWeek: g.sessionsPerWeek }));
   };
 
-  async function finish(next: string) {
+  /** Stores every answer and marks setup finished. False (with the error shown) when it couldn't. */
+  async function save(): Promise<boolean> {
     // A professional can't finish without the terms (and a clinician's or educator's acknowledgement).
     if (coach && pro && !agreedToTerms) {
       setStep("terms");
-      return;
+      return false;
     }
     setSaving(true);
     setError(null);
@@ -145,10 +155,26 @@ function Welcome({ profile }: { profile: UserProfile }) {
         ...(coach && pro ? { proKind: pro.kind, proProfile: pro, proConsents: proConsents(pro.kind) } : {}),
       });
       markSetupFinished();
-      router.replace(next);
+      setSaved(true);
+      return true;
     } catch (e) {
-      setSaving(false);
       setError(e instanceof Error ? e.message : "Couldn't save your choices. Try again.");
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function finish(next: string) {
+    // Professionals saved at the terms step; everyone else saves here.
+    if (coach && saved) {
+      setSaving(true);
+      router.replace(next);
+      return;
+    }
+    if (await save()) {
+      setSaving(true);
+      router.replace(next);
     }
   }
 
@@ -285,8 +311,39 @@ function Welcome({ profile }: { profile: UserProfile }) {
           {step === "terms" && pro && (
             <section>
               <TermsStep value={pro} agreed={agreed} onAgreed={setAgreed} />
-              <Nav onBack={() => go(-1)} onNext={() => go(1)} nextDisabled={!agreedToTerms} />
+              {error && (
+                <p className="error" role="alert">
+                  {error}
+                </p>
+              )}
+              <Nav
+                onBack={() => go(-1)}
+                onNext={async () => {
+                  // Agreeing saves the profile, so the recorder and the invite that follow work as this professional.
+                  if (await save()) go(1);
+                }}
+                nextLabel={saving ? "Saving…" : "Continue"}
+                nextDisabled={!agreedToTerms || saving}
+              />
             </section>
+          )}
+
+          {step === "try" && pro && (
+            <TryStep
+              kind={pro.kind}
+              nouns={nouns}
+              support={support}
+              onRecord={() => {
+                setSaving(true);
+                router.push(firstSessionHref(firstSession(null)));
+              }}
+              onSkip={() => go(1)}
+              onBack={() => go(-1)}
+            />
+          )}
+
+          {step === "invite" && (
+            <InviteStep coachId={profile.uid} nouns={nouns} invite={invite} onInvite={setInvite} onNext={() => go(1)} onBack={() => go(-1)} />
           )}
 
           {step === "level" && (
@@ -421,7 +478,9 @@ function Welcome({ profile }: { profile: UserProfile }) {
               {coach ? (
                 <>
                   <p className="welcome-lede">
-                    Add your first {nouns.many} by sending them a link or entering the code they give you.
+                    {invite
+                      ? `Your invite for ${invite.athleteName} is ready. Add more ${nouns.many} any time from the ${nouns.Many} page.`
+                      : `Add your first ${nouns.many} by sending them a link or entering the code they give you.`}
                   </p>
                   {pro && (
                     <dl className="welcome-summary">
