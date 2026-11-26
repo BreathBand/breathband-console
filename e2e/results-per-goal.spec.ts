@@ -78,7 +78,10 @@ test("the results differ for Train and Calm: what leads, and the coaching line",
   await expect(results).toHaveAttribute("data-goal", "calm");
   await expect(page.locator(".res-word")).toContainText("Total Breath Score");
   const calmLine = await page.locator(".res-line").innerText();
-  expect(calmLine).toMatch(/^(Nice\. \w+ days in a row\.|Done for today\. Nice\.|Done\. \w+ days in a row\.|Done for today\.)$/);
+  // "Done for today" only once the ring's minutes are met (T-0138); before that, what finishes today.
+  expect(calmLine).toMatch(
+    /^(Nice\. \w+ days in a row\.|Done for today\. Nice\.|Done\. \w+ days in a row\.|Done for today\.|(Good start|That's a start|\w+ days in a row)\. (\w+ more minutes|A minute or less) finishes today\.)$/,
+  );
   expect(calmLine).not.toBe(trainLine);
   await expect(page.locator(".res-tip")).toHaveText(/^(Next time, .+|Same again next time\.)$/);
   await expect(page.locator(".res-more")).not.toHaveAttribute("open", /.*/);

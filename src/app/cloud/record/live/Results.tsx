@@ -39,6 +39,7 @@ export function Results({
   title,
   goal,
   streakDays,
+  leftToday = 0,
   askMood = false,
   moodBefore = null,
   onSave,
@@ -51,6 +52,8 @@ export function Results({
   goal: BreathGoal | null;
   /** Days in a row with a session, this one included. */
   streakDays: number;
+  /** Whole minutes still to close today's ring, this session included (home/tailor.ts `minutesLeftToday`); 0 once closed. */
+  leftToday?: number;
   /** Focus with the mood check-in on (J6): ask how they feel now, and name the change in the line. */
   askMood?: boolean;
   /** The mood picked before Begin, if any. */
@@ -100,7 +103,7 @@ export function Results({
   const { session, paced, open } = built;
   const total = paced?.scores.total;
   const mood = askMood ? { before: moodBefore, after: moodAfter } : null;
-  const coach = coaching({ goal, session, streakDays, turns: paced?.transitions, rates, mood });
+  const coach = coaching({ goal, session, streakDays, leftToday, turns: paced?.transitions, rates, mood });
   const share = emphasis.share ? onTargetShare(session) : null;
   const rate = open?.whole.metrics?.rateBpm;
 

@@ -96,3 +96,50 @@ test("Done for today only once today's minutes meet the ring", async ({ page }) 
   await expect(ring).toContainText("3 of 3 min, ring closed");
   await expect(line).toHaveText(/^Nice\. \w+ days in a row\.$/);
 });
+
+// T-0138: the same rule after a session, and the professional's word on the client's own tabs.
+
+test("the results and the review agree with Home: a short session reads as a start, not done for today", async ({ page }) => {
+  test.setTimeout(240_000);
+  await signInAsCalm(page);
+  await expect(page.locator(".home")).toHaveAttribute("data-goal", "calm", { timeout: 30_000 });
+
+  await page.goto("/cloud/device/");
+  await page.getByRole("button", { name: "Simulated band", exact: false }).first().click();
+  await page.getByRole("button", { name: "Start the simulated band" }).click();
+  await expect(page.getByRole("heading", { level: 2, name: "Simulated band" })).toBeVisible({ timeout: 15_000 });
+  // Navigate inside the app: a full page load would drop the band's connection.
+  await main(page).getByRole("link", { name: "Record" }).click();
+  await page.waitForURL(/\/cloud\/record\/$/);
+  await page.getByRole("button", { name: "Start session" }).click();
+  await page.waitForURL(/\/cloud\/record\/live\//);
+  await expect(page.getByRole("heading", { name: "Calibrated" })).toBeVisible({ timeout: 90_000 });
+  await page.getByRole("button", { name: "Begin" }).click();
+  await expect(page.getByRole("button", { name: /Stop early/ })).toBeVisible({ timeout: 10_000 });
+  await page.waitForTimeout(32_000);
+  await page.getByRole("button", { name: /Stop early/ }).click();
+
+  // About 30 seconds of Maya's 3 minutes: the results say what's left, never "Done for today".
+  const results = page.locator(".res-line");
+  await expect(results).toHaveText(/^\w+ days in a row\. Three more minutes finishes today\.$/);
+  const said = await results.innerText();
+
+  await page.getByRole("button", { name: "Save session" }).click();
+  await page.waitForURL(/\/cloud\/session\//);
+  await expect(page.getByRole("region", { name: "Coaching" })).toContainText(said);
+
+  await main(page).getByRole("link", { name: "Home" }).click();
+  await expect(page.locator(".home")).toHaveAttribute("data-goal", "calm", { timeout: 30_000 });
+  await expect(page.getByRole("region", { name: "This week" }).locator(".home-ring")).toContainText(/Today\s*0 of 3 min/);
+  await expect(page.locator(".home-line")).toHaveText(said);
+});
+
+test("a clinician's client's own tabs name the clinician, not a coach", async ({ page }) => {
+  await signInAsClient(page);
+  // The reviewer's path: the "Practice" link on the From Ana card.
+  await page.getByRole("region", { name: "From Ana" }).getByRole("link", { name: "Practice" }).click();
+  await page.waitForURL(/\/cloud\/sessions\/\?tab=plan/);
+  const tabs = page.getByRole("navigation", { name: "Your data" });
+  await expect(tabs.getByRole("link", { name: /^From your clinician/ })).toHaveAttribute("aria-current", "page", { timeout: 30_000 });
+  await expect(page.getByText("From your coach")).toHaveCount(0);
+});

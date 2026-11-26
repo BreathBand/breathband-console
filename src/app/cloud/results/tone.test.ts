@@ -324,6 +324,37 @@ describe("Calm: showing up, one tip", () => {
   });
 });
 
+describe("Calm: 'done for today' waits for the ring, as on Home", () => {
+  it("before the ring closes: a start and the minutes still to go, never 'done'", () => {
+    expect(coaching({ goal: "calm", session: GOOD, streakDays: 1, leftToday: 3 }).line).toBe("Good start. Three more minutes finishes today.");
+    expect(coaching({ goal: "calm", session: GOOD, streakDays: 1, leftToday: 1 }).line).toBe("Good start. A minute or less finishes today.");
+    expect(coaching({ goal: "calm", session: GOOD, streakDays: 4, leftToday: 2 }).line).toBe("Four days in a row. Two more minutes finishes today.");
+    expect(coaching({ goal: "calm", session: open(14), streakDays: 1, leftToday: 3 }).line).toBe("Good start. Three more minutes finishes today.");
+  });
+  it("before the ring closes, a middling or poor session gets no praise", () => {
+    expect(coaching({ goal: "calm", session: POOR, streakDays: 1, leftToday: 3 }).line).toBe("That's a start. Three more minutes finishes today.");
+    expect(coaching({ goal: "calm", session: MIDDLING, streakDays: 3, leftToday: 2 }).line).toBe("Three days in a row. Two more minutes finishes today.");
+  });
+  it("once the ring closes: done for today", () => {
+    expect(coaching({ goal: "calm", session: GOOD, streakDays: 1, leftToday: 0 }).line).toBe("Done for today. Nice.");
+    expect(coaching({ goal: "calm", session: POOR, streakDays: 1, leftToday: 0 }).line).toBe("Done for today.");
+  });
+  it("a clinician's client: the minutes to go, then done, and the visit; never a streak", () => {
+    const pro = { name: "Ana Ruiz", kind: "clinician" as const };
+    expect(coaching({ goal: "calm", session: GOOD, streakDays: 5, leftToday: 3, professional: pro }).line).toBe(
+      "Three more minutes finishes today. Ana will see this before your next visit.",
+    );
+    expect(coaching({ goal: "calm", session: GOOD, streakDays: 5, leftToday: 0, professional: pro }).line).toBe(
+      "Done for today. Ana will see this before your next visit.",
+    );
+  });
+  it("only Calm's line reads the ring", () => {
+    for (const goal of ["train", "focus", null] as const) {
+      expect(coaching({ goal, session: GOOD, streakDays: 1, leftToday: 3 }).line).toBe(coaching({ goal, session: GOOD, streakDays: 1 }).line);
+    }
+  });
+});
+
 describe("tips and words", () => {
   it("one plain tip per weak part and lean, no numbers", () => {
     const cases: [ResultsSession, string][] = [

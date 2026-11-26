@@ -10,7 +10,7 @@ import { analyzeOpenRecording } from "@/lib/analysis/session";
 import { moodSentence } from "@/lib/domain/mood";
 import { formatScore, isTransitionScores, scoreWord, type ScoreBand } from "@/lib/domain/scores";
 import type { BreathGoal, MoodScore, SessionSummary } from "@/lib/domain/types";
-import { calmLine, capital, word, type Professional } from "../home/tailor";
+import { calmLine, capital, moreToday, word, type Professional } from "../home/tailor";
 
 /** The parts of a session the results read: a saved summary or one just built from a recording. */
 export type ResultsSession = Pick<SessionSummary, "mode" | "durationSec" | "scores" | "pacerHalfCycleSec" | "paced" | "open">;
@@ -234,6 +234,12 @@ export interface CoachingInput {
   session: ResultsSession;
   /** Days in a row with a session, this one included. */
   streakDays: number;
+  /**
+   * Whole minutes still to close today's ring, this session included
+   * (`minutesLeftToday` in home/tailor.ts, the rule Home uses); 0 (the
+   * default) once it's closed. Calm says "done for today" only at 0.
+   */
+  leftToday?: number;
   /** The person's professional, when they came through one; a clinician's client never hears about streaks. */
   professional?: Professional | null;
   /** Per-turn points of a paced session, to name the breaths that were off (Train). */
@@ -295,20 +301,28 @@ function focusLine(session: ResultsSession, band: ScoreBand | null, rates: Coach
   return `${done}${on ? `, ${on}` : ""}. ${tipFor(session)}`;
 }
 
-/** Calm: showing up is the point. Praise only a good session; never a streak for a clinician's client. */
-function calmToneLine(band: ScoreBand | null, streakDays: number, professional: Professional | null | undefined): string {
-  if (professional?.kind === "clinician") return `Done for today. ${professional.name.split(" ")[0]} will see this before your next visit.`;
-  if (band === "ok") return calmLine({ streakDays, doneToday: true, minutes: 0, streak: true });
+/**
+ * Calm: showing up is the point. Praise only a good session; never a streak
+ * for a clinician's client. "Done for today" waits for the ring's minutes, as
+ * on Home: before that, the minutes still to go.
+ */
+function calmToneLine(band: ScoreBand | null, streakDays: number, professional: Professional | null | undefined, leftToday: number): string {
+  if (professional?.kind === "clinician") {
+    const sees = `${professional.name.split(" ")[0]} will see this before your next visit.`;
+    return leftToday > 0 ? `${moreToday(leftToday)} ${sees}` : `Done for today. ${sees}`;
+  }
+  if (band === "ok") return calmLine({ streakDays, doneToday: true, minutes: 0, streak: true, leftToday });
+  if (leftToday > 0) return `${streakDays >= 2 ? `${capital(word(streakDays))} days in a row.` : "That's a start."} ${moreToday(leftToday)}`;
   return streakDays >= 2 ? `Done. ${capital(word(streakDays))} days in a row.` : "Done for today.";
 }
 
 /** The coaching line in the goal's tone (02 §5.1), and Calm's one tip. */
-export function coaching({ goal, session, streakDays, professional, turns, rates, mood }: CoachingInput): Coaching {
+export function coaching({ goal, session, streakDays, leftToday = 0, professional, turns, rates, mood }: CoachingInput): Coaching {
   const band = grade(session);
   switch (goal) {
     case "calm":
       return {
-        line: calmToneLine(band, streakDays, professional),
+        line: calmToneLine(band, streakDays, professional, leftToday),
         tip: tipFor(session),
       };
     case "focus": {

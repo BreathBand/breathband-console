@@ -77,7 +77,8 @@ On the demo laptop, in this order, the day before and again on the morning.
      with timing and depth for each breath; the week against his plan; **Total Breath Score, last 8 weeks** with the
      target line; the breathing-rate chart; **From your coach** (Lena's practice and her comment).
 
-**Say:** same band, same scoring underneath; the goal changes what you see, the default session and the tone.
+**Say:** same band, same scoring underneath; the goal changes what you see, the default session (or your coach's
+practice) and the tone.
 
 Close window B.
 
@@ -105,8 +106,8 @@ Window A: **Sign out** (bottom of the sidebar), then **Create account** (top rig
     "Calibrated" (D10).*
 12. **Begin**. Calm's first session, Just breathe, is open and 3 minutes (the plan's 2 minutes isn't offered); after
     about 40 seconds press **Stop early**.
-13. **The result**: the breathing rate (about 14 br/min), its word ("In the normal range"), one line ("Done for today.
-    Nice.") and one tip ("Same again next time."). → **Save session** opens the review.
+13. **The result**: the breathing rate (about 14 br/min), its word ("In the normal range"), one line ("Good start.
+    Three more minutes finishes today.", the same line Home shows next) and one tip ("Same again next time."). → **Save session** opens the review.
 14. **Home** (sidebar): **Streak 1 day**, Today **0 of 3 min** with the line "Good start. Three more minutes finishes
     today.", the session under **Last session**, and a "First calibration" milestone.
 
