@@ -1,0 +1,65 @@
+# Local infrastructure for breathband-console.
+#
+#   npm run infra:up     # Mailpit, waits until healthy
+#   npm run infra:down
+#
+# The database needs no container: the default is a libSQL file database,
+# TURSO_DATABASE_URL=file:./data/breathband.db (see .env.example).
+#
+# The fixed project name means every worktree shares one Compose project, so
+# a second `infra:up` from another worktree reuses the running services
+# instead of starting a copy that fights over the same ports.
+name: breathband
+
+services:
+  # SMTP sink with an inbox UI and an HTTP API (e2e tests read verification
+  # emails from it). SMTP on 1025, UI and API on http://localhost:8025.
+  mail:
+    image: axllent/mailpit:v1.33.1
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+      MP_MAX_MESSAGES: "500"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # Optional: a libSQL server (sqld) for parity with Turso's wire protocol.
+  # Not started by infra:up. Use it with
+  #   docker compose --profile sqld up -d --wait sqld
+  #   TURSO_DATABASE_URL=http://127.0.0.1:8081
+  # Host port 8081, because 8080 belongs to the container smoke test.
+  sqld:
+    image: ghcr.io/tursodatabase/libsql-server:v0.24.32
+    profiles: ["sqld"]
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    environment:
+      SQLD_NODE: primary
+    volumes:
+      - sqld-data:/var/lib/sqld
+    healthcheck:
+      # The image has no curl or wget; bash can still speak HTTP.
+      test:
+        - CMD
+        - bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/8080 && printf "GET /health HTTP/1.0\r\n\r\n" >&3 && head -1 <&3 | grep -q " 200 "'
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
+  # Placeholder: card I-13 adds the `full` profile here (a one-shot migrate
+  # service and the production app image on 8080). Not built yet.
+
+volumes:
+  sqld-data:
