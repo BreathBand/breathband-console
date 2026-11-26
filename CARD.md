@@ -78,8 +78,10 @@ Held for the owner: approve `CoachInvite.practice` (Questions). Once approved, a
 
 ## Questions for me
 
-- [ ] Approve the additive contract field CoachInvite.practice?: ProTemplateId | null (needed so an invite can carry the first practice to someone not yet linked) — Recommended: approve; then a follow-up integrates with T-0119 (local adapter) and T-0122 (server + http getCoachInvite returning coachKind/profession/scopeRequested/practice). Options: carry the practice another way (e.g. create the assignment on accept from the pro's defaults, no contract change); drop the practice from the invite.
-- [ ] Show the invite page to signed-out visitors before sign-up (§2: "who invited them … then sign up")? Today CloudShell sends them to sign in with `?next=`, and the lookup needs a signed-in user. — Recommended: yes, in a card that adds `/cloud/join/` to CloudShell's public paths and a public, rate-limited lookup on the server. Options: keep sign-in first; show only a generic "joining from an invite" note on sign-up (today).
+- [x] Approve the additive contract field CoachInvite.practice?: ProTemplateId | null (needed so an invite can carry the first practice to someone not yet linked) — Recommended: approve; then a follow-up integrates with T-0119 (local adapter) and T-0122 (server + http getCoachInvite returning coachKind/profession/scopeRequested/practice). Options: carry the practice another way (e.g. create the assignment on accept from the pro's defaults, no contract change); drop the practice from the invite.
+  Answer: approve; then a follow-up integrates with T-0119 (local adapter) and T-0122 (server + http getCoachInvite returning coachKind/profession/scopeRequested/practice)
+- [x] Show the invite page to signed-out visitors before sign-up (§2: "who invited them … then sign up")? Today CloudShell sends them to sign in with `?next=`, and the lookup needs a signed-in user. — Recommended: yes, in a card that adds `/cloud/join/` to CloudShell's public paths and a public, rate-limited lookup on the server. Options: keep sign-in first; show only a generic "joining from an invite" note on sign-up (today).
+  Answer: yes, in a card that adds `/cloud/join/` to CloudShell's public paths and a public, rate-limited lookup on the server
 
 ## Parked
 
