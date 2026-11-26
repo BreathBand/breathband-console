@@ -1,7 +1,7 @@
 # T-0122 · feat: API data part 3: squads, alert rules, coach invites, group sessions (state), waitlist, mood check-ins
 
-Status: in progress <!-- draft | ready | in progress | blocked | done -->
-Branch: card/T-0122 · Held by: AB_Rouge
+Status: done <!-- draft | ready | in progress | blocked | done -->
+Branch: card/T-0122 · Held by: nobody
 Created: 2026-11-26 · Source: planning/v1/04-infrastructure.md, card I-10 ("Shared suite passes in full on http")
 
 ## Why
@@ -13,10 +13,10 @@ with the local adapter in shared contract sections.
 
 ## Acceptance criteria
 
-- [ ] A1: the whole shared contract suite passes on local and on http, with no DataService method left "unavailable" on http · check: `npx vitest run src/lib/backend/contract src/lib/backend/http server`
-- [ ] A2: authz unit tests for each new rule · check: `npx vitest run server/authz.test.ts`
-- [ ] A3: I-09 redeem hardening: the claiming UPDATE re-checks `expires_at > now`; invite creation retries on a code collision · check: `npx vitest run server src/lib/backend/http/data.http.test.ts`
-- [ ] A4: CI green · check: `npm run check` (playwright-report/ and test-results/ removed first)
+- [x] A1: the whole shared contract suite passes on local and on http, with no DataService method left "unavailable" on http · check: `npx vitest run src/lib/backend/contract src/lib/backend/http server`
+- [x] A2: authz unit tests for each new rule · check: `npx vitest run server/authz.test.ts`
+- [x] A3: I-09 redeem hardening: the claiming UPDATE re-checks `expires_at > now`; invite creation retries on a code collision · check: `npx vitest run server src/lib/backend/http/data.http.test.ts`
+- [x] A4: CI green · check: `npm run check` (playwright-report/ and test-results/ removed first)
 
 ## Files in scope
 
@@ -50,25 +50,61 @@ with the local adapter in shared contract sections.
 
 ## Next step
 
-Build the routes, authz rules, adapter methods and contract sections; then run the checks.
+Lead: review and merge into night/2026-11-26 (no migration). Realtime for group sessions (frames, athletes joining, results) is the next card in this area.
 
 ## Decisions
 
-- 2026-11-26: Owner approved 2026-11-26 (overnight note): no new dependencies; schema changes only if strictly needed (new generated migration, logged; the lead applies it to Turso); `http.test.ts`'s "unavailable" test may go once every method is served; harness changes in `src/lib/backend/contract/**` allowed.
+- 2026-11-26: Owner approved 2026-11-26 (overnight note): no new dependencies; schema changes only if strictly needed (new generated migration, logged; the lead applies it to Turso); `http.test.ts`'s "unavailable" test may go once every method is served; harness changes in `src/lib/backend/contract/**` allowed; mood check-ins (self only, `mood_checkins`) once T-0119 is on night.
+- 2026-11-26: no schema change and no new dependency: tables from 0000/0001 suffice (HMAC and hashing are `node:crypto`). `npm install` run only to pick up night's `qrcode` from the lockfile; package files untouched.
+- 2026-11-26: new files `server/routes/{squads,alerts,coach-invites,group,waitlist,mood,codes}.ts` (+ `codes.test.ts`), mounted in `server/routes/data.ts`; the waitlist is registered before the session middleware (the one public data route). Contract sections `src/lib/backend/contract/{coach-tools,group,waitlist,mood}.contract.ts`, run by `data.local.test.ts` and `data.http.test.ts`.
+- 2026-11-26: authz rules added: `canSaveSquad`, `canInviteAthlete`, `canAnswerCoachInvite`, `canHostGroup`, `canReadGroup`, `canRunGroup`, `canUseOwnMoods`; squads and alert rules use `canUseCoachData` (firestore.rules lists `squads` and `settings` under it).
+- 2026-11-26: read "coach invites (coach-to-coach)" in the prompt as DataService's `CoachInvite` (a coach inviting an athlete); DataService has no coach-to-coach invite.
+- 2026-11-26: decided for the owner: coach-invite codes are stored only as a hash, but the coach lists them with the code (the console's Copy link and Revoke need it), so each code is derived: HMAC-SHA256(AUTH_SECRET, coachId + creation ms), moved to the next ms on a collision. Rotating AUTH_SECRET breaks pending links (alternative: a migration adding an encrypted or plain `code` column; see Questions).
+- 2026-11-26: I-09 hardening: the redeem's claiming UPDATE also requires `expires_at > now`; `createInvite` retries up to 5 times on a code primary-key collision (`withFreshCode`, unit-tested on a real file DB). Code helpers moved from `coaching.ts` to `codes.ts`; `data.http.test.ts`'s `hashCode` import follows (one line).
+- 2026-11-26: decided for the owner: group sessions are state only. On http `endGroupSession` answers empty `results` and a null `groupAverage` (nobody takes part without realtime); `watchGroupLive` polls `GET .../live` every 2 s for presence from the state (`invited` until the end, then `left`) and sends no frames; it can't throw refusals synchronously like local, so it stops polling instead (alternative: keep it "unavailable", which throws inside the host screen's effect).
+- 2026-11-26: decided for the owner: group changes are conditional on the row's `updated_at`, so of two racing host changes one applies and the other answers `invalid-input`.
+- 2026-11-26: decided for the owner: the waitlist refuses an address over 254 characters (`invalid-email`) and a `source` over 32 (`invalid-input`), as firestore.rules; a repeat answers the same as a new address. Local doesn't check those lengths.
+- 2026-11-26: decided for the owner: `saveAlertRules` on http also requires the three switches to be booleans (local doesn't check them).
+- 2026-11-26: existing test changed: `http.test.ts` "I-10: every other method fails with 'unavailable'" removed with its SERVED/COACHING lists (no method is unavailable now); replaced by I-10 path/body, null-answer, every-method-asks-the-API and watchGroupLive polling tests. README updated to match.
+- 2026-11-26: merged night/2026-11-26 (T-0119, T-0120) into the card: one conflict in `http/index.ts` (night's mood stubs vs. this card removing `unavailableData`), resolved to this card's version; the mood routes then replaced the stubs and the TODO(I-10) in `routes.ts`.
 
 ## Questions for me
 
+- [ ] Coach-invite codes: keep them derived from AUTH_SECRET (never stored), or store them? — Recommended: keep derived. Options: a migration adding an encrypted `code` column; store the code plainly (such a code only lets someone offer their own data to that coach).
+- [ ] Should the public waitlist route get a per-IP rate limit? — Recommended: yes, with the deploy card (Better Auth's limiter covers /api/auth only). Options: leave it; a captcha on the site.
+
 ## Parked
+
+- 2026-11-26 [product] an athlete stays in a coach's squads after revoking the link (local and API alike) · seen on T-0122 · server/routes/squads.ts
+- 2026-11-26 [product] athletes can't point a saved session at a group session yet (`saveSession` stores `groupSessionId: null`), so group results and average stay empty on http until the realtime card · seen on T-0122 · server/routes/sessions.ts
+- 2026-11-26 [product] the waitlist route has no rate limit · seen on T-0122 · server/routes/waitlist.ts
 
 ## Done
 
-- [ ] Every criterion ticked, with the command run and its result pasted below
-- [ ] Tests, lint and typecheck run; output below
-- [ ] No edits outside "Files in scope" (`git diff --stat` below)
-- [ ] Anything not run is marked UNTESTED, never "verified"
+- [x] Every criterion ticked, with the command run and its result pasted below
+- [x] Tests, lint and typecheck run; output below
+- [x] No edits outside "Files in scope" (`git diff --stat` below)
+- [x] Anything not run is marked UNTESTED, never "verified"
 - [ ] Draft PR opened: # (not tonight: the lead merges)
 
 ### Evidence
 
 ```
+$ npx vitest run src/lib/backend/contract src/lib/backend/http server          # A1
+ Test Files  18 passed | 1 skipped (19)          (skipped: auth.mailpit.test.ts without MAILPIT_E2E)
+      Tests  532 passed | 1 skipped (533)
+   new sections, on each adapter: coach tools, group sessions, waitlist, mood check-ins; + 7 I-10 API checks on http
+$ grep -rn "unavailableData|doesn't serve this yet" src server                # A1: no stub left
+   (nothing); http.test.ts "I-10: serves every DataService method" asks the API for every promise method
+$ npx vitest run server/authz.test.ts                                           # A2
+      Tests  38 passed (38)
+$ npx vitest run server/routes/codes.test.ts src/lib/backend/http/data.http.test.ts src/lib/backend/contract/data.local.test.ts   # A3
+      Tests  274 passed (274)   (codes.test.ts: a collision recognised through drizzle, retried, given up after the last try)
+$ sanity: canSaveSquad, canUseOwnMoods, canRunGroup, canAnswerCoachInvite, canHostGroup forced true -> 6 http tests fail; restored
+$ npm run check   (playwright-report/ and test-results/ removed first)          # A4; exit 0
+ Test Files  92 passed | 1 skipped (93)
+      Tests  1321 passed | 1 skipped (1322); lint clean; typecheck clean; build 27/27 static pages
+$ git diff --stat night/2026-11-26: 25 files, +1726 -116, all in server/routes, server/authz*, src/lib/backend/{http,contract}, CARD.md
 ```
+
+UNTESTED: the expiry re-check inside the claiming UPDATE on its own (reachable only in a race between the read and the update; the expired-invite tests stop at the read's check); the http adapter in a real browser against `npm run api:dev`; a `NEXT_PUBLIC_BACKEND=http` build of the coach screens; no e2e (none for this lane).

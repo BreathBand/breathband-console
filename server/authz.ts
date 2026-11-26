@@ -3,7 +3,8 @@
 // The local adapter (src/lib/backend/local) enforces the same rules in the browser.
 //
 // I-08 covers profiles, sessions and waveforms; I-09 coaching; I-10 squads,
-// alert rules, a coach's invites to athletes and group sessions (below).
+// alert rules, a coach's invites to athletes, group sessions and mood
+// check-ins (below).
 // The waitlist is public: no rule.
 
 import type { Role, ShareScope } from "@/lib/domain/types";
@@ -137,4 +138,9 @@ export function canReadGroup(viewerId: string, hostId: string, athleteIds: reado
 /** `groupSessions` update (start, pacer, markers, end, cancel) and the live view: the host only. */
 export function canRunGroup(viewerId: string, hostId: string): boolean {
   return isSelf(viewerId, hostId);
+}
+
+/** `users/{uid}/moodCheckins`: the person's own, read and written by them alone; a linked coach never reads them. */
+export function canUseOwnMoods(viewerId: string, athleteId: string): boolean {
+  return isSelf(viewerId, athleteId);
 }

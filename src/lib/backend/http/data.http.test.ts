@@ -26,6 +26,7 @@ import { describeCoachingContract } from "../contract/coaching.contract";
 import type { DataContractHarness, Person } from "../contract/data.harness";
 import { linkThroughInvites, PASSWORD, refusal, signUpInput, uniqueEmail } from "../contract/data.harness";
 import { describeGroupContract } from "../contract/group.contract";
+import { describeMoodContract } from "../contract/mood.contract";
 import { describeProfileContract } from "../contract/profile.contract";
 import { describeSessionsContract } from "../contract/sessions.contract";
 import { describeWaitlistContract } from "../contract/waitlist.contract";
@@ -152,6 +153,7 @@ const harness = (): DataContractHarness => ({
 
 describeProfileContract("http", harness);
 describeSessionsContract("http", harness);
+describeMoodContract("http", harness);
 describeCoachingContract("http", harness);
 describeCoachToolsContract("http", harness);
 describeGroupContract("http", harness);

@@ -6,8 +6,9 @@ import { HTTP_ROUTES } from "./routes";
 // DataService over the API's data routes (server/routes/data.ts), served under
 // /api: HTTP_ROUTES.data's `/v1/...` paths become `/api/v1/...`. I-08 serves
 // profile, preferences, sessions and waveforms; I-09 coaching (links, invites,
-// assignments, comments, seen marks, notes, targets); I-10 squads, alert rules,
-// a coach's invites to athletes, group sessions (state only) and the waitlist.
+// assignments, comments, seen marks, notes, targets); I-10 mood check-ins,
+// squads, alert rules, a coach's invites to athletes, group sessions (state
+// only) and the waitlist.
 
 export const DATA_PREFIX = "/api";
 
@@ -59,6 +60,9 @@ export function createHttpData(api: ApiClient): DataService {
     deleteSession: async (athleteId, sessionId) => {
       await call(R.deleteSession, { athleteId, sessionId });
     },
+
+    saveMoodCheckins: (athleteId, sessionId, { before, after }) => call(R.saveMoodCheckins, { athleteId, sessionId }, { before, after }),
+    listMoodCheckins: (athleteId, options = {}) => call(R.listMoodCheckins, { athleteId }, undefined, { limit: options.limit }),
 
     listAthletes: (coachId) => call(R.listAthletes, { coachId }),
     listCoaches: (athleteId) => call(R.listCoaches, { athleteId }),

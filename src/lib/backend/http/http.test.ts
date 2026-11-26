@@ -294,11 +294,13 @@ describe("http DataService", () => {
     expect(await data.getCoachLink("c-1", "a-1")).toBeNull();
   });
 
-  it("I-10: serves squads, alert rules, a coach's invites, group sessions and the waitlist: verbs, encoded path parameters and bodies", async () => {
+  it("I-10: serves mood check-ins, squads, alert rules, a coach's invites, group sessions and the waitlist: verbs, encoded path parameters and bodies", async () => {
     const { fetch, calls } = fakeFetch();
     const { data } = httpBackend(fetch);
     const rules = { missedDays: 3, scoreDrop: 2, belowTarget: 4, trendingDown: true, rateOutOfRange: true, practiceBehind: true };
     const group = { title: "Morning", athleteIds: ["a/1", "a 2"], pacerHalfCycleSec: 5 as const, durationSec: 300 };
+    await data.saveMoodCheckins("a/1", "s 1", { before: 2, after: null });
+    await data.listMoodCheckins("a/1", { limit: 5 });
     await data.listSquads("c 1");
     await data.saveSquad("c 1", { id: "q 1", name: "Sprint", athleteIds: ["a/1"] });
     await data.deleteSquad("c 1", "q 1");
@@ -319,6 +321,8 @@ describe("http DataService", () => {
     await data.cancelGroupSession("g/1");
     await data.joinWaitlist({ email: "fan@example.test", source: "hero" });
     expect(calls.map((c) => `${c.init.method} ${c.url}`)).toEqual([
+      `PUT ${API}/api/v1/athletes/a%2F1/sessions/s%201/mood`,
+      `GET ${API}/api/v1/athletes/a%2F1/mood-checkins?limit=5`,
       `GET ${API}/api/v1/coaches/c%201/squads`,
       `PUT ${API}/api/v1/coaches/c%201/squads`,
       `DELETE ${API}/api/v1/coaches/c%201/squads/q%201`,
@@ -340,6 +344,7 @@ describe("http DataService", () => {
       `POST ${API}/api/v1/waitlist`,
     ]);
     expect(calls.map((c) => c.body)).toEqual([
+      { before: 2, after: null }, null,
       null, { id: "q 1", name: "Sprint", athleteIds: ["a/1"] }, {}, null, rules,
       { athleteName: "Jo", contact: "jo@example.com" }, null, {}, null, { accept: true, scope: "scores" },
       group, null, null, {}, { pacerHalfCycleSec: 2 }, {}, {}, {},

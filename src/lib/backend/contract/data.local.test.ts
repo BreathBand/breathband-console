@@ -5,6 +5,7 @@ import { describeCoachingContract } from "./coaching.contract";
 import type { DataContractHarness, Person } from "./data.harness";
 import { linkThroughInvites, signUpInput } from "./data.harness";
 import { describeGroupContract } from "./group.contract";
+import { describeMoodContract } from "./mood.contract";
 import { describeProfileContract } from "./profile.contract";
 import { describeSessionsContract } from "./sessions.contract";
 import { describeWaitlistContract } from "./waitlist.contract";
@@ -46,6 +47,7 @@ function localHarness(): DataContractHarness {
 
 describeProfileContract("local", localHarness);
 describeSessionsContract("local", localHarness);
+describeMoodContract("local", localHarness);
 describeCoachingContract("local", localHarness);
 describeCoachToolsContract("local", localHarness);
 describeGroupContract("local", localHarness);

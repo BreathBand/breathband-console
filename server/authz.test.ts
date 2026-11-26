@@ -19,6 +19,7 @@ import {
   canSaveSquad,
   canSetProFields,
   canUseCoachData,
+  canUseOwnMoods,
   canWriteOwn,
   type LinkScope,
 } from "./authz";
@@ -203,5 +204,13 @@ describe("group sessions (I-10)", () => {
   it("lets only the host run it, invited athletes included", () => {
     expect(canRunGroup(COACH, COACH)).toBe(true);
     expect(canRunGroup(ATHLETE, COACH)).toBe(false);
+  });
+});
+
+describe("mood check-ins (I-10)", () => {
+  it("keeps them to the person: no coach reads them, whatever the link", () => {
+    expect(canUseOwnMoods(ATHLETE, ATHLETE)).toBe(true);
+    expect(canUseOwnMoods(COACH, ATHLETE)).toBe(false);
+    expect(canUseOwnMoods(STRANGER, ATHLETE)).toBe(false);
   });
 });

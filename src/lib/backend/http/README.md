@@ -3,7 +3,7 @@
 The adapter for the API in `server/` (planning/v1/04-infrastructure.md). It has the same interface as the local adapter (`../types.ts`), so screens don't change when a build sets `NEXT_PUBLIC_BACKEND=http`.
 
 - **AuthService works** (I-07): it talks to Better Auth at `/api/auth/*` (`server/auth.ts`).
-- **DataService works, every method**: profile and preferences, sessions and waveforms (I-08); coaching (I-09: coach links, invites, scope, revoke, assignments, comments and kudos, seen marks, private notes, targets); squads, alert rules, a coach's invites to athletes, group sessions (state only) and the waitlist (I-10), at `/api/v1/*` (`server/routes/data.ts` and the route files it mounts). `watchGroupLive` has no realtime channel yet: see below.
+- **DataService works, every method**: profile and preferences, sessions and waveforms (I-08); coaching (I-09: coach links, invites, scope, revoke, assignments, comments and kudos, seen marks, private notes, targets); mood check-ins, squads, alert rules, a coach's invites to athletes, group sessions (state only) and the waitlist (I-10), at `/api/v1/*` (`server/routes/data.ts` and the route files it mounts). `watchGroupLive` has no realtime channel yet: see below.
 
 ## Settings
 
@@ -61,13 +61,14 @@ The shared contract suite (`../contract/auth.contract.ts`) names these as traits
 
 ## Data routes
 
-The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}` (`DATA_PREFIX` in `data.ts`). I-08 serves profile and preferences (`getProfile`, `updateProfile`) and sessions and waveforms (`listSessions` … `deleteSession`); I-09 serves coaching (`listAthletes` … `setTargets`); I-10 the rest (`listSquads` … `joinWaitlist`). They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments (URL-encoded); everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
+The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}` (`DATA_PREFIX` in `data.ts`). I-08 serves profile and preferences (`getProfile`, `updateProfile`) and sessions and waveforms (`listSessions` … `deleteSession`); I-09 serves coaching (`listAthletes` … `setTargets`); I-10 the rest (`saveMoodCheckins`, `listMoodCheckins`, and `listSquads` … `joinWaitlist`). They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments (URL-encoded); everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
 
 - Errors are `{ error: { code, message } }` with this adapter's codes. `not-found` from `getProfile` and `getSession` becomes `null`. A 401 means the session is gone: the adapter counts the person as signed out and tells `onAuthStateChanged` listeners. A 409 from a data route is `invalid-input`, never `email-in-use`.
 - `saveSession` posts `{ session, waveform }` in one request (under 6 MB; the signal under 5 MB). The API stores the signal gzipped through its `StorageService` at `waveforms/{athleteId}/{id}.json.gz` and the summary in `breath_sessions`.
 - `getProfile` for someone else (either side of a coach link) leaves out their `birthYear` and `consents`; so do `listAthletes` and `listCoaches`.
 - Invite codes are stored only as a SHA-256 hash, last 7 days and redeem once (`invite-invalid` otherwise). `getCoachLink` answers `null` for no link. `getCoachNote` reads `{ text }`. `listComments` merges comments and kudos (two tables) oldest first.
 - `markSessionSeen` is stricter than the local adapter: the session has to exist (`not-found`) and the coach has to be linked to the athlete (`permission-denied`).
+- Mood check-ins are the person's own (`mood_checkins`): `saveMoodCheckins` needs one of their sessions (`not-found` otherwise) and replaces that session's check-ins; nobody else reads them, linked professionals included. Deleting the session keeps them, with `sessionId` null.
 - `getAlertRules` answers `DEFAULT_ALERTS` until the coach saves their own (one row per coach).
 - A coach's invite codes are stored only as a SHA-256 hash too, and last 14 days. The coach lists them with the code (to copy the link or revoke it), so each code is derived rather than random: an HMAC of the coach's id and the moment of creation under `AUTH_SECRET`. Rotating the secret breaks the links of invites still pending. `getCoachInvite` answers `null` for an unknown code; accepting or declining claims the invite in one conditional update (pending and unexpired), so it is answered once.
 - Group sessions are state only. `endGroupSession` ends the session with empty `results` and a null `groupAverage`: athletes take part (and save their sessions) over the realtime channel, which isn't built yet.
