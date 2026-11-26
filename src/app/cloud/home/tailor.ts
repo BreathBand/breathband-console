@@ -5,13 +5,10 @@
 import type { AssignmentProgress } from "@/lib/domain/coaching";
 import { isTransitionScores } from "@/lib/domain/scores";
 import type { Mechanics } from "@/lib/domain/habit";
-import type { BreathGoal, SessionSummary } from "@/lib/domain/types";
+import type { BreathGoal, ProKind, SessionSummary } from "@/lib/domain/types";
 import { weekStart } from "../SessionsTab";
 
 const DAY = 86_400_000;
-
-/** The kinds of professional in v1 (02 §4). Only "coach" can be told apart today: see `professionalOf`. */
-export type ProKind = "coach" | "clinician" | "educator";
 
 export interface Professional {
   name: string;
@@ -53,13 +50,12 @@ export interface HomeLayout {
 }
 
 /**
- * The person's linked professional, if any. A coach link doesn't record how it
- * was made (the professional's invite or the athlete's own code) or what kind
- * of professional it is, so every link reads as a coach for now.
- * When `proKind` lands on the profile (planning/v1/02 §7), read it here.
+ * The person's linked professional, if any, as the kind they told onboarding
+ * (`proKind`, planning/v1/02 §7). Accounts from before onboarding asked read
+ * as a coach.
  */
-export function professionalOf(coachName: string | undefined): Professional | null {
-  return coachName ? { name: coachName, kind: "coach" } : null;
+export function professionalOf(coachName: string | undefined, kind?: ProKind | null): Professional | null {
+  return coachName ? { name: coachName, kind: kind ?? "coach" } : null;
 }
 
 /**

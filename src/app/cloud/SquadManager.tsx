@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Icon } from "@/components/Icon";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import type { Squad, UserProfile } from "@/lib/domain/types";
+import { useTerms } from "./useTerms";
 
 /**
  * The coach's squads: create, rename, change members, delete. Squads are the
@@ -21,12 +22,13 @@ export function SquadManager({
   onChange: () => void;
 }) {
   const [editing, setEditing] = useState<string | "new" | null>(null);
+  const t = useTerms();
 
   return (
     <section className="pane pane-pad" aria-labelledby="squads-h" id="squads">
       <div className="pane-h">
         <h2 id="squads-h">Squads</h2>
-        <span className="meta">Your own groups, for filtering and group sessions. Athletes don&apos;t see them.</span>
+        <span className="meta">Your own groups, for filtering and group sessions. {t.Many} don&apos;t see them.</span>
       </div>
       <ul className="squads">
         {squads.map((s) =>
@@ -39,8 +41,8 @@ export function SquadManager({
               <b>{s.name}</b>
               <span className="label">
                 {s.athleteIds.length === 0
-                  ? "No athletes yet"
-                  : s.athleteIds.map((id) => athletes.find((a) => a.uid === id)?.displayName ?? "Athlete").join(", ")}
+                  ? `No ${t.many} yet`
+                  : s.athleteIds.map((id) => athletes.find((a) => a.uid === id)?.displayName ?? t.One).join(", ")}
               </span>
               <button type="button" className="link small" onClick={() => setEditing(s.id)}>
                 <Icon name="pencil" size={14} />
@@ -76,6 +78,7 @@ function SquadForm({
   onCancel: () => void;
 }) {
   const backend = useBackend();
+  const t = useTerms();
   const [name, setName] = useState(squad?.name ?? "");
   const [members, setMembers] = useState(new Set(squad?.athleteIds ?? []));
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -103,7 +106,7 @@ function SquadForm({
         <input required maxLength={40} value={name} placeholder="e.g. Sprint squad" onChange={(e) => setName(e.target.value)} />
       </label>
       <fieldset className="field">
-        <legend>Athletes</legend>
+        <legend>{t.Many}</legend>
         <div className="chip-picks">
           {athletes.map((a) => (
             <label key={a.uid} className="chip-pick" data-on={members.has(a.uid) || undefined}>

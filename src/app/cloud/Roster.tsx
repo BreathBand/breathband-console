@@ -12,12 +12,14 @@ import { useBackend } from "@/lib/backend/BackendProvider";
 import { daysAgoText } from "@/lib/domain/activity";
 import { isOpen } from "@/lib/domain/coaching";
 import { describeMode } from "@/lib/domain/format";
+import { aPerson } from "@/lib/domain/terminology";
 import { Avatar } from "./CoachDashboard";
 import { InviteAthlete } from "./InviteAthlete";
 import { athleteHref } from "./links";
 import { SquadManager } from "./SquadManager";
 import { inSquad, SquadFilter } from "./SquadFilter";
 import { useTeam, type TeamMember } from "./useTeam";
+import { useTerms } from "./useTerms";
 
 type Filter = "all" | "attention" | "idle";
 const FILTERS: { value: Filter; label: string }[] = [
@@ -47,6 +49,7 @@ function issues(m: TeamMember, practiceBehind = true): string[] {
 export function Roster({ coachId }: { coachId: string }) {
   const [now] = useState(() => new Date());
   const team = useTeam(coachId, now);
+  const t = useTerms();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [sort, setSort] = useState<Sort>("attention");
@@ -69,23 +72,23 @@ export function Roster({ coachId }: { coachId: string }) {
   return (
     <div className="container review">
       <div className="title-row">
-        <h1>Athletes</h1>
+        <h1>{t.Many}</h1>
         {team.status === "ready" && (
           <span>
-            {members.length} {members.length === 1 ? "athlete shares" : "athletes share"} their sessions with you
+            {members.length} {members.length === 1 ? `${t.one} shares` : `${t.many} share`} their sessions with you
           </span>
         )}
       </div>
 
-      <section className="pane roster-pane" aria-label="Athletes">
+      <section className="pane roster-pane" aria-label={t.Many}>
         {team.status === "loading" ? (
-          <Skeleton lines={4} label="Loading athletes…" />
+          <Skeleton lines={4} label={`Loading ${t.many}…`} />
         ) : team.status === "error" ? (
-          <ErrorState error={team.error} what="your athletes" onRetry={team.retry} />
+          <ErrorState error={team.error} what={`your ${t.many}`} onRetry={team.retry} />
         ) : members.length === 0 ? (
-          <EmptyState title="No athletes yet">
+          <EmptyState title={`No ${t.many} yet`}>
             <p className="muted">
-              Send an athlete an invite link by text or email below, or enter a code they created under <b>Sharing</b>.
+              Send {aPerson(t)} an invite link by text or email below, or enter a code they created under <b>Sharing</b>.
             </p>
           </EmptyState>
         ) : (
@@ -93,8 +96,8 @@ export function Roster({ coachId }: { coachId: string }) {
             <div className="toolbar">
               <label className="search">
                 <Icon name="search" size={18} />
-                <span className="sr-only">Find an athlete</span>
-                <input type="search" placeholder="Find an athlete" value={query} onChange={(e) => setQuery(e.target.value)} />
+                <span className="sr-only">Find {aPerson(t)}</span>
+                <input type="search" placeholder={`Find ${aPerson(t)}`} value={query} onChange={(e) => setQuery(e.target.value)} />
               </label>
               <div className="seg" role="group" aria-label="Show">
                 {FILTERS.map((f) => (
@@ -116,13 +119,13 @@ export function Roster({ coachId }: { coachId: string }) {
               </label>
             </div>
             {shown.length === 0 ? (
-              <p className="muted dash-empty">No athletes match.</p>
+              <p className="muted dash-empty">No {t.many} match.</p>
             ) : (
               <div className="table-scroll">
                 <table className="table roster">
                   <thead>
                     <tr>
-                      <th>Athlete</th>
+                      <th>{t.One}</th>
                       <th>Last session</th>
                       <th className="num">Latest score</th>
                       <th>Last 8 scored</th>
@@ -216,6 +219,7 @@ function RosterRow({ member: m, issues: list, squads }: { member: TeamMember; is
 /** Redeem an athlete's one-time invite code. */
 function AddAthlete({ coachId, onAdded }: { coachId: string; onAdded: () => void }) {
   const backend = useBackend();
+  const t = useTerms();
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<{ kind: "idle" | "busy" | "done" | "error"; text?: string }>({ kind: "idle" });
 
@@ -228,7 +232,7 @@ function AddAthlete({ coachId, onAdded }: { coachId: string; onAdded: () => void
       setCode("");
       setStatus({
         kind: "done",
-        text: `Added ${profile?.displayName ?? "the athlete"}. They share ${link.scope === "curves" ? "scores and breathing curves" : "scores only"}.`,
+        text: `Added ${profile?.displayName ?? `the ${t.one}`}. They share ${link.scope === "curves" ? "scores and breathing curves" : "scores only"}.`,
       });
       onAdded();
     } catch (e) {
@@ -236,8 +240,8 @@ function AddAthlete({ coachId, onAdded }: { coachId: string; onAdded: () => void
         kind: "error",
         text:
           e instanceof BackendError && e.code === "invite-invalid"
-            ? "That code isn't valid or has expired. Ask the athlete for a new one."
-            : "Couldn't add the athlete. Try again.",
+            ? `That code isn't valid or has expired. Ask the ${t.one} for a new one.`
+            : `Couldn't add the ${t.one}. Try again.`,
       });
     }
   }
@@ -245,16 +249,16 @@ function AddAthlete({ coachId, onAdded }: { coachId: string; onAdded: () => void
   return (
     <section className="pane pane-pad" aria-labelledby="add-athlete-h" id="add-athlete">
       <div className="pane-h">
-        <h2 id="add-athlete-h">Have a code from the athlete?</h2>
+        <h2 id="add-athlete-h">Have a code from the {t.one}?</h2>
         <span className="meta">Codes work once and expire after 7 days</span>
       </div>
       <p className="muted small-text">
-        The athlete creates a code under <b>Sharing</b> in BreathCloud and chooses whether you see their breathing
+        The {t.one} creates a code under <b>Sharing</b> in BreathCloud and chooses whether you see their breathing
         curves or scores only.
       </p>
       <form className="invite-form" onSubmit={onSubmit}>
         <label className="field">
-          Invite code from the athlete
+          Invite code from the {t.one}
           <input
             required
             value={code}
@@ -269,7 +273,7 @@ function AddAthlete({ coachId, onAdded }: { coachId: string; onAdded: () => void
         </label>
         <button className="button" type="submit" disabled={status.kind === "busy"}>
           <Icon name="plus" size={18} />
-          {status.kind === "busy" ? "Adding…" : "Add athlete"}
+          {status.kind === "busy" ? "Adding…" : `Add ${t.one}`}
         </button>
       </form>
       {status.kind === "done" && (

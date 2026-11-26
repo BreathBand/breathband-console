@@ -4,6 +4,7 @@ import { useSvgId } from "@/components/charts";
 import { formatDuration } from "@/lib/domain/format";
 import { pacerAt, pacerCue, pacerValue } from "@/lib/domain/group";
 import type { GroupSession } from "@/lib/domain/types";
+import { useTerms } from "../useTerms";
 
 // Charts for a group session. Every trace is on the pacer's scale (−1 fully
 // out, 1 fully in) and drawn against seconds since the start, so lanes for
@@ -72,6 +73,7 @@ export function AlignedLanes({
   /** Draws a "now" line at this time (live view). */
   now?: number;
 }) {
+  const terms = useTerms();
   const pad = { l: 112, r: 12, t: 6, b: 24 };
   const w = width - pad.l - pad.r;
   const height = pad.t + lanes.length * laneHeight + pad.b;
@@ -83,7 +85,7 @@ export function AlignedLanes({
   const clip = useSvgId("lanes");
 
   return (
-    <svg className="chart lanes" width={width} height={height} role="img" aria-label={`Breathing of ${lanes.length} athletes on one time axis, ${formatDuration(Math.max(0, t0))} to ${formatDuration(t1)}`}>
+    <svg className="chart lanes" width={width} height={height} role="img" aria-label={`Breathing of ${lanes.length} ${terms.many} on one time axis, ${formatDuration(Math.max(0, t0))} to ${formatDuration(t1)}`}>
       <defs>
         <clipPath id={clip}>
           <rect x={pad.l} y={0} width={w} height={height} />
