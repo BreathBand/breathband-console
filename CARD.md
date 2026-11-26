@@ -78,7 +78,8 @@ Review and open the draft PR; owner answers the questions below (age rule, coach
   Answer: yes for v1, revisit with counsel (N6)
 - [x] Linked coaches can read the athlete's profile, so they can now see `birthYear` and `consents`. OK? — Recommended: move both to a private subdocument before Phase 4. Options: accept for v1; strip them in the adapter for non-self reads.
   Answer: move both to a private subdocument before Phase 4
-- [ ] Should the age step move to its own screen later, as in the spec table (step 2)? — Recommended: keep it on sign-up. Options: separate step after Account.
+- [x] Should the age step move to its own screen later, as in the spec table (step 2)? — Recommended: keep it on sign-up. Options: separate step after Account.
+  Answer: keep it on sign-up
 
 ## Parked
 
