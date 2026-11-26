@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 import type { Activity } from "@/lib/domain/activity";
-import { daysAgoText } from "@/lib/domain/activity";
+import type { Ring, Streak } from "@/lib/domain/habit";
 import { formatScore, isTransitionScores } from "@/lib/domain/scores";
 import type { SessionSummary } from "@/lib/domain/types";
 import type { Workspace } from "../AthleteWorkspace";
 import { weekStart } from "../SessionsTab";
-import { trainWeek, type HomeLayout } from "./tailor";
+import { pausedLine, trainWeek, type HomeLayout } from "./tailor";
 import { HomeSlot } from "./Slots";
 
 const DAY = 86_400_000;
@@ -15,12 +15,36 @@ const DAY = 86_400_000;
  * against the plan, average rate, which way depth is going), the standard
  * facts, or Calm's habit view (the days and the streak, nothing to compare).
  */
-export function WeekCard({ ws, layout, activity, streak }: { ws: Workspace; layout: HomeLayout; activity: Activity; streak: number }) {
+export function WeekCard({
+  ws,
+  layout,
+  activity,
+  streak,
+  ring,
+  dailyMinutes,
+}: {
+  ws: Workspace;
+  layout: HomeLayout;
+  activity: Activity;
+  /** The streak, from lib/domain/habit.ts. */
+  streak: Streak;
+  /** Calm's daily ring; null where the layout or the person's switches leave it out. */
+  ring: Ring | null;
+  dailyMinutes: number;
+}) {
   const { sessions, now, targets } = ws;
   const thisWeek = sessions.filter((s) => Date.parse(s.startedAt) >= weekStart(now).getTime()).length;
+  const paused = layout.streak && streak.state === "paused";
+  // A paused streak is a word, not a zero: no red, no count of what was lost (01 §2.5).
   const streakFact = layout.streak && (
     <Fact label="Streak">
-      <b className="display">{streak}</b> {streak === 1 ? "day" : "days"}
+      {paused ? (
+        <span className="home-paused">Paused</span>
+      ) : (
+        <>
+          <b className="display">{streak.days}</b> {streak.days === 1 ? "day" : "days"}
+        </>
+      )}
     </Fact>
   );
 
@@ -79,15 +103,13 @@ export function WeekCard({ ws, layout, activity, streak }: { ws: Workspace; layo
         <span className="meta">{meta}</span>
       </div>
       <WeekStrip sessions={sessions} now={now} />
-      {/* Later cards' parts of this goal's Home (Focus's mood and exams, Calm's ring) go here. */}
+      {/* Parts of this goal's Home: Calm's ring here; Focus's mood and exams when their cards land. */}
       {layout.slots.map((id) => (
-        <HomeSlot key={id} id={id} />
+        <HomeSlot key={id} id={id} ring={ring} />
       ))}
       <dl className="home-facts">{facts}</dl>
       {layout.week === "train" && <p className="home-small">Last 7 days; depth against the 7 before.</p>}
-      {layout.streak && streak === 0 && activity.daysSince !== null && (
-        <p className="home-small">Last session {daysAgoText(activity.daysSince).toLowerCase()}.</p>
-      )}
+      {paused && <p className="home-small home-paused-line">{pausedLine(layout.goal, dailyMinutes)}</p>}
     </section>
   );
 }

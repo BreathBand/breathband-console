@@ -91,8 +91,12 @@ export interface GroupLiveHandlers {
 
 export interface DataService {
   getProfile(uid: string): Promise<UserProfile | null>;
-  /** Own profile only: name and preferences. Role and email are fixed. */
-  updateProfile(uid: string, changes: Partial<Pick<UserProfile, "displayName" | "preferences">>): Promise<UserProfile>;
+  /**
+   * Own profile only: name, preferences and, for professionals (role "coach"),
+   * `proKind` and `proProfile` (whose kind must match). Role and email are fixed.
+   * Throws BackendError("permission-denied") when an athlete sends the professional fields.
+   */
+  updateProfile(uid: string, changes: Partial<Pick<UserProfile, "displayName" | "preferences" | "proKind" | "proProfile">>): Promise<UserProfile>;
 
   /** Newest first. Throws BackendError("permission-denied") if the caller can't read this athlete. */
   listSessions(athleteId: string, options?: ListSessionsOptions): Promise<SessionSummary[]>;

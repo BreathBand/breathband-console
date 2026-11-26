@@ -2,7 +2,9 @@ import { ageGateProblem, CONSENT_KINDS, CONSENT_VERSIONS, consentsProblem } from
 import { GROUP_SIZE, pacerAt } from "@/lib/domain/group";
 import { isTransitionScores } from "@/lib/domain/scores";
 import { goalPlanProblem } from "@/lib/domain/goal-questions";
+import { gamificationProblem } from "@/lib/domain/habit";
 import { onboardingProblem } from "@/lib/domain/onboarding";
+import { proProblem } from "@/lib/domain/pro-profile";
 import { preferencesProblem } from "@/lib/domain/preferences";
 import {
   DEFAULT_ALERTS,
@@ -217,19 +219,33 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       return db.accounts[uid]?.profile ?? null;
     },
 
-    async updateProfile(uid, { displayName, preferences }) {
+    async updateProfile(uid, { displayName, preferences, proKind, proProfile }) {
       await delay();
       assertIsSelf(uid);
       const name = displayName?.trim();
       if (displayName !== undefined && !name) throw new BackendError("invalid-input", "displayName: empty");
       if (preferences) {
-        const problem = preferencesProblem(preferences) ?? goalPlanProblem(preferences) ?? onboardingProblem(preferences.onboarding);
+        const problem =
+          preferencesProblem(preferences) ??
+          goalPlanProblem(preferences) ??
+          onboardingProblem(preferences.onboarding) ??
+          gamificationProblem(preferences.gamification);
+        if (problem) throw new BackendError("invalid-input", problem);
+      }
+      if (proKind !== undefined || proProfile !== undefined) {
+        // Mirrors the users/{uid} update rule: professionals only, and the profile's kind matches.
+        const current = profileOf(uid);
+        if (current.role !== "coach") throw new BackendError("permission-denied", "proKind, proProfile: professionals only");
+        // An explicit null (untyped callers) is checked like any other value, never read as "keep".
+        const problem = proProblem(proKind !== undefined ? proKind : current.proKind, proProfile !== undefined ? proProfile : current.proProfile);
         if (problem) throw new BackendError("invalid-input", problem);
       }
       mutate((db) => {
         const profile = db.accounts[uid].profile;
         if (name) profile.displayName = name.slice(0, 80);
         if (preferences !== undefined) profile.preferences = preferences ? structuredClone(preferences) : null;
+        if (proKind !== undefined) profile.proKind = proKind;
+        if (proProfile !== undefined) profile.proProfile = structuredClone(proProfile);
       });
       const profile = profileOf(uid);
       emit();
