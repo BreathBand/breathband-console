@@ -1,11 +1,12 @@
 import { index, integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import type { SkillLevel } from "@/lib/analysis/config";
-import type { OpenDetails, PacedDetails, SessionMode, SessionScores, TransitionScores } from "@/lib/domain/types";
+import type { OpenDetails, PacedDetails, SessionScores, TransitionScores } from "@/lib/domain/types";
 import { user } from "./auth";
-import { id, timestamps } from "./columns";
+import { assignments } from "./coaching";
+import { id, SESSION_MODES, timestamps } from "./columns";
 import { calibrations, devices } from "./devices";
+import { groupSessions } from "./group";
 
-const SESSION_MODES = ["paced", "open"] as const satisfies readonly SessionMode[];
 const SKILL_LEVELS = ["beginner", "intermediate", "advanced", "expert"] as const satisfies readonly SkillLevel[];
 
 /**
@@ -36,10 +37,8 @@ export const breathSessions = sqliteTable(
     tags: text("tags", { mode: "json" }).$type<string[]>().notNull().default([]),
     calibrationId: text("calibration_id").references(() => calibrations.id, { onDelete: "set null" }),
     deviceId: text("device_id").references(() => devices.id, { onDelete: "set null" }),
-    /** References group_sessions once that table exists (card I-04). */
-    groupSessionId: text("group_session_id"),
-    /** References assignments once that table exists (card I-04). */
-    assignmentId: text("assignment_id"),
+    groupSessionId: text("group_session_id").references(() => groupSessions.id, { onDelete: "set null" }),
+    assignmentId: text("assignment_id").references(() => assignments.id, { onDelete: "set null" }),
     waveformPath: text("waveform_path").notNull(),
     appVersion: text("app_version").notNull(),
     ...timestamps,
