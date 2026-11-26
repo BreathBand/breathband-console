@@ -68,7 +68,8 @@ Lead: review and merge into night/2026-11-26 (no migration). I-10 adds squads, a
 
 ## Questions for me
 
-- [ ] Should redeeming an athlete's invite be for professionals (role "coach") only? Today any signed-in person can, on local and the API alike. — Recommended: yes, in a follow-up that changes local, the API and firestore.rules together. Options: keep as is.
+- [x] Should redeeming an athlete's invite be for professionals (role "coach") only? Today any signed-in person can, on local and the API alike. — Recommended: yes, in a follow-up that changes local, the API and firestore.rules together. Options: keep as is.
+  Answer: yes, in a follow-up that changes local, the API and firestore.rules together
 
 ## Parked
 
