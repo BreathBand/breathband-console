@@ -19,11 +19,20 @@ test("a new athlete is set up by onboarding and their goal sets their sessions",
 
   await page.getByRole("radio", { name: /Calm/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
+  // Calm's own questions (T-0106).
+  await expect(page.getByRole("heading", { name: "What would help?" })).toBeVisible();
+  await page.getByRole("group", { name: "When suits you best?" }).getByRole("button", { name: "Bedtime" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("radio", { name: /New to it/ }).click();
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(page.getByRole("heading", { name: "Your sessions" })).toBeVisible();
   await page.getByRole("button", { name: "Continue" }).click();
+  // The plan step (T-0106): prefilled from the track and the answers.
+  await expect(page.getByRole("heading", { name: "Your plan" })).toBeVisible();
+  await expect(page.getByLabel("Reminder time")).toHaveValue("21:30");
+  await page.getByRole("button", { name: "Continue" }).click();
   await page.getByRole("button", { name: "Skip for now" }).click();
+  await expect(page.getByText("21:30, every day")).toBeVisible();
   await page.getByRole("button", { name: "Go to my home" }).click();
 
   await page.waitForURL((url) => url.pathname === "/cloud/");

@@ -3,3 +3,7 @@ export * from "./people";
 export * from "./devices";
 export * from "./sessions";
 export * from "./coaching";
+export * from "./group";
+export * from "./site";
+export * from "./audit";
+export * from "./habit";

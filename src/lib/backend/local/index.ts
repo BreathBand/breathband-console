@@ -1,6 +1,8 @@
 import { ageGateProblem, CONSENT_KINDS, CONSENT_VERSIONS, consentsProblem } from "@/lib/domain/consent";
 import { GROUP_SIZE, pacerAt } from "@/lib/domain/group";
 import { isTransitionScores } from "@/lib/domain/scores";
+import { goalPlanProblem } from "@/lib/domain/goal-questions";
+import { onboardingProblem } from "@/lib/domain/onboarding";
 import { preferencesProblem } from "@/lib/domain/preferences";
 import {
   DEFAULT_ALERTS,
@@ -221,7 +223,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       const name = displayName?.trim();
       if (displayName !== undefined && !name) throw new BackendError("invalid-input", "displayName: empty");
       if (preferences) {
-        const problem = preferencesProblem(preferences);
+        const problem = preferencesProblem(preferences) ?? goalPlanProblem(preferences) ?? onboardingProblem(preferences.onboarding);
         if (problem) throw new BackendError("invalid-input", problem);
       }
       mutate((db) => {

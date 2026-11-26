@@ -298,11 +298,129 @@
   gap: var(--s-5) var(--s-7);
 }
 
-.welcome-week small {
-  display: block;
-  margin-top: var(--s-2);
-  font-size: var(--t-12);
+/* The goal's questions and the plan: one fieldset per question, pill toggles that wrap. */
+.welcome-asks {
+  display: grid;
+  gap: var(--s-6);
+}
+
+.welcome-ask {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.welcome-ask legend {
+  padding: 0;
+  margin-bottom: var(--s-1);
+  font: 600 var(--t-15) / 1.3 var(--f-sans);
+  color: var(--c-ink);
+}
+
+.welcome-ask > small {
+  font-size: var(--t-13);
   color: var(--c-ink-2);
+}
+
+.welcome-chiprow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.welcome-chiprow > span {
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.welcome-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.welcome-chips > button {
+  min-height: 40px;
+  padding: 0 var(--s-4);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-pill);
+  background: var(--c-pane);
+  color: var(--c-ink-2);
+  font: 600 var(--t-13) / 1 var(--f-sans);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.welcome-chips > button:hover:not(:disabled) {
+  border-color: var(--c-ink-3);
+  color: var(--c-ink);
+}
+
+.welcome-chips > button[aria-pressed="true"] {
+  border-color: var(--c-action);
+  background: var(--c-action);
+  color: var(--c-action-ink);
+}
+
+.welcome-chips > button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.welcome-exam {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.welcome-exams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-exams li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 36px;
+  padding: 0 var(--s-2) 0 var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--c-well);
+  font: 600 var(--t-13) / 1 var(--f-sans);
+}
+
+.welcome-exams button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--c-ink-2);
+  cursor: pointer;
+}
+
+.welcome-exams button:hover {
+  background: var(--c-pane);
+  color: var(--c-ink);
+}
+
+.welcome-time input {
+  width: 10rem;
 }
 
 .band-choices {
@@ -314,6 +432,96 @@
 .band-choices .source:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.band-choices .source[aria-checked="true"] {
+  border-color: var(--c-ink);
+  box-shadow: inset 0 0 0 1px var(--c-ink);
+}
+
+.welcome-notice {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-sheet);
+  background: var(--c-notice);
+  color: var(--c-notice-ink);
+}
+
+.welcome-notice > svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.welcome-notice b {
+  font: 600 var(--t-15) / 1.35 var(--f-sans);
+}
+
+.welcome-notice p {
+  margin: var(--s-1) 0 0;
+  font-size: var(--t-13);
+  line-height: 1.45;
+}
+
+.welcome-route {
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  border-radius: var(--r-sheet);
+  border: 1px solid var(--c-rule);
+  background: var(--c-pane);
+}
+
+.welcome-route p {
+  margin: 0;
+  color: var(--c-ink-2);
+}
+
+.welcome-route b {
+  color: var(--c-ink);
+}
+
+.welcome-check {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  cursor: pointer;
+}
+
+.welcome-check input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--c-action);
+}
+
+.welcome-check span {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.welcome-check small {
+  font-size: var(--t-13);
+  line-height: 1.45;
+  color: var(--c-ink-2);
+}
+
+.welcome-waitlist {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-rule-soft);
+}
+
+.welcome-waitlist [role="status"] {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--c-ok-strong);
 }
 
 .welcome-band {
@@ -348,7 +556,7 @@
 .welcome-summary {
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--s-4);
 }
 
@@ -422,4 +630,98 @@
     width: 24px;
     height: 24px;
   }
+}
+
+/* Sample-data mode (/cloud/welcome/sample/): every sample is marked as such. */
+.sample-flag,
+.sample-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 2px var(--s-2);
+  border-radius: var(--r-pill);
+  background: var(--c-notice);
+  color: var(--c-notice-ink);
+  font: 600 var(--t-12) / 1.4 var(--f-sans);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.sample-flag {
+  margin-bottom: var(--s-3);
+}
+
+.sample-list {
+  display: grid;
+  gap: var(--s-4);
+  margin: var(--s-6) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sample-row {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-sheet);
+  background: var(--c-pane);
+}
+
+.sample-row-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.sample-when {
+  font-weight: 600;
+}
+
+.sample-what {
+  color: var(--c-ink-2);
+}
+
+.sample-row-head .score {
+  margin-left: auto;
+}
+
+.sample-curve {
+  display: block;
+  width: 100%;
+  height: 64px;
+}
+
+.sample-curve path {
+  fill: none;
+  stroke: var(--c-out);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.sample-note {
+  margin: 0;
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.sample-band {
+  display: grid;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  border-radius: var(--r-sheet);
+  background: var(--c-pane);
+  border: 1px solid var(--c-rule);
+}
+
+.sample-band h2 {
+  margin: 0;
+}
+
+.sample-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  align-items: center;
 }

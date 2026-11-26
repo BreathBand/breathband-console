@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { integer, text } from "drizzle-orm/sqlite-core";
+import type { SessionMode } from "@/lib/domain/types";
 
 /** Milliseconds since the epoch, set by the database. */
 const nowMs = sql`(cast(unixepoch('subsecond') * 1000 as integer))`;
@@ -18,3 +19,6 @@ export const id = () =>
   text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID());
+
+/** Used by breath_sessions and assignments. Kept here because sessions.ts and coaching.ts import each other. */
+export const SESSION_MODES = ["paced", "open"] as const satisfies readonly SessionMode[];

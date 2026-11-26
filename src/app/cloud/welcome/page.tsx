@@ -1,29 +1,44 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Icon, Mark } from "@/components/Icon";
+import { useState, useSyncExternalStore } from "react";
+import { Icon, Mark, type IconName } from "@/components/Icon";
 import { LiveTrace } from "@/components/LiveTrace";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
-import { bluetoothSupport } from "@/lib/device/bluetooth";
 import { useDevice } from "@/lib/device/DeviceProvider";
+import { currentSupport, supportAdvice, UNKNOWN_SUPPORT, type BandSupport } from "@/lib/device/support";
+import { defaultDetails, planDefaults, withOnboardingAnswers, type Plan, type TrackDetails } from "@/lib/domain/goal-questions";
 import { defaultPreferences, GOALS, goalOf, SKILL_LEVELS, skillBandText } from "@/lib/domain/preferences";
-import type { BreathGoal, UserPreferences, UserProfile } from "@/lib/domain/types";
+import type { BandRoute, BreathGoal, GoalDetails, UserPreferences, UserProfile } from "@/lib/domain/types";
 import { LENGTHS } from "@/lib/prefs";
 import { markSetupFinished } from "../CloudShell";
 import { stateWords } from "../device/words";
+import { bandSummary, deviceKindFor, finishActions, initialRoute, onboardingFor, ROUTE_OPTIONS, routeAvailable } from "./band-route";
+import { GoalQuestions } from "./GoalQuestions";
+import { daysText, PlanStep } from "./PlanStep";
+import { Waitlist } from "./Waitlist";
 
-type Step = "name" | "goal" | "level" | "sessions" | "band" | "done";
-const ATHLETE_STEPS: Step[] = ["name", "goal", "level", "sessions", "band", "done"];
+type Step = "name" | "goal" | "questions" | "level" | "sessions" | "plan" | "band" | "done";
+const ATHLETE_STEPS: Step[] = ["name", "goal", "questions", "level", "sessions", "plan", "band", "done"];
 const COACH_STEPS: Step[] = ["name", "done"];
 const STEP_LABELS: Record<Step, string> = {
   name: "You",
   goal: "Your goal",
+  questions: "About your goal",
   level: "Experience",
   sessions: "Your sessions",
+  plan: "Your plan",
   band: "Your band",
   done: "Ready",
 };
+
+const noop = () => () => {};
+
+/** A plan already on the profile (onboarding run again), or null to follow the track's defaults. */
+function savedPlan(p: UserPreferences | null | undefined): Plan | null {
+  if (!p?.dailyMinutes || !p.reminders) return null;
+  return { sessionsPerWeek: p.sessionsPerWeek, dailyMinutes: p.dailyMinutes, reminders: { ...p.reminders } };
+}
 
 /** /cloud/welcome/ — first-run setup. Everything chosen here can be changed later in Settings. */
 export default function WelcomePage() {
@@ -40,10 +55,26 @@ function Welcome({ profile }: { profile: UserProfile }) {
   const [step, setStep] = useState<Step>("name");
   const [name, setName] = useState(profile.displayName);
   const [prefs, setPrefs] = useState<UserPreferences>(() => profile.preferences ?? defaultPreferences());
+  // Answers are kept per track while onboarding, so going back to change the goal loses nothing; only the chosen goal's are saved.
+  const [answers, setAnswers] = useState<GoalDetails>(() => ({ ...profile.preferences?.goalDetails }));
+  // Null until the plan step is touched: until then it follows the track and the answers.
+  const [plan, setPlan] = useState<Plan | null>(() => savedPlan(profile.preferences));
+  const support = useSyncExternalStore(noop, currentSupport, () => UNKNOWN_SUPPORT);
+  // The band step's choice: null until a route is picked (or when skipped).
+  const [route, setRoute] = useState<BandRoute | null>(() => initialRoute(profile.preferences?.onboarding, currentSupport()));
+  const [sampleData, setSampleData] = useState(() => profile.preferences?.onboarding?.sampleData ?? true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const index = steps.indexOf(step);
   const first = name.trim().split(" ")[0] || "there";
+
+  const details: TrackDetails = answers[prefs.goal] ?? defaultDetails(prefs.goal);
+  const shownPlan = plan ?? planDefaults(prefs.goal, details);
+  const choice = route ? onboardingFor(route, sampleData) : null;
+  const answered = withOnboardingAnswers(prefs, answers[prefs.goal] ?? null, plan);
+  const final = coach ? prefs : choice ? { ...answered, onboarding: choice } : answered;
+  const actions = finishActions(choice);
+  const secondary = actions.secondary;
 
   const go = (delta: number) => setStep(steps[Math.max(0, Math.min(steps.length - 1, index + delta))]);
   const pickGoal = (goal: BreathGoal) => {
@@ -57,7 +88,7 @@ function Welcome({ profile }: { profile: UserProfile }) {
     try {
       await backend.data.updateProfile(profile.uid, {
         displayName: name.trim() || profile.displayName,
-        preferences: { ...prefs, onboardedAt: new Date().toISOString() },
+        preferences: { ...final, onboardedAt: new Date().toISOString() },
       });
       markSetupFinished();
       router.replace(next);
@@ -137,6 +168,21 @@ function Welcome({ profile }: { profile: UserProfile }) {
                 ))}
               </div>
               <Nav onBack={() => go(-1)} onNext={() => go(1)} />
+            </section>
+          )}
+
+          {step === "questions" && (
+            <section>
+              <GoalQuestions goal={prefs.goal} value={details} onChange={(next) => setAnswers((a) => ({ ...a, [prefs.goal]: next }))} />
+              <Nav
+                onBack={() => go(-1)}
+                onNext={() => go(1)}
+                skipLabel="Skip these"
+                onSkip={() => {
+                  setAnswers((a) => ({ ...a, [prefs.goal]: defaultDetails(prefs.goal) }));
+                  go(1);
+                }}
+              />
             </section>
           )}
 
@@ -229,23 +275,42 @@ function Welcome({ profile }: { profile: UserProfile }) {
                     ))}
                   </div>
                 </fieldset>
-                <fieldset className="choice welcome-week">
-                  <legend>Weekly goal</legend>
-                  <div className="seg" role="group" aria-label="Sessions a week">
-                    {[2, 3, 4, 5, 6, 7].map((n) => (
-                      <button key={n} type="button" aria-pressed={prefs.sessionsPerWeek === n} onClick={() => setPrefs((p) => ({ ...p, sessionsPerWeek: n }))}>
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                  <small>sessions a week. A coach&rsquo;s target replaces it once you share with them.</small>
-                </fieldset>
               </div>
               <Nav onBack={() => go(-1)} onNext={() => go(1)} />
             </section>
           )}
 
-          {step === "band" && <BandStep onBack={() => go(-1)} onNext={() => go(1)} />}
+          {step === "plan" && (
+            <section>
+              <PlanStep goal={prefs.goal} plan={shownPlan} onChange={setPlan} />
+              <Nav
+                onBack={() => go(-1)}
+                onNext={() => go(1)}
+                skipLabel="Use the defaults"
+                onSkip={() => {
+                  setPlan(null);
+                  go(1);
+                }}
+              />
+            </section>
+          )}
+
+          {step === "band" && (
+            <BandStep
+              support={support}
+              route={route}
+              onRoute={setRoute}
+              sampleData={sampleData}
+              onSampleData={setSampleData}
+              email={profile.email}
+              onBack={() => go(-1)}
+              onNext={() => go(1)}
+              onSkip={() => {
+                setRoute(null);
+                go(1);
+              }}
+            />
+          )}
 
           {step === "done" && (
             <section>
@@ -271,7 +336,19 @@ function Welcome({ profile }: { profile: UserProfile }) {
                   </div>
                   <div>
                     <dt>Weekly goal</dt>
-                    <dd>{prefs.sessionsPerWeek} a week</dd>
+                    <dd>{final.sessionsPerWeek} a week</dd>
+                  </div>
+                  <div>
+                    <dt>Each day</dt>
+                    <dd>{final.dailyMinutes} min a day</dd>
+                  </div>
+                  <div>
+                    <dt>Reminder</dt>
+                    <dd>{final.reminders?.enabled ? `${final.reminders.time}, ${daysText(final.reminders.days)}` : "Off"}</dd>
+                  </div>
+                  <div>
+                    <dt>Band</dt>
+                    <dd>{bandSummary(choice)}</dd>
                   </div>
                 </dl>
               )}
@@ -287,14 +364,23 @@ function Welcome({ profile }: { profile: UserProfile }) {
                     <Icon name="arrowRight" size={18} />
                   </button>
                 ) : (
-                  <button type="button" className="button" data-size="large" disabled={saving} onClick={() => finish("/cloud/record/")}>
-                    <span className="rec-dot" aria-hidden="true" />
-                    {saving ? "Saving…" : "Start my first session"}
+                  <button type="button" className="button" data-size="large" disabled={saving} onClick={() => finish(actions.primary.href)}>
+                    {actions.primary.record && <span className="rec-dot" aria-hidden="true" />}
+                    {saving ? "Saving…" : actions.primary.label}
+                    {!actions.primary.record && !saving && <Icon name="arrowRight" size={18} />}
                   </button>
                 )}
-                <button type="button" className="button" data-variant="ghost" disabled={saving} onClick={() => finish("/cloud/")}>
-                  {coach ? "Go to the dashboard" : "Go to my home"}
-                </button>
+                {coach ? (
+                  <button type="button" className="button" data-variant="ghost" disabled={saving} onClick={() => finish("/cloud/")}>
+                    Go to the dashboard
+                  </button>
+                ) : (
+                  secondary && (
+                    <button type="button" className="button" data-variant="ghost" disabled={saving} onClick={() => finish(secondary.href)}>
+                      {secondary.label}
+                    </button>
+                  )
+                )}
                 <button type="button" className="link" disabled={saving} onClick={() => go(-1)}>
                   Back
                 </button>
@@ -307,13 +393,32 @@ function Welcome({ profile }: { profile: UserProfile }) {
   );
 }
 
-function Nav({ onBack, onNext, nextLabel = "Continue" }: { onBack: () => void; onNext: () => void; nextLabel?: string }) {
+function Nav({
+  onBack,
+  onNext,
+  nextLabel = "Continue",
+  nextDisabled = false,
+  onSkip,
+  skipLabel,
+}: {
+  onBack: () => void;
+  onNext: () => void;
+  nextLabel?: string;
+  nextDisabled?: boolean;
+  onSkip?: () => void;
+  skipLabel?: string;
+}) {
   return (
     <div className="welcome-actions">
-      <button type="button" className="button" data-size="large" onClick={onNext}>
+      <button type="button" className="button" data-size="large" disabled={nextDisabled} onClick={onNext}>
         {nextLabel}
         <Icon name="arrowRight" size={18} />
       </button>
+      {onSkip && (
+        <button type="button" className="button" data-variant="ghost" onClick={onSkip}>
+          {skipLabel}
+        </button>
+      )}
       <button type="button" className="link" onClick={onBack}>
         Back
       </button>
@@ -321,65 +426,130 @@ function Nav({ onBack, onNext, nextLabel = "Continue" }: { onBack: () => void; o
   );
 }
 
-/** Connect the band now (or the simulator), or skip: either way the next session can connect it. */
-function BandStep({ onBack, onNext }: { onBack: () => void; onNext: () => void }) {
+
+const ROUTE_ICONS: Record<BandRoute, IconName> = { bluetooth: "bluetooth", app: "phone", none: "lungs", simulated: "signal" };
+
+/**
+ * The band step: the browser check first, then the four ways in (planning/v1/02
+ * §3.1, step 9). Only the real band depends on the browser, so a person on
+ * Safari, Firefox or an iPhone is told plainly what works and can still finish.
+ */
+function BandStep({
+  support,
+  route,
+  onRoute,
+  sampleData,
+  onSampleData,
+  email,
+  onBack,
+  onNext,
+  onSkip,
+}: {
+  support: BandSupport;
+  route: BandRoute | null;
+  onRoute: (route: BandRoute) => void;
+  sampleData: boolean;
+  onSampleData: (on: boolean) => void;
+  email: string;
+  onBack: () => void;
+  onNext: () => void;
+  onSkip: () => void;
+}) {
   const device = useDevice();
-  const support = typeof window === "undefined" ? "unsupported" : bluetoothSupport();
+  const advice = supportAdvice(support);
   const busy = ["requesting", "connecting", "reconnecting"].includes(device.status.state);
+  const connects = route ? deviceKindFor(route) : null;
+
+  const choose = (next: BandRoute) => {
+    onRoute(next);
+    const kind = deviceKindFor(next);
+    if (!kind || kind === device.kind) return;
+    if (device.connected || busy) void device.disconnect();
+    device.setKind(kind);
+  };
 
   return (
     <section>
-      <h1>Connect your band</h1>
-      <p className="welcome-lede">Breathband reads the rise and fall of your belly. No band yet? The simulated band streams a breathing athlete so you can try everything.</p>
-      <div className="band-choices">
-        <button
-          type="button"
-          className="source"
-          aria-pressed={device.kind === "bluetooth"}
-          disabled={support !== "supported"}
-          onClick={() => device.setKind("bluetooth")}
-        >
-          <span className="source-icon">
-            <Icon name="bluetooth" size={22} />
-          </span>
-          <span className="source-text">
-            <b>My Breathband</b>
-            <span>{support === "supported" ? "Over Bluetooth. Turn it on and keep it close." : "Needs Chrome or Edge over HTTPS."}</span>
-          </span>
-        </button>
-        <button type="button" className="source" aria-pressed={device.kind === "simulated"} onClick={() => device.setKind("simulated")}>
-          <span className="source-icon">
-            <Icon name="signal" size={22} />
-          </span>
-          <span className="source-text">
-            <b>Simulated band</b>
-            <span>A breathing athlete, streamed exactly like the band.</span>
-          </span>
-        </button>
-      </div>
-      <div className="welcome-band theme-dark">
-        {device.connected ? (
-          <>
-            <LiveTrace read={device.recent} window={240} height={80} label="Live signal from your band" />
-            <p>
-              <i className="live" aria-hidden="true" /> {device.kind === "simulated" ? "Simulated band" : (device.status.deviceName ?? "Breathband")} connected. That&rsquo;s your breathing.
-            </p>
-          </>
-        ) : (
-          <div className="welcome-band-off">
-            <p>{device.status.message ?? stateWords(device.status.state)}</p>
-            <button type="button" className="button" disabled={busy} onClick={() => void device.connect()}>
-              <Icon name={device.kind === "simulated" ? "signal" : "bluetooth"} size={18} />
-              {busy ? "Connecting…" : device.kind === "simulated" ? "Start the simulated band" : "Connect"}
-            </button>
+      <h1>Your band</h1>
+      <p className="welcome-lede">Breathband reads the rise and fall of your belly. Choose how you&rsquo;ll breathe with it; you can change this any time under Band.</p>
+
+      {advice && (
+        <div className="welcome-notice" role="note" aria-label="Browser check">
+          <Icon name="info" size={18} />
+          <div>
+            <b>{advice.title}</b>
+            <p>{advice.detail}</p>
+            <p>You can still finish setting up: use the phone app, look around with sample sessions, or try the simulated band.</p>
           </div>
-        )}
+        </div>
+      )}
+
+      <div className="band-choices" role="radiogroup" aria-label="How you'll breathe with Breathband">
+        {ROUTE_OPTIONS.map((o) => {
+          const open = routeAvailable(o.id, support);
+          return (
+            <button key={o.id} type="button" role="radio" aria-checked={route === o.id} className="source" disabled={!open} onClick={() => choose(o.id)}>
+              <span className="source-icon">
+                <Icon name={ROUTE_ICONS[o.id]} size={22} />
+              </span>
+              <span className="source-text">
+                <b>{o.label}</b>
+                <span>{open ? o.detail : o.unavailable}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
-      <Nav onBack={onBack} onNext={onNext} nextLabel={device.connected ? "Continue" : "Skip for now"} />
-      <p className="welcome-hint">
-        <Icon name="info" size={16} />
-        You can change bands any time under Band in the menu.
-      </p>
+
+      {connects && (
+        <div className="welcome-band theme-dark">
+          {device.connected && device.kind === connects ? (
+            <>
+              <LiveTrace read={device.recent} window={240} height={80} label="Live signal from your band" />
+              <p>
+                <i className="live" aria-hidden="true" /> {device.kind === "simulated" ? "Simulated band" : (device.status.deviceName ?? "Breathband")} connected. That&rsquo;s your breathing.
+              </p>
+            </>
+          ) : (
+            <div className="welcome-band-off">
+              <p>{device.status.message ?? stateWords(device.status.state)}</p>
+              <button type="button" className="button" disabled={busy} onClick={() => void device.connect()}>
+                <Icon name={connects === "simulated" ? "signal" : "bluetooth"} size={18} />
+                {busy ? "Connecting…" : connects === "simulated" ? "Start the simulated band" : "Connect"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {route === "bluetooth" && !device.connected && (
+        <p className="welcome-hint">
+          <Icon name="info" size={16} />
+          Won&rsquo;t connect? Charge the band, bring it closer, close the phone app, and turn Bluetooth off and on.
+        </p>
+      )}
+
+      {route === "app" && (
+        <div className="welcome-route">
+          <p>
+            Record with the Breathband app on your phone, signed in as <b>{email}</b>. Your sessions, goal and plan show up here.
+          </p>
+        </div>
+      )}
+
+      {route === "none" && (
+        <div className="welcome-route">
+          <label className="welcome-check">
+            <input type="checkbox" checked={sampleData} onChange={(e) => onSampleData(e.target.checked)} />
+            <span>
+              <b>Explore with sample sessions</b>
+              <small>A made-up person&rsquo;s sessions, marked Sample. Nothing is added to your account, and you can leave sample mode any time.</small>
+            </span>
+          </label>
+          <Waitlist email={email} />
+        </div>
+      )}
+
+      <Nav onBack={onBack} onNext={onNext} nextDisabled={!route} skipLabel="Skip for now" onSkip={onSkip} />
     </section>
   );
 }

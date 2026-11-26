@@ -61,6 +61,80 @@ export interface UserPreferences {
   sessionsPerWeek: number;
   /** ISO 8601; null until onboarding is finished. */
   onboardedAt: string | null;
+  /** Answers to the goal's own onboarding questions, kept per track. Absent until asked. */
+  goalDetails?: GoalDetails;
+  /** Minutes a day that fill the daily ring. Absent on older profiles: the goal's default applies. */
+  dailyMinutes?: number;
+  /** When to remind. Stored only for now: nothing sends reminders yet. */
+  reminders?: ReminderPreferences;
+  /** What the person chose at onboarding's band step. Absent until chosen (skipped, or older profiles). */
+  onboarding?: OnboardingChoices;
+}
+
+/**
+ * How the person will breathe with Breathband: the band over Web Bluetooth,
+ * the phone app, no band yet, or the simulated band (demos and trying it out).
+ */
+export type BandRoute = "bluetooth" | "app" | "none" | "simulated";
+
+export interface OnboardingChoices {
+  bandRoute: BandRoute;
+  /** Sample-data mode: a made-up person's sessions, labelled "Sample". Only with "none". */
+  sampleData: boolean;
+}
+
+export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
+/** A rough time of day, for training, study and class times. */
+export type DayPart = "morning" | "midday" | "evening";
+
+export type TrainSport = "running" | "cycling" | "swimming" | "team" | "combat" | "strength" | "climbing" | "performing" | "other";
+export type TrainWant = "calm-before" | "recovery" | "control" | "longer-breaths";
+export type FocusStressor = "exams" | "presentations" | "studying" | "sleep";
+export type CalmHope = "less-stress" | "sleep" | "habit" | "curious";
+export type CalmTime = "morning" | "lunch" | "evening" | "bedtime";
+
+/** Train (athlete, performer): what they do, what they want from it, and when they train. */
+export interface TrainDetails {
+  sport: TrainSport | null;
+  /** Free text when `sport` is "other"; at most 60 characters. */
+  sportOther?: string;
+  /** Up to two. */
+  wants: TrainWant[];
+  trainingDays: Weekday[];
+  trainingTime: DayPart | null;
+}
+
+/** Focus (student, 16+): when stress gets in the way, exams coming up, study and class times. */
+export interface FocusDetails {
+  stressors: FocusStressor[];
+  /** Up to five, as YYYY-MM-DD. Personal. */
+  examDates: string[];
+  studyTimes: DayPart[];
+  classTimes: DayPart[];
+  /** Mood check-in (five faces) before and after each session. */
+  moodCheckins: boolean;
+}
+
+/** Calm (casual): what they hope for and when suits them. */
+export interface CalmDetails {
+  hopes: CalmHope[];
+  bestTime: CalmTime | null;
+}
+
+/** One entry per track answered; the current goal's entry is the one that applies. */
+export interface GoalDetails {
+  train?: TrainDetails;
+  focus?: FocusDetails;
+  calm?: CalmDetails;
+}
+
+export interface ReminderPreferences {
+  enabled: boolean;
+  /** Local time, "HH:MM" (24-hour), in `timeZone`. */
+  time: string;
+  days: Weekday[];
+  /** IANA name, e.g. "Europe/Amsterdam", taken from the browser when the plan is set. */
+  timeZone: string;
 }
 
 export type SessionMode = "paced" | "open";
