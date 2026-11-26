@@ -3,13 +3,13 @@
 // redeem once); a coach's seen marks, private notes and targets.
 // Assignments, comments and kudos are in coaching-feedback.ts.
 
-import { createHash } from "node:crypto";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { AthleteTargets, CoachLink, Invite, ShareScope, UserProfile } from "@/lib/domain/types";
 import { canCoach, canManageSharing, canReadAthlete, canReadLink, canRedeemInvite, canUseCoachData, isSelf } from "../authz";
 import { breathSessions, coachLinks, coachNotes, invites, seenSessions } from "../db/schema";
 import { SHARE_SCOPES } from "../db/schema/people";
+import { hashCode, inviteCode, normaliseCode, withFreshCode } from "./codes";
 import { fail, jsonObject, linkScope, type DataApp, type DataDeps } from "./data";
 import { loadProfile } from "./profile";
 
@@ -89,10 +89,13 @@ export function coachingRoutes(routes: DataApp, { db }: DataDeps) {
     const given = (await jsonObject(c.req.raw)).scope;
     const scope = scopeSchema.safeParse(given ?? "curves");
     if (!scope.success) fail("invalid-input", "scope: scores or curves");
-    const code = inviteCode();
     const expiresAt = new Date(Date.now() + INVITE_TTL_MS);
     // Only the hash is stored: the code itself is shown to the athlete once, here.
-    await db.insert(invites).values({ codeHash: hashCode(code), athleteId, scope: scope.data, expiresAt });
+    const code = await withFreshCode(async () => {
+      const fresh = inviteCode();
+      await db.insert(invites).values({ codeHash: hashCode(fresh), athleteId, scope: scope.data, expiresAt });
+      return fresh;
+    });
     const invite: Invite = { code, athleteId, scope: scope.data, expiresAt: expiresAt.toISOString() };
     return c.json(invite);
   });
@@ -102,16 +105,17 @@ export function coachingRoutes(routes: DataApp, { db }: DataDeps) {
     if (!isSelf(c.get("uid"), coachId)) fail("permission-denied");
     const { code } = await jsonObject(c.req.raw);
     if (typeof code !== "string") fail("invalid-input", "code: text");
-    const codeHash = hashCode(code.trim().toUpperCase());
+    const codeHash = hashCode(normaliseCode(code));
     const [invite] = await db.select().from(invites).where(eq(invites.codeHash, codeHash));
     if (!invite || invite.status !== "pending" || invite.expiresAt.getTime() < Date.now() || !canRedeemInvite(c.get("uid"), coachId, invite.athleteId)) {
       fail("invite-invalid");
     }
-    // Claimed atomically, so a code redeems once even when two requests race.
+    // Claimed atomically, so a code redeems once even when two requests race,
+    // and not at all once it has expired since the read above.
     const claimed = await db
       .update(invites)
       .set({ status: "redeemed" })
-      .where(and(eq(invites.codeHash, codeHash), eq(invites.status, "pending")))
+      .where(and(eq(invites.codeHash, codeHash), eq(invites.status, "pending"), gt(invites.expiresAt, new Date())))
       .returning({ athleteId: invites.athleteId });
     if (claimed.length === 0) fail("invite-invalid");
     // An existing link keeps its scope and targets, as on the local adapter.
@@ -193,16 +197,4 @@ function toLink(row: LinkRow): CoachLink {
     createdAt: row.createdAt.toISOString(),
     targets: row.targets ?? null,
   };
-}
-
-/** The stored form of an invite code: SHA-256 of the normalised code, hex. */
-export function hashCode(code: string): string {
-  return createHash("sha256").update(code).digest("hex");
-}
-
-/** 8 characters, no look-alikes (0/O, 1/I), as the local adapter. 32 divides 256, so no bias. */
-function inviteCode(): string {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const bytes = crypto.getRandomValues(new Uint8Array(8));
-  return Array.from(bytes, (b) => alphabet[b % alphabet.length]).join("");
 }
