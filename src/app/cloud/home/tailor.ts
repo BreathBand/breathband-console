@@ -4,7 +4,7 @@
 
 import type { AssignmentProgress } from "@/lib/domain/coaching";
 import { isTransitionScores } from "@/lib/domain/scores";
-import type { Mechanics } from "@/lib/domain/habit";
+import type { Mechanics, Ring } from "@/lib/domain/habit";
 import type { Assignment, BreathGoal, ProKind, SessionSummary } from "@/lib/domain/types";
 import { parseSetup, type SessionSetup } from "@/lib/prefs";
 import { weekStart } from "../SessionsTab";
@@ -246,6 +246,26 @@ export const word = (n: number) => WORDS[n] ?? String(n);
 export const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
+ * Whole minutes still to close today's ring; 0 once it's closed. It counts
+ * against the ring's own whole minutes done (rounded down), so it is the time
+ * left rounded up and goes with what the ring shows: "0 of 3 min" and "three
+ * more". Home and the results (results/tone.ts) both read "done for today"
+ * from it.
+ */
+export function minutesLeftToday(ring: Pick<Ring, "closed" | "goalMinutes" | "minutes">): number {
+  return ring.closed ? 0 : Math.max(1, ring.goalMinutes - ring.minutes);
+}
+
+/**
+ * What still finishes today, from `minutesLeftToday`. The minutes are rounded
+ * up, so the sentence is never short of the truth; the last minute reads "A
+ * minute or less", so ten seconds to go never sounds like a full minute.
+ */
+export function moreToday(leftToday: number): string {
+  return leftToday <= 1 ? "A minute or less finishes today." : `${capital(word(leftToday))} more minutes finishes today.`;
+}
+
+/**
  * Calm's one encouraging line (02 §5.1: "Nice. Three days in a row."). With
  * `streak` off (a clinician's client) it never mentions days in a row. Any
  * session today counts for the streak, but "done for today" waits for the
@@ -263,12 +283,12 @@ export function calmLine({
   /** The person's usual session length; 0 means "until I stop". */
   minutes: number;
   streak: boolean;
-  /** Whole minutes still to close today's ring; 0 (the default) when it's closed. */
+  /** Whole minutes still to close today's ring (`minutesLeftToday`); 0 (the default) when it's closed. */
   leftToday?: number;
 }): string {
   const length = minutes > 0 ? `${word(minutes)} ${minutes === 1 ? "minute" : "minutes"}` : "a few minutes";
   if (doneToday && leftToday > 0) {
-    const more = `${capital(word(leftToday))} more ${leftToday === 1 ? "minute" : "minutes"} finishes today.`;
+    const more = moreToday(leftToday);
     return streak && streakDays >= 2 ? `${capital(word(streakDays))} days in a row. ${more}` : `Good start. ${more}`;
   }
   if (doneToday) return streak && streakDays >= 2 ? `Nice. ${capital(word(streakDays))} days in a row.` : "Done for today. Nice.";

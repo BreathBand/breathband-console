@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { SessionSummary } from "@/lib/domain/types";
+import { ringOf } from "@/lib/domain/habit";
 import { DEFAULT_SETUP, type SessionSetup } from "@/lib/prefs";
 import {
   calmLine,
   homeLayout,
   homeStart,
   leadsWithProfessional,
+  minutesLeftToday,
+  moreToday,
   practiceQuery,
   professionalOf,
   sidePractice,
@@ -240,7 +243,7 @@ describe("calmLine", () => {
 describe("calmLine waits for the ring's minutes before 'done for today'", () => {
   it("names the minutes still to go after a short first session", () => {
     expect(calmLine({ streakDays: 1, doneToday: true, minutes: 3, streak: true, leftToday: 3 })).toBe("Good start. Three more minutes finishes today.");
-    expect(calmLine({ streakDays: 1, doneToday: true, minutes: 3, streak: true, leftToday: 1 })).toBe("Good start. One more minute finishes today.");
+    expect(calmLine({ streakDays: 1, doneToday: true, minutes: 3, streak: true, leftToday: 1 })).toBe("Good start. A minute or less finishes today.");
   });
 
   it("keeps the run of days in front when there is one", () => {
@@ -258,6 +261,38 @@ describe("calmLine waits for the ring's minutes before 'done for today'", () => 
 
   it("ignores the minutes left when nothing's done today", () => {
     expect(calmLine({ streakDays: 2, doneToday: false, minutes: 3, streak: true, leftToday: 3 })).toBe("Two days in a row. Three minutes today keeps it going.");
+  });
+});
+
+describe("minutesLeftToday and moreToday: the one rule for what finishes today (Home and the results)", () => {
+  const now = new Date("2026-11-26T18:40:00");
+  const today = (...secs: number[]) => secs.map((durationSec, i) => ({ startedAt: `2026-11-26T18:${String(10 + i * 5).padStart(2, "0")}:00`, durationSec }));
+  const left = (secs: number[], goal = 3) => minutesLeftToday(ringOf(today(...secs), now, goal));
+
+  it("rounds the time left up, matching the ring's whole minutes done", () => {
+    expect(left([37])).toBe(3); // 2:23 left; the ring reads 0 of 3 min
+    expect(left([60])).toBe(2); // exactly 2:00 left
+    expect(left([61])).toBe(2); // 1:59 left
+    expect(left([170])).toBe(1); // 0:10 left
+    expect(left([120])).toBe(1); // exactly 1:00 left
+  });
+
+  it("is 0 once today's minutes close the ring, over one session or several", () => {
+    expect(left([180])).toBe(0);
+    expect(left([100, 80])).toBe(0);
+    expect(left([400], 5)).toBe(0);
+  });
+
+  it("counts only today's sessions", () => {
+    expect(minutesLeftToday(ringOf([{ startedAt: "2026-11-25T18:00:00", durationSec: 600 }], now, 3))).toBe(3);
+  });
+
+  it("never says less than is left", () => {
+    expect(moreToday(3)).toBe("Three more minutes finishes today.");
+    expect(moreToday(2)).toBe("Two more minutes finishes today.");
+    expect(moreToday(12)).toBe("12 more minutes finishes today.");
+    // From ten seconds to a whole minute left.
+    expect(moreToday(1)).toBe("A minute or less finishes today.");
   });
 });
 

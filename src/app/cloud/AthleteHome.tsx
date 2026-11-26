@@ -19,7 +19,7 @@ import { goalOf } from "@/lib/domain/preferences";
 import type { SessionSummary, Waveform } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
 import type { Workspace } from "./AthleteWorkspace";
-import { calmLine, capital, homeLayout, homeStart, professionalOf, sidePractice, trendPeriod, withMechanics, type SessionShape } from "./home/tailor";
+import { calmLine, capital, homeLayout, homeStart, minutesLeftToday, professionalOf, sidePractice, trendPeriod, withMechanics, type SessionShape } from "./home/tailor";
 import { NewMilestones } from "./home/Milestones";
 import { LatestComment, ProfessionalCard } from "./home/ProfessionalCard";
 import { ProgramCard } from "./home/ProgramCard";
@@ -81,7 +81,7 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
       doneToday: streak.doneToday,
       minutes: Math.round((prefs?.session.durationSec ?? 180) / 60),
       streak: layout.streak,
-      leftToday: today.closed ? 0 : today.goalMinutes - today.minutes,
+      leftToday: minutesLeftToday(today),
     });
 
   return (

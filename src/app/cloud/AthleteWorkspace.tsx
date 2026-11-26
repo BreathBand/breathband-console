@@ -16,6 +16,7 @@ import { useLoad } from "@/lib/useLoad";
 import type { ConsoleContext } from "./AthleteConsole";
 import { AthleteHome } from "./AthleteHome";
 import { AthleteOverview } from "./AthleteOverview";
+import { PRO_WORD } from "./home/tailor";
 import { athleteHref, sessionHref, type AthleteTab } from "./links";
 import { NotesTab } from "./NotesTab";
 import { PlanTab } from "./PlanTab";
@@ -124,7 +125,7 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
     ? [
         { id: "sessions", label: "Sessions", count: sessions.length },
         { id: "trends", label: "Trends" },
-        { id: "plan", label: "From your coach", count: ws.plans.filter(isOpen).length || undefined },
+        { id: "plan", label: `From your ${PRO_WORD[ws.coachKind ?? "coach"]}`, count: ws.plans.filter(isOpen).length || undefined },
       ]
     : [
         { id: "overview", label: "Overview" },

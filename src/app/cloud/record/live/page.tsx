@@ -11,12 +11,14 @@ import { useDevice } from "@/lib/device/DeviceProvider";
 import { BAND_COMMANDS, SAMPLE_RATE_HZ, STRAP_TENSION } from "@/lib/device/config";
 import { firstSessionName } from "@/lib/domain/first-session";
 import { formatDuration } from "@/lib/domain/format";
+import { dailyMinutesOf, ringOf } from "@/lib/domain/habit";
 import { asksMood } from "@/lib/domain/mood";
 import type { MoodScore } from "@/lib/domain/types";
 import { parseSetup } from "@/lib/prefs";
 import { buildSession, MIN_RECORDING_S, type BuiltSession } from "@/lib/recording";
 import { useLoad } from "@/lib/useLoad";
 import { streakDays } from "../../AthleteHome";
+import { minutesLeftToday } from "../../home/tailor";
 import { sessionHref } from "../../links";
 import { fitOf } from "../../device/TensionGauge";
 import { stateWords } from "../../device/words";
@@ -289,15 +291,18 @@ function Instrument() {
   };
 
   const uid = auth.status === "signed-in" ? auth.user.uid : null;
-  // The results speak in the person's goal's tone; Calm's line counts the days in a row, this session included.
-  const goal = auth.status === "signed-in" ? (auth.profile?.preferences?.goal ?? null) : null;
+  // The results speak in the person's goal's tone; Calm's line counts the days in a row and today's
+  // minutes against the ring (Home's rule for "done for today"), this session included.
+  const prefs = auth.status === "signed-in" ? auth.profile?.preferences : null;
+  const goal = prefs?.goal ?? null;
   const history = useLoad(uid && goal === "calm" ? `results-history:${uid}` : null, () => backend.data.listSessions(uid!, { limit: 60 }));
-  const streak = useMemo(() => {
-    if (!built || !uid) return 0;
+  const { streak, leftToday } = useMemo(() => {
+    if (!built || !uid) return { streak: 0, leftToday: 0 };
     const before = history.status === "ready" ? history.data : [];
     const now = new Date(built.session.startedAt);
-    return streakDays([{ ...built.session, id: "new", athleteId: uid, waveformPath: "" }, ...before], now);
-  }, [built, uid, history]);
+    const all = [{ ...built.session, id: "new", athleteId: uid, waveformPath: "" }, ...before];
+    return { streak: streakDays(all, now), leftToday: minutesLeftToday(ringOf(all, now, dailyMinutesOf(prefs))) };
+  }, [built, uid, history, prefs]);
   // Focus's mood check-in (J6): asked before Begin and on the results, when the person has it on.
   const askMood = auth.status === "signed-in" && asksMood(auth.profile?.preferences);
   const save = async (note: string, moodAfter: MoodScore | null) => {
@@ -506,6 +511,7 @@ function Instrument() {
             title={title}
             goal={goal}
             streakDays={streak}
+            leftToday={leftToday}
             askMood={askMood}
             moodBefore={moodBefore}
             onSave={save}

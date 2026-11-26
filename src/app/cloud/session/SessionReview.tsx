@@ -11,6 +11,7 @@ import { BackendError } from "@/lib/backend";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { assignmentProgress, countsToward, describeAssignment, timeAgo } from "@/lib/domain/coaching";
 import { describeMode, formatDay, formatDuration, formatLongDay, formatTime, initials } from "@/lib/domain/format";
+import { dailyMinutesOf, ringOf } from "@/lib/domain/habit";
 import { formatScore, isLegacyScores, isTransitionScores, legacyBand, scoreWord } from "@/lib/domain/scores";
 import type { BreathGoal, SessionComment, SessionSummary } from "@/lib/domain/types";
 import { breathDeviations, waveFrame } from "@/lib/domain/waveform";
@@ -20,6 +21,7 @@ import { MethodCScores, OpenScores, TurnTable, turnsAsBreaths } from "./MethodC"
 import { useLoad, type Loaded } from "@/lib/useLoad";
 import type { ConsoleContext } from "../AthleteConsole";
 import { streakDays } from "../AthleteHome";
+import { minutesLeftToday } from "../home/tailor";
 import { coaching, onTargetShare, rateChange, resultsEmphasis, type ResultsEmphasis, type TurnPoints } from "../results/tone";
 import { BreathTable, DeviationStrip, SessionScrubber, WaveChart } from "./Waveform";
 
@@ -68,7 +70,8 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
   }, [signal, methodC, session.pacerHalfCycleSec, session.skillLevel]);
 
   // The person's own review follows their goal (results/tone.ts); a coach sees every number and no coaching line.
-  const goal = ctx.self && auth.status === "signed-in" ? (auth.profile?.preferences?.goal ?? null) : null;
+  const prefs = ctx.self && auth.status === "signed-in" ? auth.profile?.preferences : null;
+  const goal = prefs?.goal ?? null;
   const emphasis = resultsEmphasis(goal);
   const rates = useMemo(
     () => (emphasis.rateChange && signal && signal.units === "pct-max" && !signal.pacer && analysis ? rateChange(signal.user, analysis.frame.hz) : null),
@@ -80,6 +83,7 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
       emphasis={emphasis}
       session={session}
       sessions={ctx.sessions}
+      dailyMinutes={dailyMinutesOf(prefs)}
       turns={analysis?.turns?.transitions ?? null}
       rates={rates}
     />
@@ -287,6 +291,7 @@ function CoachingPane({
   emphasis,
   session,
   sessions,
+  dailyMinutes,
   turns,
   rates,
 }: {
@@ -294,12 +299,18 @@ function CoachingPane({
   emphasis: ResultsEmphasis;
   session: SessionSummary;
   sessions: SessionSummary[];
+  /** The ring's minutes a day, for Home's rule on "done for today". */
+  dailyMinutes: number;
   turns: readonly TurnPoints[] | null;
   rates: { from: number; to: number } | null;
 }) {
   const at = Date.parse(session.startedAt);
   const streak = streakDays(sessions.filter((s) => Date.parse(s.startedAt) <= at), new Date(at));
-  const { line, tip } = coaching({ goal, session, streakDays: streak, turns, rates });
+  // Today's ring, as Home shows it, when this session is from today; an older day's review keeps "done".
+  const now = new Date();
+  const today = new Date(at).toDateString() === now.toDateString();
+  const leftToday = today ? minutesLeftToday(ringOf([session, ...sessions.filter((s) => s.id !== session.id)], now, dailyMinutes)) : 0;
+  const { line, tip } = coaching({ goal, session, streakDays: streak, leftToday, turns, rates });
   const share = emphasis.share ? onTargetShare(session) : null;
   if (!line) return null;
   return (
