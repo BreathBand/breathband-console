@@ -67,6 +67,20 @@ export interface UserPreferences {
   dailyMinutes?: number;
   /** When to remind. Stored only for now: nothing sends reminders yet. */
   reminders?: ReminderPreferences;
+  /** What the person chose at onboarding's band step. Absent until chosen (skipped, or older profiles). */
+  onboarding?: OnboardingChoices;
+}
+
+/**
+ * How the person will breathe with Breathband: the band over Web Bluetooth,
+ * the phone app, no band yet, or the simulated band (demos and trying it out).
+ */
+export type BandRoute = "bluetooth" | "app" | "none" | "simulated";
+
+export interface OnboardingChoices {
+  bandRoute: BandRoute;
+  /** Sample-data mode: a made-up person's sessions, labelled "Sample". Only with "none". */
+  sampleData: boolean;
 }
 
 export type Weekday = "mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun";
