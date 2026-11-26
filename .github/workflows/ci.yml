@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
 
+# The job reads the code and nothing else: no secrets, no tokens, no Turso.
+# Every database here is a fresh file DB in the runner's temp folder.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -17,5 +22,35 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+
+      # The schema and the committed migrations agree.
+      - run: npm run db:check
+      # The migration chain applies from zero to an empty file DB.
+      - name: Migrate a fresh file DB from zero
+        run: npm run db:migrate
+        env:
+          TURSO_DATABASE_URL: file:${{ runner.temp }}/ci-migrate.db
+
+      # Includes the shared adapter suite on local and on http: the API runs
+      # in-process on a temp migrated file DB with the test-only auth secret.
+      # If the API can't start, the suite's beforeAll throws and the job fails.
+      - name: Unit and contract tests
+        run: npm test -- --reporter=default --reporter=json --outputFile=${{ runner.temp }}/vitest.json
+      - name: The http contract suite ran, nothing in it skipped
+        run: |
+          node -e '
+            const report = require(process.argv[1]);
+            const files = report.testResults.filter((f) => /src[\\/]lib[\\/]backend[\\/]http[\\/][^\\/]+\.http\.test\.ts$/.test(f.name));
+            const tests = files.flatMap((f) => f.assertionResults);
+            const notPassed = tests.filter((t) => t.status !== "passed");
+            console.log(`http contract suite: ${files.length} files, ${tests.length} tests, ${notPassed.length} not passed`);
+            if (files.length < 2 || notPassed.length > 0) process.exit(1);
+          ' "${{ runner.temp }}/vitest.json"
+
       - run: npm run build
+      # The API bundle for the production image, and its migrator on another empty file DB.
+      - run: npm run build:server
+      - name: Migrate a fresh file DB with the bundled migrator
+        run: node build/server/migrate.mjs
+        env:
+          TURSO_DATABASE_URL: file:${{ runner.temp }}/ci-migrate-bundle.db
