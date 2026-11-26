@@ -76,8 +76,10 @@ Lead: review and merge into night/2026-11-26; apply migration 0002 (`server/db/m
 
 ## Questions for me
 
-- [ ] Should the API *require* `birthYear` and `consents` at sign-up (today: checked and stored when given, so a direct API call can still skip both)? — Recommended: yes, in a small follow-up that also updates the four existing server auth tests that sign up without them. Options: keep optional; require only consents.
-- [ ] Firestore's rule lets either side of a coach link read the whole profile; the API leaves out birth year and consents for the other side. Keep that? — Recommended: yes (less PII to coaches; no screen shows them). Options: return the whole profile like Firestore.
+- [x] Should the API *require* `birthYear` and `consents` at sign-up (today: checked and stored when given, so a direct API call can still skip both)? — Recommended: yes, in a small follow-up that also updates the four existing server auth tests that sign up without them. Options: keep optional; require only consents.
+  Answer: yes, in a small follow-up that also updates the four existing server auth tests that sign up without them
+- [x] Firestore's rule lets either side of a coach link read the whole profile; the API leaves out birth year and consents for the other side. Keep that? — Recommended: yes (less PII to coaches; no screen shows them). Options: return the whole profile like Firestore.
+  Answer: yes (less PII to coaches; no screen shows them)
 
 ## Parked
 
