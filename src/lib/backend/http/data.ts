@@ -111,7 +111,8 @@ export function createHttpData(api: ApiClient): DataService {
       await call(R.saveAlertRules, { coachId }, rules);
     },
 
-    createCoachInvite: (coachId, { athleteName, contact }) => call(R.createCoachInvite, { coachId }, { athleteName, contact }),
+    createCoachInvite: (coachId, { athleteName, contact, practice }) =>
+      call(R.createCoachInvite, { coachId }, practice == null ? { athleteName, contact } : { athleteName, contact, practice }),
     listCoachInvites: (coachId) => call(R.listCoachInvites, { coachId }),
     revokeCoachInvite: async (coachId, code) => {
       await call(R.revokeCoachInvite, { coachId, code });

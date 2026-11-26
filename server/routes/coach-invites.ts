@@ -10,9 +10,11 @@
 import { createHmac } from "node:crypto";
 import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
-import type { CoachInvite, CoachLink, ShareScope } from "@/lib/domain/types";
+import { invitePractice, practiceAssignment } from "@/lib/domain/invite-context";
+import type { CoachInvite, CoachLink, ShareScope, UserProfile } from "@/lib/domain/types";
+import type { CoachInviteLookup } from "@/lib/backend/types";
 import { canAnswerCoachInvite, canInviteAthlete, canUseCoachData } from "../authz";
-import { coachInvites, coachLinks } from "../db/schema";
+import { assignments, coachInvites, coachLinks } from "../db/schema";
 import { SHARE_SCOPES } from "../db/schema/people";
 import { codeFrom, hashCode, normaliseCode, withFreshCode } from "./codes";
 import { fail, jsonObject, type DataApp, type DataDeps } from "./data";
@@ -25,7 +27,10 @@ const MAX_CONTACT = 120;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE = /^\+?[\d\s()-]{7,}$/;
 
-const newInviteSchema = z.object({ athleteName: z.string(), contact: z.string() });
+const newInviteSchema = z.object({ athleteName: z.string(), contact: z.string(), practice: z.string().nullish() });
+
+/** The professional's kind, as the local adapter reads it: `proKind`, else their profile's. */
+const kindOf = (p: UserProfile | null) => p?.proKind ?? p?.proProfile?.kind ?? null;
 
 const answerSchema = z.discriminatedUnion("accept", [
   z.object({ accept: z.literal(true), scope: z.enum(SHARE_SCOPES) }),
@@ -49,6 +54,10 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
     const athleteName = parsed.data.athleteName.trim().slice(0, MAX_NAME);
     const contact = parsed.data.contact.trim().slice(0, MAX_CONTACT);
     if (!athleteName || !(EMAIL.test(contact) || PHONE.test(contact))) fail("invalid-input", "a name, and an email address or phone number");
+    // Practice set with the invite (T-0123): one of the professional's kind's session or plan templates.
+    const { practice } = parsed.data;
+    const template = practice == null ? null : invitePractice(kindOf(coach), practice);
+    if (practice != null && !template) fail("invalid-input", "practice: one of your kind's session or plan templates");
 
     const now = Date.now();
     // Two invites from one coach in the same millisecond would share a code: the next millisecond is free.
@@ -63,6 +72,7 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
         createdAt,
         updatedAt: createdAt,
         expiresAt: new Date(createdAt.getTime() + TTL_MS),
+        practice: template?.id ?? null,
       };
       return (await db.insert(coachInvites).values(values).returning())[0];
     });
@@ -91,13 +101,27 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
     return c.json({ ok: true });
   });
 
-  // What the athlete sees on opening the link: anyone signed in, without the contact details.
+  // What the athlete sees on opening the link: anyone signed in, without the contact details. Who's
+  // asking in their own terms and what they ask to see are read from the professional's profile now,
+  // as the local adapter does (T-0123).
   routes.get("/coach-invites/:code", async (c) => {
     const code = normaliseCode(c.req.param("code"));
     const [invite] = await db.select().from(coachInvites).where(eq(coachInvites.codeHash, hashCode(code)));
     if (!invite) fail("not-found");
     const { coachId, coachName, status } = invite;
-    return c.json({ code, coachId, coachName, expiresAt: invite.expiresAt.toISOString(), status });
+    const coach = await loadProfile(db, coachId, false);
+    const lookup: CoachInviteLookup = {
+      code,
+      coachId,
+      coachName,
+      expiresAt: invite.expiresAt.toISOString(),
+      status,
+      practice: invite.practice ?? null,
+      coachKind: kindOf(coach),
+      coachProfession: coach?.proProfile?.profession ?? null,
+      scopeRequested: coach?.proProfile?.scopeRequested ?? null,
+    };
+    return c.json(lookup);
   });
 
   routes.post("/athletes/:athleteId/coach-invites/:code/response", async (c) => {
@@ -120,7 +144,7 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
           gt(coachInvites.expiresAt, new Date()),
         ),
       )
-      .returning({ coachId: coachInvites.coachId });
+      .returning({ coachId: coachInvites.coachId, practice: coachInvites.practice });
     if (!claimed) fail("invite-invalid");
     if (!answer.accept) return c.json(null);
 
@@ -130,6 +154,12 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
       .values({ coachId: claimed.coachId, athleteId, scope: answer.scope })
       .onConflictDoUpdate({ target: [coachLinks.coachId, coachLinks.athleteId], set: { scope: answer.scope, updatedAt: new Date() } })
       .returning();
+    // Practice set with the invite becomes the athlete's assignment, set by the professional, due from now (T-0123).
+    const template = claimed.practice ? invitePractice(kindOf(await loadProfile(db, claimed.coachId, false)), claimed.practice) : null;
+    if (template) {
+      const set = practiceAssignment(template, new Date());
+      await db.insert(assignments).values({ ...set, dueAt: new Date(set.dueAt), coachId: claimed.coachId, athleteId, cancelled: false });
+    }
     const result: CoachLink = {
       coachId: link.coachId,
       athleteId: link.athleteId,
@@ -152,5 +182,7 @@ function toInvite(row: InviteRow, code: string): CoachInvite {
     expiresAt: row.expiresAt.toISOString(),
     status: row.status,
     athleteId: row.athleteId ?? null,
+    // Only when one was set, as the local adapter stores it.
+    ...(row.practice ? { practice: row.practice } : {}),
   };
 }

@@ -3,9 +3,9 @@
 // steps 10–12 and the order rule; the sessions are named in §3.2–3.4).
 
 import { DEFAULT_SETUP, setupQuery, type SessionSetup } from "@/lib/prefs";
-import type { UserPreferences } from "./types";
+import type { Assignment, UserPreferences } from "./types";
 
-export type FirstSessionId = "breath-control" | "post-training-downshift" | "focus-sprint" | "just-breathe" | "first-session";
+export type FirstSessionId = "breath-control" | "post-training-downshift" | "focus-sprint" | "just-breathe" | "first-session" | "assigned-practice";
 
 export interface FirstSession {
   id: FirstSessionId;
@@ -26,6 +26,7 @@ const NAMES: Record<FirstSessionId, string> = {
   "focus-sprint": "Focus Sprint",
   "just-breathe": "Just breathe",
   "first-session": "Your first session",
+  "assigned-practice": "Assigned practice",
 };
 
 const paced55 = (skill: SessionSetup["skill"], sound: boolean): SessionSetup => ({
@@ -37,6 +38,8 @@ const paced55 = (skill: SessionSetup["skill"], sound: boolean): SessionSetup => 
   skill,
 });
 
+type Prefs = Partial<Pick<UserPreferences, "goal" | "goalDetails" | "skillLevel" | "session">> | null | undefined;
+
 const make = (id: FirstSessionId, setup: SessionSetup): FirstSession => ({ id, name: NAMES[id], setup });
 
 /**
@@ -45,7 +48,7 @@ const make = (id: FirstSessionId, setup: SessionSetup): FirstSession => ({ id, n
  * gets Focus Sprint (paced 5-5); Calm gets "Just breathe" (open, tones off).
  * All three minutes, at the person's level. Without a goal, a paced 5-5.
  */
-export function firstSession(prefs: Partial<Pick<UserPreferences, "goal" | "goalDetails" | "skillLevel" | "session">> | null | undefined): FirstSession {
+export function firstSession(prefs: Prefs): FirstSession {
   const skill = prefs?.skillLevel ?? DEFAULT_SETUP.skill;
   const sound = prefs?.session?.sound ?? DEFAULT_SETUP.sound;
   switch (prefs?.goal) {
@@ -58,6 +61,34 @@ export function firstSession(prefs: Partial<Pick<UserPreferences, "goal" | "goal
     default:
       return make("first-session", paced55(skill, sound));
   }
+}
+
+/**
+ * Practice a professional set, as the first session, locked to its settings
+ * (planning/v1/02 §3.5): its mode, pacer and length, at the person's level.
+ * Open sessions are tones off, as "Just breathe" is. Named by the practice's
+ * note (the template's name) when it has one.
+ */
+export function assignedFirstSession(a: Pick<Assignment, "mode" | "pacerHalfCycleSec" | "durationSec" | "note">, prefs: Prefs): FirstSession {
+  const skill = prefs?.skillLevel ?? DEFAULT_SETUP.skill;
+  const open = a.mode === "open";
+  return {
+    id: "assigned-practice",
+    name: a.note.trim() || NAMES["assigned-practice"],
+    setup: {
+      mode: a.mode,
+      pacer: a.pacerHalfCycleSec ?? 5,
+      lengthSec: a.durationSec,
+      view: open ? "line" : "circle",
+      sound: open ? false : (prefs?.session?.sound ?? DEFAULT_SETUP.sound),
+      skill,
+    },
+  };
+}
+
+/** The first session onboarding hands over: the professional's practice when there is one, else the track's. */
+export function suggestedFirstSession(prefs: Prefs, assignment: Parameters<typeof assignedFirstSession>[0] | null | undefined): FirstSession {
+  return assignment ? assignedFirstSession(assignment, prefs) : firstSession(prefs);
 }
 
 /** The instrument's address for a first session: its settings, plus the flag that names it. */

@@ -20,6 +20,11 @@
   max-width: 880px;
 }
 
+/* The optional first practice (T-0123) sits under name and contact, beside the button. */
+.inv-practice {
+  grid-column: span 2;
+}
+
 .inv-error {
   grid-column: 1 / -1;
   font-size: var(--t-13);
@@ -134,6 +139,9 @@
   }
   .inv-form .button {
     justify-self: start;
+  }
+  .inv-practice {
+    grid-column: auto;
   }
   .inv-another {
     margin-left: 0;
