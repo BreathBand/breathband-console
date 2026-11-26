@@ -11,6 +11,7 @@ import { peopleNouns } from "@/lib/domain/terminology";
 import type { UserPreferences, UserProfile } from "@/lib/domain/types";
 import { LENGTHS } from "@/lib/prefs";
 import { signOutToLanding } from "../CloudShell";
+import { changePreferences } from "../profile-writes";
 import { stateWords } from "../device/words";
 import { SharingPanel } from "../settings/SharingPanel";
 import { AlertRulesSection } from "./AlertRulesForm";
@@ -40,8 +41,7 @@ function Settings({ profile }: { profile: UserProfile }) {
     setPrefsState("saving");
     try {
       // `profile` is from sign-in; Home may have written since (a program, milestones), so only this change goes over the stored preferences.
-      const stored = (await backend.data.getProfile(profile.uid))?.preferences;
-      await backend.data.updateProfile(profile.uid, { preferences: stored ? withChanges(stored, before, next) : next });
+      await changePreferences(backend, profile.uid, (stored) => (stored ? withChanges(stored, before, next) : next));
       setPrefsState("saved");
     } catch {
       setPrefsState("error");

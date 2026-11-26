@@ -25,6 +25,7 @@ There are no self-serve programs: Calm's Home has nothing to follow day by day, 
 - `src/lib/backend/local/program.test.ts` (new)
 - `src/app/cloud/home/**`, `src/app/cloud/AthleteHome.tsx`, `src/app/cloud/home.css`
 - `src/app/cloud/account/page.tsx` (fix round, widened by the lead), `src/app/cloud/account/merge-preferences.ts` + `.test.ts` (new)
+- `src/app/cloud/profile-writes.ts` + `.test.ts` (new, final follow-up)
 - `e2e/program.spec.ts` (new)
 - `CARD.md`
 
@@ -61,6 +62,7 @@ Review and merge; then Harry approves or rewrites Foundations' 14 days (J4), and
 - 2026-11-26: fix round (reviewer block): the lead widened scope to `src/app/cloud/account/page.tsx`. Settings built every save as `{ ...prefs, change }` from the sign-in profile, so a save after enrolling (or after milestones were shown) wiped `gamification`. Each save now re-reads the profile through the backend and lays only the fields it changed over it (`withChanges`, new `account/merge-preferences.ts`, unit-tested). BackendProvider untouched.
 - 2026-11-26: fix round: Home's `changeGamification` writes now run one at a time (a module-level queue), so enrolling while milestones are being marked can't overwrite either (reviewer suggestion 1).
 - 2026-11-26: fix round: the new e2e "a Settings change made without a reload keeps the program" writes a milestone straight to storage while Settings is open, because the local adapter refreshes auth's profile on every `updateProfile` and would otherwise hide the bug. It fails without the Settings fix and passes with it.
+- 2026-11-26: final follow-up (re-review): Settings' read-then-write saves could overlap, so a second save read the profile before the first landed and reverted it. Every preferences read-modify-write (Settings' saves, Home's milestones and program) now goes through one queue in the new `src/app/cloud/profile-writes.ts` (`changePreferences`); `home/gamification.ts` delegates to it. Unit tests with a slow fake backend: two overlapping Settings saves, and a program enrolment overlapping a save, both keep every change (both fail without the queue).
 
 ## Questions for me
 
@@ -115,5 +117,12 @@ $ npm run check
 $ PORT=3203 npx playwright test e2e/program.spec.ts e2e/habit.spec.ts e2e/home-per-goal.spec.ts e2e/onboarding.spec.ts
  7 passed (1.4m), including program.spec.ts › a Settings change made without a reload keeps the program
  (same spec with account/page.tsx reverted: 1 failed)
+Final follow-up:
+$ npx vitest run src/app/cloud src/lib/domain
+ Test Files  38 passed (38) · Tests  377 passed (377)
+$ npm run check
+ exit 0 · Test Files 96 passed | 1 skipped (97) · Tests 1344 passed | 1 skipped (1345) · 27/27 static pages
+$ PORT=3203 npx playwright test e2e/program.spec.ts e2e/onboarding.spec.ts
+ 3 passed (1.3m)
 UNTESTED: real Bluetooth band; the http adapter / server path (server/routes/profile.ts uses the same validator, not run tonight); axe not run.
 ```
