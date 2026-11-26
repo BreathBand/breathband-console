@@ -1,7 +1,7 @@
 # T-0123 · feat: the invited path: invite page with scope choice, goal prefilled from the professional's kind, the assignment as the first session
 
-Status: blocked <!-- draft | ready | in progress | blocked | done -->
-Branch: card/T-0123 · Held by: nobody
+Status: in progress <!-- draft | ready | in progress | blocked | done -->
+Branch: card/T-0123 · Held by: AB_Rouge
 Created: 2026-11-26 · Source: planning/v1/02-onboarding-and-tailoring.md §2 (invite row), §3.5; 03-launch-checklist.md D12
 
 ## Why
@@ -75,6 +75,7 @@ Held for the owner: approve `CoachInvite.practice` (Questions). Once approved, a
 - 2026-11-26: decided for the owner: the professional's "own terms" on the invite page = their profession or role when given (physiotherapist, counsellor), else the kind (coach, clinician, teacher); older accounts with no kind are "coach". Headline per §3.5: "Aoife Byrne (physiotherapist) would like to see your scores." The scope radio starts at `scopeRequested`, else the kind's default, else scores and curves (as before).
 - 2026-11-26: decided for the owner: the assigned first session keeps the person's tones choice for paced practice and is tones off for open practice (as Just breathe); the instrument names it "Assigned practice" via the existing `first=` flag (no recorder change); the done step names the template ("Between visits from Aoife").
 - 2026-11-26: Existing test file changed: `src/lib/domain/first-session.test.ts` only gained a new describe block (assignment → first session); no existing assertion changed. No existing e2e changed: the flow change is new-person-after-invite only.
+- 2026-11-26: Owner approved 2026-11-26 (answers in card): CoachInvite.practice?: ProTemplateId | null (additive); integrate with T-0119 (local adapter) and T-0122 (server + http getCoachInvite).
 
 ## Questions for me
 
