@@ -5,6 +5,7 @@
 
 import { and, eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import type { BackendErrorCode } from "@/lib/backend/types";
@@ -19,6 +20,8 @@ import { waveformRoutes } from "./waveforms";
 
 export const DATA_BASE_PATH = "/api/v1";
 
+const MAX_BODY_BYTES = 256 * 1024;
+
 export type DataDeps = { db: Db; auth: Auth; storage: StorageService };
 
 /** Hono's environment for the data routes: the signed-in person's id. */
@@ -28,6 +31,10 @@ export type DataApp = Hono<DataEnv>;
 
 export function dataRoutes(deps: DataDeps) {
   const routes = new Hono<DataEnv>();
+
+  // 256 KB for every body but a saved session, which carries its signal (sessions.ts: 6 MB).
+  const smallBodies = bodyLimit({ maxSize: MAX_BODY_BYTES, onError: () => fail("invalid-input", "request body too large") });
+  routes.use((c, next) => (c.req.method === "POST" && /\/sessions$/.test(c.req.path) ? next() : smallBodies(c, next)));
 
   routes.use(async (c, next) => {
     const session = await deps.auth.api.getSession({ headers: c.req.raw.headers });

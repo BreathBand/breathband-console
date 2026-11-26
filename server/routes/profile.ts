@@ -147,13 +147,17 @@ export async function loadProfile(db: Db, uid: string, withPrivate: boolean): Pr
 
 type HookContext = { body?: unknown } | null;
 
+/** User columns Better Auth takes as input at sign-up that update-user must never change. */
+const FIXED_USER_FIELDS = ["role", "proKind", "birthYear"] as const;
+
 const consentsIn = (context: HookContext): unknown =>
   context?.body && typeof context.body === "object" ? (context.body as { consents?: unknown }).consents : undefined;
 
 /**
  * Better Auth's `databaseHooks.user`: sign-up refuses under 16 (by year of birth)
  * and consents that aren't every kind at its current version, then stores the
- * profile row and the consent records. Accounts made without a birth year or
+ * profile row and the consent records; refuses proKind at sign-up, and role,
+ * proKind and birth year on update-user. Accounts made without a birth year or
  * consents (older clients, the API's own tests) are still allowed; see CARD.md.
  */
 export function signUpHooks(db: Db) {
@@ -169,6 +173,11 @@ export function signUpHooks(db: Db) {
   return {
     create: {
       before: async (created: Record<string, unknown>, context: HookContext) => {
+        // firestore.rules: proKind comes later, from onboarding (PATCH /api/v1/users), never at sign-up.
+        // 400, not 403: Better Auth turns a 403 at sign-up into its "account exists" answer.
+        if (created.proKind !== undefined && created.proKind !== null) {
+          throw new APIError("BAD_REQUEST", { code: "invalid-input", message: "proKind: set it in onboarding, not at sign-up" });
+        }
         refuseUnderAge(created.birthYear);
         const given = consentsIn(context);
         if (given === undefined) return;
@@ -190,9 +199,14 @@ export function signUpHooks(db: Db) {
         );
       },
     },
+    // Role and birth year are fixed after sign-up, and proKind changes only through
+    // PATCH /api/v1/users (professionals only), so /api/auth/update-user may not touch them.
     update: {
       before: async (changes: Record<string, unknown>) => {
-        refuseUnderAge(changes.birthYear);
+        const fixed = FIXED_USER_FIELDS.filter((field) => changes[field] !== undefined);
+        if (fixed.length > 0) {
+          throw new APIError("FORBIDDEN", { code: "permission-denied", message: `${fixed.join(", ")}: can't be changed here` });
+        }
       },
     },
   };

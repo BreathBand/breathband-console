@@ -110,14 +110,30 @@ async function confirmEmail(address: string) {
 
 const open = (fetchImpl: Fetch = browser()) => createHttpBackend({ baseUrl: api, appUrl: APP, fetch: fetchImpl });
 
+/** Each person's browser, for requests the adapter has no method for. */
+const browsers = new Map<string, Fetch>();
+
+/** POST /api/auth/update-user as this person: Better Auth's own route for changing the user. */
+const updateUser = (uid: string, fields: Record<string, unknown>) =>
+  browsers.get(uid)!(`${api}/api/auth/update-user`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(fields),
+  });
+
 const harness = (): DataContractHarness => ({
   async person(role = "athlete") {
-    const backend = open();
+    const fetchImpl = browser();
+    const backend = open(fetchImpl);
     const input = signUpInput(role);
     await backend.auth.signUp(input);
     await confirmEmail(input.email);
     const user = await backend.auth.signIn(input.email, input.password);
+    browsers.set(user.uid, fetchImpl);
     return { uid: user.uid, email: user.email, birthYear: input.birthYear, backend };
+  },
+  async updateAccount(person, fields) {
+    return (await updateUser(person.uid, fields)).ok ? "accepted" : "refused";
   },
   signedOut: () => open(),
   async link(coachId, athleteId, scope) {
@@ -168,20 +184,32 @@ describe("the API behind the http DataService", () => {
     expect(await userRow(body.email)).toBeUndefined();
   });
 
-  it("refuses under 16 on update-user too", async () => {
-    const fetchImpl = browser();
-    const backend = open(fetchImpl);
-    const input = signUpInput();
-    await backend.auth.signUp(input);
-    await confirmEmail(input.email);
-    await backend.auth.signIn(input.email, input.password);
-    const response = await fetchImpl(`${api}/api/auth/update-user`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ birthYear: new Date().getUTCFullYear() - 10 }),
-    });
+  it("refuses a sign-up that sets the professional kind (onboarding sets it, through PATCH /users)", async () => {
+    const body = signUpBody({ role: "coach", proKind: "clinician" });
+    const response = await post("/sign-up/email", body);
     expect(response.status).toBe(400);
-    expect((await userRow(input.email)).birthYear).toBe(input.birthYear);
+    expect(await response.json()).toMatchObject({ code: "invalid-input" });
+    expect(await userRow(body.email)).toBeUndefined();
+  });
+
+  it.each<[string, Record<string, unknown>]>([
+    ["an athlete making themselves a coach", { role: "coach" }],
+    ["setting proKind", { proKind: "clinician" }],
+    ["changing the birth year", { birthYear: 1970 }],
+    ["an under-16 birth year", { birthYear: new Date().getUTCFullYear() - 10 }],
+  ])("refuses update-user %s, and changes nothing", async (_, fields) => {
+    const ana = await harness().person();
+    const before = await userRow(ana.email);
+    const response = await updateUser(ana.uid, fields);
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "permission-denied" });
+    expect(await userRow(ana.email)).toMatchObject({ role: "athlete", proKind: null, birthYear: before.birthYear });
+  });
+
+  it("still lets update-user change the name", async () => {
+    const ana = await harness().person();
+    expect((await updateUser(ana.uid, { name: "Ana Renamed" })).status).toBe(200);
+    expect((await userRow(ana.email)).name).toBe("Ana Renamed");
   });
 
   it("counts the person as signed out when a data route answers 401", async () => {

@@ -25,6 +25,12 @@ export interface DataContractHarness {
    * The coaching routes that do this for real are I-09's.
    */
   link(coachId: string, athleteId: string, scope: ShareScope | null): Promise<void>;
+  /**
+   * Tries to change account fields outside DataService, as a client could: http
+   * posts Better Auth's /api/auth/update-user. Local has no such route, so nothing
+   * can change there and it reports "refused".
+   */
+  updateAccount(person: Person, fields: Record<string, unknown>): Promise<"refused" | "accepted">;
 }
 
 export const PASSWORD = "correct horse battery";

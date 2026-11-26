@@ -36,6 +36,8 @@ function localHarness(): DataContractHarness {
       const link = { coachId, athleteId, scope: scope!, createdAt: new Date().toISOString(), targets: null };
       shared = { ...shared, coachLinks: scope ? [...others, link] : others };
     },
+    // The local adapter has no route besides DataService that changes an account.
+    updateAccount: async () => "refused",
   };
 }
 

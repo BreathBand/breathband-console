@@ -148,7 +148,7 @@ export function sessionRoutes(routes: DataApp, { db, storage }: DataDeps) {
     if (typeof note !== "string") fail("invalid-input", "note: text");
     const updated = await db
       .update(breathSessions)
-      .set({ note: note.slice(0, MAX_NOTE) })
+      .set({ note: note.trim().slice(0, MAX_NOTE) })
       .where(and(eq(breathSessions.athleteId, athleteId), eq(breathSessions.id, sessionId)))
       .returning({ id: breathSessions.id });
     if (updated.length === 0) fail("not-found");

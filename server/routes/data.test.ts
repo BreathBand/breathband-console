@@ -151,6 +151,19 @@ describe("data routes", () => {
     expect(await response.json()).toMatchObject({ error: { code: "invalid-input", message: "signal over 5 MB" } });
   });
 
+  it("refuse other bodies over 256 KB, and trim a changed note", async () => {
+    const app = build();
+    const { uid, cookie } = await signedIn(app);
+    const big = await call(app, "PATCH", `/api/v1/users/${uid}`, { cookie, body: { displayName: "x".repeat(300 * 1024) } });
+    expect(big.status).toBe(400);
+    expect(await big.json()).toMatchObject({ error: { code: "invalid-input", message: "request body too large" } });
+
+    const created = await call(app, "POST", `/api/v1/athletes/${uid}/sessions`, { cookie, body: { session, waveform } });
+    const path = `/api/v1/athletes/${uid}/sessions/${((await created.json()) as { id: string }).id}`;
+    expect((await call(app, "PUT", `${path}/note`, { cookie, body: { note: "  legs heavy  " } })).status).toBe(200);
+    expect(await (await call(app, "GET", path, { cookie })).json()).toMatchObject({ note: "legs heavy" });
+  });
+
   it("answer 404 for a waveform whose blob is missing", async () => {
     const app = build();
     const { uid, cookie } = await signedIn(app);

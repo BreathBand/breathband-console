@@ -69,6 +69,9 @@ Lead: review and merge into night/2026-11-26; apply migration 0002 (`server/db/m
 - 2026-11-26: deleting a session deletes its row (comments, kudos and seen marks cascade by FK) and then its blob.
 - 2026-11-26: existing test changed: `src/lib/backend/http/http.test.ts`, only where the I-08 stubs were replaced: the sign-up body now includes `consents`; "I-08: checks the consents but doesn't send them" became "sends the consents"; "I-08: every method fails" became three I-08 tests (paths and verbs under /api/v1, not-found → null, 409 isn't email-in-use) plus "I-09/I-10: every other method fails". README updated to match. No other existing test changed; `auth.http.test.ts` untouched (its harness is copied into `data.http.test.ts`).
 - 2026-11-26: the contract harness makes coach links directly (local: the shared store; http: a `coach_links` row), because the coaching routes are I-09. Local runs every person as their own browser on one shared store (a store view with its own `currentUid`).
+- 2026-11-26 (review fix, blocking): Better Auth's `/update-user` accepts every `input: true` field, so an athlete could make themselves a coach (skipping `canSetProFields`), set `proKind` or change `birthYear`. Now `databaseHooks.user.update.before` refuses any change to `role`, `proKind`, `birthYear` there (403 `permission-denied`; proKind changes only through PATCH /api/v1/users), and `create.before` refuses `proKind` at sign-up (400 `invalid-input`: a 403 at sign-up would become Better Auth's generic "account exists" answer), as firestore.rules does. Tests: http cases for each, and the profile contract's role/proKind/birthYear section now covers update-user through the harness's `updateAccount`.
+- 2026-11-26 (review fix): existing tests changed because sign-up no longer takes `proKind`: `server/routes/auth.test.ts` ("creates the user with role and birth year…", "…the session carries the role") and `server/auth.mailpit.test.ts` drop `proKind` from the sign-up and expect `proKind: null`. "an unknown pro kind" is unchanged (still 400).
+- 2026-11-26 (review fix): data routes take bodies up to 256 KB (`server/routes/data.ts`), except a saved session (6 MB, its signal); a changed note is now trimmed as well as capped.
 
 ## Questions for me
 
@@ -116,5 +119,14 @@ $ npm run check                                                           # A5: 
 $ sanity: with canReadCurves allowing a scores link, authz.test.ts (2) and the http contract "scores-only coach ... curves" fail (then restored)
 $ git diff --cached --stat   (30 files; 3035 of the lines are drizzle-kit's 0002_snapshot.json; non-test source ~830 lines incl. comments)
 ```
+
+Review fix round:
+$ npx vitest run src/lib/backend/contract src/lib/backend/http server
+ Test Files  17 passed | 1 skipped (18)
+      Tests  306 passed | 1 skipped (307)
+$ npm run check   (playwright-report/ removed first); exit 0
+ Test Files  78 passed | 1 skipped (79)
+      Tests  993 passed | 1 skipped (994); build 27/27
+$ sanity: with the update-user hook allowing role/proKind/birthYear, 7 tests in data.http.test.ts fail (then restored)
 
 UNTESTED: migration 0002 on Turso (the lead applies it); the http adapter in a real browser against `npm run api:dev` (CORS, cookies across ports); a `NEXT_PUBLIC_BACKEND=http` build of the screens; no e2e (none for this lane).

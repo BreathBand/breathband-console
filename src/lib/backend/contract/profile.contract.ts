@@ -84,6 +84,19 @@ export function describeProfileContract(adapter: string, setup: () => DataContra
         expect(await ana.backend.data.getProfile(ana.uid)).toMatchObject({ role: "athlete", email: ana.email });
       });
 
+      it.each<[string, Record<string, unknown>]>([
+        ["an athlete making themselves a professional", { role: "coach" }],
+        ["setting the professional kind", { proKind: "clinician" }],
+        ["changing the birth year", { birthYear: 1970 }],
+      ])("refuses %s by any other route, so updateProfile's rules can't be skipped", async (_, fields) => {
+        const ana = await h.person();
+        expect(await h.updateAccount(ana, fields)).toBe("refused");
+        const profile = await ana.backend.data.getProfile(ana.uid);
+        expect(profile).toMatchObject({ role: "athlete", birthYear: ana.birthYear });
+        expect(profile?.proKind).toBeUndefined();
+        await refusal(ana.backend.data.updateProfile(ana.uid, { proKind: "clinician", proProfile: clinician }), "permission-denied");
+      });
+
       it("stores preferences, with the onboarding and habit answers, exactly", async () => {
         const ana = await h.person();
         const returned = await ana.backend.data.updateProfile(ana.uid, { preferences });
