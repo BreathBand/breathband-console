@@ -72,7 +72,8 @@ Appended by the session, one line each, newest last.
 
 ## Questions for me
 
-- [ ] Should the server's `pro_profiles` get `level`, `country` and `sport_other` columns (or a JSON practice column) so it can hold what the web stores? — Recommended: add the three columns with the HTTP backend card. Options: a JSON column; drop level and country from v1.
+- [x] Should the server's `pro_profiles` get `level`, `country` and `sport_other` columns (or a JSON practice column) so it can hold what the web stores? — Recommended: add the three columns with the HTTP backend card. Options: a JSON column; drop level and country from v1.
+  Answer: add the three columns with the HTTP backend card
 
 ## Parked
 
