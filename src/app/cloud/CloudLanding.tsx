@@ -180,7 +180,7 @@ export function CloudLanding() {
                 n={1}
                 icon="band"
                 title="Wear the band"
-                text="Around your belly, just below the ribs. A quick strap check and five deep breaths calibrate it to you."
+                text="Around your belly, just below the ribs. A quick strap check and 20 seconds of full breaths calibrate it to you, each time you put it on."
               />
               <FlowStep
                 n={2}

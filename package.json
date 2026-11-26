@@ -12,7 +12,9 @@
     "e2e": "playwright test",
     "check": "npm run lint && npm run typecheck && npm test && npm run build",
     "preview": "npx --yes serve@14.2.4 out",
-    "docker:smoke": "node scripts/docker-smoke.mjs"
+    "docker:smoke": "node scripts/docker-smoke.mjs",
+    "infra:up": "docker compose up -d --wait mail",
+    "infra:down": "docker compose --profile \"*\" down"
   },
   "dependencies": {
     "next": "16.4.6",

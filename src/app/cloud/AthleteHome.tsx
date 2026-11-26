@@ -486,7 +486,7 @@ function FirstRun({ name, now }: { name: string; now: Date }) {
           </li>
           <li>
             <b>Follow the pacer</b>
-            <span>Calibrate with five deep breaths, then breathe with the pacer. Your score is ready when you stop.</span>
+            <span>Calibrate with 20 seconds of full breaths, then breathe with the pacer. Your score is ready when you stop.</span>
           </li>
         </ol>
         <div className="first-actions">

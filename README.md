@@ -69,6 +69,25 @@ Group sessions follow the "Group, live" mode in the product docs. Each athlete's
 
 Sessions carry legacy 0–100% scores (`legacy-v1`) or the 1–10 per-transition scores (`transition-v1`, `TransitionScores` in `src/lib/domain/types.ts`); the console shows whichever a session has.
 
+## Local infrastructure
+
+The web app on the local adapter needs none of this. It is for the API that is coming (`server/`, see [planning/v1/04-infrastructure.md](planning/v1/04-infrastructure.md)): a database, an SMTP inbox and the environment names every card shares.
+
+```bash
+cp .env.example .env.local   # once; keeps the defaults below
+npm run infra:up             # Mailpit, waits until healthy
+# Mailpit inbox: http://localhost:8025 (SMTP on localhost:1025)
+npm run infra:down           # stops every service in the project
+```
+
+- **Database: a libSQL file, no container.** The default is `TURSO_DATABASE_URL=file:./data/breathband.db` with no token. `data/` and `*.db` files are gitignored.
+- **Shared database: Turso.** Put its `libsql://` URL in `TURSO_DATABASE_URL` and the token in `TURSO_AUTH_TOKEN`, in `.env.local` only. Never commit either. Tests never use it: they run on a file database (card I-03 makes the test setup refuse `libsql://` URLs).
+- **Email: Mailpit** (`mail` in `docker-compose.yml`). It accepts any SMTP login, keeps the last 500 messages and has an HTTP API the e2e tests read.
+- **Optional sqld.** For parity with Turso's wire protocol: `docker compose --profile sqld up -d --wait sqld`, then `TURSO_DATABASE_URL=http://127.0.0.1:8081`. Its data lives in the `breathband_sqld-data` volume.
+- **One Compose project for every worktree.** `docker-compose.yml` sets `name: breathband`, so running `infra:up` from any checkout or worktree reuses the same containers and ports instead of starting a second set. `infra:down` from any of them stops it for all.
+
+Ports: 1025 (SMTP), 8025 (Mailpit UI), 8081 (sqld, only with its profile). Port 8080 stays free for the container smoke test.
+
 ## Scripts
 
 | Command             | Does                                                    |
@@ -80,6 +99,8 @@ Sessions carry legacy 0–100% scores (`legacy-v1`) or the 1–10 per-transition
 | `npm run typecheck` | Generates route types, then runs `tsc`                  |
 | `npm run lint`      | ESLint                                                  |
 | `npm run check`     | All of the above, as CI runs it                         |
+| `npm run infra:up`  | Starts Mailpit in Docker and waits until it's healthy   |
+| `npm run infra:down`| Stops and removes the local infrastructure containers   |
 
 ## How it's put together
 
