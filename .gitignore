@@ -50,3 +50,20 @@ next-env.d.ts
 firebase-debug.log*
 firestore-debug.log*
 ui-debug.log*
+
+# local databases (libSQL file DB, Turso local state)
+/data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+.turso/
+
+# keys and cloud credentials
+*.key
+*.p8
+*.p12
+service-account*.json
+
+# agent worktrees
+/.claude/worktrees/
