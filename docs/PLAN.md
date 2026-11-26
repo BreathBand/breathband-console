@@ -244,7 +244,7 @@ Do **4a** early, because it unblocks the public launch. Do **4b** when the conso
 
 ## Cloud Run
 
-The deploy target ([decisions 1 and 10](#decisions)). `Dockerfile` builds one image: the static export plus the API compiled to `build/server/` (`npm run build:server`). The API serves `/api/*` and the static export, with the security headers nginx used to add, on `$PORT` (8080). It needs `AUTH_SECRET`, `SMTP_HOST` and, on Cloud Run, the Turso settings at run time. No Firebase SDK, Firebase Hosting or emulators are involved.
+The deploy target ([decisions 1 and 10](#decisions)). `Dockerfile` builds one image: the static export plus the API compiled to `build/server/` (`npm run build:server`). The API serves `/api/*` and the static export, with the security headers nginx used to add, on `$PORT` (8080). It needs `AUTH_SECRET`, `SMTP_HOST` and, on Cloud Run, the Turso settings and `TRUSTED_PROXY_HOPS` at run time. No Firebase SDK, Firebase Hosting or emulators are involved.
 
 **Everything a deploy needs is in [docs/deploy.md](deploy.md)**: the Google Cloud mapping, the environment and secrets, the migrations job, storage, and the "Before first deploy" checklist. Nothing has been deployed.
 

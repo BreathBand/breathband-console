@@ -71,12 +71,12 @@ The API reads only the process environment (`server/env.ts`, `server/db/env.ts`)
 | `SMTP_USER` | **yes** | the provider's SMTP login | |
 | `SMTP_PASS` | **yes** | the provider's SMTP password or API key | |
 | `STORAGE_DIR` | no | see [Storage](#storage) | The image defaults it to `/app/data/blobs`, which on Cloud Run is in-memory, per instance and lost on restart |
-| `TRUSTED_PROXY_HOPS` | no | the measured hop count (open question 1) | **Added by T-0133** (in progress): 0 (its default) keys rate limits by the socket address only; N > 0 uses the Nth X-Forwarded-For entry from the right. It covers the API's own limiter in `server/rate-limit.ts` (invite lookups), not Better Auth's |
+| `TRUSTED_PROXY_HOPS` | no | the measured hop count (open question 1) | **Merged with T-0133.** 0 (the default) keys rate limits by the connection's address and ignores the header; N > 0 uses the Nth X-Forwarded-For entry from the right (IPv6 keyed by /64). Too high and clients choose their own bucket; too low and everyone behind the proxy shares one. It covers the API's own limiter in `server/rate-limit.ts` (invite lookups and responses), not Better Auth's |
 
 Not used in production: `MAILPIT_E2E` (a test switch), `NEXT_PUBLIC_FIREBASE_*` and `NEXT_PUBLIC_USE_FIREBASE_EMULATORS`
 (the Firebase stub), and `NEXT_PUBLIC_API_URL` (the spec's name; the code reads `NEXT_PUBLIC_API_BASE_URL`, an open
-question from T-0102). `.env.example` doesn't list `PORT` or `TRUSTED_PROXY_HOPS` yet; this table is the reference until
-it is synced (parked on T-0134).
+question from T-0102). `.env.example` doesn't list `PORT` yet, and states the hop counts as settled; this table is the reference until it is
+synced (parked on T-0134).
 
 The service's runtime service account needs `roles/secretmanager.secretAccessor` on these secrets only, and later
 object access on the blob bucket only.
@@ -144,8 +144,10 @@ need the owner's approval as their own card.
 - [ ] **Better Auth's client IP and trusted proxies.** Better Auth reads the leftmost `X-Forwarded-For` entry, which a
   client can set, so sign-in limits can be dodged; and in the container it warns it can't find the client IP, so
   everyone shares one sign-in bucket. Set `advanced.ipAddress` (`ipAddressHeaders`, trusted proxies) in
-  `server/auth.ts` to match Cloud Run (T-0111, T-0128; an auth change).
-- [ ] **The real X-Forwarded-For hop count**, for Better Auth and for `TRUSTED_PROXY_HOPS` (T-0133). T-0111 says 2
+  `server/auth.ts` to match Cloud Run; it ignores `TRUSTED_PROXY_HOPS` (T-0111, T-0128, T-0133; an auth change).
+- [ ] **The request log writes Better Auth's `?token=` values in plaintext** (email verification and password reset
+  links); redact them as T-0133 did for invite codes (`server/index.ts`, T-0133).
+- [ ] **The real X-Forwarded-For hop count**, for Better Auth and for `TRUSTED_PROXY_HOPS` (merged with T-0133). T-0111 says 2
   hops; T-0129 assumed 1 (Cloud Run alone). **Open question 1.** Too few and every client shares the proxy's bucket;
   too many and a client picks its own.
 - [ ] **Rate limits are in memory, per instance** (`server/rate-limit.ts` and Better Auth's `storage: "memory"`). Each
@@ -153,7 +155,7 @@ need the owner's approval as their own card.
   needs a `rateLimit` table: a schema change) (T-0111, T-0129). **Open question 4.**
 - [ ] **Rate limits on the routes that have none**: the public waitlist (`server/routes/waitlist.ts`, T-0122, T-0129),
   `POST /api/v1/account/delete`, which checks a password (`server/routes/account.ts`, T-0126), and invite-code
-  redemption (`server/routes/coaching.ts`, T-0121). `server/rate-limit.ts` already has the limiter.
+  redemption (`server/routes/coaching.ts`, T-0121, T-0133). `server/rate-limit.ts` already has the limiter.
 - [ ] **`APP_URL`** is the public `https://` origin, on the service and in any seed run. If the `run.app` address
   stays reachable too, sign-in from it fails the origin check: only APP_URL's origin is trusted.
 - [ ] **`AUTH_SECRET`**: a real one in Secret Manager, never the dev-only value (the API refuses that in production).
@@ -185,8 +187,7 @@ need the owner's approval as their own card.
   not `.dockerignore`: decide which file governs uploads.
 - [ ] **The `http` build has never run in a real browser against a deployed API**: sign up, read the email, verify,
   record, and a professional sees the session (night report, "Not run anywhere"). Do it on a staging service first.
-- [ ] **Sync `.env.example` with this page** (`PORT`, `TRUSTED_PROXY_HOPS`, the API base URL's name) once T-0133 has
-  merged (parked on T-0134).
+- [ ] **Sync `.env.example` with this page** (`PORT`, the hop counts as an open question, the API base URL's name) (parked on T-0134).
 - [ ] **Outside the code**: region (D6 / D-I), budget alerts, an SMTP provider with SPF, DKIM and DMARC, Workload
   Identity Federation for whoever deploys, Turso backups checked by an actual restore, and a dedicated runtime service
   account with access to its own secrets only.
@@ -197,7 +198,7 @@ need the owner's approval as their own card.
    likely depends on question 2: Cloud Run's own front end appends one entry, and an external HTTPS load balancer in
    front adds another. Recommended: measure it on a staging revision (log the raw header for a request from a known
    address), then set `TRUSTED_PROXY_HOPS` and Better Auth to that number. Until then T-0133's default of 0 fails
-   closed (everyone shares one bucket).
+   closed (everyone behind Cloud Run shares one bucket).
 2. **How does the custom domain reach the service**: Cloud Run domain mapping, or an external HTTPS load balancer
    (needed for Cloud Armor or a CDN)? Recommended: domain mapping for the demo and launch, if the region supports it.
 3. **Where do waveforms live on Cloud Run?** Recommended: implement `server/storage/gcs.ts` against the Cloud Storage
