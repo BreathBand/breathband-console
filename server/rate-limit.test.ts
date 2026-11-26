@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { addressKey, clientIp, createRateLimiter, rateLimit } from "./rate-limit";
+import { INVALID_ADDRESS_KEY, addressKey, clientIp, createRateLimiter, rateLimit } from "./rate-limit";
 
 // T-0129: the API's own rate limiter (Better Auth limits only /api/auth).
 
@@ -159,9 +159,24 @@ describe("addressKey", () => {
     expect(addressKey("0:0:0:0:0:ffff:203.0.113.9")).toBe("203.0.113.9");
   });
 
-  it("keeps anything that isn't an address as it is", () => {
-    expect(addressKey("unknown")).toBe("unknown");
-    expect(addressKey("not-an-ip")).toBe("not-an-ip");
+  it("gives everything that isn't an address one shared key (T-0135)", () => {
+    for (const garbage of ["unknown", "not-an-ip", "", "   ", "999.1.1.1", "1.2.3", "2001:db8::1::2", "[::1", "x".repeat(500)]) {
+      expect(addressKey(garbage), garbage).toBe(INVALID_ADDRESS_KEY);
+    }
+    expect(INVALID_ADDRESS_KEY).toBe("invalid");
+  });
+
+  it("puts clients with garbage X-Forwarded-For entries in one bucket, apart from real addresses", async () => {
+    const limiter = createRateLimiter({ limit: 2, windowMs: 60_000, now: () => 0 });
+    const app = new Hono();
+    app.get("/", rateLimit(limiter, (c) => clientIp(c, 1)), (c) => c.text("ok"));
+    const statuses: number[] = [];
+    for (const forged of ["junk-1", "junk-2", "junk-3", "not an ip"]) {
+      statuses.push((await app.request("/", { headers: { "X-Forwarded-For": forged } })).status);
+    }
+    expect(statuses).toEqual([200, 200, 429, 429]);
+    expect(limiter.size()).toBe(1);
+    expect((await app.request("/", { headers: { "X-Forwarded-For": "203.0.113.9" } })).status).toBe(200);
   });
 });
 

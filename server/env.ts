@@ -13,8 +13,9 @@ const blankAsUndefined = (value: unknown) => (value === "" ? undefined : value);
 
 // How many proxies in front of the API append to X-Forwarded-For (T-0133). 0, the default, trusts none:
 // the rate limits key on the socket's address, since without a proxy a client writes that header itself.
-// Cloud Run alone is 1 (its front end appends the client's address); behind a load balancer as well, 2.
-// The deploy sets it (I-16). Read per request by clientIp() in server/rate-limit.ts.
+// Cloud Run's count is still open: expected 1 for Cloud Run alone and 2 behind an external load balancer;
+// confirm before deploy (see docs/deploy.md; I-16). Too high lets clients choose their own bucket; too low
+// makes everyone share one. Read per request by clientIp() in server/rate-limit.ts.
 const trustedProxyHopsSchema = z.preprocess(blankAsUndefined, z.coerce.number().int().min(0).max(10).default(0));
 
 const schema = z.object({

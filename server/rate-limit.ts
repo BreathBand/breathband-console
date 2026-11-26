@@ -105,13 +105,17 @@ export function clientIp(c: Context, trustedHops: number = trustedProxyHops()): 
   return socket ? addressKey(socket) : "unknown";
 }
 
+/** The one rate-limit key every unparseable address shares (see `addressKey`). */
+export const INVALID_ADDRESS_KEY = "invalid";
+
 /**
  * One bucket per client: an IPv4 address as it is; an IPv6 address by its /64
  * prefix (one subscriber's network, whose addresses it can rotate freely),
  * written `2001:db8:1:2::/64`; an IPv4-mapped IPv6 address (`::ffff:1.2.3.4`,
  * which Node reports for IPv4 clients on a dual-stack socket) as its IPv4
  * address. Brackets, a zone (`%eth0`) and a port on an IPv4 address are
- * dropped. Anything else is kept as it is.
+ * dropped. Anything else shares the one key `INVALID_ADDRESS_KEY` (T-0135):
+ * kept as it was, every new garbage string would get a fresh bucket.
  */
 export function addressKey(address: string): string {
   let a = address.trim();
@@ -121,7 +125,7 @@ export function addressKey(address: string): string {
   if (v4WithPort) a = v4WithPort[1];
   if (isIPv4(a)) return a;
   a = a.replace(/%.*$/, "");
-  if (!isIPv6(a)) return address;
+  if (!isIPv6(a)) return INVALID_ADDRESS_KEY;
   const groups = ipv6Groups(a);
   const mapped = groups.slice(0, 5).every((g) => g === 0) && groups[5] === 0xffff;
   if (mapped) return [groups[6] >> 8, groups[6] & 0xff, groups[7] >> 8, groups[7] & 0xff].join(".");
