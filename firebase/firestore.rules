@@ -39,8 +39,12 @@ service cloud.firestore {
                   || (signedIn() && coachLinked(uid, request.auth.uid));
       // Sign-up carries the 16+ age gate (by year of birth) and one consent
       // record per kind, in lib/domain/consent.ts order. Versions are checked
-      // by the client and adapter, not here.
+      // by the client and adapter, not here. proKind and proProfile come later,
+      // from onboarding (update rule below), never at sign-up: the adapter's
+      // signUp doesn't take them either.
       allow create: if isSelf(uid)
+                    && request.resource.data.get('proKind', null) == null
+                    && request.resource.data.get('proProfile', null) == null
                     && request.resource.data.role in ['athlete', 'coach']
                     && request.resource.data.email == request.auth.token.email
                     && request.resource.data.birthYear is int

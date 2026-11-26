@@ -72,6 +72,13 @@ describe("updateProfile with professional answers", () => {
     expect(stored).toMatchObject({ proKind: "clinician", proProfile: clinician });
   });
 
+  it("refuses an explicit null kind or profile from untyped code, and keeps what was there", async () => {
+    await backend.data.updateProfile(DEMO_COACH.uid, { proKind: "clinician", proProfile: clinician });
+    await refused(backend.data.updateProfile(DEMO_COACH.uid, { proKind: null as never }), "invalid-input", /proKind: one of/);
+    await refused(backend.data.updateProfile(DEMO_COACH.uid, { proProfile: null as never }), "invalid-input", /proProfile: an object/);
+    expect(await backend.data.getProfile(DEMO_COACH.uid)).toMatchObject({ proKind: "clinician", proProfile: clinician });
+  });
+
   it("a profile for a new account needs its kind", async () => {
     await refused(backend.data.updateProfile(DEMO_COACH.uid, { proProfile: coach }), "invalid-input", /needs proKind/);
   });

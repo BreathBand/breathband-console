@@ -231,7 +231,8 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
         // Mirrors the users/{uid} update rule: professionals only, and the profile's kind matches.
         const current = profileOf(uid);
         if (current.role !== "coach") throw new BackendError("permission-denied", "proKind, proProfile: professionals only");
-        const problem = proProblem(proKind ?? current.proKind, proProfile ?? current.proProfile);
+        // An explicit null (untyped callers) is checked like any other value, never read as "keep".
+        const problem = proProblem(proKind !== undefined ? proKind : current.proKind, proProfile !== undefined ? proProfile : current.proProfile);
         if (problem) throw new BackendError("invalid-input", problem);
       }
       mutate((db) => {

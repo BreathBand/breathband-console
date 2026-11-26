@@ -67,6 +67,7 @@ Appended by the session, one line each, newest last.
 - 2026-11-26: decided for the owner: the educator's "student age range" isn't asked (16+ is the only v1 answer); the practice step says "For now, Breathband is for students aged 16 and over." (alternative: store a fixed `16+`).
 - 2026-11-26: decided for the owner: terminology defaults by kind (athletes / clients / students, no "patients") and can be any of the three; `peopleNouns()` uses the choice, then the kind's default, then "athletes" (older coach accounts and the demo coach have neither). Copy says "Some pages still say 'athletes' for now" until K5 applies it; the welcome done step already uses it ("Add clients").
 - 2026-11-26: decided for the owner: answers are kept per kind while onboarding (going back to change kind loses nothing) and saved once at Finish with the rest, like the individual track (alternative: save after every step, spec principle 7; parked).
+- 2026-11-26: Review fix: `allow create` in firestore.rules now requires `proKind` and `proProfile` absent (matching the adapter's `signUp`, which never takes them); the adapter's `updateProfile` checks an explicit `proKind: null` / `proProfile: null` instead of reading it as "keep" (new test in `local/pro-profile.test.ts`).
 - 2026-11-26: Fixed in scope: in `welcome.css`, a pressed chip under the pointer turned black on black (the hover rule outranked the pressed rule); seen on the practice step, affects the goal questions too.
 
 ## Questions for me
@@ -126,5 +127,10 @@ $ git diff --stat (vs card start)
  new: src/lib/domain/{pro-profile,terminology}.ts (+ tests), src/lib/backend/local/pro-profile.test.ts,
       src/app/cloud/welcome/ProSteps.tsx, e2e/onboarding-pro.spec.ts
 
-UNTESTED: firebase rules (no emulator run); axe not run; other e2e specs (demo-path, home-per-goal) not run.
+Review fix round:
+$ npx vitest run src/lib/backend/local src/lib/domain      -> Test Files 22 passed, Tests 216 passed
+$ npm run check                                             -> EXIT=0 · 66 files passed, 1 skipped · 759 tests passed, 1 skipped · build OK
+$ PORT=3202 npx playwright test e2e/demo-path.spec.ts e2e/home-per-goal.spec.ts e2e/onboarding-pro.spec.ts -> 7 passed (2.3m); port free after
+
+UNTESTED: firebase rules (no emulator run); axe not run.
 ```
