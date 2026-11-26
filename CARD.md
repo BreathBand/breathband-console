@@ -1,7 +1,7 @@
 # T-0123 · feat: the invited path: invite page with scope choice, goal prefilled from the professional's kind, the assignment as the first session
 
-Status: in progress <!-- draft | ready | in progress | blocked | done -->
-Branch: card/T-0123 · Held by: AB_Rouge
+Status: done <!-- draft | ready | in progress | blocked | done -->
+Branch: card/T-0123 · Held by: nobody
 Created: 2026-11-26 · Source: planning/v1/02-onboarding-and-tailoring.md §2 (invite row), §3.5; 03-launch-checklist.md D12
 
 ## Why
@@ -25,6 +25,9 @@ the professional set.
   their first session; a signed-in, onboarded athlete still accepts and stays out of onboarding · check:
   `PORT=3202 npx playwright test e2e/invited-path.spec.ts e2e/onboarding.spec.ts e2e/onboarding-first-session.spec.ts e2e/onboarding-pro-invite.spec.ts`
 - [x] A5: `npm run check` passes (after removing playwright-report/ and test-results/)
+- [x] A6 (I-10, owner-approved integration): the API stores an invite's practice, its lookup returns the same
+  `CoachInviteLookup` as the local adapter, and accepting creates the assignment; the http adapter sends practice ·
+  check: `npx vitest run src/lib/backend/contract src/lib/backend/http src/lib/backend/local` and `npx vitest run server`
 
 ## Files in scope
 
@@ -39,6 +42,9 @@ the professional set.
   `firebase/firestore.rules` (the four in agreement)
 - new `e2e/invited-path.spec.ts`
 - `CARD.md`
+- Owner-approved integration with T-0122 (I-10): `server/routes/coach-invites.ts`, `server/db/schema/coaching.ts`,
+  new `server/db/migrations/0004_coach_invite_practice.sql` + `server/db/migrations/meta/0004_snapshot.json`,
+  `server/db/migrations/meta/_journal.json`, `src/lib/backend/http/data.ts`, `src/lib/backend/contract/coach-tools.contract.ts`
 
 ## Out of scope
 
@@ -49,7 +55,7 @@ the professional set.
 ## Constraints
 
 - No new dependencies. Contract changes additive only, logged below.
-- Don't touch `src/lib/backend/http/**`, `server/**`, `src/app/cloud/home/**`, `AthleteHome.tsx`, `src/app/cloud/record/**`,
+- Don't touch `src/lib/backend/http/**` and `server/**` beyond the files listed in scope, `src/app/cloud/home/**`, `AthleteHome.tsx`, `src/app/cloud/record/**`,
   the coach dashboard, `package.json`.
 
 ## Skills
@@ -62,7 +68,7 @@ the professional set.
 
 ## Next step
 
-Held for the owner: approve `CoachInvite.practice` (Questions). Once approved, a follow-up merges night/2026-11-26 into card/T-0123 and resolves the conflicts in `src/lib/backend/local/index.ts` and `src/lib/backend/types.ts` (T-0119 mood check-ins), then integrates `CoachInviteLookup` with T-0122 (I-10): the server and http `getCoachInvite` return coachKind, coachProfession, scopeRequested and practice, `createCoachInvite` stores `practice`, and accepting creates the assignment.
+Done: for the lead to review and merge into night/2026-11-26, and to apply migration `0004_coach_invite_practice` to Turso. The public invite page for signed-out visitors is a separate card.
 
 ## Decisions
 
@@ -76,6 +82,10 @@ Held for the owner: approve `CoachInvite.practice` (Questions). Once approved, a
 - 2026-11-26: decided for the owner: the assigned first session keeps the person's tones choice for paced practice and is tones off for open practice (as Just breathe); the instrument names it "Assigned practice" via the existing `first=` flag (no recorder change); the done step names the template ("Between visits from Aoife").
 - 2026-11-26: Existing test file changed: `src/lib/domain/first-session.test.ts` only gained a new describe block (assignment → first session); no existing assertion changed. No existing e2e changed: the flow change is new-person-after-invite only.
 - 2026-11-26: Owner approved 2026-11-26 (answers in card): CoachInvite.practice?: ProTemplateId | null (additive); integrate with T-0119 (local adapter) and T-0122 (server + http getCoachInvite).
+- 2026-11-26: Merged origin/night/2026-11-26 into card/T-0123 (no rebase). Conflicts only in the import lists of `src/lib/backend/local/index.ts` and `src/lib/backend/types.ts`; both sides kept (T-0119's mood imports beside this card's). package-lock.json unchanged, so no `npm ci`.
+- 2026-11-26: Scope widened for the owner-approved integration: `server/routes/coach-invites.ts`, `server/db/schema/coaching.ts`, migration `0004_coach_invite_practice` (+ snapshot, journal), `src/lib/backend/http/data.ts`, `src/lib/backend/contract/coach-tools.contract.ts`. `firebase/firestore.rules` already allowed `practice`; only its comment now says the lookup adds who's asking.
+- 2026-11-26: Server matches local: nullable `coach_invites.practice` (text, generated with `npm run db:generate -- --name coach_invite_practice`, applied only to a scratch file DB); `practice` validated with `invitePractice` against the professional's kind (`proKind`, else `proProfile.kind`), else "invalid-input"; `CoachInvite.practice` present only when set; the lookup reads kind, profession and `scopeRequested` from the professional's profile at lookup time (null when absent); accepting inserts the assignment from `practiceAssignment` after the link. The HMAC-derived codes are unchanged. The http adapter sends `practice` only when given, so its request-shape test is unchanged.
+- 2026-11-26: Existing test changed: `coach-tools.contract.ts` "shows whoever opens the link who is asking" now expects the lookup's four new fields as null for a coach with no kind (both adapters return them; `toEqual` treats null as a value). New contract tests (local + http): practice kept and refused, no kind refuses practice, the lookup in the professional's terms, accept creates the assignment and decline doesn't.
 
 ## Questions for me
 
@@ -93,6 +103,9 @@ Format: `- YYYY-MM-DD [product|tool|checklist] <what> · seen on T-NNNN · <file
 - 2026-11-26 [product] The server's coach invites (when they land) need `practice` stored, kind/profession/scope in the lookup, and the assignment created on accept · seen on T-0123 · server/routes/coaching.ts
 - 2026-11-26 [product] Reloading /cloud/join/ after accepting but before finishing onboarding shows "You already share" with "Go to your sessions", which lands on onboarding without the invite prefill · seen on T-0123 · src/app/cloud/join/page.tsx
 - 2026-11-26 [product] §4.4 says the invite page repeats the 16+ age gate for educators; sign-up gates it, the join page doesn't repeat it · seen on T-0123 · src/app/cloud/join/page.tsx
+- 2026-11-26 [checklist] `src/lib/backend/http/README.md` still describes coach invites without practice and the lookup's new fields · seen on T-0123 · src/lib/backend/http/README.md
+- 2026-11-26 [product] The demo seed (server/db/seed/rows.ts) maps local coach invites without `practice`; harmless today (the seed has none) but would drop one if added · seen on T-0123 · server/db/seed/rows.ts
+- 2026-11-26 [product] Accepting a coach invite on the server claims the invite, writes the link, then the assignment, with no transaction: a failure between leaves the invite accepted without the assignment (the link write had the same gap before) · seen on T-0123 · server/routes/coach-invites.ts
 
 ## Done
 
@@ -105,6 +118,44 @@ Format: `- YYYY-MM-DD [product|tool|checklist] <what> · seen on T-NNNN · <file
 ### Evidence
 
 ```
+# Integration session (2026-11-26, after merging night/2026-11-26; HEAD before the card commit 630e1f2)
+$ npx vitest run src/lib/domain/invite-context.test.ts src/lib/domain/first-session.test.ts src/lib/backend/local/invite-context.test.ts
+ Test Files  3 passed (3)
+      Tests  30 passed (30)
+
+$ npx vitest run src/lib/backend/contract src/lib/backend/http src/lib/backend/local   # contract suite, local + http
+ Test Files  20 passed (20)
+      Tests  486 passed (486)
+$ npx vitest run src/lib/backend/contract/data.local.test.ts src/lib/backend/http/data.http.test.ts -t "T-0123|who is asking"
+ ✓ coach tools: local|http > shows whoever opens the link who is asking, without the contact details
+ ✓ coach tools: local|http > with a first practice (T-0123) > keeps one of the kind's templates…, refuses any other practice
+ ✓ coach tools: local|http > with a first practice (T-0123) > refuses practice from a coach with no kind
+ ✓ coach tools: local|http > with a first practice (T-0123) > shows who's asking in their own terms, what they ask to see and the practice
+ ✓ coach tools: local|http > with a first practice (T-0123) > makes the practice the athlete's assignment when they accept, and nothing when they decline
+      Tests  10 passed | 268 skipped (278)
+
+$ npx vitest run server
+ Test Files  16 passed | 1 skipped (17)
+      Tests  193 passed | 1 skipped (194)
+
+$ npm run db:check            # TURSO_* unset
+Everything's fine
+$ TURSO_DATABASE_URL=file:<scratchpad>/t0123.db npm run db:migrate   # scratch file DB only, never Turso
+Migrations applied to file:…/scratchpad/t0123.db.
+
+$ rm -rf playwright-report test-results && npm run check     # exit 0
+  lint: clean · typecheck: tsc clean
+  Test Files  101 passed | 1 skipped (102)
+       Tests  1397 passed | 1 skipped (1398)
+  build: Compiled successfully · Generating static pages (27/27)
+
+$ PORT=3202 npx playwright test e2e/invited-path.spec.ts e2e/onboarding.spec.ts e2e/onboarding-first-session.spec.ts e2e/onboarding-pro-invite.spec.ts e2e/smoke.spec.ts e2e/demo-path.spec.ts
+  12 passed (2.4m)       # nothing left listening on 3202 afterwards
+
+UNTESTED (integration): the web flow against the http backend in a browser (e2e runs the local adapter); the
+migration on Turso (the lead applies it); the Firebase rules in the emulator.
+
+# First build (9bee728)
 $ npx vitest run src/lib/domain/invite-context.test.ts src/lib/domain/first-session.test.ts src/lib/backend/local/invite-context.test.ts
  Test Files  3 passed (3)
       Tests  30 passed (30)
