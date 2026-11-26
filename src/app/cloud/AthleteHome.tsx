@@ -11,6 +11,7 @@ import { TimeTrend, type TimePoint } from "@/components/trendCharts";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { useDevice } from "@/lib/device/DeviceProvider";
 import { activity } from "@/lib/domain/activity";
+import { dailyMinutesOf, mechanicsOf, ringOf, streakOf } from "@/lib/domain/habit";
 import { describeAssignment, dueText, isOpen } from "@/lib/domain/coaching";
 import { describeMode, formatDay, formatDuration, formatTime } from "@/lib/domain/format";
 import { formatScore, headline, isTransitionScores, scoreWord } from "@/lib/domain/scores";
@@ -18,7 +19,8 @@ import { goalOf } from "@/lib/domain/preferences";
 import type { SessionSummary, UserPreferences, Waveform } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
 import type { Workspace } from "./AthleteWorkspace";
-import { calmLine, homeLayout, professionalOf, trendPeriod } from "./home/tailor";
+import { calmLine, homeLayout, professionalOf, trendPeriod, withMechanics } from "./home/tailor";
+import { NewMilestones } from "./home/Milestones";
 import { LatestComment, ProfessionalCard } from "./home/ProfessionalCard";
 import { WeekCard } from "./home/WeekCard";
 
@@ -34,18 +36,11 @@ function greeting(now: Date): string {
   return h < 5 ? "Good evening" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
-/** Consecutive days, up to today or yesterday, with at least one session. */
-export function streakDays(sessions: SessionSummary[], now: Date): number {
-  const days = new Set(sessions.map((s) => new Date(s.startedAt).toDateString()));
-  const d = new Date(now);
-  if (!days.has(d.toDateString())) d.setDate(d.getDate() - 1);
-  let n = 0;
-  while (days.has(d.toDateString())) {
-    n++;
-    d.setDate(d.getDate() - 1);
-  }
-  return n;
-}
+/**
+ * Days in a row, with one rest day per rolling 7 days (lib/domain/habit.ts).
+ * Re-exported here for the results line and the session review, which read it from Home.
+ */
+export { streakDays } from "@/lib/domain/habit";
 
 /**
  * The athlete's home, built to fit one laptop screen: a greeting with the
@@ -65,17 +60,21 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
 
   if (sessions.length === 0) return <FirstRun name={first} now={now} />;
 
-  const layout = homeLayout({ goal: prefs?.goal ?? null, professional: professionalOf(ws.coachName), plans: ws.plans });
+  const professional = professionalOf(ws.coachName);
+  const mechanics = mechanicsOf(prefs, professional?.kind === "clinician");
+  const layout = withMechanics(homeLayout({ goal: prefs?.goal ?? null, professional, plans: ws.plans }), mechanics);
   const a = activity(sessions, now, ws.rules, targets);
   const latest = sessions[0];
-  const streak = streakDays(sessions, now);
+  const streak = streakOf(sessions, now);
+  const dailyMinutes = dailyMinutesOf(prefs);
+  const ring = layout.slots.includes("calm-ring") ? ringOf(sessions, now, dailyMinutes) : null;
   const open = ws.plans.filter(isOpen);
   const suggestion = prefs ? suggestedSession(prefs) : "Start a session";
   const line =
     layout.line &&
     calmLine({
-      streakDays: streak,
-      doneToday: sessions.some((s) => new Date(s.startedAt).toDateString() === now.toDateString()),
+      streakDays: streak.days,
+      doneToday: streak.doneToday,
       minutes: Math.round((prefs?.session.durationSec ?? 180) / 60),
       streak: layout.streak,
     });
@@ -120,12 +119,14 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
         </ul>
       )}
 
+      {mechanics.milestones && <NewMilestones sessions={sessions} now={now} />}
+
       {layout.professional && <ProfessionalCard ws={ws} pro={layout.professional} />}
 
       <div className="home-grid">
         <LastSession session={latest} sessions={sessions} href={ws.sessionHref(latest.id)} />
 
-        <WeekCard ws={ws} layout={layout} activity={a} streak={streak} />
+        <WeekCard ws={ws} layout={layout} activity={a} streak={streak} ring={ring} dailyMinutes={dailyMinutes} />
 
         {layout.trendDays !== null && <ScoreTrend ws={ws} days={layout.trendDays} rate={layout.rate} />}
 

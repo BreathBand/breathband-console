@@ -69,6 +69,25 @@ export interface UserPreferences {
   reminders?: ReminderPreferences;
   /** What the person chose at onboarding's band step. Absent until chosen (skipped, or older profiles). */
   onboarding?: OnboardingChoices;
+  /** The habit mechanics: which are on, and the milestones already shown. Absent on older profiles: the goal's defaults apply. */
+  gamification?: GamificationPreferences;
+}
+
+/** Milestones (planning/v1/01 §3.8), each shown once. */
+export type MilestoneKey = "first-calibration" | "first-paced" | "streak-7" | "streak-30" | "sessions-100" | "first-9" | "first-program";
+
+/**
+ * The habit mechanics a person has on (Settings, J7), each defaulting from the
+ * goal when absent, and the milestones already shown to them.
+ */
+export interface GamificationPreferences {
+  /** The daily ring: minutes today against `dailyMinutes`. */
+  ring?: boolean;
+  /** Days in a row, with one rest day per rolling 7 days. */
+  streak?: boolean;
+  milestones?: boolean;
+  /** Milestones already shown, with when (ISO 8601). A milestone in here is never shown again. */
+  awarded?: Partial<Record<MilestoneKey, string>>;
 }
 
 /**
