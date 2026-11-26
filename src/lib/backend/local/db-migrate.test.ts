@@ -41,7 +41,14 @@ function withRecording() {
   db.sessions["u-new"] = [recorded];
   db.recordedWaveforms[recorded.waveformPath] = { sampleIntervalMs: 50, user: [0, 1, 0], pacer: [0, 1, 0], markers: [], calibration: { min: 0, max: 1 } };
   // Maya recorded one in this browser too: no seeded mood may land on it.
-  db.sessions[MAYA] = [{ ...recorded, id: "s-maya0001", athleteId: MAYA, waveformPath: "waveforms/demo-athlete-4/s-maya0001.json.gz" }, ...db.sessions[MAYA]];
+  // And joined a group session here: its result has no `source` and must get no seeded mood either.
+  const groupResult: SessionSummary = { ...recorded, id: "s-group001", athleteId: MAYA, groupSessionId: "g-1", waveformPath: "waveforms/demo-athlete-4/s-group001.json.gz" };
+  delete groupResult.source;
+  db.sessions[MAYA] = [
+    { ...recorded, id: "s-maya0001", athleteId: MAYA, waveformPath: "waveforms/demo-athlete-4/s-maya0001.json.gz" },
+    groupResult,
+    ...db.sessions[MAYA],
+  ];
   db.currentUid = "u-new";
   return db;
 }
@@ -64,7 +71,9 @@ describe("migrateDb 8 → 9", () => {
     // The demo's Focus person keeps her seeded check-ins, on seeded sessions only.
     expect(after.moodCheckins[MAYA].length).toBeGreaterThan(0);
     expect(after.moodCheckins[MAYA].some((c) => c.sessionId === "s-maya0001")).toBe(false);
-    const seededIds = new Set(after.sessions[MAYA].filter((s) => s.source !== "web").map((s) => s.id));
+    expect(after.moodCheckins[MAYA].some((c) => c.sessionId === "s-group001")).toBe(false);
+    expect(after.sessions[MAYA].some((s) => s.id === "s-group001")).toBe(true);
+    const seededIds = new Set(after.sessions[MAYA].filter((s) => s.source === "app" && !s.groupSessionId).map((s) => s.id));
     expect(after.moodCheckins[MAYA].every((c) => c.sessionId !== null && seededIds.has(c.sessionId))).toBe(true);
   });
 
@@ -74,6 +83,7 @@ describe("migrateDb 8 → 9", () => {
     expect(migrateDb({ ...v8Db(), version: 7 }, NOW)).toBeNull();
     expect(migrateDb({ version: "x" }, NOW)).toBeNull();
     expect(migrateDb(null, NOW)).toBeNull();
+    expect(migrateDb({ ...v8Db(), sessions: { [MAYA]: "not a list" } }, NOW)).toBeNull();
   });
 });
 

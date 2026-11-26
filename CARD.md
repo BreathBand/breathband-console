@@ -67,7 +67,7 @@ Appended by the session, one line each, newest last.
 - 2026-11-26: decided for the owner: a Focus profile without goal answers counts as check-in on, the question's default (alternative: off until asked).
 - 2026-11-26: decided for the owner: a check-in that fails to save (the http adapter until I-10) never blocks the session save (alternative: surface the error).
 - 2026-11-26: decided for the owner: the before prompt sits on the Calibrated step above Begin and is optional; the after prompt sits with the note; a second tap clears a face.
-- 2026-11-26: the local DB's version goes 8 → 9 (new `moodCheckins` field and Maya's seeded check-ins). Fix round: a v8 database is migrated in place (`migrateDb` in `local/db.ts`), so accounts and sessions recorded in the browser survive; seeded check-ins land only on seeded (non-web) sessions; versions older than 8 or unknown still reseed.
+- 2026-11-26: the local DB's version goes 8 → 9 (new `moodCheckins` field and Maya's seeded check-ins). Fix round: a v8 database is migrated in place (`migrateDb` in `local/db.ts`), so accounts and sessions recorded in the browser survive; seeded check-ins land only on seeded sessions (source "app", no `groupSessionId`, so neither web recordings nor group results get demo moods); a malformed `sessions` list reseeds; versions older than 8 or unknown still reseed.
 - 2026-11-26: the exam countdown was cheap (a pure `nextExam` + one line), so `focus-exams` now shows "Exam in N days."; the study-day strip stays a seam.
 - 2026-11-26: fix round: one existing test changed: `src/lib/backend/http/http.test.ts` "every other method fails ... unavailable" now accepts a message naming I-09 or I-10 (was I-09 only), because the mood routes' message names "API card I-10". New test: `src/lib/backend/local/db-migrate.test.ts`. Restart now clears the before-mood.
 - 2026-11-26: before the fix round, no existing test changed. New tests: `src/lib/domain/mood.test.ts`, `src/lib/backend/local/mood.test.ts`, `src/app/cloud/results/tone-mood.test.ts`, `src/app/cloud/home/focus.test.ts`, `e2e/mood.spec.ts`.
@@ -128,6 +128,7 @@ $ npx vitest run src/lib/backend/local src/lib/domain/mood.test.ts
       Tests  120 passed (120)
 $ rm -rf playwright-report test-results && npm run check
 exit 0 · lint clean · Test Files 89 passed | 1 skipped · Tests 1093 passed | 1 skipped · build 27/27 pages
+Follow-up (seeded filter source === "app", no group rows): npx vitest run src/lib/backend/local → 13 files, 108 tests passed; npm run check → exit 0, 1093 passed | 1 skipped, lint clean, build OK.
 e2e not rerun in the fix round (UNTESTED after the fix; the UI change is one setState on restart).
 
 Screenshots looked at (Playwright attachments): Calibrated step with the five faces; Focus results with

@@ -110,8 +110,8 @@ export function memoryStore(initial: LocalDb = createSeededDb()): DbStore {
  * place; null when it's older or unknown (the caller reseeds).
  *
  * 8 → 9 (T-0119) adds `moodCheckins`: empty for everyone, except the demo
- * people's seeded check-ins, placed on their seeded sessions only (never on a
- * session recorded in this browser). Accounts, sessions and everything else
+ * people's seeded check-ins, placed on their seeded sessions only (source
+ * "app", no group session), never on one recorded or joined in this browser. Accounts, sessions and everything else
  * are kept as they are.
  */
 export function migrateDb(stored: unknown, now = new Date()): LocalDb | null {
@@ -119,7 +119,9 @@ export function migrateDb(stored: unknown, now = new Date()): LocalDb | null {
   const db = stored as Omit<LocalDb, "version" | "moodCheckins"> & { version?: unknown; moodCheckins?: LocalDb["moodCheckins"] };
   if (db.version === DB_VERSION) return db as LocalDb;
   if (db.version !== 8 || typeof db.sessions !== "object" || db.sessions === null) return null;
-  const seededSessions = Object.fromEntries(Object.entries(db.sessions).map(([uid, list]) => [uid, list.filter((s) => s.source !== "web")]));
+  const lists = Object.entries(db.sessions);
+  if (!lists.every(([, list]) => Array.isArray(list))) return null;
+  const seededSessions = Object.fromEntries(lists.map(([uid, list]) => [uid, list.filter((s) => s.source === "app" && !s.groupSessionId)]));
   return { ...db, version: DB_VERSION, moodCheckins: db.moodCheckins ?? seedMoodCheckins(seededSessions, now) };
 }
 
