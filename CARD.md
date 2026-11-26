@@ -67,7 +67,8 @@ Lead: review and merge; then answer the NotesTab question below (E14 on the note
 
 ## Questions for me
 
-- [ ] E14 wants the hint on the private notes themselves (`src/app/cloud/NotesTab.tsx`, a coach-UI file outside this card and next to T-0116's lane). Should `PRIVATE_NOTES_HINT` go under "Only you can see these" there, and should the placeholder "Goals, injuries, what works for them…" change (mentioning injuries invites health detail)? — Recommended: yes, as a one-line follow-up after T-0116 merges. Options: do it in T-0116; leave it in onboarding only.
+- [x] E14 wants the hint on the private notes themselves (`src/app/cloud/NotesTab.tsx`, a coach-UI file outside this card and next to T-0116's lane). Should `PRIVATE_NOTES_HINT` go under "Only you can see these" there, and should the placeholder "Goals, injuries, what works for them…" change (mentioning injuries invites health detail)? — Recommended: yes, as a one-line follow-up after T-0116 merges. Options: do it in T-0116; leave it in onboarding only.
+  Answer: yes, as a one-line follow-up after T-0116 merges
 
 ## Parked
 
