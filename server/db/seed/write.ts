@@ -25,7 +25,7 @@ import {
   squads,
   user,
 } from "../schema";
-import { DEMO_PASSWORD, DEMO_UIDS, demoRows } from "./rows";
+import { DEMO_PASSWORD, DEMO_UIDS, demoRows, type DemoRows } from "./rows";
 
 export const SEED_TABLES = [
   "user",
@@ -53,6 +53,8 @@ export interface SeedOptions {
   now?: Date;
   /** Remove the demo people and their data first, then seed afresh. */
   refresh?: boolean;
+  /** The API's AUTH_SECRET (server/auth.ts authSecret): the coach invite's code is derived under it. */
+  secret: string;
 }
 
 export interface SeedResult {
@@ -69,9 +71,9 @@ export interface SeedResult {
 /** Rows per insert statement; keeps statements small on a remote database. */
 const CHUNK = 25;
 
-export async function seedDemo({ db, storage, now = new Date(), refresh = false }: SeedOptions): Promise<SeedResult> {
+export async function seedDemo({ db, storage, now = new Date(), refresh = false, secret }: SeedOptions): Promise<SeedResult> {
   const removed = refresh ? await removeDemo(db, storage) : 0;
-  const rows = demoRows(now);
+  const rows = demoRows(now, secret);
   const inserted = Object.fromEntries(SEED_TABLES.map((t) => [t, 0])) as Record<SeedTable, number>;
   const add = async <T>(table: SeedTable, list: T[], run: (chunk: T[]) => Promise<unknown[]>) => {
     for (let i = 0; i < list.length; i += CHUNK) inserted[table] += (await run(list.slice(i, i + CHUNK))).length;
@@ -151,7 +153,17 @@ export async function seedDemo({ db, storage, now = new Date(), refresh = false 
   await add("squad_members", members, (v) =>
     db.insert(squadMembers).values(v).onConflictDoNothing().returning({ id: squadMembers.squadId }),
   );
-  await add("coach_invites", rows.coachInvites.filter((i) => has(i.coachId, i.athleteId)), (v) =>
+  // A coach invite's key (its code's hash) depends on when it was made, which moves with `now`:
+  // the demo's is there already when its coach has one for the same person and contact.
+  const invites: DemoRows["coachInvites"] = [];
+  for (const invite of rows.coachInvites.filter((i) => has(i.coachId, i.athleteId))) {
+    const [held] = await db
+      .select({ id: coachInvites.codeHash })
+      .from(coachInvites)
+      .where(and(eq(coachInvites.coachId, invite.coachId), eq(coachInvites.athleteName, invite.athleteName), eq(coachInvites.contact, invite.contact)));
+    if (!held) invites.push(invite);
+  }
+  await add("coach_invites", invites, (v) =>
     db.insert(coachInvites).values(v).onConflictDoNothing().returning({ id: coachInvites.codeHash }),
   );
   await add("mood_checkins", rows.moodCheckins.filter((m) => has(m.userId)), (v) =>

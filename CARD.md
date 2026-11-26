@@ -52,8 +52,9 @@ Done; the lead merges, then runs `db:migrate` + `db:seed` against Turso (blobs l
 - 2026-11-26: decided for the owner: insert-only, per row, on fixed keys; an existing demo uid is left as it is (not upserted), and a demo email held by another account skips that person and everything naming them (alternative: upsert demo rows, which would overwrite changes made during a demo).
 - 2026-11-26: decided for the owner: `db:seed -- --refresh` removes the demo uids first (cascade) and their blobs, then reseeds, so sessions sit relative to today before the 10 Dec demo (alternative: no refresh; on Turso the seeded dates would age).
 - 2026-11-26: Passwords use `better-auth/crypto` `hashPassword` (Better Auth's default hasher, the one `server/auth.ts` uses) on a `credential` account; emails verified. No consents/birth year: the local seed has none (accounts without them are allowed).
-- 2026-11-26: No pro profiles seeded: the local seed's people have no `proKind`. The coach invite is stored as `hashCode(code)` from routes/coaching.ts (the invite hash); I-10 may change how coach invites are hashed.
+- 2026-11-26: No pro profiles seeded: the local seed's people have no `proKind`.
 - 2026-11-26: A seeded session whose blob is missing (e.g. a DB seeded from another machine) gets its signal rewritten on the next seed; no new row.
+- 2026-11-26 (integration fix after T-0122 merged): the demo coach invite uses T-0122's scheme: code = HMAC(AUTH_SECRET, "coach-invite\0coachId\0createdAtMs") cut to 8 chars (`codeFrom`), stored as `hashCode(code)` from routes/codes.ts. The route's `codeOf` is a closure and not exported (routes are out of scope), so `coachInviteCode` in server/db/seed/rows.ts repeats the formula; seed.test.ts proves the API lists the seeded invite with a code that opens and revokes it. `seedDemo` takes `secret`; the CLI uses `authSecret()` (AUTH_SECRET, or the dev-only one outside production), so seed with the API's AUTH_SECRET. The invite's key moves with `now`, so it counts as present when the coach already has one for the same name and contact (idempotent). The local code "JRDN7K2Q" is not kept.
 - 2026-11-26: `db:reset` deletes the file and its `-wal`/`-shm`/`-journal` siblings, then migrates; blobs under STORAGE_DIR are left (the seed rewrites the demo's).
 
 ## Questions for me
@@ -103,6 +104,15 @@ $ npx vitest run server/db/seed.test.ts
 $ rm -rf playwright-report test-results && npm run check
 lint ok · typecheck ok · Test Files 92 passed | 1 skipped (93) · Tests 1216 passed | 1 skipped (1217)
 ✓ Compiled successfully; static export built. exit=0
+
+# Re-run after merging night/2026-11-26 (T-0122) and the coach-invite fix
+$ npm ci && rm -rf playwright-report test-results
+$ npx vitest run server            → Test Files 14 passed | 1 skipped · Tests 180 passed | 1 skipped
+$ npx vitest run server/db/seed.test.ts → Tests 11 passed (11) (new: the seeded coach invite is listed by the API
+   with an 8-char code; Alex opens it by code; the coach revokes it by code)
+$ npm run check                    → exit 0 · Test Files 93 passed | 1 skipped · Tests 1332 passed | 1 skipped · build ok
+$ A1 again: reset=0 seed=0 (252 new rows, coach_invites 1) seed2=0 (0 new rows); file + blobs deleted
+$ A2 again: libsql:// reset exit=1
 
 $ git diff --stat main...  (this card)
  CARD.md, package.json (+2 scripts), server/db/reset.ts, server/db/seed.ts, server/db/seed.test.ts,

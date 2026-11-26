@@ -11,7 +11,7 @@ import { SQLiteTable } from "drizzle-orm/sqlite-core";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, generateWaveform, seedSessions } from "@/lib/backend/local/seed";
-import type { SessionSummary, UserProfile, Waveform } from "@/lib/domain/types";
+import type { CoachInvite, SessionSummary, UserProfile, Waveform } from "@/lib/domain/types";
 import { authSecret, createAuth } from "../auth";
 import { createApp } from "../index";
 import type { Mailer } from "../mailer";
@@ -27,6 +27,8 @@ import { seedDemo, SEED_TABLES } from "./seed/write";
 const APP = "http://localhost:3000";
 const API = "http://localhost:8787";
 const NOW = new Date("2026-11-26T12:00:00.000Z");
+/** The API's secret in tests; the seed derives the coach invite's code under the same one. */
+const SECRET = authSecret("test", undefined);
 
 const dir = mkdtempSync(join(tmpdir(), "breathband-seed-"));
 const fileUrl = (name: string) => `file:${join(dir, name).replaceAll("\\", "/")}`;
@@ -68,7 +70,7 @@ const build = () =>
     db,
     mode: "test",
     appUrl: APP,
-    auth: createAuth({ db, mode: "test", secret: authSecret("test", undefined), baseUrl: API, appUrl: APP, mailer }),
+    auth: createAuth({ db, mode: "test", secret: SECRET, baseUrl: API, appUrl: APP, mailer }),
     storage,
   });
 type App = ReturnType<typeof build>;
@@ -105,7 +107,7 @@ describe("the demo seed", () => {
   beforeAll(async () => {
     // Someone real, already here: the seed must leave them alone.
     await db.insert(schema.user).values({ id: "real-person", name: "Real Person", email: "real@example.test", emailVerified: true });
-    first = await seedDemo({ db, storage, now: NOW });
+    first = await seedDemo({ db, storage, now: NOW, secret: SECRET });
     afterFirst = await rowCounts(db);
   }, 120_000);
 
@@ -156,6 +158,27 @@ describe("the demo seed", () => {
     expect(thread.map((c) => c.kind).sort()).toEqual(["comment", "comment", "kudos", "kudos"]);
   });
 
+  it("lists the demo coach's invite with a code that works through the API", async () => {
+    const app = build();
+    const cookie = await signIn(app, DEMO_COACH.email);
+    const invites = await json<CoachInvite[]>(await call(app, "GET", `/api/v1/coaches/${DEMO_COACH.uid}/coach-invites`, { cookie }));
+    expect(invites).toHaveLength(1);
+    const [invite] = invites;
+    expect(invite).toMatchObject({ coachId: DEMO_COACH.uid, coachName: DEMO_COACH.displayName, athleteName: "Jordan Lee", status: "pending", athleteId: null });
+    expect(invite.code).toMatch(/^[A-HJ-NP-Z2-9]{8}$/);
+    expect(Date.parse(invite.expiresAt)).toBeGreaterThan(NOW.getTime());
+
+    // Alex opens the link: the code finds the invite.
+    const alex = await signIn(app, DEMO_ATHLETE.email);
+    const opened = await json<{ coachId: string; status: string }>(await call(app, "GET", `/api/v1/coach-invites/${invite.code}`, { cookie: alex }));
+    expect(opened).toMatchObject({ coachId: DEMO_COACH.uid, status: "pending" });
+
+    // The coach can revoke it by its code (a status change; no rows added or removed).
+    await json(await call(app, "POST", `/api/v1/coaches/${DEMO_COACH.uid}/coach-invites/${invite.code}/revoke`, { cookie }));
+    const after = await json<CoachInvite[]>(await call(app, "GET", `/api/v1/coaches/${DEMO_COACH.uid}/coach-invites`, { cookie }));
+    expect(after).toMatchObject([{ code: invite.code, status: "revoked" }]);
+  });
+
   it("refuses the wrong password", async () => {
     const response = await call(build(), "POST", "/api/auth/sign-in/email", { body: { email: DEMO_ATHLETE.email, password: "not-the-demo-password" } });
     expect(response.status).toBe(401);
@@ -163,7 +186,7 @@ describe("the demo seed", () => {
 
   it("adds nothing when run again, even on another day", async () => {
     const before = await rowCounts(db);
-    const again = await seedDemo({ db, storage, now: new Date(NOW.getTime() + 3 * 86_400_000) });
+    const again = await seedDemo({ db, storage, now: new Date(NOW.getTime() + 3 * 86_400_000), secret: SECRET });
     expect(SEED_TABLES.every((t) => again.inserted[t] === 0)).toBe(true);
     expect(again.waveformsWritten).toBe(0);
     expect(await rowCounts(db)).toEqual(before);
@@ -173,14 +196,14 @@ describe("the demo seed", () => {
     const path = `waveforms/${DEMO_ATHLETE.uid}/${demoSessionId(DEMO_ATHLETE.uid, "s001")}.json.gz`;
     await storage.delete(path);
     const before = await rowCounts(db);
-    const again = await seedDemo({ db, storage, now: NOW });
+    const again = await seedDemo({ db, storage, now: NOW, secret: SECRET });
     expect(again.waveformsWritten).toBe(1);
     expect(await storage.getJson(path)).not.toBeNull();
     expect(await rowCounts(db)).toEqual(before);
   });
 
   it("refreshes the demo without touching anyone else", async () => {
-    const again = await seedDemo({ db, storage, now: NOW, refresh: true });
+    const again = await seedDemo({ db, storage, now: NOW, refresh: true, secret: SECRET });
     expect(again.removed).toBe(6);
     expect(again.inserted).toEqual(first.inserted);
     // Their sign-in sessions went with them, so the counts are those of the first run.
@@ -193,7 +216,7 @@ describe("the demo seed", () => {
     try {
       await migrate(other.db, { migrationsFolder: resolve(MIGRATIONS_DIR) });
       await other.db.insert(schema.user).values({ id: "someone", name: "Someone", email: DEMO_COACH.email });
-      const result = await seedDemo({ db: other.db, storage: createFsStorage(join(dir, "blobs-taken")), now: NOW });
+      const result = await seedDemo({ db: other.db, storage: createFsStorage(join(dir, "blobs-taken")), now: NOW, secret: SECRET });
       expect(result.skipped).toEqual([DEMO_COACH.email]);
       expect(result.inserted.user).toBe(5);
       expect(result.inserted.coach_links).toBe(0);

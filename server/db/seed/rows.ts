@@ -6,11 +6,12 @@
 // ids are only unique per athlete locally ("s001"), so rows prefix the athlete
 // ("demo-athlete-s001"); other local ids get a "demo-" prefix.
 
+import { createHmac } from "node:crypto";
 import { createSeededDb } from "@/lib/backend/local/db";
 import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, DEMO_TEAM, generateWaveform } from "@/lib/backend/local/seed";
 import { isTransitionScores } from "@/lib/domain/scores";
 import type { SessionSummary, UserProfile, Waveform } from "@/lib/domain/types";
-import { hashCode } from "../../routes/coaching";
+import { codeFrom, hashCode } from "../../routes/codes";
 import {
   assignments,
   breathSessions,
@@ -62,8 +63,21 @@ export interface DemoRows {
 /** Every uid the demo seed owns: the local seed's accounts. */
 export const DEMO_UIDS: readonly string[] = [DEMO_ATHLETE, ...DEMO_TEAM, DEMO_COACH].map((p) => p.uid);
 
-/** The demo, as rows, with sessions placed relative to `now` (as the local adapter does). */
-export function demoRows(now: Date): DemoRows {
+/**
+ * A coach invite's code, as routes/coach-invites.ts derives it (T-0122): an HMAC
+ * of the coach and the moment of creation under AUTH_SECRET, cut to 8
+ * characters. Only its hash is stored; the API derives the code again to list it.
+ * Kept in step with the route by server/db/seed.test.ts (the API lists the seeded code and it works).
+ */
+export function coachInviteCode(secret: string, coachId: string, createdAt: Date): string {
+  return codeFrom(createHmac("sha256", secret).update(`coach-invite\0${coachId}\0${createdAt.getTime()}`).digest());
+}
+
+/**
+ * The demo, as rows, with sessions placed relative to `now` (as the local adapter does).
+ * `secret` is the API's AUTH_SECRET: the coach invite's code depends on it.
+ */
+export function demoRows(now: Date, secret: string): DemoRows {
   const local = createSeededDb(now);
   const at = (iso: string) => new Date(iso);
 
@@ -156,9 +170,9 @@ export function demoRows(now: Date): DemoRows {
     squadMembers: Object.entries(local.squads).flatMap(([coachId, list]) =>
       list.flatMap((q) => q.athleteIds.map((athleteId) => ({ squadId: demoId(q.id), athleteId, coachId }))),
     ),
-    // Stored like an athlete's invite: only the hash of the code (routes/coaching.ts).
+    // The local code ("JRDN7K2Q") can't be kept: the API derives a coach invite's code (see coachInviteCode).
     coachInvites: local.coachInvites.map((i) => ({
-      codeHash: hashCode(i.code),
+      codeHash: hashCode(coachInviteCode(secret, i.coachId, at(i.createdAt))),
       coachId: i.coachId,
       coachName: i.coachName,
       athleteName: i.athleteName,
