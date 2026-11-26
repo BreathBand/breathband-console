@@ -9,11 +9,13 @@
 
 House rules:
 
-- **Static export only** (`output: "export"`). No server actions, request-reading route handlers, `proxy`, `cookies()`/`headers()`, config rewrites/redirects/headers, or dynamic `[param]` routes. Per-record pages use query strings. Full list: docs/PLAN.md, "Static export rules".
-- **Screens talk to data only through `useBackend()` / `useAuth()`.** Never import `lib/backend/local` or `lib/backend/firebase` from a page (the one exception is the demo-account hint on the login page).
-- **Adding a backend capability** means updating `lib/backend/types.ts`, the local adapter, its tests, and, if it touches access, `firebase/firestore.rules` / `storage.rules`. These four must agree.
+- **Static export only** for the web app (`output: "export"`). No server actions, request-reading route handlers, `proxy`, `cookies()`/`headers()`, config rewrites/redirects/headers, or dynamic `[param]` routes. Per-record pages use query strings. Full list: docs/PLAN.md, "Static export rules". The API is a separate Node program in `server/` (docs/PLAN.md, decision 10), never Next route handlers.
+- **Screens talk to data only through `useBackend()` / `useAuth()`.** Screens still never import an adapter (`lib/backend/local`, `lib/backend/http`, `lib/backend/firebase`) or anything in `server/` (the one exception is the demo-account hint on the login page).
+- **Adding a backend capability** means updating `lib/backend/types.ts`, the local adapter, the shared contract tests (`lib/backend/contract/`, run against local and http), the `http` adapter and its route in `server/`, and, if it touches access, `server/authz.ts` and `firebase/firestore.rules` / `storage.rules`. These must all agree.
 - **`lib/domain/types.ts` is the contract with the Flutter app** (`BreathBand/breathband-app`, checked out locally at `../breathband`). Don't rename or retype fields casually; the app writes them.
-- **Do not install `firebase`, `firebase-admin`, `@google-cloud/*` or other cloud SDKs** until Phase 4 is started deliberately.
+- **Server code lives in `server/`** (Hono on Node 22, Drizzle on libSQL, Better Auth; one `package.json`). The API's allowed dependencies are `drizzle-orm`, `drizzle-kit`, `@libsql/client`, `tsx`, `hono`, `@hono/node-server`, `better-auth`, `zod`, `nodemailer`, `qrcode`, their `@types/*` packages, and `concurrently`. Anything else is a stop-and-ask.
+- **Never run tests against `libsql://`** (Turso). Tests use file databases; `server/db/test-setup.ts` refuses remote URLs.
+- **Do not install `firebase`, `firebase-admin`, `@google-cloud/*` or other cloud SDKs.** The Firebase adapter stays a stub, and Cloud Storage is a stub driver (`server/storage/gcs.ts`), until the owner approves an SDK deliberately.
 - Styling reads from the CSS custom properties in `src/app/globals.css`. Add tokens there instead of hard-coding colours.
 
 Next.js: this version has breaking changes (APIs, conventions, file structure). Read the

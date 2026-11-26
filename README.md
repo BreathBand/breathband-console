@@ -102,6 +102,9 @@ Ports: 1025 (SMTP), 8025 (Mailpit UI), 8081 (sqld, only with its profile). Port 
 | `npm run check`     | All of the above, as CI runs it                         |
 | `npm run infra:up`  | Starts Mailpit in Docker and waits until it's healthy   |
 | `npm run infra:down`| Stops and removes the local infrastructure containers   |
+| `npm run api:dev`   | The API on :8787 with reload (`server/`, tsx watch)     |
+| `npm run db:migrate`| Applies `server/db/migrations` to `TURSO_DATABASE_URL` (default: the file DB) |
+| `npm run db:seed`   | Writes the demo people into the database (`db:reset` starts it over) |
 | `npm run build:server` | Compiles the API to `build/server/` for the image    |
 | `npm run docker:smoke` | Builds, runs and checks the production image         |
 
@@ -119,18 +122,24 @@ src/
 │       ├── index.ts          picks the adapter from NEXT_PUBLIC_BACKEND
 │       ├── BackendProvider   React context: useBackend(), useAuth()
 │       ├── local/            working fake (localStorage + seeded demo data)
-│       └── firebase/         stub, implemented in Phase 4
+│       ├── http/             talks to the API in server/
+│       ├── contract/         the behaviour tests every adapter passes (local and http)
+│       └── firebase/         stub, not used (docs/PLAN.md, decision 10)
+server/                       the API: Hono, Drizzle on libSQL, Better Auth (decision 10)
+├── routes/                   /api/v1/... and the access rules (authz.ts beside it)
+├── db/                       schema, committed migrations, seed
+└── storage/                  StorageService: fs driver; gcs.ts is a stub
 firebase/                     draft Firestore/Storage rules + indexes (not deployed)
 firebase.json                 Hosting + emulator config (kept, not used)
 Dockerfile                    Cloud Run image: the API serving /api/* and the static export on :8080
 ```
 
-- **The build is fully static.** `next build` emits HTML/JS/CSS only. The browser talks to the backend directly, and access control lives in the backend's rules (`firebase/firestore.rules`), not in a server. The local adapter enforces the same rules, so permission errors show up in development.
-- **Screens never import an adapter.** They call `useBackend()`. Moving off the local adapter (the plan is an `http` adapter for a future Cloud Run API) means implementing an adapter and selecting it with `NEXT_PUBLIC_BACKEND`. No page changes are needed.
+- **The web build is fully static.** `next build` emits HTML/JS/CSS only. The browser talks to the API in `server/`, and access control lives there (`server/authz.ts`), not in the web app. The local adapter enforces the same rules, and the shared contract tests run against both, so permission errors show up in development.
+- **Screens never import an adapter.** They call `useBackend()`; `NEXT_PUBLIC_BACKEND` picks `local` or `http` at build time. No page changes are needed to switch.
 
 ## Deploy target: Cloud Run (prepared, not deployed)
 
-The deploy target is **Google Cloud Run**. `gcloud run deploy breathband-web --source . --region <region> --allow-unauthenticated` builds the `Dockerfile` (the API and the static export on :8080; it also needs `AUTH_SECRET`, `SMTP_*` and the database settings, see [Run in a container](#run-in-a-container)). A person runs that by hand; CI and agents don't. Details are in [docs/PLAN.md](docs/PLAN.md#cloud-run).
+The deploy target is **Google Cloud Run**. `gcloud run deploy breathband-web --source . --region <region> --allow-unauthenticated` builds the `Dockerfile` (the API and the static export on :8080; it also needs `AUTH_SECRET`, `SMTP_*` and the database settings, see [Run in a container](#run-in-a-container)). A person runs that by hand; CI and agents don't. Everything a deploy needs (environment, secrets, the migrations job, storage, and what must be fixed first) is in [docs/deploy.md](docs/deploy.md). Nothing has been deployed.
 
 Firebase Hosting is no longer a target. `firebase.json` and `firebase/` stay in the repo unchanged, but nothing deploys them.
 
