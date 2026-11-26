@@ -5,13 +5,14 @@
 
 import { APIError } from "better-auth/api";
 import { eq } from "drizzle-orm";
-import { ageGateProblem, CONSENT_KINDS, consentsProblem } from "@/lib/domain/consent";
+import { ageGateProblem, CONSENT_KINDS, consentsProblem, PRO_CONSENT_KINDS } from "@/lib/domain/consent";
 import { goalPlanProblem } from "@/lib/domain/goal-questions";
 import { gamificationProblem } from "@/lib/domain/habit";
 import { onboardingProblem } from "@/lib/domain/onboarding";
 import { preferencesProblem } from "@/lib/domain/preferences";
 import { proProblem } from "@/lib/domain/pro-profile";
-import type { ConsentRecord, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
+import { proTermsProblem } from "@/lib/domain/pro-terms";
+import type { ConsentRecord, ProKind, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
 import { canReadPrivateProfile, canReadProfile, canSetProFields, canWriteOwn } from "../authz";
 import type { Db } from "../db/client";
 import { consents, profiles, proProfiles, user } from "../db/schema";
@@ -36,7 +37,7 @@ export function profileRoutes(routes: DataApp, { db }: DataDeps) {
   routes.patch("/users/:uid", async (c) => {
     const uid = c.req.param("uid");
     if (!canWriteOwn(c.get("uid"), uid)) fail("permission-denied");
-    const { displayName, preferences, proKind, proProfile } = await jsonObject(c.req.raw);
+    const { displayName, preferences, proKind, proProfile, proConsents } = await jsonObject(c.req.raw);
 
     const name = typeof displayName === "string" ? displayName.trim() : undefined;
     if (displayName !== undefined && !name) fail("invalid-input", "displayName: empty");
@@ -47,12 +48,19 @@ export function profileRoutes(routes: DataApp, { db }: DataDeps) {
 
     const current = await loadProfile(db, uid, false);
     if (!current) fail("not-found");
-    const proChange = proKind !== undefined || proProfile !== undefined;
+    const proChange = proKind !== undefined || proProfile !== undefined || proConsents !== undefined;
     if (proChange) {
-      if (!canSetProFields(current.role)) fail("permission-denied", "proKind, proProfile: professionals only");
+      if (!canSetProFields(current.role)) fail("permission-denied", "proKind, proProfile, proConsents: professionals only");
       // An explicit null is checked like any other value, never read as "keep" (as the local adapter does).
-      const problem = proProblem(proKind !== undefined ? proKind : current.proKind, proProfile !== undefined ? proProfile : current.proProfile);
+      const kind = proKind !== undefined ? proKind : current.proKind;
+      const problem = proProblem(kind, proProfile !== undefined ? proProfile : current.proProfile);
       if (problem) fail("invalid-input", problem);
+      if (proConsents !== undefined) {
+        // The terms belong to a kind of work, so there has to be one.
+        if (!kind) fail("invalid-input", "proConsents: needs proKind");
+        const terms = proTermsProblem(kind as ProKind, proConsents as Pick<ConsentRecord, "kind" | "version">[]);
+        if (terms) fail("invalid-input", terms);
+      }
     }
 
     const changes: Partial<typeof profiles.$inferInsert> = {};
@@ -65,10 +73,22 @@ export function profileRoutes(routes: DataApp, { db }: DataDeps) {
     if (changes.displayName) await db.update(user).set({ name: changes.displayName }).where(eq(user.id, uid));
     if (proKind !== undefined) await db.update(user).set({ proKind: proKind as ProProfile["kind"] }).where(eq(user.id, uid));
     if (proProfile !== undefined) await saveProProfile(db, uid, proProfile as ProProfile);
+    if (proConsents !== undefined) await addProConsents(db, uid, proConsents as Pick<ConsentRecord, "kind" | "version">[]);
 
     return c.json(await loadProfile(db, uid, true));
   });
 }
+
+/** Appended after sign-up's records, never replacing them; a kind already held at this version isn't added twice. */
+async function addProConsents(db: Db, uid: string, given: Pick<ConsentRecord, "kind" | "version">[]) {
+  const held = await db.select({ kind: consents.kind, version: consents.version }).from(consents).where(eq(consents.userId, uid));
+  const fresh = given.filter((c) => !held.some((h) => h.kind === c.kind && h.version === c.version));
+  const acceptedAt = new Date();
+  if (fresh.length > 0) await db.insert(consents).values(fresh.map((c) => ({ userId: uid, kind: c.kind, version: c.version, acceptedAt })));
+}
+
+/** Sign-up's kinds first, in their order, then the professional ones; oldest first within a kind. */
+const CONSENT_ORDER: string[] = [...CONSENT_KINDS, ...PRO_CONSENT_KINDS];
 
 /** The first problem with untrusted preferences, from the same validators the local adapter uses. */
 function preferencesProblemOf(value: unknown): string | null {
@@ -93,6 +113,9 @@ async function saveProProfile(db: Db, uid: string, p: ProProfile) {
     country: p.country,
     useCases: p.useCases,
     terminology: p.terminology,
+    defaultTargets: p.defaultTargets ?? null,
+    // The column has a default; an older profile without one reads back as "scores".
+    scopeRequested: p.scopeRequested ?? "scores",
   };
   await db
     .insert(proProfiles)
@@ -131,6 +154,8 @@ export async function loadProfile(db: Db, uid: string, withPrivate: boolean): Pr
       country: pro.country,
       useCases: pro.useCases as ProProfile["useCases"],
       terminology: pro.terminology as ProProfile["terminology"],
+      ...(pro.defaultTargets !== null && { defaultTargets: pro.defaultTargets }),
+      scopeRequested: pro.scopeRequested,
     };
   }
   if (withPrivate) {
@@ -139,7 +164,7 @@ export async function loadProfile(db: Db, uid: string, withPrivate: boolean): Pr
     if (records.length > 0) {
       result.consents = records
         .map((r): ConsentRecord => ({ kind: r.kind as ConsentRecord["kind"], version: r.version, acceptedAt: r.acceptedAt.toISOString() }))
-        .sort((a, b) => CONSENT_KINDS.indexOf(a.kind) - CONSENT_KINDS.indexOf(b.kind));
+        .sort((a, b) => CONSENT_ORDER.indexOf(a.kind) - CONSENT_ORDER.indexOf(b.kind) || a.acceptedAt.localeCompare(b.acceptedAt));
     }
   }
   return result;

@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { CONSENT_KINDS, CONSENT_VERSIONS } from "@/lib/domain/consent";
+import { CONSENT_KINDS, CONSENT_VERSIONS, currentConsents } from "@/lib/domain/consent";
 import { defaultPreferences } from "@/lib/domain/preferences";
+import { withProDefaults } from "@/lib/domain/pro-defaults";
 import { defaultProProfile } from "@/lib/domain/pro-profile";
+import { proConsents } from "@/lib/domain/pro-terms";
 import type { ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
+import type { DataService } from "../types";
 import type { DataContractHarness } from "./data.harness";
 import { refusal } from "./data.harness";
 
@@ -132,6 +135,35 @@ export function describeProfileContract(adapter: string, setup: () => DataContra
 
         await refusal(cara.backend.data.updateProfile(cara.uid, { proKind: "educator" }), "invalid-input");
         expect(await cara.backend.data.getProfile(cara.uid)).toMatchObject({ proKind: "clinician" });
+      });
+
+      it("records the professional terms after sign-up's consents, once, with the kind's defaults", async () => {
+        const cara = await h.person("coach");
+        const practice = withProDefaults(clinician);
+        const terms = proConsents("clinician");
+        const returned = await cara.backend.data.updateProfile(cara.uid, { proKind: "clinician", proProfile: practice, proConsents: terms });
+        expect(returned.proProfile).toMatchObject(practice);
+        const kinds = [...CONSENT_KINDS, ...terms.map((c) => c.kind)];
+        expect(returned.consents?.map((c) => [c.kind, c.version])).toEqual(kinds.map((k) => [k, CONSENT_VERSIONS[k]]));
+
+        await cara.backend.data.updateProfile(cara.uid, { proConsents: terms });
+        expect((await cara.backend.data.getProfile(cara.uid))?.consents?.map((c) => c.kind)).toEqual(kinds);
+      });
+
+      it.each<[string, Parameters<DataService["updateProfile"]>[1]]>([
+        ["terms for another kind of work", { proKind: "clinician", proProfile: clinician, proConsents: proConsents("educator") }],
+        ["a missing acknowledgement", { proKind: "clinician", proProfile: clinician, proConsents: proConsents("coach") }],
+        ["sign-up's kinds", { proKind: "clinician", proProfile: clinician, proConsents: currentConsents() }],
+        ["terms with no kind of work", { proConsents: proConsents("coach") }],
+      ])("refuses professional consents with %s", async (_, changes) => {
+        const cara = await h.person("coach");
+        await refusal(cara.backend.data.updateProfile(cara.uid, changes), "invalid-input");
+        expect((await cara.backend.data.getProfile(cara.uid))?.consents?.map((c) => c.kind)).toEqual(CONSENT_KINDS);
+      });
+
+      it("refuses professional consents from an athlete", async () => {
+        const ana = await h.person();
+        await refusal(ana.backend.data.updateProfile(ana.uid, { proConsents: proConsents("coach") }), "permission-denied");
       });
     });
   });
