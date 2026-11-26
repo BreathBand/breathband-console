@@ -1,7 +1,8 @@
 /*
  * The athlete's home: greeting and primary action, the last session as a dark
  * instrument card, the week at a glance, the score trend, recent sessions and
- * the coach's practice and comments.
+ * the coach's practice and comments. The goal tailors it (home/tailor.ts):
+ * `data-density` is dense (Train), standard (Focus) or minimal (Calm).
  */
 
 /* One screen at 1280 × 800 and up: header, then a two-by-two grid. */
@@ -121,7 +122,9 @@
 .home-facts {
   margin: auto 0 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Two or three facts, depending on the goal; each takes an equal column. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: var(--s-3);
   padding-top: var(--s-4);
   border-top: 1px solid var(--c-rule-soft);
@@ -149,6 +152,52 @@
   color: var(--c-ink-2);
 }
 
+/* Depth's change on the week before, beside the number (Train). */
+.home-change {
+  margin-left: var(--s-2);
+  font-weight: 600;
+}
+
+/* Calm's one encouraging line, under the greeting. */
+.home-line {
+  margin-top: var(--s-2);
+  font: 400 var(--t-20) / 1.3 var(--f-display);
+  letter-spacing: -0.01em;
+}
+
+/* "From Lena": the professional someone came through leads the page. */
+.home-pro {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4) var(--s-6);
+  flex-wrap: wrap;
+  padding: var(--s-4) var(--s-5);
+}
+
+.home-pro-who {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.home-pro-avatar {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--c-well);
+  font: 500 var(--t-17) / 1 var(--f-display);
+}
+
+.home-pro-body {
+  flex: 1 1 320px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
 .home-side {
   display: flex;
   flex-direction: column;
@@ -164,6 +213,25 @@
 
 .home-side-block + .home-side-block {
   border-top: 1px solid var(--c-rule-soft);
+}
+
+/* Calm has no trend, so its side pane takes the whole second row, its blocks side by side. */
+.home[data-density="minimal"] .home-side {
+  grid-column: 1 / -1;
+}
+
+@media (min-width: 1101px) {
+  .home[data-density="minimal"] .home-side {
+    flex-direction: row;
+  }
+  .home[data-density="minimal"] .home-side-block {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+  .home[data-density="minimal"] .home-side-block + .home-side-block {
+    border-top: 0;
+    border-left: 1px solid var(--c-rule-soft);
+  }
 }
 
 .home-plan {
