@@ -9,7 +9,7 @@ This repo will serve two things from one domain:
 
 This plan covers what has to happen, in order, to take the scaffold that exists today to a launched public site and a working console login, where new and returning users can see their data.
 
-Status: **local development only.** No Firebase or Google Cloud dependency is installed. Every piece that will talk to them sits behind an interface, so moving over is a contained step (Phase 4).
+Status: **local development only.** No Firebase or Google Cloud dependency is installed. The backend is a Hono API in `server/` on libSQL (a file locally, Turso when shared) with Better Auth, behind the `http` adapter ([decision 10](#decisions)). Nothing is deployed; what a Cloud Run deploy needs is in [docs/deploy.md](deploy.md).
 
 ---
 
@@ -18,9 +18,10 @@ Status: **local development only.** No Firebase or Google Cloud dependency is in
 Already done in this repo:
 
 - Next.js 16 + React 19 + TypeScript, built as a **static export** (`out/`): plain files that any static host can serve.
-- **Backend seam** (`src/lib/backend/`): every screen talks to `AuthService` and `DataService` interfaces through `useBackend()`. Two adapters exist:
+- **Backend seam** (`src/lib/backend/`): every screen talks to `AuthService` and `DataService` interfaces through `useBackend()`. Three adapters exist:
   - `local`: a working, rule-enforcing fake backed by `localStorage`, with seeded demo data. This is the current default.
   - `firebase`: a stub that tells you how to implement it. It's selected with `NEXT_PUBLIC_BACKEND=firebase`.
+  - `http`: talks to the API in `server/` ([decision 10](#decisions)). It's selected with `NEXT_PUBLIC_BACKEND=http`; the shared contract tests run against it and against `local`.
 - **Domain contract** (`src/lib/domain/types.ts`): `UserProfile`, `SessionSummary`, `Waveform`, `CoachLink`, `Invite`, `WaitlistEntry`. These are the shapes the Flutter app will upload.
 - **Placeholder routes**:
   - `/` (waitlist form)
@@ -29,7 +30,7 @@ Already done in this repo:
   - `/cloud/sessions/?athlete=`
   - `/cloud/session/?athlete=&id=`
 - **Draft access rules** in `firebase/firestore.rules` and `firebase/storage.rules`, matching what the local adapter enforces.
-- **Deployment target, ready but not deployed**: `Dockerfile` + `nginx.conf` for Cloud Run ([decision 1](#decisions), [Cloud Run](#cloud-run)). `firebase.json` (Hosting + emulators) is kept as it is but not used.
+- **Deployment target, ready but not deployed**: one `Dockerfile` image for Cloud Run in which the API serves `/api/*` and the static export ([decision 10](#decisions), [Cloud Run](#cloud-run), [docs/deploy.md](deploy.md)). `nginx.conf` is gone. `firebase.json` (Hosting + emulators) is kept as it is but not used.
 - **Tests and CI**: Vitest tests define the behaviour every adapter must have, plus the domain helpers (scores, activity flags, breath analysis). GitHub Actions runs lint, typecheck, tests and build.
 
 - **Console styled in the Coach Console direction** (Phase 1 tokens and much of Phase 3 on the local adapter): coach dashboard, roster with search and flags, athlete workspace (overview, sessions table with CSV export, practice plans, private coach notes), session review with waveform, deviation strip, breath table, comments and kudos, sharing scope (scores only, or scores and curves), and an account page. See the README for the routes. Practice plans, comments, kudos and sharing scope are the console side of the v1.1 coaching features in the app's requirements (F22); the app still has to show them (Phase 5). **Live group sessions** (`/cloud/group/`) run on a local simulation of the realtime channel. Going live for real needs the Realtime Database (or another realtime channel), the `createGroupSession` Cloud Function, and the app's join and stream flow (the v2 "Group, live" mode).
@@ -46,8 +47,8 @@ Made by the owner on 2026-11-23. Where older text in this plan disagrees with on
 
 | # | Date | Decision |
 | --- | --- | --- |
-| 1 | 2026-11-23 | **The deploy target is Google Cloud Run**, using the existing `Dockerfile` and `nginx.conf`: the static export, served by nginx on `$PORT` 8080. No Firebase SDK, no Firebase Hosting and no emulators. `firebase/` and `firebase.json` are left untouched. See [Cloud Run](#cloud-run). |
-| 2 | 2026-11-23 | **"Cloud" means the backend seam, ready but local.** BreathCloud features run on the local adapter. A documented `http` adapter stub is added for a future Cloud Run API. |
+| 1 | 2026-11-23 | **The deploy target is Google Cloud Run.** ~~Using the existing `Dockerfile` and `nginx.conf`: the static export, served by nginx on `$PORT` 8080.~~ (The nginx part is superseded by [decision 10](#decisions): the API serves the static export.) No Firebase SDK, no Firebase Hosting and no emulators. `firebase/` and `firebase.json` are left untouched. See [Cloud Run](#cloud-run). |
+| 2 | 2026-11-23 | **"Cloud" means the backend seam, ready but local.** BreathCloud features run on the local adapter. A documented `http` adapter stub is added for a future Cloud Run API. (The stub is superseded by [decision 10](#decisions): the `http` adapter now talks to the API in `server/`; `local` stays as the demo fallback.) |
 | 3 | 2026-11-23 | **The console computes scores**: method C for paced sessions and the Appendix metrics for open sessions, in a shared `src/lib/analysis/` library. This replaces "scores are computed in the app". |
 | 4 | 2026-11-23 | **Total Breath Score** is the mean of the four sub-scores, rounded once. |
 | 5 | 2026-11-23 | **Web Bluetooth** uses the Nordic UART service UUIDs as a named, labelled assumption, kept in one config file. The simulated sensor is the default. |
@@ -55,6 +56,7 @@ Made by the owner on 2026-11-23. Where older text in this plan disagrees with on
 | 7 | 2026-11-23 | **A UI overhaul is allowed**, but it goes through `DESIGN.md` first. |
 | 8 | 2026-11-24 | **PROVISIONAL, pending Harm. Open-session metrics locate each transition on the raw signal.** The Appendix says "Low-pass the signal (~1 Hz, 4th-order Butterworth, zero-phase)." (l.15) and "Find peaks and troughs with prominence ≥ 1% of max and spacing ≥ 0.5 s." (l.16). It does not say whether a transition's time and level come from the filtered or the raw signal, so two readings fit: (a) the extrema are located on the filtered signal; (b) they are detected on the filtered signal, then located on the raw signal at the extremum of the same type within 0.25 s. The filter moves the extrema of asymmetric breaths: on the noise-free normal pattern (1.5 s in, 3.0 s out), reading (a) gives I:E 1.81 and reading (b) gives 2.0. Open metrics use reading (b) for now (`analyzeOpen` in `src/lib/analysis/open.ts`). Paced scoring (method C) still uses the filtered locations until Harm confirms, so open and paced locate transitions differently until then. |
 | 9 | 2026-11-24 | **BreathCloud is a self-standing product, built to take the real band.** Athletes record in the browser: the band over Web Bluetooth (the app's protocol; UUIDs assumed, see `src/lib/device/config.ts`) or the simulated band behind the same `SignalSource` interface. Sessions are scored on save with the analysis library and stored with `DataService.saveSession`. The site and the console share one design system, Carbon & Breath (`DESIGN.md`), which replaces the Coach Console direction (D2). |
+| 10 | 2026-11-26 | **The backend is our own API, not Firebase** (`planning/v1/04-infrastructure.md`, its decisions 1, 5 and 6, with the libSQL override at its top). A Hono API on Node 22 lives in `server/` in the same repo and `package.json`, behind the existing `http` adapter, so screens don't change. Data is in libSQL through Drizzle: a file database locally, Turso when shared. Accounts use Better Auth, self-hosted on the API. **One Cloud Run image** serves `/api/*` and the static export from the same origin, so cookies need no CORS; the API took over nginx's security headers. This replaces decision 1's nginx serving, decision 2's `http` stub, and the [Phase 4](#phase-4-move-to-firebase) Firebase plan (Firebase Auth, Firestore, Storage, Functions). The web stays a static export. The `firebase` adapter stays a stub, `firebase/` and `firebase.json` stay as they are, and no cloud SDK is installed. Deploying is described in [docs/deploy.md](deploy.md) and hasn't been done. |
 
 ## Decisions already made
 
@@ -62,7 +64,7 @@ Made by the owner on 2026-11-23. Where older text in this plan disagrees with on
 | --- | --- |
 | One web project for the site and the console | One deploy, one domain, `/cloud` is just a folder of routes |
 | React (Next.js) for the console, not Flutter web | Faster to load, better for dashboards, and the web-design tooling applies directly |
-| Static export with the browser talking to the backend directly | No server to run or pay for. Firebase rules handle authorization. |
+| Static export with the browser talking to the backend directly | No server to run or pay for. ~~Firebase rules handle authorization.~~ Superseded (2026-11-26) by [decision 10](#decisions): the browser talks to the API in `server/`, which enforces the access rules (`server/authz.ts`). |
 | **Superseded (2026-11-23) by [decisions 1 and 2](#decisions).** ~~Firebase as the target backend (Auth, Firestore, Storage, Functions)~~ | ~~Managed, has Flutter and JavaScript SDKs, free tier for early use. Cloud Run is added only for heavy jobs.~~ |
 | **Superseded (2026-11-23) by [decision 3](#decisions).** ~~Scores are computed **in the app** and uploaded~~ | ~~Scoring formulas exist in one place (Dart). The console only displays them.~~ |
 | `scoringVersion` stored on every session | Old sessions can be told apart (and rescored) when the formula changes |
@@ -77,11 +79,11 @@ Because the build is static, these Next.js features are **off-limits**:
 - route handlers that read the request
 - `proxy` (middleware)
 - `cookies()` / `headers()`
-- rewrites, redirects and headers in `next.config.ts` (set them in `firebase.json` / `nginx.conf` instead)
+- rewrites, redirects and headers in `next.config.ts` (headers are set by the API instead: `SECURITY_HEADERS` in `server/index.ts`; `nginx.conf` is gone, [decision 10](#decisions))
 - dynamic `[param]` routes without `generateStaticParams`
 - the default `next/image` optimizer
 
-Anything per-user happens in Client Components after load. If a future feature needs a server, the upgrade path is Firebase App Hosting (Next.js on Cloud Run). That change is mostly config, with no rewrite.
+Anything per-user happens in Client Components after load. ~~If a future feature needs a server, the upgrade path is Firebase App Hosting (Next.js on Cloud Run). That change is mostly config, with no rewrite.~~ Superseded (2026-11-26) by [decision 10](#decisions): server work goes in the API in `server/`, and the web stays a static export.
 
 ---
 
@@ -148,7 +150,7 @@ The goal is a page that explains Breathband in under a minute and converts visit
 - [ ] Analytics (D7) plus events for "waitlist submitted" and "BreathCloud sign-in clicked".
 - [ ] Waitlist: the form already writes through `DataService.joinWaitlist`. Add spam protection (honeypot field now, App Check in Phase 4).
 
-**Launch dependency:** in local mode the waitlist only saves to the visitor's own browser. To launch the site publicly, do **Phase 4a** (Hosting + Firestore waitlist) first. It's small and doesn't need the rest of Firebase.
+**Launch dependency:** in local mode the waitlist only saves to the visitor's own browser. ~~To launch the site publicly, do **Phase 4a** (Hosting + Firestore waitlist) first. It's small and doesn't need the rest of Firebase.~~ Superseded (2026-11-26) by [decision 10](#decisions): with `NEXT_PUBLIC_BACKEND=http` the waitlist is stored by the API (`server/routes/waitlist.ts`), so the public launch needs the Cloud Run deploy ([docs/deploy.md](deploy.md)) instead.
 
 **Done when:** the site is live on the domain, sign-ups land in Firestore, and Lighthouse scores are 90+ across the board.
 
@@ -212,7 +214,7 @@ Every screen needs: a loading skeleton, an empty state, an error state with retr
 
 ## Phase 4: Move to Firebase
 
-**Superseded (2026-11-23) by [decisions 1 and 2](#decisions).** The deploy target is [Cloud Run](#cloud-run) and the console stays on the local adapter, with an `http` adapter stub for a future Cloud Run API. The Firebase steps below are kept for reference only; don't start them.
+**Superseded (2026-11-23) by [decisions 1 and 2](#decisions), and replaced (2026-11-26) by [decision 10](#decisions).** The backend is the Hono API in `server/` (libSQL/Turso, Better Auth) behind the `http` adapter, deployed as one [Cloud Run](#cloud-run) image. The Firebase steps below are kept for reference only; don't start them.
 
 Do **4a** early, because it unblocks the public launch. Do **4b** when the console and app are ready for real data.
 
@@ -242,36 +244,29 @@ Do **4a** early, because it unblocks the public launch. Do **4b** when the conso
 
 ## Cloud Run
 
-The deploy target ([decision 1](#decisions)). `Dockerfile` builds the static export and `nginx.conf` serves it from nginx on port 8080, the `$PORT` Cloud Run sends traffic to. No Firebase SDK, Firebase Hosting or emulators are involved.
+The deploy target ([decisions 1 and 10](#decisions)). `Dockerfile` builds one image: the static export plus the API compiled to `build/server/` (`npm run build:server`). The API serves `/api/*` and the static export, with the security headers nginx used to add, on `$PORT` (8080). It needs `AUTH_SECRET`, `SMTP_HOST` and, on Cloud Run, the Turso settings and `TRUSTED_PROXY_HOPS` at run time. No Firebase SDK, Firebase Hosting or emulators are involved.
+
+**Everything a deploy needs is in [docs/deploy.md](deploy.md)**: the Google Cloud mapping, the environment and secrets, the migrations job, storage, and the "Before first deploy" checklist. Nothing has been deployed.
 
 ### Run the container locally
 
 ```
-docker build -t breathband-console .
-docker run -p 8080:8080 breathband-console
+AUTH_SECRET=$(openssl rand -base64 32) docker compose --profile full up --build
 ```
 
-Then open <http://localhost:8080/> (the console is at <http://localhost:8080/cloud/>).
+Then open <http://localhost:8080/> (the console is at <http://localhost:8080/cloud/>; emails land in Mailpit on <http://localhost:8025>). `npm run docker:smoke` builds, runs and checks the image. See the README, "Run in a container".
 
 ### Build arg: `NEXT_PUBLIC_BACKEND`
 
-`NEXT_PUBLIC_*` values are inlined into the JavaScript at build time, so the backend is picked with a Docker build arg, not a runtime environment variable. Changing it means building a new image. It defaults to `local`:
+`NEXT_PUBLIC_*` values are inlined into the JavaScript at build time, so the backend is picked with a Docker build arg, not a runtime environment variable. Changing it means building a new image. The image defaults to `http` with an empty `NEXT_PUBLIC_API_BASE_URL` (the API on the same origin). `local` builds the demo fallback, which needs no API:
 
 ```
 docker build --build-arg NEXT_PUBLIC_BACKEND=local -t breathband-console .
 ```
 
-`local` is the only working value today ([decision 2](#decisions)). The value for the future Cloud Run API comes with its `http` adapter.
-
 ### Deploy (a person runs this)
 
-**A person runs this step by hand, from their own machine with their own `gcloud` login. CI and agents do not run it**, and no workflow in `.github/workflows/` deploys. It hasn't been run yet. The region waits on D6.
-
-```
-gcloud run deploy breathband-web --source . --region <region> --allow-unauthenticated
-```
-
-`--source .` has Cloud Build build the `Dockerfile` with its defaults, so the image gets `NEXT_PUBLIC_BACKEND=local`.
+**A person runs this step by hand, from their own machine with their own `gcloud` login. CI and agents do not run it**, and no workflow in `.github/workflows/` deploys. It hasn't been run yet. The region waits on D6. The commands, and what must be fixed first, are in [docs/deploy.md](deploy.md).
 
 ---
 

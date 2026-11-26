@@ -25,7 +25,7 @@ AUTH_SECRET=$(openssl rand -base64 32) docker compose --profile full up --build
 
 Then open <http://localhost:8080/> (emails land in Mailpit on <http://localhost:8025>). `docker compose --profile full down` stops it; add `-v` to drop the database volume. `npm run docker:smoke` builds the image, runs it, applies the migrations, checks `/api/health`, two pages, the headers and the caching, then removes the container.
 
-The image builds with `NEXT_PUBLIC_BACKEND=http` and an empty API base URL (same origin); `--build-arg NEXT_PUBLIC_BACKEND=local` builds the demo fallback instead. At run time it needs `AUTH_SECRET` (32+ characters) and `SMTP_HOST`; `TURSO_DATABASE_URL` defaults to `file:/app/data/breathband.db`. Behind a proxy, set `TRUSTED_PROXY_HOPS` to how many proxies append to `X-Forwarded-For` (Cloud Run alone 1, with a load balancer 2); it defaults to 0, which keys the API's rate limits on the connection's address and ignores the header (see `.env.example`).
+The image builds with `NEXT_PUBLIC_BACKEND=http` and an empty API base URL (same origin); `--build-arg NEXT_PUBLIC_BACKEND=local` builds the demo fallback instead. At run time it needs `AUTH_SECRET` (32+ characters) and `SMTP_HOST`; `TURSO_DATABASE_URL` defaults to `file:/app/data/breathband.db`. Behind a proxy, set `TRUSTED_PROXY_HOPS` to how many proxies append to `X-Forwarded-For`: expected 1 for Cloud Run alone and 2 behind an external load balancer, but confirm the real count before deploying (an open question in [docs/deploy.md](docs/deploy.md#open-questions-for-the-owner)). Set it too high and clients can choose their own rate-limit bucket; set it too low and everyone behind the proxy shares one. It defaults to 0, which keys the API's rate limits on the connection's address and ignores the header (see `.env.example`).
 
 Open <http://localhost:3000/cloud/> and sign in with a demo account (password `breathband`, or use the one-click buttons on the sign-in page):
 
@@ -72,7 +72,7 @@ Sessions carry legacy 0–100% scores (`legacy-v1`) or the 1–10 per-transition
 
 ## Local infrastructure
 
-The web app on the local adapter needs none of this. It is for the API that is coming (`server/`, see [planning/v1/04-infrastructure.md](planning/v1/04-infrastructure.md)): a database, an SMTP inbox and the environment names every card shares.
+The web app on the local adapter needs none of this. It is for the API (`server/`, see [planning/v1/04-infrastructure.md](planning/v1/04-infrastructure.md)): a database, an SMTP inbox and the environment names every card shares.
 
 ```bash
 cp .env.example .env.local   # once; keeps the defaults below
@@ -102,6 +102,9 @@ Ports: 1025 (SMTP), 8025 (Mailpit UI), 8081 (sqld, only with its profile). Port 
 | `npm run check`     | All of the above, as CI runs it                         |
 | `npm run infra:up`  | Starts Mailpit in Docker and waits until it's healthy   |
 | `npm run infra:down`| Stops and removes the local infrastructure containers   |
+| `npm run api:dev`   | The API on :8787 with reload (`server/`, tsx watch)     |
+| `npm run db:migrate`| Applies `server/db/migrations` to `TURSO_DATABASE_URL` (default: the file DB) |
+| `npm run db:seed`   | Writes the demo people into the database (`db:reset` starts it over) |
 | `npm run build:server` | Compiles the API to `build/server/` for the image    |
 | `npm run docker:smoke` | Builds, runs and checks the production image         |
 
@@ -119,18 +122,24 @@ src/
 │       ├── index.ts          picks the adapter from NEXT_PUBLIC_BACKEND
 │       ├── BackendProvider   React context: useBackend(), useAuth()
 │       ├── local/            working fake (localStorage + seeded demo data)
-│       └── firebase/         stub, implemented in Phase 4
+│       ├── http/             talks to the API in server/
+│       ├── contract/         the behaviour tests every adapter passes (local and http)
+│       └── firebase/         stub, not used (docs/PLAN.md, decision 10)
+server/                       the API: Hono, Drizzle on libSQL, Better Auth (decision 10)
+├── routes/                   /api/v1/... and the access rules (authz.ts beside it)
+├── db/                       schema, committed migrations, seed
+└── storage/                  StorageService: fs driver; gcs.ts is a stub
 firebase/                     draft Firestore/Storage rules + indexes (not deployed)
 firebase.json                 Hosting + emulator config (kept, not used)
 Dockerfile                    Cloud Run image: the API serving /api/* and the static export on :8080
 ```
 
-- **The build is fully static.** `next build` emits HTML/JS/CSS only. The browser talks to the backend directly, and access control lives in the backend's rules (`firebase/firestore.rules`), not in a server. The local adapter enforces the same rules, so permission errors show up in development.
-- **Screens never import an adapter.** They call `useBackend()`. Moving off the local adapter (the plan is an `http` adapter for a future Cloud Run API) means implementing an adapter and selecting it with `NEXT_PUBLIC_BACKEND`. No page changes are needed.
+- **The web build is fully static.** `next build` emits HTML/JS/CSS only. The browser talks to the API in `server/`, and access control lives there (`server/authz.ts`), not in the web app. The local adapter enforces the same rules, and the shared contract tests run against both, so permission errors show up in development.
+- **Screens never import an adapter.** They call `useBackend()`; `NEXT_PUBLIC_BACKEND` picks `local` or `http` at build time. No page changes are needed to switch.
 
 ## Deploy target: Cloud Run (prepared, not deployed)
 
-The deploy target is **Google Cloud Run**. `gcloud run deploy breathband-web --source . --region <region> --allow-unauthenticated` builds the `Dockerfile` (the API and the static export on :8080; it also needs `AUTH_SECRET`, `SMTP_*` and the database settings, see [Run in a container](#run-in-a-container)). A person runs that by hand; CI and agents don't. Details are in [docs/PLAN.md](docs/PLAN.md#cloud-run).
+The deploy target is **Google Cloud Run**, one service running the `Dockerfile` image (the API and the static export on :8080). Nothing has been deployed. To deploy, follow [docs/deploy.md](docs/deploy.md): work through its "Before first deploy" checklist, then build and push the image (with `NEXT_PUBLIC_SITE_URL` as a build arg), run the migrations job, and deploy the service with its environment and secrets. A person does this by hand; CI and agents don't.
 
 Firebase Hosting is no longer a target. `firebase.json` and `firebase/` stay in the repo unchanged, but nothing deploys them.
 
