@@ -68,7 +68,8 @@ Appended by the session, one line each, newest last.
 
 ## Questions for me
 
-- [ ] Default flags per kind need to know whether rules were ever saved — Recommended: getAlertRules returns null when nothing is saved (backend types + local adapter + tests + rules + http). Options: accept the DEFAULT_ALERTS-equality heuristic; store a flag in proProfile.
+- [x] Default flags per kind need to know whether rules were ever saved — Recommended: getAlertRules returns null when nothing is saved (backend types + local adapter + tests + rules + http). Options: accept the DEFAULT_ALERTS-equality heuristic; store a flag in proProfile.
+  Answer: getAlertRules returns null when nothing is saved (backend types + local adapter + tests + rules + http)
 
 ## Parked
 
