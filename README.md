@@ -72,7 +72,7 @@ Sessions carry legacy 0–100% scores (`legacy-v1`) or the 1–10 per-transition
 
 ## Local infrastructure
 
-The web app on the local adapter needs none of this. It is for the API that is coming (`server/`, see [planning/v1/04-infrastructure.md](planning/v1/04-infrastructure.md)): a database, an SMTP inbox and the environment names every card shares.
+The web app on the local adapter needs none of this. It is for the API (`server/`, see [planning/v1/04-infrastructure.md](planning/v1/04-infrastructure.md)): a database, an SMTP inbox and the environment names every card shares.
 
 ```bash
 cp .env.example .env.local   # once; keeps the defaults below
@@ -139,7 +139,7 @@ Dockerfile                    Cloud Run image: the API serving /api/* and the st
 
 ## Deploy target: Cloud Run (prepared, not deployed)
 
-The deploy target is **Google Cloud Run**. `gcloud run deploy breathband-web --source . --region <region> --allow-unauthenticated` builds the `Dockerfile` (the API and the static export on :8080; it also needs `AUTH_SECRET`, `SMTP_*` and the database settings, see [Run in a container](#run-in-a-container)). A person runs that by hand; CI and agents don't. Everything a deploy needs (environment, secrets, the migrations job, storage, and what must be fixed first) is in [docs/deploy.md](docs/deploy.md). Nothing has been deployed.
+The deploy target is **Google Cloud Run**, one service running the `Dockerfile` image (the API and the static export on :8080). Nothing has been deployed. To deploy, follow [docs/deploy.md](docs/deploy.md): work through its "Before first deploy" checklist, then build and push the image (with `NEXT_PUBLIC_SITE_URL` as a build arg), run the migrations job, and deploy the service with its environment and secrets. A person does this by hand; CI and agents don't.
 
 Firebase Hosting is no longer a target. `firebase.json` and `firebase/` stay in the repo unchanged, but nothing deploys them.
 

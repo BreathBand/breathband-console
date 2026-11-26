@@ -57,6 +57,7 @@ Done: for the lead to review and merge card/T-0134 into night/2026-11-26 (it alr
 - 2026-11-26: docs/PLAN.md: besides the decision 10 row, marked the superseded parts of decisions 1 and 2, the Firebase App Hosting sentence and Phase 4, and rewrote the Cloud Run section (it still described nginx, parked on T-0128) to point at docs/deploy.md.
 - 2026-11-26: decided for the owner: TURSO_DATABASE_URL is listed as a secret in deploy.md (the repo is public), alongside the token (alternative: plain env var).
 - 2026-11-26: merged origin/night/2026-11-26 (T-0133, 04e32bd) as the lead asked; no conflict. Then, per the lead: README's TRUSTED_PROXY_HOPS sentence softened (expected 1/2, confirm before deploy, too high/too low warning); deploy.md calls it merged with T-0133.
+- 2026-11-26 (review fix, blocking): README's deploy section no longer shows `gcloud run deploy --source .` (no build args, no env or secrets, no checklist gate); it points to docs/deploy.md. Also from the review: PLAN.md's headers line names `SECURITY_HEADERS` in server/index.ts, "Firebase rules handle authorization" and Phase 4a for the waitlist are marked superseded; deploy.md says CORS is development-only and what APP_URL does in production (authBaseUrl), drops the seed/APP_URL claim, and creates AUTH_SECRET by piping openssl into `gcloud secrets create --data-file=-`; README no longer calls the API "coming"; house rules say "the local adapter and its tests, the shared contract tests" (CLAUDE.md and AGENTS.md identical, house-rules hunks only). Removed the matching Parked line.
 
 ## Questions for me
 
@@ -67,7 +68,6 @@ Format: `- YYYY-MM-DD [product|tool|checklist] <what> · seen on T-NNNN · <file
 - 2026-11-26 [product] sync .env.example with docs/deploy.md: add PORT, state the TRUSTED_PROXY_HOPS counts as expected-not-confirmed, settle NEXT_PUBLIC_API_URL vs NEXT_PUBLIC_API_BASE_URL · seen on T-0134 · .env.example
 - 2026-11-26 [product] `src/app/cloud/CloudShell.tsx` imports `@/lib/backend/local/db` (the sidebar Reset), a second exception to "screens never import an adapter" that the house rules don't name · seen on T-0134 · src/app/cloud/CloudShell.tsx
 - 2026-11-26 [product] `server/storage/index.ts` comment says the Cloud Storage driver "comes later (I-16)"; it is now a stub in gcs.ts · seen on T-0134 · server/storage/index.ts
-- 2026-11-26 [product] README's deploy section still shows `gcloud run deploy --source .`, which can't pass build args (NEXT_PUBLIC_SITE_URL); docs/deploy.md builds and pushes instead · seen on T-0134 · README.md
 
 ## Done
 
@@ -110,5 +110,7 @@ Migrations applied to file:/tmp/.../m.db. · exit 0 · __drizzle_migrations: 5 r
 $ git diff --stat origin/night/2026-11-26 HEAD
  AGENTS.md 10, CARD.md, CLAUDE.md 10, README.md 19, docs/PLAN.md 37, docs/deploy.md 213 (new), server/storage/gcs.test.ts 40 (new), server/storage/gcs.ts 49 (new)
 ```
+
+Fix round (after the review): `npm run check` exit 0 (110 files passed, 1 skipped; 1500 tests passed, 1 skipped; build 27/27); path check 41 paths, 0 missing; CLAUDE.md/AGENTS.md house-rules blocks identical, `git diff -U0 7866546` hunks only under "House rules:".
 
 UNTESTED: every `gcloud` command in docs/deploy.md (by design: no deploy, no cloud resources); nothing run against Turso; e2e not run (no user flow changed).

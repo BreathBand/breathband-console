@@ -64,7 +64,7 @@ Made by the owner on 2026-11-23. Where older text in this plan disagrees with on
 | --- | --- |
 | One web project for the site and the console | One deploy, one domain, `/cloud` is just a folder of routes |
 | React (Next.js) for the console, not Flutter web | Faster to load, better for dashboards, and the web-design tooling applies directly |
-| Static export with the browser talking to the backend directly | No server to run or pay for. Firebase rules handle authorization. |
+| Static export with the browser talking to the backend directly | No server to run or pay for. ~~Firebase rules handle authorization.~~ Superseded (2026-11-26) by [decision 10](#decisions): the browser talks to the API in `server/`, which enforces the access rules (`server/authz.ts`). |
 | **Superseded (2026-11-23) by [decisions 1 and 2](#decisions).** ~~Firebase as the target backend (Auth, Firestore, Storage, Functions)~~ | ~~Managed, has Flutter and JavaScript SDKs, free tier for early use. Cloud Run is added only for heavy jobs.~~ |
 | **Superseded (2026-11-23) by [decision 3](#decisions).** ~~Scores are computed **in the app** and uploaded~~ | ~~Scoring formulas exist in one place (Dart). The console only displays them.~~ |
 | `scoringVersion` stored on every session | Old sessions can be told apart (and rescored) when the formula changes |
@@ -79,7 +79,7 @@ Because the build is static, these Next.js features are **off-limits**:
 - route handlers that read the request
 - `proxy` (middleware)
 - `cookies()` / `headers()`
-- rewrites, redirects and headers in `next.config.ts` (set them in `firebase.json` / `nginx.conf` instead)
+- rewrites, redirects and headers in `next.config.ts` (headers are set by the API instead: `SECURITY_HEADERS` in `server/index.ts`; `nginx.conf` is gone, [decision 10](#decisions))
 - dynamic `[param]` routes without `generateStaticParams`
 - the default `next/image` optimizer
 
@@ -150,7 +150,7 @@ The goal is a page that explains Breathband in under a minute and converts visit
 - [ ] Analytics (D7) plus events for "waitlist submitted" and "BreathCloud sign-in clicked".
 - [ ] Waitlist: the form already writes through `DataService.joinWaitlist`. Add spam protection (honeypot field now, App Check in Phase 4).
 
-**Launch dependency:** in local mode the waitlist only saves to the visitor's own browser. To launch the site publicly, do **Phase 4a** (Hosting + Firestore waitlist) first. It's small and doesn't need the rest of Firebase.
+**Launch dependency:** in local mode the waitlist only saves to the visitor's own browser. ~~To launch the site publicly, do **Phase 4a** (Hosting + Firestore waitlist) first. It's small and doesn't need the rest of Firebase.~~ Superseded (2026-11-26) by [decision 10](#decisions): with `NEXT_PUBLIC_BACKEND=http` the waitlist is stored by the API (`server/routes/waitlist.ts`), so the public launch needs the Cloud Run deploy ([docs/deploy.md](deploy.md)) instead.
 
 **Done when:** the site is live on the domain, sign-ups land in Firestore, and Lighthouse scores are 90+ across the board.
 

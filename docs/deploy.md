@@ -60,9 +60,9 @@ The API reads only the process environment (`server/env.ts`, `server/db/env.ts`)
 | `NODE_ENV` | no | leave unset | The image sets `production`; unset also means production |
 | `PORT` | no | set by Cloud Run | The image defaults it to 8080. Read in production only |
 | `API_PORT` | no | **don't set** | It wins over `PORT`, so setting it would make the API listen on the wrong port |
-| `APP_URL` | no | **`https://<domain>`, required** | The public origin. Better Auth trusts it as a request origin, the API allows it for CORS, and auth email links (verification, reset) land on it. The default, `http://localhost:3000`, would break sign-in and every emailed link |
+| `APP_URL` | no | **`https://<domain>`, required** | The public origin. Better Auth trusts it as a request origin, and auth email links (verification, reset) use it twice: in production `authBaseUrl()` in `server/auth.ts` makes it the links' base (API_URL unset), and the links redirect back to it. CORS is off in production (one origin); it is only on in development. The default, `http://localhost:3000`, would break sign-in and every emailed link |
 | `API_URL` | no | leave unset | Unset means APP_URL in production, which is right for one service |
-| `AUTH_SECRET` | **yes** | required, 32+ characters | Signs session cookies and tokens, and derives coach-invite codes (T-0122). The API refuses to start without it. Generate with `openssl rand -base64 32`. Rotating it signs everyone out and breaks pending coach-invite links |
+| `AUTH_SECRET` | **yes** | required, 32+ characters | Signs session cookies and tokens, and derives coach-invite codes (T-0122). The API refuses to start without it. Create it with the command below the table, which never prints it. Rotating it signs everyone out and breaks pending coach-invite links |
 | `TURSO_DATABASE_URL` | **yes** | `libsql://<db>-<org>.turso.io` | The image defaults it to `file:/app/data/breathband.db`, a file inside the container that is lost on restart and different on each instance. Kept as a secret so the database's address isn't public |
 | `TURSO_AUTH_TOKEN` | **yes** | a token for that database only | Read by the API and the migrations job |
 | `SMTP_HOST` | no | the provider's SMTP host | Required in production: the API refuses to start without it |
@@ -77,6 +77,12 @@ Not used in production: `MAILPIT_E2E` (a test switch), `NEXT_PUBLIC_FIREBASE_*` 
 (the Firebase stub), and `NEXT_PUBLIC_API_URL` (the spec's name; the code reads `NEXT_PUBLIC_API_BASE_URL`, an open
 question from T-0102). `.env.example` doesn't list `PORT` yet, and states the hop counts as settled; this table is the reference until it is
 synced (parked on T-0134).
+
+Create `AUTH_SECRET` straight into Secret Manager, so it never appears on screen, in shell history or in a file (sketch, not run):
+
+```sh
+openssl rand -base64 32 | tr -d '\n' | gcloud secrets create breathband-auth-secret --data-file=-
+```
 
 The service's runtime service account needs `roles/secretmanager.secretAccessor` on these secrets only, and later
 object access on the blob bucket only.
@@ -156,7 +162,7 @@ need the owner's approval as their own card.
 - [ ] **Rate limits on the routes that have none**: the public waitlist (`server/routes/waitlist.ts`, T-0122, T-0129),
   `POST /api/v1/account/delete`, which checks a password (`server/routes/account.ts`, T-0126), and invite-code
   redemption (`server/routes/coaching.ts`, T-0121, T-0133). `server/rate-limit.ts` already has the limiter.
-- [ ] **`APP_URL`** is the public `https://` origin, on the service and in any seed run. If the `run.app` address
+- [ ] **`APP_URL`** is the public `https://` origin on the service (the seed doesn't read it). If the `run.app` address
   stays reachable too, sign-in from it fails the origin check: only APP_URL's origin is trusted.
 - [ ] **`AUTH_SECRET`**: a real one in Secret Manager, never the dev-only value (the API refuses that in production).
 - [ ] **Re-seed the demo with the real `AUTH_SECRET`** (T-0125). The demo coach invite on Turso was seeded with a
