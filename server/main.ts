@@ -8,9 +8,11 @@
 
 import { existsSync } from "node:fs";
 import { serve } from "@hono/node-server";
+import { authBaseUrl, authSecret, createAuth } from "./auth";
 import { createDb } from "./db/client";
 import { readEnv } from "./env";
 import { createApp } from "./index";
+import { createMailer } from "./mailer";
 
 const STATIC_DIR = "out";
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -23,12 +25,22 @@ if (production && !existsSync(STATIC_DIR)) {
   console.warn(`${STATIC_DIR}/ is missing: run \`npm run build\` to serve the web app from the API.`);
 }
 
+const auth = createAuth({
+  db,
+  mode: env.mode,
+  secret: authSecret(env.mode, env.authSecret),
+  baseUrl: authBaseUrl(env),
+  appUrl: env.appUrl,
+  mailer: createMailer(env.mode, env.smtp),
+});
+
 const app = createApp({
   db,
   mode: env.mode,
   appUrl: env.appUrl,
   staticDir: production ? STATIC_DIR : undefined,
   log: env.mode !== "test",
+  auth,
 });
 
 const server = serve({ fetch: app.fetch, port: env.port }, (info) => {
