@@ -6,7 +6,7 @@ import { HTTP_ROUTES } from "./routes";
 
 // The adapter for the API in server/ (planning/v1/04-infrastructure.md).
 // AuthService talks to Better Auth (I-07); DataService to /api/v1: profile,
-// preferences, sessions and waveforms (I-08), the rest with I-09 and I-10.
+// preferences, sessions and waveforms (I-08), coaching (I-09), the rest with I-10.
 
 export * from "./routes";
 export { toBackendError } from "./client";
@@ -36,13 +36,13 @@ export function createHttpBackend(options: HttpBackendOptions = {}): Backend {
 
 /**
  * The DataService methods the API doesn't serve yet fail with BackendError("unavailable"):
- * coaching arrives with I-09, squads, alerts, coach invites, groups and the waitlist with I-10.
+ * squads, alerts, coach invites, groups and the waitlist arrive with I-10.
  */
 function unavailableData(): DataService {
   const notYet = (method: string) =>
     new BackendError(
       "unavailable",
-      `${method}: the API doesn't serve this yet (I-09..I-10). Use NEXT_PUBLIC_BACKEND=local for now.`,
+      `${method}: the API doesn't serve this yet (I-10). Use NEXT_PUBLIC_BACKEND=local for now.`,
     );
   const methods = Object.keys(HTTP_ROUTES.data).map((method) => [
     method,
