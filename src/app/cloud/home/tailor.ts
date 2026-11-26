@@ -5,7 +5,8 @@
 import type { AssignmentProgress } from "@/lib/domain/coaching";
 import { isTransitionScores } from "@/lib/domain/scores";
 import type { Mechanics } from "@/lib/domain/habit";
-import type { BreathGoal, ProKind, SessionSummary } from "@/lib/domain/types";
+import type { Assignment, BreathGoal, ProKind, SessionSummary } from "@/lib/domain/types";
+import { parseSetup, type SessionSetup } from "@/lib/prefs";
 import { weekStart } from "../SessionsTab";
 
 const DAY = 86_400_000;
@@ -138,6 +139,54 @@ export function withMechanics(layout: HomeLayout, mechanics: Mechanics): HomeLay
 }
 
 /**
+ * The side pane's block for practice from a professional, when their card
+ * isn't leading Home: headed with the linked professional's word. With no
+ * professional, Train asks for a coach and Focus for a teacher (02 §5.1,
+ * "Sharing default": coach or physio; teacher or counsellor), and Calm, whose
+ * sharing is off, shows no block, so its Home stays minimal.
+ */
+export function sidePractice(goal: BreathGoal | null, professional: Professional | null): { word: string; empty: string } | null {
+  if (professional) return { word: PRO_WORD[professional.kind], empty: "Nothing set right now." };
+  if (goal === "calm") return null;
+  if (goal === "focus") return { word: "teacher", empty: "Share with a teacher or counsellor in Settings and their practice shows up here." };
+  return { word: "coach", empty: "Share with a coach in Settings and their practice shows up here." };
+}
+
+/** What a start button needs to name a session; the person's defaults and an assignment both have it. */
+export type SessionShape = Pick<Assignment, "mode" | "pacerHalfCycleSec" | "durationSec">;
+
+/** "Start Paced 5-5 · 10 min", "Start Open · 3 min". */
+export function startLabel(s: SessionShape): string {
+  const what = s.mode === "paced" ? `Paced ${s.pacerHalfCycleSec}-${s.pacerHalfCycleSec}` : "Open";
+  return `Start ${what}${s.durationSec ? ` · ${Math.round(s.durationSec / 60)} min` : ""}`;
+}
+
+/**
+ * Home's one primary action: the open practice a professional set, when
+ * there is one (02 §3.5 and §5.1, "New session defaults: the assignment"),
+ * else the person's own defaults. The practice goes to New session in the
+ * query, which sets it there.
+ */
+export function homeStart(own: SessionShape | null, practice: SessionShape | null): { label: string; href: string } {
+  if (practice) return { label: startLabel(practice), href: `/cloud/record/?${practiceQuery(practice)}` };
+  return { label: own ? startLabel(own) : "Start a session", href: "/cloud/record/" };
+}
+
+/** A practice's mode, pacer and length as New session's query (the same keys as `setupQuery`). */
+export function practiceQuery(p: SessionShape): string {
+  const q = new URLSearchParams({ mode: p.mode, len: String(p.durationSec) });
+  if (p.mode === "paced" && p.pacerHalfCycleSec) q.set("pacer", String(p.pacerHalfCycleSec));
+  return q.toString();
+}
+
+/** New session's setup with a practice from the query applied; view, sound and level stay the person's own. */
+export function withPractice(setup: SessionSetup, q: URLSearchParams): SessionSetup {
+  if (!q.has("mode")) return setup;
+  const p = parseSetup(q);
+  return { ...setup, mode: p.mode, lengthSec: p.lengthSec, pacer: q.has("pacer") ? p.pacer : setup.pacer };
+}
+
+/**
  * The streak's paused line in the goal's tone (02 §8, "Streak paused"):
  * kind, never "lost", never red. Focus names the minutes that pick it back up.
  */
@@ -198,21 +247,30 @@ export const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
  * Calm's one encouraging line (02 §5.1: "Nice. Three days in a row."). With
- * `streak` off (a clinician's client) it never mentions days in a row.
+ * `streak` off (a clinician's client) it never mentions days in a row. Any
+ * session today counts for the streak, but "done for today" waits for the
+ * ring's minutes (T-0113): with `leftToday` minutes still to go it says so.
  */
 export function calmLine({
   streakDays,
   doneToday,
   minutes,
   streak,
+  leftToday = 0,
 }: {
   streakDays: number;
   doneToday: boolean;
   /** The person's usual session length; 0 means "until I stop". */
   minutes: number;
   streak: boolean;
+  /** Whole minutes still to close today's ring; 0 (the default) when it's closed. */
+  leftToday?: number;
 }): string {
   const length = minutes > 0 ? `${word(minutes)} ${minutes === 1 ? "minute" : "minutes"}` : "a few minutes";
+  if (doneToday && leftToday > 0) {
+    const more = `${capital(word(leftToday))} more ${leftToday === 1 ? "minute" : "minutes"} finishes today.`;
+    return streak && streakDays >= 2 ? `${capital(word(streakDays))} days in a row. ${more}` : `Good start. ${more}`;
+  }
   if (doneToday) return streak && streakDays >= 2 ? `Nice. ${capital(word(streakDays))} days in a row.` : "Done for today. Nice.";
   if (streak && streakDays === 1) return `Yesterday's done. ${capital(length)} today makes two days in a row.`;
   if (streak && streakDays >= 2) return `${capital(word(streakDays))} days in a row. ${capital(length)} today keeps it going.`;

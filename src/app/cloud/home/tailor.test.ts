@@ -1,6 +1,20 @@
 import { describe, expect, it } from "vitest";
 import type { SessionSummary } from "@/lib/domain/types";
-import { calmLine, homeLayout, leadsWithProfessional, professionalOf, trainWeek, trendPeriod, type Professional } from "./tailor";
+import { DEFAULT_SETUP, type SessionSetup } from "@/lib/prefs";
+import {
+  calmLine,
+  homeLayout,
+  homeStart,
+  leadsWithProfessional,
+  practiceQuery,
+  professionalOf,
+  sidePractice,
+  startLabel,
+  trainWeek,
+  trendPeriod,
+  withPractice,
+  type Professional,
+} from "./tailor";
 
 const coach: Professional = { name: "Lena Vos", kind: "coach" };
 const clinician: Professional = { name: "Dr Ada Shaw", kind: "clinician" };
@@ -220,5 +234,87 @@ describe("calmLine", () => {
   it("never counts days in a row when the streak is off", () => {
     expect(calmLine({ streakDays: 5, doneToday: true, minutes: 3, streak: false })).toBe("Done for today. Nice.");
     expect(calmLine({ streakDays: 5, doneToday: false, minutes: 3, streak: false })).toBe("Your next session takes three minutes.");
+  });
+});
+
+describe("calmLine waits for the ring's minutes before 'done for today'", () => {
+  it("names the minutes still to go after a short first session", () => {
+    expect(calmLine({ streakDays: 1, doneToday: true, minutes: 3, streak: true, leftToday: 3 })).toBe("Good start. Three more minutes finishes today.");
+    expect(calmLine({ streakDays: 1, doneToday: true, minutes: 3, streak: true, leftToday: 1 })).toBe("Good start. One more minute finishes today.");
+  });
+
+  it("keeps the run of days in front when there is one", () => {
+    expect(calmLine({ streakDays: 11, doneToday: true, minutes: 3, streak: true, leftToday: 2 })).toBe("11 days in a row. Two more minutes finishes today.");
+  });
+
+  it("never counts days with the streak off", () => {
+    expect(calmLine({ streakDays: 5, doneToday: true, minutes: 3, streak: false, leftToday: 2 })).toBe("Good start. Two more minutes finishes today.");
+  });
+
+  it("says done once the ring is met", () => {
+    expect(calmLine({ streakDays: 1, doneToday: true, minutes: 3, streak: true, leftToday: 0 })).toBe("Done for today. Nice.");
+    expect(calmLine({ streakDays: 3, doneToday: true, minutes: 3, streak: true, leftToday: 0 })).toBe("Nice. Three days in a row.");
+  });
+
+  it("ignores the minutes left when nothing's done today", () => {
+    expect(calmLine({ streakDays: 2, doneToday: false, minutes: 3, streak: true, leftToday: 3 })).toBe("Two days in a row. Three minutes today keeps it going.");
+  });
+});
+
+describe("sidePractice: the side pane's practice block", () => {
+  it("uses the linked professional's word", () => {
+    expect(sidePractice("train", coach)).toEqual({ word: "coach", empty: "Nothing set right now." });
+    expect(sidePractice("calm", clinician)?.word).toBe("clinician");
+    expect(sidePractice("focus", { name: "Chris Park", kind: "educator" })?.word).toBe("teacher");
+  });
+
+  it("is gone for Calm with no professional (sharing is off)", () => {
+    expect(sidePractice("calm", null)).toBeNull();
+  });
+
+  it("asks Train for a coach and Focus for a teacher or counsellor (02 §5.1 sharing default)", () => {
+    expect(sidePractice("train", null)).toEqual({ word: "coach", empty: "Share with a coach in Settings and their practice shows up here." });
+    expect(sidePractice(null, null)?.word).toBe("coach");
+    expect(sidePractice("focus", null)).toEqual({ word: "teacher", empty: "Share with a teacher or counsellor in Settings and their practice shows up here." });
+  });
+});
+
+describe("Home's start action", () => {
+  const own = { mode: "open" as const, pacerHalfCycleSec: 5 as const, durationSec: 180 };
+  const practice = { mode: "paced" as const, pacerHalfCycleSec: 5 as const, durationSec: 300 };
+
+  it("labels a session the way the button reads", () => {
+    expect(startLabel(own)).toBe("Start Open · 3 min");
+    expect(startLabel({ mode: "paced", pacerHalfCycleSec: 5, durationSec: 600 })).toBe("Start Paced 5-5 · 10 min");
+    expect(startLabel({ mode: "open", pacerHalfCycleSec: null, durationSec: 0 })).toBe("Start Open");
+  });
+
+  it("starts the open practice a professional set, over the person's own defaults", () => {
+    expect(homeStart(own, practice)).toEqual({ label: "Start Paced 5-5 · 5 min", href: "/cloud/record/?mode=paced&len=300&pacer=5" });
+  });
+
+  it("falls back to the person's defaults, then a plain start", () => {
+    expect(homeStart(own, null)).toEqual({ label: "Start Open · 3 min", href: "/cloud/record/" });
+    expect(homeStart(null, null)).toEqual({ label: "Start a session", href: "/cloud/record/" });
+  });
+
+  it("sends an open practice without a pacer", () => {
+    expect(practiceQuery({ mode: "open", pacerHalfCycleSec: null, durationSec: 240 })).toBe("mode=open&len=240");
+  });
+});
+
+describe("withPractice: New session set to the practice from the query", () => {
+  const mine: SessionSetup = { ...DEFAULT_SETUP, mode: "open", pacer: 2, lengthSec: 180, view: "line", sound: false, skill: "beginner" };
+
+  it("leaves the person's setup alone without a practice", () => {
+    expect(withPractice(mine, new URLSearchParams())).toEqual(mine);
+  });
+
+  it("sets mode, pacer and length, and keeps view, sound and level", () => {
+    expect(withPractice(mine, new URLSearchParams("mode=paced&len=300&pacer=5"))).toEqual({ ...mine, mode: "paced", pacer: 5, lengthSec: 300 });
+  });
+
+  it("keeps the person's pacer for an open practice", () => {
+    expect(withPractice({ ...mine, mode: "paced" }, new URLSearchParams("mode=open&len=240"))).toEqual({ ...mine, mode: "open", lengthSec: 240 });
   });
 });
