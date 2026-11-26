@@ -7,23 +7,34 @@ import { LiveTrace } from "@/components/LiveTrace";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { bluetoothSupport } from "@/lib/device/bluetooth";
 import { useDevice } from "@/lib/device/DeviceProvider";
+import { defaultDetails, planDefaults, withOnboardingAnswers, type Plan, type TrackDetails } from "@/lib/domain/goal-questions";
 import { defaultPreferences, GOALS, goalOf, SKILL_LEVELS, skillBandText } from "@/lib/domain/preferences";
-import type { BreathGoal, UserPreferences, UserProfile } from "@/lib/domain/types";
+import type { BreathGoal, GoalDetails, UserPreferences, UserProfile } from "@/lib/domain/types";
 import { LENGTHS } from "@/lib/prefs";
 import { markSetupFinished } from "../CloudShell";
 import { stateWords } from "../device/words";
+import { GoalQuestions } from "./GoalQuestions";
+import { daysText, PlanStep } from "./PlanStep";
 
-type Step = "name" | "goal" | "level" | "sessions" | "band" | "done";
-const ATHLETE_STEPS: Step[] = ["name", "goal", "level", "sessions", "band", "done"];
+type Step = "name" | "goal" | "questions" | "level" | "sessions" | "plan" | "band" | "done";
+const ATHLETE_STEPS: Step[] = ["name", "goal", "questions", "level", "sessions", "plan", "band", "done"];
 const COACH_STEPS: Step[] = ["name", "done"];
 const STEP_LABELS: Record<Step, string> = {
   name: "You",
   goal: "Your goal",
+  questions: "About your goal",
   level: "Experience",
   sessions: "Your sessions",
+  plan: "Your plan",
   band: "Your band",
   done: "Ready",
 };
+
+/** A plan already on the profile (onboarding run again), or null to follow the track's defaults. */
+function savedPlan(p: UserPreferences | null | undefined): Plan | null {
+  if (!p?.dailyMinutes || !p.reminders) return null;
+  return { sessionsPerWeek: p.sessionsPerWeek, dailyMinutes: p.dailyMinutes, reminders: { ...p.reminders } };
+}
 
 /** /cloud/welcome/ — first-run setup. Everything chosen here can be changed later in Settings. */
 export default function WelcomePage() {
@@ -40,10 +51,18 @@ function Welcome({ profile }: { profile: UserProfile }) {
   const [step, setStep] = useState<Step>("name");
   const [name, setName] = useState(profile.displayName);
   const [prefs, setPrefs] = useState<UserPreferences>(() => profile.preferences ?? defaultPreferences());
+  // Answers are kept per track while onboarding, so going back to change the goal loses nothing; only the chosen goal's are saved.
+  const [answers, setAnswers] = useState<GoalDetails>(() => ({ ...profile.preferences?.goalDetails }));
+  // Null until the plan step is touched: until then it follows the track and the answers.
+  const [plan, setPlan] = useState<Plan | null>(() => savedPlan(profile.preferences));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const index = steps.indexOf(step);
   const first = name.trim().split(" ")[0] || "there";
+
+  const details: TrackDetails = answers[prefs.goal] ?? defaultDetails(prefs.goal);
+  const shownPlan = plan ?? planDefaults(prefs.goal, details);
+  const final = coach ? prefs : withOnboardingAnswers(prefs, answers[prefs.goal] ?? null, plan);
 
   const go = (delta: number) => setStep(steps[Math.max(0, Math.min(steps.length - 1, index + delta))]);
   const pickGoal = (goal: BreathGoal) => {
@@ -57,7 +76,7 @@ function Welcome({ profile }: { profile: UserProfile }) {
     try {
       await backend.data.updateProfile(profile.uid, {
         displayName: name.trim() || profile.displayName,
-        preferences: { ...prefs, onboardedAt: new Date().toISOString() },
+        preferences: { ...final, onboardedAt: new Date().toISOString() },
       });
       markSetupFinished();
       router.replace(next);
@@ -137,6 +156,21 @@ function Welcome({ profile }: { profile: UserProfile }) {
                 ))}
               </div>
               <Nav onBack={() => go(-1)} onNext={() => go(1)} />
+            </section>
+          )}
+
+          {step === "questions" && (
+            <section>
+              <GoalQuestions goal={prefs.goal} value={details} onChange={(next) => setAnswers((a) => ({ ...a, [prefs.goal]: next }))} />
+              <Nav
+                onBack={() => go(-1)}
+                onNext={() => go(1)}
+                skipLabel="Skip these"
+                onSkip={() => {
+                  setAnswers((a) => ({ ...a, [prefs.goal]: defaultDetails(prefs.goal) }));
+                  go(1);
+                }}
+              />
             </section>
           )}
 
@@ -229,19 +263,23 @@ function Welcome({ profile }: { profile: UserProfile }) {
                     ))}
                   </div>
                 </fieldset>
-                <fieldset className="choice welcome-week">
-                  <legend>Weekly goal</legend>
-                  <div className="seg" role="group" aria-label="Sessions a week">
-                    {[2, 3, 4, 5, 6, 7].map((n) => (
-                      <button key={n} type="button" aria-pressed={prefs.sessionsPerWeek === n} onClick={() => setPrefs((p) => ({ ...p, sessionsPerWeek: n }))}>
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                  <small>sessions a week. A coach&rsquo;s target replaces it once you share with them.</small>
-                </fieldset>
               </div>
               <Nav onBack={() => go(-1)} onNext={() => go(1)} />
+            </section>
+          )}
+
+          {step === "plan" && (
+            <section>
+              <PlanStep goal={prefs.goal} plan={shownPlan} onChange={setPlan} />
+              <Nav
+                onBack={() => go(-1)}
+                onNext={() => go(1)}
+                skipLabel="Use the defaults"
+                onSkip={() => {
+                  setPlan(null);
+                  go(1);
+                }}
+              />
             </section>
           )}
 
@@ -271,7 +309,15 @@ function Welcome({ profile }: { profile: UserProfile }) {
                   </div>
                   <div>
                     <dt>Weekly goal</dt>
-                    <dd>{prefs.sessionsPerWeek} a week</dd>
+                    <dd>{final.sessionsPerWeek} a week</dd>
+                  </div>
+                  <div>
+                    <dt>Each day</dt>
+                    <dd>{final.dailyMinutes} min a day</dd>
+                  </div>
+                  <div>
+                    <dt>Reminder</dt>
+                    <dd>{final.reminders?.enabled ? `${final.reminders.time}, ${daysText(final.reminders.days)}` : "Off"}</dd>
                   </div>
                 </dl>
               )}
@@ -307,13 +353,30 @@ function Welcome({ profile }: { profile: UserProfile }) {
   );
 }
 
-function Nav({ onBack, onNext, nextLabel = "Continue" }: { onBack: () => void; onNext: () => void; nextLabel?: string }) {
+function Nav({
+  onBack,
+  onNext,
+  nextLabel = "Continue",
+  onSkip,
+  skipLabel,
+}: {
+  onBack: () => void;
+  onNext: () => void;
+  nextLabel?: string;
+  onSkip?: () => void;
+  skipLabel?: string;
+}) {
   return (
     <div className="welcome-actions">
       <button type="button" className="button" data-size="large" onClick={onNext}>
         {nextLabel}
         <Icon name="arrowRight" size={18} />
       </button>
+      {onSkip && (
+        <button type="button" className="button" data-variant="ghost" onClick={onSkip}>
+          {skipLabel}
+        </button>
+      )}
       <button type="button" className="link" onClick={onBack}>
         Back
       </button>
