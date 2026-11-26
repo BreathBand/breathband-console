@@ -64,7 +64,8 @@ Appended by the session, one line each, newest last.
 
 ## Questions for me
 
-- [ ] Should the "invited" card require an actual invite (the professional's link or code) rather than any coach link? It needs a field on `CoachLink` (e.g. `via: "invite" | "code"`) and `proKind` on the profile, both lane 2's `types.ts` — Recommended: add both with the D1 card and change `professionalOf()` then. Options: keep "any linked coach"; add only `proKind`.
+- [x] Should the "invited" card require an actual invite (the professional's link or code) rather than any coach link? It needs a field on `CoachLink` (e.g. `via: "invite" | "code"`) and `proKind` on the profile, both lane 2's `types.ts` — Recommended: add both with the D1 card and change `professionalOf()` then. Options: keep "any linked coach"; add only `proKind`.
+  Answer: add both with the D1 card and change `professionalOf()` then
 
 ## Parked
 
