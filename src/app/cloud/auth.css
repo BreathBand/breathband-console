@@ -194,7 +194,8 @@
 }
 
 .bc-auth-pitch {
-  font: 600 var(--t-24) / 1.2 var(--f-sans);
+  font: 400 var(--t-28) / 1.15 var(--f-display);
+  letter-spacing: -0.02em;
   letter-spacing: -0.01em;
   color: var(--c-ink);
   text-wrap: balance;
@@ -897,7 +898,8 @@
 }
 
 .bc-landing h2 {
-  font: 600 var(--t-28) / 1.2 var(--f-sans);
+  font: 400 var(--t-36) / 1.1 var(--f-display);
+  letter-spacing: -0.025em;
   letter-spacing: -0.01em;
   text-wrap: balance;
 }
@@ -934,7 +936,8 @@
 }
 
 .bc-hero h1 {
-  font: 600 34px / 1.1 var(--f-sans);
+  font: 400 40px / 1.04 var(--f-display);
+  letter-spacing: -0.03em;
   letter-spacing: -0.02em;
   text-wrap: balance;
 }
@@ -1028,7 +1031,7 @@
 
 @media (min-width: 720px) {
   .bc-hero h1 {
-    font-size: var(--t-40);
+    font-size: 48px;
   }
 }
 
@@ -1048,7 +1051,7 @@
     align-self: end;
   }
   .bc-hero h1 {
-    font-size: 44px;
+    font-size: 56px;
   }
 }
 
@@ -1366,7 +1369,7 @@
 }
 
 .bc-share-big {
-  font: 600 var(--t-40) / 1.1 var(--f-sans);
+  font: 400 var(--t-40) / 1.1 var(--f-display);
 }
 
 .bc-share-word {

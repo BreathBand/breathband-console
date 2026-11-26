@@ -1,6 +1,25 @@
-import { combineTransitionScores, isTransitionScores } from "@/lib/domain/scores";
+import {
+  DEMO_DURATION_S,
+  DEMO_FAULTS,
+  generatePiecewise,
+  generateProfile,
+  generateSignal,
+  OPEN_NORMAL_PATTERN,
+  PACER_2_2,
+  PACER_5_5,
+  pacerPattern,
+  toRaw,
+  withCycle,
+  withDepth,
+  type DemoFaultName,
+} from "@/lib/analysis/synth";
+import { SAMPLE_RATE_HZ } from "@/lib/device/config";
+import { defaultPreferences } from "@/lib/domain/preferences";
+import { isLegacyScores } from "@/lib/domain/scores";
+import { buildSession } from "@/lib/recording";
 import {
   SCORING_VERSIONS,
+  type PacerHalfCycle,
   type Assignment,
   type CoachInvite,
   type Squad,
@@ -21,6 +40,7 @@ export const DEMO_ATHLETE: UserProfile = {
   displayName: "Alex Morgan",
   role: "athlete",
   createdAt: "2026-09-01T09:00:00.000Z",
+  preferences: { ...defaultPreferences("train", "intermediate"), onboardedAt: "2026-09-01T09:00:00.000Z" },
 };
 
 export const DEMO_COACH: UserProfile = {
@@ -29,6 +49,7 @@ export const DEMO_COACH: UserProfile = {
   displayName: "Lena Vos",
   role: "coach",
   createdAt: "2026-09-01T09:00:00.000Z",
+  preferences: { ...defaultPreferences("train", "intermediate"), onboardedAt: "2026-09-01T09:00:00.000Z" },
 };
 
 /** Two more athletes linked to the demo coach, so the roster has people to compare. */
@@ -39,6 +60,7 @@ export const DEMO_TEAM: UserProfile[] = [
     displayName: "Sam Okafor",
     role: "athlete",
     createdAt: "2026-09-08T09:00:00.000Z",
+    preferences: { ...defaultPreferences("train", "beginner"), onboardedAt: "2026-09-08T09:00:00.000Z" },
   },
   {
     uid: "demo-athlete-3",
@@ -46,6 +68,7 @@ export const DEMO_TEAM: UserProfile[] = [
     displayName: "Priya Nair",
     role: "athlete",
     createdAt: "2026-09-20T09:00:00.000Z",
+    preferences: { ...defaultPreferences("calm", "beginner"), onboardedAt: "2026-09-20T09:00:00.000Z" },
   },
   {
     uid: "demo-athlete-4",
@@ -53,6 +76,7 @@ export const DEMO_TEAM: UserProfile[] = [
     displayName: "Maya Chen",
     role: "athlete",
     createdAt: "2026-08-24T09:00:00.000Z",
+    preferences: { ...defaultPreferences("focus", "advanced"), onboardedAt: "2026-08-24T09:00:00.000Z" },
   },
   {
     uid: "demo-athlete-5",
@@ -60,6 +84,7 @@ export const DEMO_TEAM: UserProfile[] = [
     displayName: "Leo Brandt",
     role: "athlete",
     createdAt: "2026-10-28T09:00:00.000Z",
+    preferences: { ...defaultPreferences("train", "intermediate"), onboardedAt: "2026-10-28T09:00:00.000Z" },
   },
 ];
 
@@ -93,10 +118,10 @@ interface SeedPlan {
   spanDays: number;
   /** Days since the newest session. */
   restDays: number;
-  /** Paced Total Breath Score at the start and end of the span (1–10). */
+  /** Paced Total Breath Score at the start and end of the span (1–10), roughly. */
   from: number;
   to: number;
-  /** How many of the oldest sessions were recorded before per-transition scoring. */
+  /** How many of the oldest sessions were recorded before per-transition scoring (app 1.0). */
   legacyCount: number;
   /** Points knocked off the newest session, so the roster has a "score down" flag to show. */
   dip?: number;
@@ -104,7 +129,7 @@ interface SeedPlan {
 
 const PLANS: Record<string, SeedPlan> = {
   // Improving steadily; the oldest sessions predate the 1–10 scores.
-  "demo-athlete": { count: 24, spanDays: 56, restDays: 1, from: 5.2, to: 7.6, legacyCount: 5 },
+  "demo-athlete": { count: 24, spanDays: 56, restDays: 1, from: 6, to: 8.6, legacyCount: 5 },
   // Slipping over the last few weeks, and a poor latest session.
   "demo-athlete-2": { count: 18, spanDays: 42, restDays: 2, from: 7.6, to: 6.4, legacyCount: 0, dip: 2.6 },
   // Newer, and hasn't recorded for over a week.
@@ -123,6 +148,121 @@ const NOTES = [
   "Phone buzzed halfway through and I lost focus for a while.",
 ];
 
+/** The app build the seeded method-C sessions claim to come from. */
+export const SEED_APP_VERSION = "1.2.0+60";
+const LEGACY_APP_VERSION = "1.0.0+43";
+/** Raw sensor scale of the seeded recordings (the simulated band's scale). */
+const SEED_SCALE = { a100: 900, midline: 2050 } as const;
+
+type ExtraRecipe = { kind: "fault"; fault: DemoFaultName } | { kind: "markers" };
+
+/**
+ * Alex's recent sessions that show what method C does with typical faults,
+ * plus two open sessions split by markers: days ago, and what the athlete wrote.
+ */
+const ALEX_EXTRAS: { id: string; daysAgo: number; hour: number; recipe: ExtraRecipe; note: string }[] = [
+  { id: "f-early", daysAgo: 3, hour: 7, recipe: { kind: "fault", fault: "early" }, note: "Kept jumping ahead of the pacer. Turned every breath too soon." },
+  { id: "m-001", daysAgo: 4, hour: 18, recipe: { kind: "markers" }, note: "Marked the start and end of the hard set on the bike. Breathing ran fast in between." },
+  { id: "f-shallow", daysAgo: 5, hour: 21, recipe: { kind: "fault", fault: "shallow" }, note: "Tired. Only half filled each breath." },
+  { id: "f-deep", daysAgo: 6, hour: 8, recipe: { kind: "fault", fault: "tooDeep" }, note: "Overdid it with huge breaths. Felt a bit light-headed." },
+  { id: "f-fast", daysAgo: 8, hour: 12, recipe: { kind: "fault", fault: "tooFast" }, note: "Rushed it. Couldn't slow down to the pacer." },
+  { id: "f-lost", daysAgo: 9, hour: 17, recipe: { kind: "fault", fault: "lostThenRecovered" }, note: "Band slipped after a minute. Tightened it and carried on." },
+  { id: "m-002", daysAgo: 10, hour: 9, recipe: { kind: "markers" }, note: "Marked when the call started and ended. Breathing sped up on the call." },
+];
+
+/** Everything needed to regenerate a seeded session's signal: derived from the session, never stored. */
+type Recipe =
+  | { kind: "plan"; mode: "paced" | "open"; half: PacerHalfCycle | null; durationSec: number; level: number; seed: number }
+  | { kind: "fault"; fault: DemoFaultName; seed: number }
+  | { kind: "markers"; durationSec: number; seed: number };
+
+type SeedFields = Pick<SessionSummary, "athleteId" | "id" | "mode" | "pacerHalfCycleSec" | "durationSec" | "startedAt" | "note">;
+
+/** Total Breath Score aimed for → how far each turn strays, in method C's SD units (tuned against the scorer). */
+function spreadSd(level: number): number {
+  return clamp((10.3 - level) / 7.6, 0.02, 0.9);
+}
+
+const OPEN_RATES = [12, 13, 14, 15, 16] as const;
+/** The level Alex's fault sessions would score without the fault. */
+const FAULT_BASE_LEVEL = 8.2;
+
+function planLevel(plan: SeedPlan, i: number): number {
+  const newest = i === plan.count - 1;
+  return plan.from + (plan.to - plan.from) * (i / (plan.count - 1)) - (newest ? (plan.dip ?? 0) : 0);
+}
+
+function recipeFor(session: Omit<SeedFields, "startedAt" | "note"> & { waveformPath: string }): Recipe {
+  const seed = hashString(session.waveformPath);
+  const extra = session.athleteId === DEMO_ATHLETE.uid ? ALEX_EXTRAS.find((e) => e.id === session.id) : undefined;
+  if (extra?.recipe.kind === "fault") return { kind: "fault", fault: extra.recipe.fault, seed };
+  if (extra) return { kind: "markers", durationSec: session.durationSec, seed };
+  const plan = PLANS[session.athleteId] ?? PLANS[DEMO_ATHLETE.uid];
+  const level = planLevel(plan, Number(session.id.slice(1)) - 1);
+  return { kind: "plan", mode: session.mode, half: session.pacerHalfCycleSec, durationSec: session.durationSec, level, seed };
+}
+
+/** The breathing signal for a recipe, in % of max at 20 Hz, with marker sample indices. */
+function signalFor(recipe: Recipe): { pct: number[]; markers: number[] } {
+  const options = { sampleRateHz: SAMPLE_RATE_HZ };
+  const noiseSeed = recipe.seed % 100_000;
+  if (recipe.kind === "fault") {
+    // On top of the fault, the same scatter as Alex's recent good sessions (5-5 pacer: 1 SD of timing is 5 s).
+    const sd = spreadSd(FAULT_BASE_LEVEL);
+    const noise = { seed: noiseSeed, sampleSdPct: 0.05, amplitudeSdPct: sd * 3, timingSdS: sd * 5 };
+    return { pct: generateProfile(DEMO_FAULTS.paced[recipe.fault], { ...options, noise }).user, markers: [] };
+  }
+  const r = mulberry32(recipe.seed);
+  if (recipe.kind === "markers") {
+    const d = recipe.durationSec;
+    const m1 = Math.round(d * (0.3 + r() * 0.08));
+    const m2 = Math.round(d * (0.62 + r() * 0.08));
+    const noise = { seed: noiseSeed, sampleSdPct: 0.05, amplitudeSdPct: 0.25, timingSdS: 0.08 };
+    const signal = generatePiecewise(
+      [
+        { fromS: 0, pattern: withCycle(OPEN_NORMAL_PATTERN, 60 / 13) },
+        { fromS: m1, pattern: withDepth(withCycle(OPEN_NORMAL_PATTERN, 60 / 20), 0.75) },
+        { fromS: m2, pattern: withCycle(OPEN_NORMAL_PATTERN, 60 / 14.5) },
+      ],
+      { ...options, durationS: d, noise },
+    );
+    return { pct: signal.user, markers: [m1 * SAMPLE_RATE_HZ, m2 * SAMPLE_RATE_HZ] };
+  }
+  if (recipe.mode === "paced" && recipe.half) {
+    const sd = spreadSd(recipe.level);
+    const pattern = pacerPattern(recipe.half === 2 ? PACER_2_2 : PACER_5_5);
+    const noise = { seed: noiseSeed, sampleSdPct: 0.05, amplitudeSdPct: sd * 3, timingSdS: sd * recipe.half };
+    return { pct: generateSignal(pattern, { ...options, durationS: recipe.durationSec, noise }).user, markers: [] };
+  }
+  const rate = OPEN_RATES[Math.floor(r() * OPEN_RATES.length)] + (r() - 0.5);
+  const pattern = withDepth(withCycle(OPEN_NORMAL_PATTERN, 60 / rate), 0.8 + r() * 0.4);
+  const noise = { seed: noiseSeed, sampleSdPct: 0.05, amplitudeSdPct: 0.25, timingSdS: 0.1 };
+  return { pct: generateSignal(pattern, { ...options, durationS: recipe.durationSec, noise }).user, markers: [] };
+}
+
+/** Records and scores a seeded session exactly as BreathCloud scores a browser recording. */
+function built(session: SeedFields & { waveformPath: string }) {
+  const { pct, markers } = signalFor(recipeFor(session));
+  return buildSession({
+    mode: session.mode,
+    halfCycleS: session.mode === "paced" ? session.pacerHalfCycleSec : null,
+    startedAt: new Date(session.startedAt),
+    raw: toRaw(pct, SEED_SCALE),
+    markers,
+    calibration: SEED_SCALE,
+    skillLevel: "intermediate",
+    note: session.note,
+    recorder: SEED_APP_VERSION,
+  });
+}
+
+/** A scored method-C (paced) or Appendix-metrics (open) session, as the app would upload it. */
+function seededSession(base: SeedFields): SessionSummary {
+  const waveformPath = `waveforms/${base.athleteId}/${base.id}.json.gz`;
+  const { session } = built({ ...base, waveformPath });
+  return { ...session, ...base, waveformPath, source: "app" };
+}
+
 /** A few weeks of sessions before `now`, newest first, following the athlete's plan. */
 export function seedSessions(athleteId: string, now: Date): SessionSummary[] {
   const plan = PLANS[athleteId] ?? PLANS[DEMO_ATHLETE.uid];
@@ -137,47 +277,57 @@ export function seedSessions(athleteId: string, now: Date): SessionSummary[] {
     startedAt.setHours(6 + Math.floor(rand() * 14), Math.floor(rand() * 60), 0, 0);
 
     const newest = i === plan.count - 1;
-    const mode = (newest && plan.dip) || rand() < 0.72 ? "paced" : "open";
-    const pacerHalfCycleSec = mode === "paced" ? (rand() < 0.35 ? 2 : 5) : null;
-    const legacy = i < plan.legacyCount;
-    const level = plan.from + (plan.to - plan.from) * progress - (newest ? (plan.dip ?? 0) : 0);
+    // Alex's newest is a good 5-5, so the home screen opens on a healthy session.
+    const alexNewest = newest && athleteId === DEMO_ATHLETE.uid;
+    const mode = alexNewest || (newest && plan.dip) || rand() < 0.72 ? "paced" : "open";
+    const pacerHalfCycleSec = mode === "paced" ? (alexNewest || rand() >= 0.35 ? 5 : 2) : null;
     const id = `s${String(i + 1).padStart(3, "0")}`;
+    const durationSec = mode === "paced" ? (alexNewest || rand() < 0.7 ? 300 : 180) : 240 + Math.floor(rand() * 3) * 30;
+    const note = rand() < 0.3 ? NOTES[Math.floor(rand() * NOTES.length)] : "";
+    const base: SeedFields = { athleteId, id, mode, pacerHalfCycleSec, durationSec, startedAt: startedAt.toISOString(), note };
 
-    let scores: SessionSummary["scores"] = null;
-    if (mode === "paced" && legacy) {
+    if (i < plan.legacyCount) {
+      const level = planLevel(plan, i);
       const depth = round1(clamp(level * 10 + (rand() - 0.5) * 14, 0, 100));
       const timing = round1(clamp(level * 10 + (rand() - 0.5) * 14, 0, 100));
-      scores = { depth, timing, overall: round1((depth + timing) / 2) };
-    } else if (mode === "paced") {
-      const sub = () => clamp(Math.round(level + (rand() - 0.5) * 2.4), 1, 10);
-      const timing = { inhale: sub(), exhale: sub() };
-      const depth = { inhale: sub(), exhale: sub() };
-      scores = {
-        total: combineTransitionScores(timing, depth),
-        timing,
-        depth,
-        smoothness: { inhale: sub(), exhale: sub() },
-      };
+      sessions.push({
+        ...base,
+        scores: mode === "paced" ? { depth, timing, overall: round1((depth + timing) / 2) } : null,
+        scoringVersion: SCORING_VERSIONS.legacy,
+        respirationRateBpm: mode === "paced" ? 60 / (2 * pacerHalfCycleSec!) : 11 + Math.floor(rand() * 7),
+        waveformPath: `waveforms/${athleteId}/${id}.json.gz`,
+        appVersion: LEGACY_APP_VERSION,
+      });
+    } else {
+      sessions.push(seededSession(base));
     }
-
-    sessions.push({
-      id,
-      athleteId,
-      startedAt: startedAt.toISOString(),
-      durationSec: mode === "paced" ? (rand() < 0.7 ? 300 : 180) : 240 + Math.floor(rand() * 5) * 30,
-      mode,
-      pacerHalfCycleSec,
-      scores,
-      scoringVersion: legacy ? SCORING_VERSIONS.legacy : SCORING_VERSIONS.transition,
-      respirationRateBpm:
-        mode === "paced" ? 60 / (2 * pacerHalfCycleSec!) : 11 + Math.floor(rand() * 7),
-      note: rand() < 0.3 ? NOTES[Math.floor(rand() * NOTES.length)] : "",
-      waveformPath: `waveforms/${athleteId}/${id}.json.gz`,
-      appVersion: legacy ? "1.0.0+43" : "1.1.0+52",
-    });
   }
 
-  return sessions.reverse();
+  if (athleteId === DEMO_ATHLETE.uid) {
+    for (const extra of ALEX_EXTRAS) {
+      const startedAt = new Date(now.getTime() - extra.daysAgo * 86_400_000);
+      startedAt.setHours(extra.hour, 20, 0, 0);
+      const paced = extra.recipe.kind === "fault";
+      sessions.push(
+        seededSession({
+          athleteId,
+          id: extra.id,
+          mode: paced ? "paced" : "open",
+          pacerHalfCycleSec: paced ? 5 : null,
+          durationSec: paced ? DEMO_DURATION_S : 240,
+          startedAt: startedAt.toISOString(),
+          note: extra.note,
+        }),
+      );
+    }
+  }
+
+  return sessions.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+}
+
+/** Seeded sessions that show a fault or markers on purpose; the coaching seed keeps its comments off them. */
+export function isDemoExtra(session: Pick<SessionSummary, "id">): boolean {
+  return ALEX_EXTRAS.some((e) => e.id === session.id);
 }
 
 const DAY = 86_400_000;
@@ -279,7 +429,7 @@ export function seedCoaching(
     createdAt: at(s, hours),
   });
 
-  const alexPaced = sessions[alex].filter((s) => s.mode === "paced");
+  const alexPaced = sessions[alex].filter((s) => s.mode === "paced" && !isDemoExtra(s));
   const samLatest = sessions[sam][0];
   const comments: Record<string, SessionComment[]> = {
     [alex]: [
@@ -334,13 +484,24 @@ export function seedCoaching(
 }
 
 /**
- * Illustrative pacer depth for demo signals, as a share of the calibrated
- * range. Deliberately not the app's calibration factor.
+ * The signal behind a seeded session. Method-C sessions are regenerated from
+ * their recipe through the same recording path that scored them, so the
+ * waveform always matches the stored scores. Legacy sessions keep the old
+ * illustrative generator.
+ */
+export function generateWaveform(session: SessionSummary): Waveform {
+  if (session.scoringVersion === SCORING_VERSIONS.legacy) return legacyWaveform(session);
+  return built(session).waveform;
+}
+
+/**
+ * Illustrative pacer depth for legacy demo signals, as a share of the
+ * calibrated range. Deliberately not the app's calibration factor.
  */
 const DEMO_PACER_SHARE = 0.25;
 
-/** Builds a plausible signal for a session: the user follows the pacer about as well as their scores say. */
-export function generateWaveform(session: SessionSummary): Waveform {
+/** A plausible legacy signal: the user follows the pacer about as well as their 0–100 % scores say. */
+function legacyWaveform(session: SessionSummary): Waveform {
   const rand = mulberry32(hashString(session.waveformPath));
   const sampleIntervalMs = 50;
   const hz = 1000 / sampleIntervalMs;
@@ -351,7 +512,9 @@ export function generateWaveform(session: SessionSummary): Waveform {
 
   const paced = session.mode === "paced";
   const halfCycle = session.pacerHalfCycleSec ?? 30 / (session.respirationRateBpm ?? 14);
-  const q = quality(session);
+  const q = isLegacyScores(session.scores)
+    ? { timing: session.scores.timing / 10, depthIn: session.scores.depth / 10, depthOut: session.scores.depth / 10 }
+    : { timing: 10, depthIn: 8.5, depthOut: 8.5 };
   // Lower timing scores trail the pacer by more; lower depth scores fall short of it.
   const meanLag = (10 - q.timing) * 0.04 * halfCycle;
   const reachIn = 1 - (10 - q.depthIn) * 0.07;
@@ -383,18 +546,4 @@ export function generateWaveform(session: SessionSummary): Waveform {
 
   const markers = !paced && session.note ? [Math.floor(samples * 0.4)] : [];
   return { sampleIntervalMs, user, pacer, markers, calibration };
-}
-
-/** Timing and depth on the 1–10 scale, whichever scoring version the session has. */
-function quality(session: SessionSummary): { timing: number; depthIn: number; depthOut: number } {
-  const { scores } = session;
-  if (isTransitionScores(scores)) {
-    return {
-      timing: (scores.timing.inhale + scores.timing.exhale) / 2,
-      depthIn: scores.depth.inhale,
-      depthOut: scores.depth.exhale,
-    };
-  }
-  if (scores) return { timing: scores.timing / 10, depthIn: scores.depth / 10, depthOut: scores.depth / 10 };
-  return { timing: 10, depthIn: 8.5, depthOut: 8.5 };
 }

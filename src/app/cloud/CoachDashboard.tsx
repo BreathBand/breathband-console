@@ -145,7 +145,9 @@ function TeamStats({ members, now }: { members: TeamMember[]; now: Date }) {
             <span className="d">
               Total Breath Score
               {avgBefore !== null &&
-                ` · ${avgNow >= avgBefore ? "+" : "−"}${formatScore(Math.abs(round1(avgNow - avgBefore)))} on the week before`}
+                (round1(avgNow - avgBefore) === 0
+                  ? " · the same as the week before"
+                  : ` · ${avgNow > avgBefore ? "+" : "−"}${formatScore(Math.abs(round1(avgNow - avgBefore)))} on the week before`)}
             </span>
           </>
         )}

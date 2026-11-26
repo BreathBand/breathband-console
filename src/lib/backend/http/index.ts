@@ -31,6 +31,8 @@ export const HTTP_ROUTES: HttpRoutes = {
     getSession: { method: "GET", path: "/v1/athletes/{athleteId}/sessions/{sessionId}" },
     getWaveform: { method: "GET", path: "/v1/athletes/{athleteId}/sessions/{sessionId}/waveform" },
     updateSessionNote: { method: "PUT", path: "/v1/athletes/{athleteId}/sessions/{sessionId}/note" },
+    saveSession: { method: "POST", path: "/v1/athletes/{athleteId}/sessions" },
+    deleteSession: { method: "DELETE", path: "/v1/athletes/{athleteId}/sessions/{sessionId}" },
 
     listAthletes: { method: "GET", path: "/v1/coaches/{coachId}/athletes" },
     listCoaches: { method: "GET", path: "/v1/athletes/{athleteId}/coaches" },

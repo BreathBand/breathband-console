@@ -1,197 +1,8 @@
 /*
- * BreathCloud console layout, after the Coach Console direction's iPad review
- * screen: graphite top bar, a session rail on the left, and dense panes of
- * scores, waveform and breath-by-breath detail. Colours and type come from the
- * tokens in ../globals.css.
+ * BreathCloud pages: a session rail beside dense panes of scores, waveform and
+ * breath-by-breath detail. The frame around them (sidebar, tab bar) is in
+ * shell.css. Colours and type come from the tokens in ../globals.css.
  */
-
-.app {
-  --topbar-h: 57px;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-}
-
-.app-main {
-  flex: 1;
-  min-width: 0;
-}
-
-/* ================================================================ top bar */
-
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--c-chrome);
-  color: var(--c-chrome-ink);
-  border-bottom: 1px solid var(--c-chrome-rule);
-}
-
-.topbar-row {
-  min-height: 56px;
-  padding: 0 var(--s-6);
-  display: flex;
-  align-items: center;
-  gap: var(--s-5);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: var(--s-chrome);
-  color: inherit;
-  text-decoration: none;
-  font: 600 var(--t-17) / 1 var(--f-sans);
-  white-space: nowrap;
-}
-
-.brand sup {
-  font-size: 0.55em;
-  font-weight: 500;
-}
-
-.brand-sub {
-  color: var(--c-chrome-ink-2);
-  font-weight: 400;
-}
-
-.topnav {
-  display: flex;
-  gap: var(--s-1);
-}
-
-.topnav a {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-2);
-  min-height: 40px;
-  padding: 0 var(--s-4);
-  border-radius: var(--r-2);
-  color: var(--c-chrome-ink-2);
-  font: 500 var(--t-15) / 1 var(--f-sans);
-  text-decoration: none;
-}
-
-.topnav a:hover {
-  color: var(--c-chrome-ink);
-}
-
-.topnav a[aria-current] {
-  background: var(--c-chrome-2);
-  color: var(--c-chrome-ink);
-  box-shadow: inset 0 0 0 1px var(--c-chrome-rule);
-}
-
-.picker {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--s-chrome);
-  height: 40px;
-  padding: 0 var(--s-4);
-  border-radius: var(--r-2);
-  background: var(--c-chrome-2);
-  border: 1px solid var(--c-chrome-rule);
-}
-
-.picker select {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  color: var(--c-chrome-ink);
-  font: 500 var(--t-15) / 1 var(--f-sans);
-  padding-right: 18px;
-  cursor: pointer;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
-    linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: right 6px center, right 1px center;
-  background-size: 5px 5px;
-  background-repeat: no-repeat;
-}
-
-.picker select option {
-  color: var(--c-ink);
-  background: var(--c-pane);
-}
-
-.avatar {
-  flex: none;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: var(--c-well);
-  border: 1px solid var(--c-rule);
-  color: var(--c-ink);
-  font: 600 var(--t-12) / 1 var(--f-cond);
-}
-
-.picker .avatar {
-  background: var(--c-chrome-3);
-  border-color: transparent;
-  color: var(--c-chrome-ink);
-}
-
-.topbar-end {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: var(--s-5);
-}
-
-.sync,
-.who {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  font: 400 var(--t-13) / 1.2 var(--f-cond);
-  color: var(--c-chrome-ink-2);
-  white-space: nowrap;
-}
-
-.live {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--c-live);
-}
-
-.who-name {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  font: 500 var(--t-13) / 1.2 var(--f-sans);
-  color: var(--c-chrome-ink);
-}
-
-.who-name small {
-  font: 400 var(--t-12) / 1.2 var(--f-cond);
-  color: var(--c-chrome-ink-2);
-}
-
-.chrome-button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--s-2);
-  min-height: 36px;
-  padding: 0 var(--s-4);
-  border-radius: var(--r-2);
-  border: 1px solid var(--c-chrome-rule);
-  background: var(--c-chrome-2);
-  color: var(--c-chrome-ink);
-  font: 500 var(--t-13) / 1 var(--f-sans);
-  cursor: pointer;
-}
-
-.chrome-button svg {
-  color: var(--c-chrome-ink-2);
-}
-
-.chrome-button:hover {
-  border-color: var(--c-chrome-ink-2);
-}
 
 /* ================================================================ console grid */
 
@@ -368,16 +179,22 @@
 
 .hero .lbl,
 .stat .lbl {
-  font: 400 var(--t-13) / 1.25 var(--f-cond);
+  font: 600 var(--t-13) / 1.25 var(--f-sans);
   color: var(--c-ink-2);
 }
 
 .hero .n,
 .stat .n {
   display: block;
-  font: 600 var(--t-36) / 1 var(--f-sans);
-  letter-spacing: -0.02em;
-  margin: 6px 0 4px;
+  font: 400 var(--t-40) / 1 var(--f-display);
+  letter-spacing: -0.03em;
+  margin: 8px 0 6px;
+}
+
+.stat .n small {
+  font: 500 var(--t-15) / 1 var(--f-sans);
+  letter-spacing: 0;
+  color: var(--c-ink-2);
 }
 
 .stat .n.sm {
@@ -451,23 +268,27 @@
 }
 
 /* score atoms */
+/* Score bands are graded ink, as on the site: solid for good, hollow for fair, amber for low. The word always travels with it. */
 .dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   margin-right: 5px;
-  vertical-align: 1px;
+  vertical-align: 0;
   flex: none;
-  background: var(--c-mid);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--c-ink-3);
 }
 
 .dot[data-band="ok"] {
-  background: var(--c-ok);
+  background: var(--c-ink);
+  box-shadow: none;
 }
 
 .dot[data-band="low"] {
-  background: var(--c-low);
+  background: var(--c-low-mark);
+  box-shadow: none;
 }
 
 .score {
@@ -969,7 +790,32 @@
 
 /* ================================================================ states */
 
+/* Loaded content rises in; a skeleton only shows if loading takes longer than a beat. */
+.page-frame .pane,
+.page-frame .home-last,
+.page-frame .page-head,
+.page-frame .ws-head,
+.page-frame .sl-pane {
+  animation: page-enter 320ms var(--ease-out) both;
+}
+
+.page-frame .pane:nth-child(2),
+.page-frame .home-stats > :nth-child(2) {
+  animation-delay: 30ms;
+}
+
+.page-frame .pane:nth-child(3),
+.page-frame .home-stats > :nth-child(3) {
+  animation-delay: 60ms;
+}
+
+.page-frame .pane:nth-child(n + 4),
+.page-frame .home-stats > :nth-child(4) {
+  animation-delay: 90ms;
+}
+
 .skeleton {
+  animation: skeleton-in 200ms ease-out 260ms both;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1078,29 +924,11 @@
   }
 }
 
-@media (max-width: 960px) {
-  .app {
-    --topbar-h: 0px;
-  }
-  .topbar {
-    position: static;
-  }
-  .topbar-row {
-    flex-wrap: wrap;
-    padding: var(--s-3) var(--s-5);
-    gap: var(--s-3) var(--s-4);
-  }
-  .topbar-end {
-    width: 100%;
-    margin-left: 0;
-    justify-content: space-between;
-  }
+/* With the 248 px sidebar beside it, the session rail only fits from 1280 px. */
+@media (max-width: 1279px) {
   .console {
     display: flex;
     flex-direction: column;
-  }
-  .console-body {
-    padding: var(--s-5);
   }
   .rail {
     position: static;
@@ -1116,6 +944,12 @@
   .console[data-view="session"] .rail {
     display: none;
   }
+}
+
+@media (max-width: 960px) {
+  .console-body {
+    padding: var(--s-5);
+  }
   .low,
   .trends {
     grid-template-columns: minmax(0, 1fr);
@@ -1123,11 +957,6 @@
 }
 
 @media (max-width: 640px) {
-  .brand-sub,
-  .sync-text,
-  .who-name small {
-    display: none;
-  }
   .scores,
   .scores[data-cols="2"] {
     grid-template-columns: minmax(0, 1fr);
@@ -1204,16 +1033,18 @@
 
 /* ================================================================ shared bits */
 
-a.who-name {
-  text-decoration: none;
-  padding: 4px 8px;
-  margin: -4px 0;
-  border-radius: var(--r-2);
-}
-
-a.who-name:hover,
-a.who-name[aria-current] {
-  background: var(--c-chrome-2);
+.avatar {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--c-well);
+  border: 1px solid var(--c-rule);
+  color: var(--c-ink);
+  font: 600 var(--t-12) / 1 var(--f-sans);
+  letter-spacing: 0.02em;
 }
 
 .avatar.lg {
@@ -1584,8 +1415,8 @@ a.plain {
 }
 
 .cell[data-band="ok"] {
-  background: var(--c-ok);
-  border-color: var(--c-ok);
+  background: var(--c-ink);
+  border-color: var(--c-ink);
 }
 
 .cell[data-band="mid"] {
@@ -1594,8 +1425,8 @@ a.plain {
 }
 
 .cell[data-band="low"] {
-  background: var(--c-low);
-  border-color: var(--c-low);
+  background: var(--c-low-mark);
+  border-color: var(--c-low-mark);
 }
 
 .cell[data-band="open"] {
@@ -1680,8 +1511,18 @@ a.plain {
 
 .ws-head {
   display: flex;
-  align-items: flex-start;
-  gap: var(--s-4);
+  align-items: center;
+  gap: var(--s-5);
+}
+
+.ws-head h1 {
+  font: 400 var(--t-40) / 1.05 var(--f-display);
+  letter-spacing: -0.025em;
+}
+
+.ws-head .avatar.lg {
+  width: 56px;
+  height: 56px;
 }
 
 .ws-title {
@@ -1720,25 +1561,34 @@ a.plain {
   justify-content: flex-end;
 }
 
+/* Workspace tabs: the same pill control as every other choice in the product. */
 .tabs {
-  display: flex;
-  gap: var(--s-1);
-  border-bottom: 1px solid var(--c-rule);
+  display: inline-flex;
+  align-self: flex-start;
+  max-width: 100%;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-pill);
+  background: var(--c-well);
   overflow-x: auto;
+  scrollbar-width: none;
 }
 
 .tabs a {
   display: inline-flex;
   align-items: center;
   gap: var(--s-2);
-  min-height: 44px;
-  padding: 0 var(--s-4);
-  margin-bottom: -1px;
-  border-bottom: 2px solid transparent;
+  min-height: 36px;
+  padding: 0 var(--s-5);
+  border-radius: var(--r-pill);
   color: var(--c-ink-2);
-  font: 500 var(--t-15) / 1 var(--f-sans);
+  font: 600 var(--t-15) / 1 var(--f-sans);
   text-decoration: none;
   white-space: nowrap;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
 .tabs a:hover {
@@ -1746,17 +1596,23 @@ a.plain {
 }
 
 .tabs a[aria-current] {
+  background: var(--c-pane);
   color: var(--c-ink);
-  border-bottom-color: var(--c-action);
+  box-shadow: 0 1px 2px rgb(18 17 16 / 0.12), 0 0 0 1px var(--c-rule);
 }
 
 .tab-count {
   min-width: 20px;
   padding: 2px 6px;
-  border-radius: var(--r-badge);
+  border-radius: var(--r-pill);
   background: var(--c-rule-soft);
-  font: 500 var(--t-12) / 1.2 var(--f-cond);
+  font: 600 var(--t-12) / 1.2 var(--f-sans);
   text-align: center;
+}
+
+.tabs a[aria-current] .tab-count {
+  background: var(--c-ink);
+  color: var(--c-ink-inverse);
 }
 
 .tab-body {
@@ -2212,7 +2068,6 @@ a.plain {
 }
 
 @media print {
-  .topbar,
   .rail,
   .crumbs,
   .no-print,
@@ -2230,19 +2085,6 @@ a.plain {
   }
   .pane {
     break-inside: avoid;
-  }
-}
-
-/* Three coach tabs don't fit a phone's top bar on one line: keep labels whole and let the bar scroll. */
-.topnav a {
-  white-space: nowrap;
-}
-
-@media (max-width: 640px) {
-  .topnav {
-    max-width: 100%;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
 }
 
@@ -2297,7 +2139,7 @@ a.plain {
 }
 
 .chart .viz-target {
-  stroke: var(--c-ok);
+  stroke: var(--c-ink-2);
   stroke-width: 1.5;
   stroke-dasharray: 5 4;
 }

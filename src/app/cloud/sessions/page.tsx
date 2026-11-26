@@ -26,7 +26,8 @@ function AthleteSessions() {
   const self = auth.status === "signed-in" ? auth.user.uid : null;
   const athleteId = params.get("athlete") || self;
   if (!athleteId) return null;
-  const tab = TABS.find((t) => t === params.get("tab")) ?? "overview";
+  // Athletes' own overview is the home page (/cloud/), so their workspace opens on the session list.
+  const tab = TABS.find((t) => t === params.get("tab")) ?? (athleteId === self ? "sessions" : "overview");
 
   return <AthleteWorkspace key={athleteId} athleteId={athleteId} tab={tab} assign={params.get("assign") === "1"} />;
 }

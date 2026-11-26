@@ -24,7 +24,7 @@ export interface LocalAccount {
 }
 
 // Bump when the seed or the shape changes, so browsers holding older demo data reseed.
-const DB_VERSION = 6;
+const DB_VERSION = 8;
 
 export interface LocalDb {
   version: typeof DB_VERSION;

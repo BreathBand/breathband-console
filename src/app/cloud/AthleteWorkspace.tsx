@@ -14,6 +14,7 @@ import { DEFAULT_ALERTS, type AlertRules, type AthleteTargets, type CoachLink, t
 import { downloadText, slug } from "@/lib/download";
 import { useLoad } from "@/lib/useLoad";
 import type { ConsoleContext } from "./AthleteConsole";
+import { AthleteHome } from "./AthleteHome";
 import { AthleteOverview } from "./AthleteOverview";
 import { athleteHref, sessionHref, type AthleteTab } from "./links";
 import { NotesTab } from "./NotesTab";
@@ -85,6 +86,7 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
   }
 
   const { sessions, profile, assignments, comments, link, rules, coach } = data.data;
+  const ownPreferences = auth.status === "signed-in" ? auth.profile?.preferences : null;
   const name = (self ? auth.status === "signed-in" && auth.profile?.displayName : profile?.displayName) || "Athlete";
   const tabHref = (t: AthleteTab, open = false) =>
     self ? (t === "overview" && !open ? "/cloud/" : `/cloud/sessions/?tab=${t}${open ? "&assign=1" : ""}`) : athleteHref(athleteId, t, open);
@@ -101,24 +103,33 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
     plans: assignments.map((a) => assignmentProgress(a, sessions, now)),
     comments,
     rules,
-    targets: targetsFor(self ? coach?.link : link),
+    targets: targetsFor(self ? coach?.link : link, self ? ownPreferences : profile?.preferences),
     coachName: coach?.name,
     now,
     tabHref,
     reload: data.retry,
   };
 
-  const tabs: { id: AthleteTab; label: string; count?: number }[] = [
-    { id: "overview", label: "Overview" },
-    { id: "trends", label: "Trends" },
-    { id: "sessions", label: "Sessions", count: sessions.length },
-    { id: "plan", label: self ? "From your coach" : "Plan", count: ws.plans.filter(isOpen).length || undefined },
-  ];
-  if (!self) tabs.push({ id: "notes", label: "Notes" });
-  const current = tabs.some((t) => t.id === tab) ? tab : "overview";
+  // An athlete's own overview is their home page, with its own layout and no tabs.
+  if (self && tab === "overview") return <AthleteHome ws={ws} />;
+
+  const tabs: { id: AthleteTab; label: string; count?: number }[] = self
+    ? [
+        { id: "sessions", label: "Sessions", count: sessions.length },
+        { id: "trends", label: "Trends" },
+        { id: "plan", label: "From your coach", count: ws.plans.filter(isOpen).length || undefined },
+      ]
+    : [
+        { id: "overview", label: "Overview" },
+        { id: "trends", label: "Trends" },
+        { id: "sessions", label: "Sessions", count: sessions.length },
+        { id: "plan", label: "Plan", count: ws.plans.filter(isOpen).length || undefined },
+        { id: "notes", label: "Notes" },
+      ];
+  const current = tabs.some((t) => t.id === tab) ? tab : tabs[0].id;
 
   return (
-    <div className="container review workspace">
+    <div className="container page workspace">
       {!self && (
         <nav className="crumbs" aria-label="Breadcrumb">
           <Link href="/cloud/athletes/" className="link">
@@ -169,12 +180,14 @@ function Header({ ws }: { ws: Workspace }) {
   meta.push(oldest ? `${sessions.length} sessions since ${formatLongDay(oldest.startedAt)}` : "No sessions yet");
 
   return (
-    <header className="ws-head">
-      <span className="avatar lg" aria-hidden="true">
-        {initials(name)}
-      </span>
+    <header className="ws-head" data-self={self || undefined}>
+      {!self && (
+        <span className="avatar lg" aria-hidden="true">
+          {initials(name)}
+        </span>
+      )}
       <div className="ws-title">
-        <h1>{self ? "Your sessions" : name}</h1>
+        <h1>{self ? "Sessions" : name}</h1>
         <p className="ws-meta">
           {meta.map((m, i) => (
             <span key={i}>{m}</span>

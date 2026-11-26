@@ -1,6 +1,6 @@
 # Breathband Console
 
-The Breathband website (`/`) and the BreathCloud console (`/cloud/`), where athletes and coaches sign in to see breathing sessions recorded with the Breathband app.
+The Breathband website (`/`) and BreathCloud (`/cloud/`): a web product where athletes record breathing sessions with the Breathband over Bluetooth (or a simulated band), get them scored, review every breath and share them with a coach, and where coaches follow their athletes.
 
 **Status:** local development. The console runs on a local demo backend. The deploy target is Google Cloud Run, prepared but not deployed. The roadmap and the decisions behind it are in [docs/PLAN.md](docs/PLAN.md#decisions).
 
@@ -28,15 +28,15 @@ Then open <http://localhost:8080/>. The backend is chosen at build time with `--
 
 Open <http://localhost:3000/cloud/> and sign in with a demo account (password `breathband`, or use the one-click buttons on the sign-in page):
 
-- `coach@demo.local` (Lena Vos): a coach with three athletes. Lands on the roster.
-- `athlete@demo.local` (Alex Morgan): 8 weeks of sessions, the oldest scored the legacy 0–100% way. Lands on their overview.
+- `coach@demo.local` (Lena Vos): a coach with five athletes. Lands on the dashboard.
+- `athlete@demo.local` (Alex Morgan): 8 weeks of sessions scored with method C (the five oldest with the legacy 0–100% way), including the five demo faults (early, shallow, too deep, too fast, lost then recovered) and open sessions with markers. Lands on their home.
 - `sam@demo.local` and `priya@demo.local`: the coach's other athletes (one with a score drop, one who hasn't trained for a week).
 
-Demo data lives in your browser's localStorage. Use **Reset** in the top bar to start over.
+Demo data lives in your browser's localStorage. Use **Reset** in the sidebar to start over. To record without a band, open **Band**, keep **Simulated band** and press **Start the simulated band**, then **Start a session**. The walkthrough for a demo is in [docs/DEMO.md](docs/DEMO.md).
 
 ### What's in the console
 
-The look is the **Coach Console** design direction (graphite top bar, IBM Plex, dense panes; tokens in `src/app/globals.css`, layout in `src/app/cloud/console.css`).
+The look is **Carbon & Breath**, shared with the public site: a carbon sidebar, bone and carbon neutrals, Funnel Display and Funnel Sans, and the breath (red in, blue out) as the only colour. Recording happens on a full-screen dark instrument. See [DESIGN.md](DESIGN.md).
 
 | Route | Who | What |
 | --- | --- | --- |
@@ -45,7 +45,11 @@ The look is the **Coach Console** design direction (graphite top bar, IBM Plex, 
 | `/cloud/login/`, `/cloud/signup/`, `/cloud/reset/` | Signed out | Sign in (with demo accounts locally), create an account (athlete or coach), password reset. `?next=` returns people to the page they asked for |
 | `/cloud/` | Coach | Dashboard: team numbers, "Needs a look" (replies owed, score drops, practice behind, missed days), sessions not yet opened, a 14-day training grid, practice due, recent notes and comments |
 | `/cloud/athletes/` | Coach | Roster with search, filters and sorting: latest score, trend, practice progress, flags; redeem an invite code |
-| `/cloud/` | Athlete | Their own workspace (as below, without Notes) |
+| `/cloud/` | Athlete | **Home**: Start a session, the last session as a dark card (score, its breath over the pacer, timing and depth), this week, streak, average, breathing at rest, the 8-week trend, recent sessions, practice and comments |
+| `/cloud/device/` | Athlete | **Band**: choose the Breathband over Web Bluetooth or the simulated band, connect, live signal, battery, strap-tension gauge, and the simulated athlete's breathing pattern (steady, early, shallow, too deep, rushed, distracted) |
+| `/cloud/record/` | Both | **New session**: paced (5-5 or 2-2) or open, length, circle or line pacer, tones, skill level, or the coach's practice in one tap |
+| `/cloud/record/live/?…` | Both | The **recording instrument** (full screen, dark): strap check, calibration circle, countdown, live pacer with Web Audio tones or open breathing with two markers and a live rate, then the score and a note; saving scores it with method C or the Appendix open metrics |
+| `/cloud/record/duo/` | Both | **Two-person session** (User 1 / User 2): two bands on one pacer, two lanes, side-by-side scores (not saved) |
 | `/cloud/sessions/?athlete=&tab=` | Both | Athlete workspace. Tabs: **Overview** (headline numbers, trends, practice, latest comments), **Sessions** (filterable table, CSV export), **Plan** (coach assigns practice; athlete sees it as "From your coach"), **Notes** (coach's private notes) |
 | `/cloud/session/?athlete=&id=` | Both | Session review: scores, waveform vs pacer (zoom, scrub), per-breath deviations, note, comment thread, kudos, the practice it counts toward, print/PDF. Opening it marks it reviewed for the coach |
 | `/cloud/sessions/?athlete=&tab=trends` | Both | **Trends**: 7 d / 30 d / 90 d / 6 mo charts (score per session against the target, timing vs depth, breathing rate against its range, sessions per day or week), an automatic plain-words summary against the previous period, and the coach's **targets** (editable by the coach, visible to the athlete) |
@@ -55,7 +59,7 @@ The look is the **Coach Console** design direction (graphite top bar, IBM Plex, 
 | `/cloud/group/` | Coach | Start a live **group session** (pick 2–30 athletes, pacer 5-5 or 2-2, length) and see earlier ones with their group average |
 | `/cloud/group/live/?id=` | Coach (host) | Lobby (who has joined), then the live room: the shared pacer, each athlete's breathing in a grid or **lined up on one time axis**, pacer switching, markers, end for everyone; afterwards the results and a replay of everyone lined up in time |
 | `/cloud/sharing/` | Athlete | Create invite codes; per coach, choose **scores and curves** or **scores only**, or stop sharing |
-| `/cloud/account/` | Both | Name, email, account type, sign out |
+| `/cloud/account/` | Both | Name, email, account type, session defaults, appearance (system, light, dark), sign out |
 
 Practice ("assignments") counts a session when its mode, pacer and length match inside the assignment's window (`src/lib/domain/coaching.ts`), so the app doesn't have to tag sessions. A coach whose link is **scores only** can't load waveforms; the review shows a locked panel instead.
 

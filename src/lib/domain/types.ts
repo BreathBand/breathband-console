@@ -16,6 +16,36 @@ export interface UserProfile {
   role: Role;
   /** ISO 8601 */
   createdAt: string;
+  /** Set during onboarding and in Settings; absent until then. Shared with the app. */
+  preferences?: UserPreferences | null;
+}
+
+/** Why someone breathes with Breathband; the site's Train / Focus / Calm. Sets defaults, never scoring. */
+export type BreathGoal = "train" | "focus" | "calm";
+
+/** What a new session starts with, in the app and on the web. */
+export interface SessionPreferences {
+  mode: SessionMode;
+  pacerHalfCycleSec: PacerHalfCycle;
+  /** Seconds; 0 means "until I stop" (open sessions only). */
+  durationSec: number;
+  view: "circle" | "line";
+  sound: boolean;
+}
+
+/**
+ * A person's choices that personalise Breathband: their goal, how experienced
+ * they are (which sets how close to the pacer counts as on target), their
+ * session defaults and a weekly goal. Firestore: users/{uid}.preferences.
+ */
+export interface UserPreferences {
+  goal: BreathGoal;
+  skillLevel: SkillLevel;
+  session: SessionPreferences;
+  /** The athlete's own target; a coach's target for them wins where one is set. */
+  sessionsPerWeek: number;
+  /** ISO 8601; null until onboarding is finished. */
+  onboardedAt: string | null;
 }
 
 export type SessionMode = "paced" | "open";
@@ -67,6 +97,36 @@ export interface PacedDetails {
   transitions: number;
 }
 
+/** The Appendix's open-session metrics for one span of a session. */
+export interface OpenSpanMetrics {
+  rateBpm: number;
+  /** Exhale length over inhale length (2 means 1:2). */
+  ieRatio: number;
+  inhaleS: number;
+  exhaleS: number;
+  /** Mean peak-to-trough depth, % of the calibrated maximum. */
+  depthPct: number;
+  inhaleDepthPct: number;
+  exhaleDepthPct: number;
+  /** Depth against the normal band, capped at 100. */
+  depthIndex: number;
+  /** Share of breaths at a normal rate (12–16 br/min). */
+  normalRatePct: number;
+  /** Share of breaths at a normal depth. */
+  normalDepthPct: number;
+}
+
+/**
+ * Open-session metrics, stored with the summary so lists and coach views can
+ * show them without loading the signal. Segments split the session at the
+ * event markers (none, before/after, or before/between/after).
+ */
+export interface OpenDetails {
+  whole: OpenSpanMetrics | null;
+  breaths: number;
+  segments: { name: "before" | "between" | "after"; fromS: number; toS: number; breaths: number; metrics: OpenSpanMetrics | null }[];
+}
+
 /**
  * Which formula produced a session's `scores`. Bump (add a new value) when the
  * app's scoring changes, so old sessions can be told apart and rescored.
@@ -110,6 +170,10 @@ export interface SessionSummary {
   groupSessionId?: string | null;
   skillLevel?: SkillLevel;
   paced?: PacedDetails | null;
+  /** Open sessions scored by the console (method-c-v1 era); absent on older sessions. */
+  open?: OpenDetails | null;
+  /** Where the session was recorded: the phone app, or BreathCloud in a browser. */
+  source?: "app" | "web";
 }
 
 export type WaveformUnits = "raw" | "pct-max";

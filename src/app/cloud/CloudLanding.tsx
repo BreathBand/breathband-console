@@ -42,12 +42,10 @@ export function CloudLanding() {
         <section className="bc-hero" aria-labelledby="hero-h">
           <div className="bc-wrap bc-hero-grid">
             <div className="bc-hero-copy">
-              <p className="bc-eyebrow bc-eyebrow-chrome">BreathCloud · Breathband on the web</p>
               <h1 id="hero-h">Your Breathband sessions, on a bigger screen.</h1>
               <p className="bc-hero-lede">
-                BreathCloud is the web console for Breathband. Review every session you record in the app, see how your
-                breathing practice is trending, and share it with a coach. If you coach, follow all your athletes in one
-                place.
+                Record with your band right here in the browser, or in the app. See every breath against the pacer, how
+                your practice is trending, and share it with a coach. If you coach, follow all your athletes in one place.
               </p>
               <div className="bc-right-place">
                 <Icon name="check" size={20} />
@@ -74,7 +72,7 @@ export function CloudLanding() {
             <figure className="bc-shot bc-hero-shot">
               <Screenshot
                 name="session-review"
-                alt="BreathCloud session review: a paced 5-5 session's breathing curve drawn against the pacer, above Total Breath Score and timing, depth and smoothness scores for inhale and exhale."
+                alt="BreathCloud session review: the Total Breath Score with timing and depth for the inhale and exhale, on-target bars, the deviation histogram, and the breathing curve against the pacer within the ±3% band."
                 priority
               />
               <figcaption>A paced session in BreathCloud. Shown with demo data.</figcaption>
@@ -86,7 +84,6 @@ export function CloudLanding() {
         <section className="bc-section" aria-labelledby="who-h">
           <div className="bc-wrap">
             <header className="bc-section-head">
-              <p className="bc-eyebrow">Who it&apos;s for</p>
               <h2 id="who-h">One console, two views</h2>
               <p>
                 Sign up as an athlete or a coach. Athletes see their own sessions. Coaches see the athletes who chose to
@@ -103,12 +100,13 @@ export function CloudLanding() {
                 <h3 id="athletes-h">See every session, and where your practice is heading.</h3>
                 <FeatureList
                   items={[
-                    ["history", "History", "Every open and paced session from the app, newest first."],
+                    ["record", "Record here", "Connect your band over Bluetooth in Chrome or Edge and follow the pacer on screen, with tones."],
+                    ["history", "History", "Every open and paced session, from the app or the web, newest first."],
                     ["dashboard", "Trends", "Total Breath Score across paced sessions, breathing rate across open ones."],
                     [
                       "marker",
                       "Session review",
-                      "Your breathing curve against the pacer, with paced sessions scored 1–10 for timing and depth on each inhale and exhale.",
+                      "Your breathing against the pacer, scored 1–10 for timing and depth on every inhale and exhale, and what to change next time.",
                     ],
                     ["comment", "Notes and comments", "Add a note to any session and read what your coach says."],
                     ["plan", "Practice", "See the practice your coach set and how far along you are."],
@@ -122,9 +120,9 @@ export function CloudLanding() {
               <figure className="bc-shot">
                 <Screenshot
                   name="athlete-overview"
-                  alt="An athlete's BreathCloud overview: latest Total Breath Score, sessions in the last 7 days, a score trend chart, breathing rate for open sessions, practice from the coach and latest comments."
+                  alt="An athlete's BreathCloud home: the last session's score on a dark card with its breath drawn over the pacer, this week, streak and average, and the score trend against the target."
                 />
-                <figcaption>An athlete&apos;s overview. Demo data.</figcaption>
+                <figcaption>An athlete&apos;s home. Demo data.</figcaption>
               </figure>
             </article>
 
@@ -151,6 +149,7 @@ export function CloudLanding() {
                       "Group sessions",
                       "Several athletes breathe to one pacer live, lined up in time on your screen.",
                     ],
+                    ["users", "Two-person sessions", "Two bands on one pacer, side by side, for coaching in the room."],
                   ]}
                 />
                 <Link href="/cloud/signup/" className="bc-inline-link bc-more">
@@ -173,33 +172,32 @@ export function CloudLanding() {
         <section className="bc-section bc-section-pane" aria-labelledby="flow-h">
           <div className="bc-wrap">
             <header className="bc-section-head">
-              <p className="bc-eyebrow">How it connects</p>
-              <h2 id="flow-h">Record in the app. Review it here.</h2>
-              <p>BreathCloud doesn&apos;t record anything itself. It shows what the Breathband app records.</p>
+              <h2 id="flow-h">Record anywhere. Review it here.</h2>
+              <p>The app and BreathCloud share one account, so every session ends up in the same place.</p>
             </header>
             <ol className="bc-flow">
               <FlowStep
                 n={1}
-                icon="phone"
-                title="Record with the app"
-                text="Wear the band and run a session in the Breathband app: open, to measure your natural breathing, or paced, following a 2-2 or 5-5 pacer."
+                icon="band"
+                title="Wear the band"
+                text="Around your belly, just below the ribs. A quick strap check and five deep breaths calibrate it to you."
               />
               <FlowStep
                 n={2}
-                icon="cloud"
-                title="Sessions sync"
-                text="The app syncs each recorded session to your Breathband account."
+                icon="record"
+                title="Record in the app or here"
+                text="Paced, following a 5-5 or 2-2 pacer, or open, breathing your own way. On a computer, BreathCloud connects to the band over Bluetooth."
               />
               <FlowStep
                 n={3}
                 icon="monitor"
-                title="Review in BreathCloud"
-                text="Sign in here with the same account to review sessions, follow trends and share with a coach."
+                title="Review and share"
+                text="Your score is ready when you stop. Review every breath, follow your trend, and share with a coach."
               />
             </ol>
             <p className="bc-flow-note">
               <Icon name="info" size={18} />
-              New account and nothing here yet? Sign in to the Breathband app with the same email and record a session.
+              No band yet? After you sign in, the simulated band lets you try every part of BreathCloud.
             </p>
           </div>
         </section>
@@ -208,7 +206,6 @@ export function CloudLanding() {
         <section className="bc-section" aria-labelledby="privacy-h">
           <div className="bc-wrap bc-privacy">
             <div className="bc-privacy-copy">
-              <p className="bc-eyebrow">Privacy and sharing</p>
               <h2 id="privacy-h">Your sessions are yours. You decide who sees them.</h2>
               <ul className="bc-checks">
                 <li>

@@ -14,11 +14,15 @@ import { describeMode, formatDay, formatDuration, formatLongDay, formatTime, ini
 import { formatScore, isLegacyScores, isTransitionScores, legacyBand, scoreWord } from "@/lib/domain/scores";
 import type { SessionComment, SessionSummary } from "@/lib/domain/types";
 import { breathDeviations, waveFrame } from "@/lib/domain/waveform";
+import { analyzePacedRecording } from "@/lib/analysis/session";
+import { SCORING_VERSIONS } from "@/lib/domain/types";
+import { MethodCScores, OpenScores, TurnTable, turnsAsBreaths } from "./MethodC";
 import { useLoad, type Loaded } from "@/lib/useLoad";
 import type { ConsoleContext } from "../AthleteConsole";
 import { BreathTable, DeviationStrip, SessionScrubber, WaveChart } from "./Waveform";
 
 const ZOOMS = [
+  { label: "5 s", sec: 5 },
   { label: "10 s", sec: 10 },
   { label: "30 s", sec: 30 },
   { label: "60 s", sec: 60 },
@@ -43,11 +47,23 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
     if (!ctx.self && viewerId) backend.data.markSessionSeen(viewerId, session.athleteId, session.id).catch(() => {});
   }, [backend, ctx.self, viewerId, session.athleteId, session.id]);
   const signal = waveform.status === "ready" ? waveform.data : null;
+  const methodC = session.scoringVersion === SCORING_VERSIONS.methodC;
   const analysis = useMemo(() => {
     if (!signal) return null;
     const frame = waveFrame(signal);
-    return { frame, breaths: breathDeviations(signal, frame) };
-  }, [signal]);
+    if (methodC && signal.pacer && signal.units === "pct-max" && session.pacerHalfCycleSec) {
+      try {
+        const turns = analyzePacedRecording(signal.user, frame.hz, {
+          halfCycleS: session.pacerHalfCycleSec,
+          skillLevel: session.skillLevel ?? "intermediate",
+        });
+        return { frame, breaths: turnsAsBreaths(turns), turns };
+      } catch {
+        // A signal the analysis can't read still shows; it just has no per-turn detail.
+      }
+    }
+    return { frame, breaths: breathDeviations(signal, frame), turns: null };
+  }, [signal, methodC, session.pacerHalfCycleSec, session.skillLevel]);
 
   const paced = session.mode === "paced";
   const zooms = ZOOMS.filter((z) => z.sec < session.durationSec || z.sec === Infinity);
@@ -78,8 +94,10 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
         </h1>
         <span>
           {formatTime(session.startedAt)} · {formatDuration(session.durationSec)} ·{" "}
-          {paced ? `pacer ${session.pacerHalfCycleSec} s in, ${session.pacerHalfCycleSec} s out` : "no pacer"} · app{" "}
-          {session.appVersion}
+          {paced ? `pacer ${session.pacerHalfCycleSec} s in, ${session.pacerHalfCycleSec} s out` : "no pacer"} ·{" "}
+          {session.source === "web"
+            ? `recorded in BreathCloud${session.appVersion.includes("simulator") ? " with the simulated band" : ""}`
+            : `app ${session.appVersion}`}
         </span>
         <div className="title-actions no-print">
           {!ctx.self && comments.status === "ready" && (
@@ -143,6 +161,7 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
                     t1={t1}
                     width={width}
                     halfCycle={session.pacerHalfCycleSec ?? 5}
+                    depthMax={analysis.turns ? 4.5 : undefined}
                   />
                 )}
                 {span < duration && (
@@ -162,7 +181,15 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
       </section>
 
       <div className="low" data-single={curvesPrivate || undefined}>
-        {curvesPrivate ? null : paced ? (
+        {curvesPrivate ? null : paced && analysis?.turns ? (
+          <section className="pane pane-pad" aria-label="Pacer turns in view">
+            <div className="pane-h">
+              <h2>Each turn of the pacer</h2>
+              <span className="meta">+ late / deeper · depth in % of your max · points for timing · depth</span>
+            </div>
+            <TurnTable result={analysis.turns} t0={t0} t1={t1} />
+          </section>
+        ) : paced ? (
           <section className="pane pane-pad" aria-label="Breaths in view">
             <div className="pane-h">
               <h2>Breaths in view</h2>
@@ -234,6 +261,11 @@ function Legend({ paced }: { paced: boolean }) {
 /** Headline, breakdown and explainer, shaped by the session's scoring version. */
 function ScoreRow({ session, sessions }: { session: SessionSummary; sessions: SessionSummary[] }) {
   const { scores } = session;
+
+  if (session.scoringVersion === SCORING_VERSIONS.methodC && isTransitionScores(scores)) {
+    return <MethodCScores session={session} sessions={sessions} scores={scores} />;
+  }
+  if (session.open) return <OpenScores session={session} />;
 
   if (isTransitionScores(scores)) {
     const { word, band } = scoreWord(scores.total);

@@ -15,7 +15,7 @@ export default function AthletesPage() {
       <div className="container">
         <EmptyState title="This page is for coaches">
           <p className="muted">
-            To let a coach see your sessions, create an invite code on the <Link href="/cloud/sharing/">Sharing</Link> page.
+            To let a coach see your sessions, create an invite code in <Link href="/cloud/account/#coaches">Settings</Link>.
           </p>
         </EmptyState>
       </div>
