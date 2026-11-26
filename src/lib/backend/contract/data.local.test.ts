@@ -1,10 +1,13 @@
 import { createLocalBackend } from "../local";
 import { createSeededDb, type DbStore, type LocalDb } from "../local/db";
+import { describeCoachToolsContract } from "./coach-tools.contract";
 import { describeCoachingContract } from "./coaching.contract";
 import type { DataContractHarness, Person } from "./data.harness";
 import { linkThroughInvites, signUpInput } from "./data.harness";
+import { describeGroupContract } from "./group.contract";
 import { describeProfileContract } from "./profile.contract";
 import { describeSessionsContract } from "./sessions.contract";
+import { describeWaitlistContract } from "./waitlist.contract";
 
 /**
  * One set of data, many browsers: each store sees the shared data with its own
@@ -44,3 +47,6 @@ function localHarness(): DataContractHarness {
 describeProfileContract("local", localHarness);
 describeSessionsContract("local", localHarness);
 describeCoachingContract("local", localHarness);
+describeCoachToolsContract("local", localHarness);
+describeGroupContract("local", localHarness);
+describeWaitlistContract("local", localHarness);

@@ -1,16 +1,22 @@
 import { describe, expect, it } from "vitest";
 import {
+  canAnswerCoachInvite,
   canCancelAssignment,
   canCoach,
   canComment,
   canDeleteComment,
+  canHostGroup,
+  canInviteAthlete,
   canManageSharing,
   canReadAthlete,
   canReadCurves,
   canReadPrivateProfile,
   canReadLink,
+  canReadGroup,
   canReadProfile,
   canRedeemInvite,
+  canRunGroup,
+  canSaveSquad,
   canSetProFields,
   canUseCoachData,
   canWriteOwn,
@@ -139,5 +145,63 @@ describe("a coach's own working data (I-09)", () => {
     expect(canUseCoachData(COACH, COACH)).toBe(true);
     expect(canUseCoachData(ATHLETE, COACH)).toBe(false);
     expect(canUseCoachData(STRANGER, COACH)).toBe(false);
+  });
+});
+
+describe("squads and alert rules (I-10)", () => {
+  it("keeps squads and alert rules to the coach", () => {
+    expect(canUseCoachData(COACH, COACH)).toBe(true);
+    expect(canUseCoachData(ATHLETE, COACH)).toBe(false);
+  });
+
+  it.each<[string, LinkScope[], boolean]>([
+    ["no one", [], true],
+    ["linked athletes in either scope", ["scores", "curves"], true],
+    ["an athlete not linked (or revoked)", ["curves", null], false],
+  ])("lets a coach save a squad of %s: %s", (_, links, allowed) => {
+    expect(canSaveSquad(COACH, COACH, links)).toBe(allowed);
+  });
+
+  it("never lets someone save a squad in another's name", () => {
+    expect(canSaveSquad(STRANGER, COACH, ["curves"])).toBe(false);
+  });
+});
+
+describe("a coach's invites to athletes (I-10)", () => {
+  it("lets a professional invite in their own name only", () => {
+    expect(canInviteAthlete(COACH, COACH, "coach")).toBe(true);
+    expect(canInviteAthlete(ATHLETE, ATHLETE, "athlete")).toBe(false);
+    expect(canInviteAthlete(STRANGER, COACH, "coach")).toBe(false);
+  });
+
+  it("lets an athlete answer for themselves only, and never a professional", () => {
+    expect(canAnswerCoachInvite(ATHLETE, ATHLETE, "athlete")).toBe(true);
+    expect(canAnswerCoachInvite(COACH, COACH, "coach")).toBe(false);
+    expect(canAnswerCoachInvite(STRANGER, ATHLETE, "athlete")).toBe(false);
+  });
+});
+
+describe("group sessions (I-10)", () => {
+  it.each<[string, string, string, LinkScope[], boolean]>([
+    ["a coach for linked athletes", COACH, "coach", ["scores", "curves"], true],
+    ["a coach with an unlinked athlete", COACH, "coach", ["curves", null], false],
+    ["an athlete", ATHLETE, "athlete", ["curves", "curves"], false],
+  ])("lets %s host: %s", (_, viewer, role, links, allowed) => {
+    expect(canHostGroup(viewer, viewer, role as "athlete" | "coach", links)).toBe(allowed);
+  });
+
+  it("never lets someone host in another's name", () => {
+    expect(canHostGroup(STRANGER, COACH, "coach", ["curves", "curves"])).toBe(false);
+  });
+
+  it("shows a group session to its host and invited athletes only", () => {
+    expect(canReadGroup(COACH, COACH, [ATHLETE])).toBe(true);
+    expect(canReadGroup(ATHLETE, COACH, [ATHLETE])).toBe(true);
+    expect(canReadGroup(STRANGER, COACH, [ATHLETE])).toBe(false);
+  });
+
+  it("lets only the host run it, invited athletes included", () => {
+    expect(canRunGroup(COACH, COACH)).toBe(true);
+    expect(canRunGroup(ATHLETE, COACH)).toBe(false);
   });
 });

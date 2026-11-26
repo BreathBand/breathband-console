@@ -2,7 +2,9 @@
 // functions. Routes look up who is asking and the coach link, then ask here.
 // The local adapter (src/lib/backend/local) enforces the same rules in the browser.
 //
-// I-08 covers profiles, sessions and waveforms; I-09 coaching (below).
+// I-08 covers profiles, sessions and waveforms; I-09 coaching; I-10 squads,
+// alert rules, a coach's invites to athletes and group sessions (below).
+// The waitlist is public: no rule.
 
 import type { Role, ShareScope } from "@/lib/domain/types";
 
@@ -93,7 +95,46 @@ export function canDeleteComment(viewerId: string, authorId: string): boolean {
   return isSelf(viewerId, authorId);
 }
 
-/** `coaches/{coachId}/...` (seen marks, private notes): the coach only. Nobody else reads them, the athlete included. */
+/**
+ * `coaches/{coachId}/...` (seen marks, private notes, squads, alert rules) and
+ * reading or revoking the coach's own invites: the coach only. Nobody else reads
+ * them, the athlete included.
+ */
 export function canUseCoachData(viewerId: string, coachId: string): boolean {
   return isSelf(viewerId, coachId);
+}
+
+// I-10: squads, a coach's invites to athletes, group sessions.
+
+/** `links`: the coach's link to each athlete in question (null: none or revoked). */
+const allLinked = (links: readonly LinkScope[]) => links.every((link) => link !== null);
+
+/** Saving a squad: the coach's own, holding only athletes linked to them. */
+export function canSaveSquad(viewerId: string, coachId: string, memberLinks: readonly LinkScope[]): boolean {
+  return canUseCoachData(viewerId, coachId) && allLinked(memberLinks);
+}
+
+/** `coachInvites` create: a professional (role "coach") inviting in their own name. */
+export function canInviteAthlete(viewerId: string, coachId: string, role: Role): boolean {
+  return isSelf(viewerId, coachId) && role === "coach";
+}
+
+/** Accepting or declining a coach's invite (the Cloud Function's check): an athlete, for themselves. */
+export function canAnswerCoachInvite(viewerId: string, athleteId: string, role: Role): boolean {
+  return isSelf(viewerId, athleteId) && role === "athlete";
+}
+
+/** Opening a group session: a professional hosting in their own name, for athletes linked to them. */
+export function canHostGroup(viewerId: string, hostId: string, role: Role, athleteLinks: readonly LinkScope[]): boolean {
+  return isSelf(viewerId, hostId) && role === "coach" && allLinked(athleteLinks);
+}
+
+/** `groupSessions` read: the host and the invited athletes. */
+export function canReadGroup(viewerId: string, hostId: string, athleteIds: readonly string[]): boolean {
+  return isSelf(viewerId, hostId) || athleteIds.includes(viewerId);
+}
+
+/** `groupSessions` update (start, pacer, markers, end, cancel) and the live view: the host only. */
+export function canRunGroup(viewerId: string, hostId: string): boolean {
+  return isSelf(viewerId, hostId);
 }

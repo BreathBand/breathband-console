@@ -3,7 +3,7 @@
 The adapter for the API in `server/` (planning/v1/04-infrastructure.md). It has the same interface as the local adapter (`../types.ts`), so screens don't change when a build sets `NEXT_PUBLIC_BACKEND=http`.
 
 - **AuthService works** (I-07): it talks to Better Auth at `/api/auth/*` (`server/auth.ts`).
-- **DataService, parts 1 and 2 work**: profile and preferences, sessions and waveforms (I-08), and coaching (I-09: coach links, invites, scope, revoke, assignments, comments and kudos, seen marks, private notes, targets), at `/api/v1/*` (`server/routes/data.ts`, `coaching.ts`, `coaching-feedback.ts`). The other methods fail with `BackendError("unavailable")` naming I-10 (squads, alerts, coach invites, groups, waitlist).
+- **DataService works, every method**: profile and preferences, sessions and waveforms (I-08); coaching (I-09: coach links, invites, scope, revoke, assignments, comments and kudos, seen marks, private notes, targets); squads, alert rules, a coach's invites to athletes, group sessions (state only) and the waitlist (I-10), at `/api/v1/*` (`server/routes/data.ts` and the route files it mounts). `watchGroupLive` has no realtime channel yet: see below.
 
 ## Settings
 
@@ -61,13 +61,17 @@ The shared contract suite (`../contract/auth.contract.ts`) names these as traits
 
 ## Data routes
 
-The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}` (`DATA_PREFIX` in `data.ts`). I-08 serves profile and preferences (`getProfile`, `updateProfile`) and sessions and waveforms (`listSessions` … `deleteSession`); I-09 serves coaching (`listAthletes` … `setTargets`); the rest are proposals until I-10 settles them. They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments (URL-encoded); everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
+The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}` (`DATA_PREFIX` in `data.ts`). I-08 serves profile and preferences (`getProfile`, `updateProfile`) and sessions and waveforms (`listSessions` … `deleteSession`); I-09 serves coaching (`listAthletes` … `setTargets`); I-10 the rest (`listSquads` … `joinWaitlist`). They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments (URL-encoded); everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
 
 - Errors are `{ error: { code, message } }` with this adapter's codes. `not-found` from `getProfile` and `getSession` becomes `null`. A 401 means the session is gone: the adapter counts the person as signed out and tells `onAuthStateChanged` listeners. A 409 from a data route is `invalid-input`, never `email-in-use`.
 - `saveSession` posts `{ session, waveform }` in one request (under 6 MB; the signal under 5 MB). The API stores the signal gzipped through its `StorageService` at `waveforms/{athleteId}/{id}.json.gz` and the summary in `breath_sessions`.
 - `getProfile` for someone else (either side of a coach link) leaves out their `birthYear` and `consents`; so do `listAthletes` and `listCoaches`.
 - Invite codes are stored only as a SHA-256 hash, last 7 days and redeem once (`invite-invalid` otherwise). `getCoachLink` answers `null` for no link. `getCoachNote` reads `{ text }`. `listComments` merges comments and kudos (two tables) oldest first.
 - `markSessionSeen` is stricter than the local adapter: the session has to exist (`not-found`) and the coach has to be linked to the athlete (`permission-denied`).
+- `getAlertRules` answers `DEFAULT_ALERTS` until the coach saves their own (one row per coach).
+- A coach's invite codes are stored only as a SHA-256 hash too, and last 14 days. The coach lists them with the code (to copy the link or revoke it), so each code is derived rather than random: an HMAC of the coach's id and the moment of creation under `AUTH_SECRET`. Rotating the secret breaks the links of invites still pending. `getCoachInvite` answers `null` for an unknown code; accepting or declining claims the invite in one conditional update (pending and unexpired), so it is answered once.
+- Group sessions are state only. `endGroupSession` ends the session with empty `results` and a null `groupAverage`: athletes take part (and save their sessions) over the realtime channel, which isn't built yet.
+- `joinWaitlist` is the one route without a session. The address is trimmed and lower-cased, stored once (a repeat answers the same), at most 254 characters; `source` at most 32.
 
 ### DataService
 
@@ -122,13 +126,13 @@ The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}
 
 Data methods that are not a single request:
 
-- `watchGroupLive()` is a stream of about ten frames a second, not a request and response. `GET /v1/group-sessions/{id}/live` is meant for a streaming transport (server-sent events or a WebSocket upgrade); which one is part of the API design.
+- `watchGroupLive()` is meant to be a stream of about ten frames a second over a realtime channel (server-sent events or a WebSocket; not built yet). Until then it polls `GET /v1/group-sessions/{id}/live` every 2 s (`LIVE_POLL_MS`) for `{ status, presence }` and sends no frames: every athlete is `invited` until the session ends, then `left`. It stops when unsubscribed, when the session is over, or when the API refuses (not the host, no such session); it keeps trying after a lost connection. Unlike the local adapter it can't throw those refusals synchronously, so the screen sees them through `getGroupSession` first.
 - `getWaveform()` takes a whole `SessionSummary`; the route uses its `athleteId` and `id`.
 
 ## Tests
 
-- `http.test.ts`: the adapter with a fake `fetch` (requests, session state, error mapping, the data paths, the I-10 gaps) and the route table against this README.
-- `data.http.test.ts`: the profile, sessions and coaching contract sections (`../contract/profile.contract.ts`, `../contract/sessions.contract.ts`, `../contract/coaching.contract.ts`) against the real API, with a temp `STORAGE_DIR`; `../contract/data.local.test.ts` runs them on the local adapter.
+- `http.test.ts`: the adapter with a fake `fetch` (requests, session state, error mapping, the data paths, `watchGroupLive`'s polling) and the route table against this README.
+- `data.http.test.ts`: every DataService contract section (`../contract/*.contract.ts`: profile, sessions, coaching, coach tools, group sessions, waitlist) against the real API, with a temp `STORAGE_DIR`; `../contract/data.local.test.ts` runs them on the local adapter.
 - `auth.http.test.ts`: the shared auth contract (`../contract/auth.contract.ts`) against the real API, started in-process on a free port with a temp migrated file database and a mailer that keeps emails in memory, so the tests follow the confirmation and reset links. No Docker. `../contract/auth.local.test.ts` runs the same suite on the local adapter.
 
 Adding an HTTP client library is a new dependency and needs a person's approval first; the browser's `fetch` is enough.

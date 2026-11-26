@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { currentConsents } from "@/lib/domain/consent";
 import { backendKind, createBackend } from "../index";
 import { createSeededDb, memoryStore } from "../local/db";
 import { createLocalBackend } from "../local";
 import type { SessionSummary, Waveform } from "@/lib/domain/types";
 import { BackendError, type BackendErrorCode, type NewAssignment, type NewSession, type SignUpInput } from "../types";
+import { LIVE_POLL_MS } from "./data";
 import { createHttpBackend, HTTP_METHODS, HTTP_ROUTES, toBackendError } from "./index";
 
 const NOW = new Date("2026-11-18T12:00:00.000Z");
@@ -195,12 +196,6 @@ describe("toBackendError", () => {
 });
 
 describe("http DataService", () => {
-  const SERVED = ["getProfile", "updateProfile", "listSessions", "getSession", "getWaveform", "updateSessionNote", "saveSession", "deleteSession"];
-  const COACHING = [
-    "listAthletes", "listCoaches", "getCoachLink", "setCoachScope", "createInvite", "redeemInvite", "revokeCoach",
-    "listAssignments", "createAssignment", "cancelAssignment", "listComments", "addComment", "deleteComment",
-    "listSeenSessions", "markSessionSeen", "getCoachNote", "saveCoachNote", "setTargets",
-  ];
   const session = { id: "s 1", athleteId: "a/1" } as SessionSummary;
 
   it("I-08: serves profile, sessions and waveforms under /api/v1, path parameters encoded", async () => {
@@ -299,20 +294,117 @@ describe("http DataService", () => {
     expect(await data.getCoachLink("c-1", "a-1")).toBeNull();
   });
 
-  it("I-10: every other method fails with BackendError('unavailable') until the API serves it", async () => {
-    const { fetch } = fakeFetch();
+  it("I-10: serves squads, alert rules, a coach's invites, group sessions and the waitlist: verbs, encoded path parameters and bodies", async () => {
+    const { fetch, calls } = fakeFetch();
     const { data } = httpBackend(fetch);
-    for (const method of (Object.keys(HTTP_ROUTES.data) as (keyof typeof data)[]).filter((m) => !SERVED.includes(m) && !COACHING.includes(m))) {
-      let error: unknown;
-      try {
-        await (data[method] as () => unknown)();
-      } catch (e) {
-        error = e;
-      }
-      expect(error, method).toBeInstanceOf(BackendError);
-      expect(error, method).toMatchObject({ code: "unavailable", message: expect.stringContaining("I-10") });
+    const rules = { missedDays: 3, scoreDrop: 2, belowTarget: 4, trendingDown: true, rateOutOfRange: true, practiceBehind: true };
+    const group = { title: "Morning", athleteIds: ["a/1", "a 2"], pacerHalfCycleSec: 5 as const, durationSec: 300 };
+    await data.listSquads("c 1");
+    await data.saveSquad("c 1", { id: "q 1", name: "Sprint", athleteIds: ["a/1"] });
+    await data.deleteSquad("c 1", "q 1");
+    await data.getAlertRules("c 1");
+    await data.saveAlertRules("c 1", rules);
+    await data.createCoachInvite("c 1", { athleteName: "Jo", contact: "jo@example.com" });
+    await data.listCoachInvites("c 1");
+    await data.revokeCoachInvite("c 1", "ABCD/234");
+    await data.getCoachInvite("ABCD/234");
+    await data.respondToCoachInvite("a/1", "ABCD/234", { accept: true, scope: "scores" });
+    await data.createGroupSession("c 1", group);
+    await data.getGroupSession("g/1");
+    await data.listGroupSessions("u 1");
+    await data.startGroupSession("g/1");
+    await data.setGroupPacer("g/1", 2);
+    await data.addGroupMarker("g/1");
+    await data.endGroupSession("g/1");
+    await data.cancelGroupSession("g/1");
+    await data.joinWaitlist({ email: "fan@example.test", source: "hero" });
+    expect(calls.map((c) => `${c.init.method} ${c.url}`)).toEqual([
+      `GET ${API}/api/v1/coaches/c%201/squads`,
+      `PUT ${API}/api/v1/coaches/c%201/squads`,
+      `DELETE ${API}/api/v1/coaches/c%201/squads/q%201`,
+      `GET ${API}/api/v1/coaches/c%201/alert-rules`,
+      `PUT ${API}/api/v1/coaches/c%201/alert-rules`,
+      `POST ${API}/api/v1/coaches/c%201/coach-invites`,
+      `GET ${API}/api/v1/coaches/c%201/coach-invites`,
+      `POST ${API}/api/v1/coaches/c%201/coach-invites/ABCD%2F234/revoke`,
+      `GET ${API}/api/v1/coach-invites/ABCD%2F234`,
+      `POST ${API}/api/v1/athletes/a%2F1/coach-invites/ABCD%2F234/response`,
+      `POST ${API}/api/v1/coaches/c%201/group-sessions`,
+      `GET ${API}/api/v1/group-sessions/g%2F1`,
+      `GET ${API}/api/v1/users/u%201/group-sessions`,
+      `POST ${API}/api/v1/group-sessions/g%2F1/start`,
+      `PUT ${API}/api/v1/group-sessions/g%2F1/pacer`,
+      `POST ${API}/api/v1/group-sessions/g%2F1/markers`,
+      `POST ${API}/api/v1/group-sessions/g%2F1/end`,
+      `POST ${API}/api/v1/group-sessions/g%2F1/cancel`,
+      `POST ${API}/api/v1/waitlist`,
+    ]);
+    expect(calls.map((c) => c.body)).toEqual([
+      null, { id: "q 1", name: "Sprint", athleteIds: ["a/1"] }, {}, null, rules,
+      { athleteName: "Jo", contact: "jo@example.com" }, null, {}, null, { accept: true, scope: "scores" },
+      group, null, null, {}, { pacerHalfCycleSec: 2 }, {}, {}, {},
+      { email: "fan@example.test", source: "hero" },
+    ]);
+  });
+
+  it("I-10: answers null for a coach's invite or group session the API says isn't there", async () => {
+    const notFound = () => json({ error: { code: "not-found", message: "Not found" } }, 404);
+    const { fetch } = fakeFetch(notFound(), notFound());
+    const { data } = httpBackend(fetch);
+    expect(await data.getCoachInvite("ZZZZ2222")).toBeNull();
+    expect(await data.getGroupSession("g-1")).toBeNull();
+  });
+
+  it("I-10: serves every DataService method: none answers 'unavailable' without asking the API", async () => {
+    const { fetch } = fakeFetch(...Object.keys(HTTP_ROUTES.data).map(() => json({})));
+    const { data } = httpBackend(fetch);
+    for (const method of Object.keys(HTTP_ROUTES.data) as (keyof typeof data)[]) {
+      if (method === "watchGroupLive") continue;
+      const args = method === "getWaveform" ? [{ athleteId: "a", id: "s" }] : ["x", "y", {}];
+      await (data[method] as (...args: unknown[]) => Promise<unknown>)(...args);
     }
-    expect(fetch).not.toHaveBeenCalled();
+    expect(fetch).toHaveBeenCalledTimes(Object.keys(HTTP_ROUTES.data).length - 1);
+  });
+
+  describe("I-10: watchGroupLive until a realtime channel arrives", () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    const live = (status: string, presence: Record<string, string>) => json({ status, presence });
+
+    it("polls the live route for presence, reports it when it changes, and stops when asked", async () => {
+      const { fetch, calls } = fakeFetch(
+        live("lobby", { a: "invited" }),
+        live("lobby", { a: "invited" }),
+        live("live", { a: "joined" }),
+        live("live", { a: "joined" }),
+      );
+      const presence: unknown[] = [];
+      const frames: unknown[] = [];
+      const stop = httpBackend(fetch).data.watchGroupLive("g/1", { onPresence: (p) => presence.push(p), onFrame: (f) => frames.push(f) });
+      await vi.advanceTimersByTimeAsync(3 * LIVE_POLL_MS);
+      expect(calls.map((c) => `${c.init.method} ${c.url}`)).toEqual(Array(4).fill(`GET ${API}/api/v1/group-sessions/g%2F1/live`));
+      expect(presence).toEqual([{ a: "invited" }, { a: "joined" }]);
+      expect(frames).toEqual([]);
+      stop();
+      await vi.advanceTimersByTimeAsync(5 * LIVE_POLL_MS);
+      expect(calls).toHaveLength(4);
+    });
+
+    it("stops once the session is over, or the API refuses, and tries again after a lost connection", async () => {
+      const over = fakeFetch(live("ended", { a: "left" }));
+      httpBackend(over.fetch).data.watchGroupLive("g-1", { onPresence() {}, onFrame() {} });
+      const refused = fakeFetch(json({ error: { code: "permission-denied", message: "no" } }, 403));
+      httpBackend(refused.fetch).data.watchGroupLive("g-1", { onPresence() {}, onFrame() {} });
+      const lost = fakeFetch(new TypeError("offline"), live("live", { a: "joined" }));
+      const presence: unknown[] = [];
+      const stop = httpBackend(lost.fetch).data.watchGroupLive("g-1", { onPresence: (p) => presence.push(p), onFrame() {} });
+      await vi.advanceTimersByTimeAsync(3 * LIVE_POLL_MS);
+      stop();
+      expect(over.calls).toHaveLength(1);
+      expect(refused.calls).toHaveLength(1);
+      expect(presence).toEqual([{ a: "joined" }]);
+    });
   });
 });
 
