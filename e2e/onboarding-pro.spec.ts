@@ -37,6 +37,12 @@ async function acceptDefaultsAndTerms(page: Page) {
   await expect(page.getByRole("heading", { name: "Professional terms" })).toBeVisible();
   for (const box of await page.getByRole("checkbox").all()) await box.check();
   await next(page);
+  // T-0120 added "Try it yourself" and the first invite after the terms; skipped here,
+  // e2e/onboarding-pro-invite.spec.ts covers them.
+  await expect(page.getByRole("heading", { name: "Try it yourself" })).toBeVisible();
+  await page.getByRole("button", { name: "Skip for now" }).click();
+  await expect(page.getByRole("heading", { name: /^Invite your first/ })).toBeVisible();
+  await page.getByRole("button", { name: "Skip for now" }).click();
 }
 const pick = (page: Page, question: string, option: string) =>
   page.getByRole("group", { name: question, exact: true }).getByRole("button", { name: option, exact: true }).click();

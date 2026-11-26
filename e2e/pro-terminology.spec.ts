@@ -101,6 +101,13 @@ test("a new clinician who signs up lands on a dashboard waiting for their first 
   await expect(page.getByText("BreathCloud will call them this.")).toBeVisible();
   await expect(page.getByText(/still say/)).toHaveCount(0);
   await next();
+  // Defaults, templates and the terms (T-0118), then "Try it yourself" and the first invite (T-0120), each skipped.
+  await next();
+  await next();
+  for (const box of await page.getByRole("checkbox").all()) await box.check();
+  await next();
+  await page.getByRole("button", { name: "Skip for now" }).click();
+  await page.getByRole("button", { name: "Skip for now" }).click();
   await page.getByRole("button", { name: "Go to the dashboard" }).click();
   await page.waitForURL((url) => url.pathname === "/cloud/");
 

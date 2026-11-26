@@ -85,6 +85,8 @@ The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}
 | `updateSessionNote` | `PUT` | `/v1/athletes/{athleteId}/sessions/{sessionId}/note` |
 | `saveSession` | `POST` | `/v1/athletes/{athleteId}/sessions` |
 | `deleteSession` | `DELETE` | `/v1/athletes/{athleteId}/sessions/{sessionId}` |
+| `saveMoodCheckins` | `PUT` | `/v1/athletes/{athleteId}/sessions/{sessionId}/mood` |
+| `listMoodCheckins` | `GET` | `/v1/athletes/{athleteId}/mood-checkins` |
 | `listAthletes` | `GET` | `/v1/coaches/{coachId}/athletes` |
 | `listCoaches` | `GET` | `/v1/athletes/{athleteId}/coaches` |
 | `getCoachLink` | `GET` | `/v1/coach-links/{coachId}/{athleteId}` |

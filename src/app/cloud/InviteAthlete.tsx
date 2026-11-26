@@ -9,8 +9,10 @@ import { formatDay } from "@/lib/domain/format";
 import { aPerson } from "@/lib/domain/terminology";
 import type { CoachInvite } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
+import { qrShape } from "./invite-qr";
 import { useTerms } from "./useTerms";
 import "./join/join.css";
+import "./dashboard/dashboard.css";
 
 type InviteState = CoachInvite["status"] | "expired";
 
@@ -180,7 +182,7 @@ export function InviteAthlete({
   );
 }
 
-function InviteForm({
+export function InviteForm({
   coachId,
   onCreated,
 }: {
@@ -258,8 +260,8 @@ function InviteForm({
   );
 }
 
-/** The new link, ready to copy or send the way the coach reaches this athlete. */
-function CreatedLink({
+/** The new link, ready to copy, scan or send the way the coach reaches this athlete. */
+export function CreatedLink({
   invite,
   onAnother,
 }: {
@@ -276,7 +278,10 @@ function CreatedLink({
         <Icon name="check" size={18} />
         Invite for {invite.athleteName} is ready. Send {first} this link:
       </p>
-      <output className="inv-link">{url}</output>
+      <div className="inv-share">
+        <output className="inv-link">{url}</output>
+        <InviteQr url={url} name={invite.athleteName} />
+      </div>
       <div className="inv-actions">
         <CopyButton text={url} />
         {email ? (
@@ -313,6 +318,20 @@ function CreatedLink({
         {formatDay(invite.expiresAt)}.
       </p>
     </div>
+  );
+}
+
+/** The invite link as a QR code, drawn dark on white in either theme so phones can read it. */
+function InviteQr({ url, name }: { url: string; name: string }) {
+  const qr = qrShape(url);
+  return (
+    <figure className="inv-qr">
+      <svg viewBox={`0 0 ${qr.box} ${qr.box}`} role="img" aria-label={`QR code of the invite link for ${name}`} shapeRendering="crispEdges">
+        <rect width={qr.box} height={qr.box} className="inv-qr-ground" />
+        <path d={qr.path} className="inv-qr-ink" />
+      </svg>
+      <figcaption className="label">Or let them scan this with their phone&apos;s camera.</figcaption>
+    </figure>
   );
 }
 

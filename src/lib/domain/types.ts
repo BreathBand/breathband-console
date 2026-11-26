@@ -345,6 +345,27 @@ export interface SessionSummary {
   source?: "app" | "web";
 }
 
+/** A mood on the five faces, 1 (worst) to 5 (best). */
+export type MoodScore = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * One mood check-in around a session (Focus, J6): before it starts or after
+ * it ends. Kept beside the session, not on it, so a check-in never rewrites
+ * the summary. Private to the person: linked professionals don't read it.
+ *
+ * Firestore: users/{athleteId}/moodCheckins/{id}. Server: `mood_checkins`.
+ */
+export interface MoodCheckin {
+  id: string;
+  athleteId: string;
+  /** The session it was taken around; null once that session is deleted. */
+  sessionId: string | null;
+  phase: "before" | "after";
+  mood: MoodScore;
+  /** ISO 8601 */
+  createdAt: string;
+}
+
 export type WaveformUnits = "raw" | "pct-max";
 
 /** The raw signal for one session. Cloud Storage: `SessionSummary.waveformPath`. */

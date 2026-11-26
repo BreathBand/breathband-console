@@ -5,6 +5,7 @@ import type {
   CoachLink,
   GroupSession,
   Invite,
+  MoodCheckin,
   SessionComment,
   SessionSummary,
   Squad,
@@ -12,7 +13,7 @@ import type {
   WaitlistEntry,
   Waveform,
 } from "@/lib/domain/types";
-import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, DEMO_TEAM, seedCoaching, seedSessions } from "./seed";
+import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, DEMO_TEAM, seedCoaching, seedMoodCheckins, seedSessions } from "./seed";
 
 // The local adapter's "database": one JSON document, persisted to
 // localStorage in the browser and kept in memory everywhere else (tests,
@@ -23,8 +24,10 @@ export interface LocalAccount {
   profile: UserProfile;
 }
 
-// Bump when the seed or the shape changes, so browsers holding older demo data reseed.
-const DB_VERSION = 8;
+// Bump when the seed or the shape changes. A browser holding the version before is
+// migrated in place (`migrateDb`), so sessions recorded there survive; anything
+// older, or unreadable, reseeds.
+const DB_VERSION = 9;
 
 export interface LocalDb {
   version: typeof DB_VERSION;
@@ -48,6 +51,8 @@ export interface LocalDb {
   coachInvites: CoachInvite[];
   /** Newest first. */
   groupSessions: GroupSession[];
+  /** By athlete id, newest first: mood check-ins around sessions (Focus, J6). */
+  moodCheckins: Record<string, MoodCheckin[]>;
   /** Signals saved by group sessions, by waveformPath. Other sessions' signals are generated from the seed. */
   recordedWaveforms: Record<string, Waveform>;
   waitlist: (WaitlistEntry & { createdAt: string })[];
@@ -78,6 +83,7 @@ export function createSeededDb(now = new Date()): LocalDb {
     ...seedCoaching(sessions, now),
     alertRules: {},
     groupSessions: [],
+    moodCheckins: seedMoodCheckins(sessions, now),
     recordedWaveforms: {},
     waitlist: [],
     currentUid: null,
@@ -99,6 +105,26 @@ export function memoryStore(initial: LocalDb = createSeededDb()): DbStore {
   };
 }
 
+/**
+ * A stored database at the current version, upgrading the version before in
+ * place; null when it's older or unknown (the caller reseeds).
+ *
+ * 8 → 9 (T-0119) adds `moodCheckins`: empty for everyone, except the demo
+ * people's seeded check-ins, placed on their seeded sessions only (source
+ * "app", no group session), never on one recorded or joined in this browser. Accounts, sessions and everything else
+ * are kept as they are.
+ */
+export function migrateDb(stored: unknown, now = new Date()): LocalDb | null {
+  if (typeof stored !== "object" || stored === null) return null;
+  const db = stored as Omit<LocalDb, "version" | "moodCheckins"> & { version?: unknown; moodCheckins?: LocalDb["moodCheckins"] };
+  if (db.version === DB_VERSION) return db as LocalDb;
+  if (db.version !== 8 || typeof db.sessions !== "object" || db.sessions === null) return null;
+  const lists = Object.entries(db.sessions);
+  if (!lists.every(([, list]) => Array.isArray(list))) return null;
+  const seededSessions = Object.fromEntries(lists.map(([uid, list]) => [uid, list.filter((s) => s.source === "app" && !s.groupSessionId)]));
+  return { ...db, version: DB_VERSION, moodCheckins: db.moodCheckins ?? seedMoodCheckins(seededSessions, now) };
+}
+
 export function browserStore(): DbStore {
   const fallback = memoryStore();
   const storage = typeof window === "undefined" ? null : safeLocalStorage();
@@ -109,8 +135,12 @@ export function browserStore(): DbStore {
       try {
         const raw = storage.getItem(STORAGE_KEY);
         if (raw) {
-          const parsed = JSON.parse(raw) as LocalDb;
-          if (parsed.version === DB_VERSION) return parsed;
+          const stored: unknown = JSON.parse(raw);
+          const migrated = migrateDb(stored);
+          if (migrated) {
+            if (migrated !== stored) this.write(migrated);
+            return migrated;
+          }
         }
       } catch {
         // Corrupt or unreadable: fall through and reseed.

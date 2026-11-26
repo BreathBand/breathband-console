@@ -7,8 +7,9 @@
 
 import { FIXED_CONSTANTS } from "@/lib/analysis/config";
 import { analyzeOpenRecording } from "@/lib/analysis/session";
+import { moodSentence } from "@/lib/domain/mood";
 import { formatScore, isTransitionScores, scoreWord, type ScoreBand } from "@/lib/domain/scores";
-import type { BreathGoal, SessionSummary } from "@/lib/domain/types";
+import type { BreathGoal, MoodScore, SessionSummary } from "@/lib/domain/types";
 import { calmLine, capital, word, type Professional } from "../home/tailor";
 
 /** The parts of a session the results read: a saved summary or one just built from a recording. */
@@ -239,6 +240,8 @@ export interface CoachingInput {
   turns?: readonly TurnPoints[] | null;
   /** Open sessions: the rate at the start and the end (Focus). */
   rates?: { from: number; to: number } | null;
+  /** Focus's mood check-ins around this session (J6); the line names the change only when both exist. */
+  mood?: { before: MoodScore | null; after: MoodScore | null } | null;
 }
 
 export interface Coaching {
@@ -300,7 +303,7 @@ function calmToneLine(band: ScoreBand | null, streakDays: number, professional: 
 }
 
 /** The coaching line in the goal's tone (02 §5.1), and Calm's one tip. */
-export function coaching({ goal, session, streakDays, professional, turns, rates }: CoachingInput): Coaching {
+export function coaching({ goal, session, streakDays, professional, turns, rates, mood }: CoachingInput): Coaching {
   const band = grade(session);
   switch (goal) {
     case "calm":
@@ -308,8 +311,11 @@ export function coaching({ goal, session, streakDays, professional, turns, rates
         line: calmToneLine(band, streakDays, professional),
         tip: tipFor(session),
       };
-    case "focus":
-      return { line: focusLine(session, band, rates), tip: null };
+    case "focus": {
+      const line = focusLine(session, band, rates);
+      const feel = moodSentence(mood?.before, mood?.after);
+      return { line: line && feel ? `${line} ${feel}` : (line ?? feel), tip: null };
+    }
     default:
       return { line: trainLine(session, turns), tip: null };
   }
