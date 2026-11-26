@@ -10,8 +10,22 @@ import { count, eq, getTableName, is } from "drizzle-orm";
 import { SQLiteTable } from "drizzle-orm/sqlite-core";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD, generateWaveform, seedSessions } from "@/lib/backend/local/seed";
-import type { CoachInvite, SessionSummary, UserProfile, Waveform } from "@/lib/domain/types";
+import {
+  DEMO_ATHLETE,
+  DEMO_CALM,
+  DEMO_CLASS,
+  DEMO_CLIENT,
+  DEMO_CLIENTS,
+  DEMO_CLINICIAN,
+  DEMO_COACH,
+  DEMO_EDUCATOR,
+  DEMO_FOCUS,
+  DEMO_PASSWORD,
+  DEMO_PEOPLE,
+  generateWaveform,
+  seedSessions,
+} from "@/lib/backend/local/seed";
+import type { Assignment, CoachInvite, MoodCheckin, SessionSummary, UserProfile, Waveform } from "@/lib/domain/types";
 import { authSecret, createAuth } from "../auth";
 import { createApp } from "../index";
 import type { Mailer } from "../mailer";
@@ -113,12 +127,12 @@ describe("the demo seed", () => {
 
   it("writes the local seed's people, sessions, signals, coaching and mood check-ins", () => {
     expect(first.skipped).toEqual([]);
-    expect(first.inserted.user).toBe(6);
-    expect(first.inserted.account).toBe(6);
-    expect(first.inserted.profiles).toBe(6);
+    expect(first.inserted.user).toBe(DEMO_PEOPLE.length);
+    expect(first.inserted.account).toBe(DEMO_PEOPLE.length);
+    expect(first.inserted.profiles).toBe(DEMO_PEOPLE.length);
     expect(first.inserted.breath_sessions).toBeGreaterThan(100);
     expect(first.waveformsWritten).toBe(first.inserted.breath_sessions);
-    for (const table of ["coach_links", "assignments", "comments", "kudos", "seen_sessions", "coach_notes", "squads", "squad_members", "coach_invites", "mood_checkins"] as const) {
+    for (const table of ["pro_profiles", "consents", "coach_links", "assignments", "comments", "kudos", "seen_sessions", "coach_notes", "squads", "squad_members", "coach_invites", "mood_checkins"] as const) {
       expect(first.inserted[table], table).toBeGreaterThan(0);
     }
   });
@@ -164,7 +178,7 @@ describe("the demo seed", () => {
     const invites = await json<CoachInvite[]>(await call(app, "GET", `/api/v1/coaches/${DEMO_COACH.uid}/coach-invites`, { cookie }));
     expect(invites).toHaveLength(1);
     const [invite] = invites;
-    expect(invite).toMatchObject({ coachId: DEMO_COACH.uid, coachName: DEMO_COACH.displayName, athleteName: "Jordan Lee", status: "pending", athleteId: null });
+    expect(invite).toMatchObject({ coachId: DEMO_COACH.uid, coachName: DEMO_COACH.displayName, athleteName: "Ruby Hale", status: "pending", athleteId: null });
     expect(invite.code).toMatch(/^[A-HJ-NP-Z2-9]{8}$/);
     expect(Date.parse(invite.expiresAt)).toBeGreaterThan(NOW.getTime());
 
@@ -177,6 +191,44 @@ describe("the demo seed", () => {
     await json(await call(app, "POST", `/api/v1/coaches/${DEMO_COACH.uid}/coach-invites/${invite.code}/revoke`, { cookie }));
     const after = await json<CoachInvite[]>(await call(app, "GET", `/api/v1/coaches/${DEMO_COACH.uid}/coach-invites`, { cookie }));
     expect(after).toMatchObject([{ code: invite.code, status: "revoked" }]);
+  });
+
+  it("gives Ana her clinician profile and consents, and Jordan through her accepted invite", async () => {
+    const app = build();
+    const cookie = await signIn(app, DEMO_CLINICIAN.email);
+    const ana = await json<UserProfile>(await call(app, "GET", `/api/v1/users/${DEMO_CLINICIAN.uid}`, { cookie }));
+    expect(ana).toMatchObject({ role: "coach", proKind: "clinician", proProfile: DEMO_CLINICIAN.proProfile });
+    expect(ana.consents).toEqual(DEMO_CLINICIAN.consents);
+
+    const clients = await json<UserProfile[]>(await call(app, "GET", `/api/v1/coaches/${DEMO_CLINICIAN.uid}/athletes`, { cookie }));
+    expect(clients.map((c) => c.uid).sort()).toEqual(DEMO_CLIENTS.map((c) => c.uid).sort());
+    const invites = await json<CoachInvite[]>(await call(app, "GET", `/api/v1/coaches/${DEMO_CLINICIAN.uid}/coach-invites`, { cookie }));
+    expect(invites.find((i) => i.athleteId === DEMO_CLIENT.uid)).toMatchObject({ athleteName: "Jordan Lee", status: "accepted" });
+
+    const jordan = await signIn(app, DEMO_CLIENT.email);
+    const coaches = await json<UserProfile[]>(await call(app, "GET", `/api/v1/athletes/${DEMO_CLIENT.uid}/coaches`, { cookie: jordan }));
+    expect(coaches.map((c) => c.uid)).toEqual([DEMO_CLINICIAN.uid]);
+    const plan = await json<Assignment[]>(await call(app, "GET", `/api/v1/athletes/${DEMO_CLIENT.uid}/assignments`, { cookie: jordan }));
+    expect(plan.map((a) => a.coachId)).toEqual([DEMO_CLINICIAN.uid]);
+  });
+
+  it("gives Chris his educator profile and his class of six, and Maya and Sam their own", async () => {
+    const app = build();
+    const cookie = await signIn(app, DEMO_EDUCATOR.email);
+    const chris = await json<UserProfile>(await call(app, "GET", `/api/v1/users/${DEMO_EDUCATOR.uid}`, { cookie }));
+    expect(chris).toMatchObject({ proKind: "educator", proProfile: DEMO_EDUCATOR.proProfile });
+    expect(chris.consents?.map((c) => c.kind)).toContain("student-age-acknowledgement");
+    const students = await json<UserProfile[]>(await call(app, "GET", `/api/v1/coaches/${DEMO_EDUCATOR.uid}/athletes`, { cookie }));
+    expect(students.map((s) => s.uid).sort()).toEqual(DEMO_CLASS.map((s) => s.uid).sort());
+
+    const maya = await signIn(app, DEMO_CALM.email);
+    const own = await json<UserProfile>(await call(app, "GET", `/api/v1/users/${DEMO_CALM.uid}`, { cookie: maya }));
+    expect(own.preferences?.goal).toBe("calm");
+    expect(own.preferences?.gamification?.program?.id).toBe("foundations");
+
+    const sam = await signIn(app, DEMO_FOCUS.email);
+    const moods = await json<MoodCheckin[]>(await call(app, "GET", `/api/v1/athletes/${DEMO_FOCUS.uid}/mood-checkins`, { cookie: sam }));
+    expect(moods.length).toBeGreaterThan(0);
   });
 
   it("refuses the wrong password", async () => {
@@ -204,7 +256,7 @@ describe("the demo seed", () => {
 
   it("refreshes the demo without touching anyone else", async () => {
     const again = await seedDemo({ db, storage, now: NOW, refresh: true, secret: SECRET });
-    expect(again.removed).toBe(6);
+    expect(again.removed).toBe(DEMO_PEOPLE.length);
     expect(again.inserted).toEqual(first.inserted);
     // Their sign-in sessions went with them, so the counts are those of the first run.
     expect(await rowCounts(db)).toEqual(afterFirst);
@@ -218,8 +270,9 @@ describe("the demo seed", () => {
       await other.db.insert(schema.user).values({ id: "someone", name: "Someone", email: DEMO_COACH.email });
       const result = await seedDemo({ db: other.db, storage: createFsStorage(join(dir, "blobs-taken")), now: NOW, secret: SECRET });
       expect(result.skipped).toEqual([DEMO_COACH.email]);
-      expect(result.inserted.user).toBe(5);
-      expect(result.inserted.coach_links).toBe(0);
+      expect(result.inserted.user).toBe(DEMO_PEOPLE.length - 1);
+      // None of Lena's: only Ana's clients and Chris's class.
+      expect(result.inserted.coach_links).toBe(DEMO_CLIENTS.length + DEMO_CLASS.length);
       const [someone] = await other.db.select().from(schema.user).where(eq(schema.user.id, "someone"));
       expect(someone).toMatchObject({ name: "Someone", email: DEMO_COACH.email });
     } finally {

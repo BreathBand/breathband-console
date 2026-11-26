@@ -1,6 +1,7 @@
-// Seeds the demo people (the local adapter's: Lena Vos, Alex Morgan, Sam, Priya,
-// Maya, Leo; password "breathband") with their sessions, signals, coaching and
-// mood check-ins. Idempotent and insert-only: run it again and nothing changes.
+// Seeds the demo people (the local adapter's: Lena Vos and her squad, Maya, Ana Ruiz
+// and her clients, Chris Park and his class; password "breathband") with their
+// sessions, signals, pro profiles, consents, coaching and mood check-ins.
+// Idempotent and insert-only: run it again and nothing changes.
 // Run the migrations first (`npm run db:migrate`, or `npm run db:reset`).
 //
 //   npm run db:seed                                      the local file DB
@@ -9,7 +10,7 @@
 //   node --env-file=.env.local --import tsx server/db/seed.ts   Turso (the lead only)
 //
 // Signals go to STORAGE_DIR (default ./data/blobs), as the API stores them.
-// The coach invite's code is derived under AUTH_SECRET, as the API does: seed with
+// The coach invites' codes are derived under AUTH_SECRET, as the API does: seed with
 // the same AUTH_SECRET the API runs with (unset outside production: the dev-only one).
 
 import { authSecret } from "../auth";
