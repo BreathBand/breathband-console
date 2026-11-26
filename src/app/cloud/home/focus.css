@@ -1,0 +1,58 @@
+/* Focus's Home slots: the mood trend (J6) and the exam countdown. */
+
+.home-mood {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.home-mood p {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: var(--t-13);
+  color: var(--c-ink);
+}
+
+.mood-bars {
+  flex: none;
+}
+
+.mood-bars line {
+  stroke: var(--c-ink-3);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.mood-bars .mood-before {
+  fill: var(--c-pane);
+  stroke: var(--c-ink-3);
+  stroke-width: 1.5;
+}
+
+.mood-bars .mood-after {
+  fill: var(--c-ink-3);
+}
+
+.mood-bars [data-way="up"] line,
+.mood-bars [data-way="up"] .mood-before {
+  stroke: var(--c-ok);
+}
+
+.mood-bars [data-way="up"] .mood-after {
+  fill: var(--c-ok);
+}
+
+.mood-bars [data-way="down"] line,
+.mood-bars [data-way="down"] .mood-before {
+  stroke: var(--c-low-mark);
+}
+
+.mood-bars [data-way="down"] .mood-after {
+  fill: var(--c-low-mark);
+}
+
+.home-exam {
+  font-size: var(--t-15);
+  color: var(--c-ink);
+}
