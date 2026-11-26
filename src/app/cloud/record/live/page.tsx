@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon, Mark } from "@/components/Icon";
-import { CALIBRATION_BREATHS, calibrationProgress } from "@/lib/analysis/calibrationProgress";
+import { CALIBRATION_WINDOW_S, calibrationProgress } from "@/lib/analysis/calibrationProgress";
 import { analyzeOpenRecording } from "@/lib/analysis/session";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { useDevice } from "@/lib/device/DeviceProvider";
@@ -23,9 +23,6 @@ import { TONES, useTones } from "./useTones";
 
 type Phase = "strap" | "calibrate" | "ready" | "countdown" | "live" | "review";
 
-const CALIBRATION_GIVE_UP_S = 90;
-/** A recent calibration from this connection can be reused for this long. */
-const CALIBRATION_REUSE_MS = 15 * 60_000;
 const MAX_MARKERS = 2;
 
 export default function LivePage() {
@@ -69,6 +66,7 @@ function Instrument() {
   const scale = useRef<{ a100: number; midline: number } | null>(null);
 
   const [calBreaths, setCalBreaths] = useState(0);
+  const [calLeft, setCalLeft] = useState(CALIBRATION_WINDOW_S);
   const [calError, setCalError] = useState<string | null>(null);
   const [goodFor, setGoodFor] = useState(0);
   const [reuseAge, setReuseAge] = useState<number | null>(null);
@@ -116,33 +114,37 @@ function Instrument() {
     calRaw.current = [];
     calStarted.current = performance.now();
     setCalBreaths(0);
+    setCalLeft(CALIBRATION_WINDOW_S);
     setCalError(null);
     setPhase("calibrate");
     void device.send(BAND_COMMANDS.calibrate).catch(() => undefined);
   }, [device]);
 
   useEffect(() => {
-    if (phase === "strap" && goodFor >= 2) {
+    // A calibration from this connection is kept until the band comes off (Harry: calibrate
+    // each time the band goes on, not between sessions), so only a fresh band calibrates itself.
+    if (phase === "strap" && goodFor >= 2 && !device.calibration) {
       const t = setTimeout(beginCalibration, 0);
       return () => clearTimeout(t);
     }
-  }, [phase, goodFor, beginCalibration]);
+  }, [phase, goodFor, beginCalibration, device.calibration]);
 
-  // Calibration: count deep breaths as they come, then take the scale from the deepest three.
+  // Calibration: full breaths for 20 seconds, then the scale from the deepest three.
   useEffect(() => {
     if (phase !== "calibrate") return;
     const timer = setInterval(() => {
       const seconds = (performance.now() - calStarted.current) / 1000;
-      const { breaths, result } = calibrationProgress(calRaw.current, SAMPLE_RATE_HZ, seconds);
+      const { breaths, remainingS, result, failed } = calibrationProgress(calRaw.current, SAMPLE_RATE_HZ, seconds);
       setCalBreaths(breaths);
+      setCalLeft(Math.ceil(remainingS));
       if (result) {
         device.setCalibration(result);
         scale.current = { a100: result.a100, midline: result.midline };
         setPhase("ready");
         return;
       }
-      if (seconds > CALIBRATION_GIVE_UP_S) {
-        setCalError("We couldn't see three deep breaths. Check the strap is snug, then try again, breathing slowly all the way in and out.");
+      if (failed) {
+        setCalError("We couldn't see three full breaths in the 20 seconds. Check the strap is snug, then try again, breathing slowly all the way in and out.");
         setPhase("strap");
         setGoodFor(0);
       }
@@ -165,7 +167,7 @@ function Instrument() {
     return { fill: hi - lo > 1e-6 ? (last - lo) / (hi - lo) : 0, rising: last >= prev };
   }, []);
 
-  const reuse = reuseAge !== null && reuseAge * 60_000 < CALIBRATION_REUSE_MS ? device.calibration : null;
+  const reuse = reuseAge !== null ? device.calibration : null;
   const useLastCalibration = () => {
     if (!reuse) return;
     scale.current = { a100: reuse.a100, midline: reuse.midline };
@@ -356,15 +358,26 @@ function Instrument() {
         ) : phase === "strap" ? (
           <section className="inst-step">
             <h1>Check the strap</h1>
-            <p>{calError ?? "Wrap the band around your belly, just below the ribs, and tighten it until the marker sits in the green."}</p>
+            <p>
+              {calError ??
+                (reuse
+                  ? "You calibrated when you put the band on. If it has stayed on since, keep that calibration; if you took it off, calibrate again."
+                  : "Wrap the band around your belly, just below the ribs, and tighten it until the marker sits in the green.")}
+            </p>
             <StrapMeter read={device.recent} />
             <div className="inst-actions">
-              <button type="button" className="button" data-size="large" onClick={beginCalibration}>
-                It&rsquo;s snug, calibrate
-              </button>
-              {reuse && (
-                <button type="button" className="button" data-variant="ghost" onClick={useLastCalibration}>
-                  Use my calibration from {Math.max(1, Math.round(reuseAge ?? 1))} min ago
+              {reuse ? (
+                <>
+                  <button type="button" className="button" data-size="large" onClick={useLastCalibration}>
+                    Keep my calibration from {Math.max(1, Math.round(reuseAge ?? 1))} min ago
+                  </button>
+                  <button type="button" className="button" data-variant="ghost" onClick={beginCalibration}>
+                    I took the band off, calibrate again
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="button" data-size="large" onClick={beginCalibration}>
+                  It&rsquo;s snug, calibrate
                 </button>
               )}
             </div>
@@ -373,18 +386,24 @@ function Instrument() {
           <section className="inst-step inst-calibrate">
             <CalibrationRing read={calibrationFill} />
             <div>
-              <h1>Five deep breaths</h1>
+              <h1>Full breaths for 20 seconds</h1>
               <p>
-                Breathe in slowly until the circle reaches the outer ring, then push every bit of air out until it shrinks to the
-                inner one. Your deepest breaths tell Breathband how far you can breathe, so every score is measured against you.
+                Imagine your belly as a balloon. Breathe in slowly until the circle reaches the outer ring, then push every bit of
+                air out until it shrinks to the inner one, and keep going until the time is up. Your fullest breaths tell
+                Breathband how far you can breathe, so every score is measured against you.
               </p>
-              <ol className="cal-dots" aria-label={`${calBreaths} of ${CALIBRATION_BREATHS} deep breaths`}>
-                {Array.from({ length: CALIBRATION_BREATHS }, (_, i) => (
-                  <li key={i} data-done={i < calBreaths || undefined} />
-                ))}
-              </ol>
+              <div
+                className="cal-time"
+                role="progressbar"
+                aria-label="Calibration time"
+                aria-valuemin={0}
+                aria-valuemax={CALIBRATION_WINDOW_S}
+                aria-valuenow={CALIBRATION_WINDOW_S - calLeft}
+              >
+                <i style={{ width: `${((CALIBRATION_WINDOW_S - calLeft) / CALIBRATION_WINDOW_S) * 100}%` }} />
+              </div>
               <p className="inst-small" role="status">
-                {calBreaths === 0 ? "Waiting for your first deep breath…" : `${calBreaths} of ${CALIBRATION_BREATHS} deep breaths`}
+                {calLeft > 0 ? `${calLeft} s left` : "Done"} · {calBreaths === 0 ? "waiting for your first full breath" : `${calBreaths} full ${calBreaths === 1 ? "breath" : "breaths"}`}
               </p>
             </div>
           </section>

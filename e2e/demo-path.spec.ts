@@ -24,7 +24,7 @@ async function startSession(page: Page, mode: "Paced" | "Open") {
   await page.getByRole("button", { name: "2 min", exact: true }).click();
   await page.getByRole("button", { name: "Start session" }).click();
   await page.waitForURL(/\/cloud\/record\/live\//);
-  await expect(page.getByRole("heading", { name: "Five deep breaths" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "Full breaths for 20 seconds" })).toBeVisible({ timeout: 30_000 });
   await expect(page.getByRole("heading", { name: "Calibrated" })).toBeVisible({ timeout: 90_000 });
   await page.getByRole("button", { name: "Begin" }).click();
   await expect(page.getByRole("button", { name: /Stop early/ })).toBeVisible({ timeout: 10_000 });

@@ -38,7 +38,6 @@ interface Lane {
 }
 
 const LENGTHS = [60, 120, 300];
-const CAL_GIVE_UP_S = 90;
 
 const emptyLane = (): Lane => ({ source: null, lastN: -1, cal: [], scale: null, startN: null, pct: [], unsub: [] });
 
@@ -133,18 +132,20 @@ export default function DuoPage() {
   useEffect(() => {
     if (phase !== "calibrate") return;
     const timer = setInterval(() => {
+      let failed = false;
       const done = ([0, 1] as const).map((i) => {
         const lane = lanes.current[i];
         if (lane.scale) return true;
-        const { result } = calibrationProgress(lane.cal, SAMPLE_RATE_HZ, (performance.now() - calStarted.current) / 1000);
-        if (!result) return false;
-        setLane(i, { ...lane, scale: result });
+        const progress = calibrationProgress(lane.cal, SAMPLE_RATE_HZ, (performance.now() - calStarted.current) / 1000);
+        failed ||= progress.failed;
+        if (!progress.result) return false;
+        setLane(i, { ...lane, scale: progress.result });
         return true;
       }) as [boolean, boolean];
       setCalDone(done);
       if (done[0] && done[1]) setPhase("ready");
-      else if ((performance.now() - calStarted.current) / 1000 > CAL_GIVE_UP_S) {
-        setCalError("One of the bands didn't show three deep breaths. Check both straps and try again.");
+      else if (failed) {
+        setCalError("One of the bands didn't show three full breaths in the 20 seconds. Check both straps and try again.");
         setPhase("setup");
       }
     }, 1000);
@@ -351,8 +352,8 @@ export default function DuoPage() {
           </section>
         ) : phase === "calibrate" ? (
           <section className="inst-step">
-            <h1>Five deep breaths, both of you</h1>
-            <p>Breathe in slowly until you&rsquo;re full, then all the way out. Each band calibrates on its own.</p>
+            <h1>Full breaths for 20 seconds, both of you</h1>
+            <p>Breathe in slowly until you&rsquo;re full, then all the way out, and keep going until both bands are calibrated.</p>
             <ul className="duo-cal">
               {([0, 1] as const).map((i) => (
                 <li key={i} data-done={calDone[i] || undefined}>
