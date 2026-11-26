@@ -65,7 +65,8 @@ Lead: review and merge into night/2026-11-26. I-07 (http adapter AuthService) ca
 
 ## Questions for me
 
-- [ ] 02-onboarding-and-tailoring.md step 3 says verification is "a banner, not a wall: you can keep going", but this card (and I-06) refuses sign-in until the email is verified. Keep the wall? — Recommended: keep it for now (it is what the card asked for and protects sharing); revisit when onboarding is built. Options: turn `requireEmailVerification` off and gate sharing/reminders on `emailVerified` instead.
+- [x] 02-onboarding-and-tailoring.md step 3 says verification is "a banner, not a wall: you can keep going", but this card (and I-06) refuses sign-in until the email is verified. Keep the wall? — Recommended: keep it for now (it is what the card asked for and protects sharing); revisit when onboarding is built. Options: turn `requireEmailVerification` off and gate sharing/reminders on `emailVerified` instead.
+  Answer: keep it for now (it is what the card asked for and protects sharing); revisit when onboarding is built
 
 ## Parked
 
