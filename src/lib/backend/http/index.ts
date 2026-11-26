@@ -1,10 +1,12 @@
 import { BackendError, type Backend, type DataService } from "../types";
 import { createHttpAuth } from "./auth";
 import { createApiClient, type Fetch } from "./client";
+import { createHttpData } from "./data";
 import { HTTP_ROUTES } from "./routes";
 
 // The adapter for the API in server/ (planning/v1/04-infrastructure.md).
-// AuthService talks to Better Auth (I-07); DataService arrives with I-08..I-10.
+// AuthService talks to Better Auth (I-07); DataService to /api/v1: profile,
+// preferences, sessions and waveforms (I-08), the rest with I-09 and I-10.
 
 export * from "./routes";
 export { toBackendError } from "./client";
@@ -22,23 +24,25 @@ export interface HttpBackendOptions {
 export function createHttpBackend(options: HttpBackendOptions = {}): Backend {
   // Inlined at build time, so it has to be read by its full name.
   const baseUrl = options.baseUrl ?? process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-  const api = createApiClient(baseUrl, options.fetch ?? ((input, init) => fetch(input, init)));
-  const auth = createHttpAuth(api, {
+  const fetchImpl = options.fetch ?? ((input, init) => fetch(input, init));
+  const auth = createHttpAuth(createApiClient(baseUrl, fetchImpl), {
     appUrl: () => options.appUrl ?? window.location.origin,
     now: options.now ?? (() => new Date()),
   });
-  return { kind: "http", auth, data: unavailableData() };
+  // A 401 from a data route means the session is gone: the person counts as signed out.
+  const api = createApiClient(baseUrl, fetchImpl, { area: "data", onUnauthorized: () => auth.expire() });
+  return { kind: "http", auth, data: { ...unavailableData(), ...createHttpData(api) } };
 }
 
 /**
- * Every DataService method fails with BackendError("unavailable") until the API
- * serves its data routes (I-08 profile and sessions, I-09 coaching, I-10 groups).
+ * The DataService methods the API doesn't serve yet fail with BackendError("unavailable"):
+ * coaching arrives with I-09, squads, alerts, coach invites, groups and the waitlist with I-10.
  */
 function unavailableData(): DataService {
   const notYet = (method: string) =>
     new BackendError(
       "unavailable",
-      `${method}: the API doesn't serve data yet (I-08..I-10). Use NEXT_PUBLIC_BACKEND=local for now.`,
+      `${method}: the API doesn't serve this yet (I-09..I-10). Use NEXT_PUBLIC_BACKEND=local for now.`,
     );
   const methods = Object.keys(HTTP_ROUTES.data).map((method) => [
     method,

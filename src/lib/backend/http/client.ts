@@ -7,34 +7,50 @@ import { BackendError, type BackendErrorCode } from "../types";
 
 export type Fetch = typeof fetch;
 
+export type ApiMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
 export interface ApiClient {
   get<T>(path: string): Promise<T>;
   post<T>(path: string, body?: unknown): Promise<T>;
+  /** Any verb; a body is sent as JSON for everything but GET. */
+  request<T>(method: ApiMethod, path: string, body?: unknown): Promise<T>;
 }
 
-export function createApiClient(baseUrl: string, fetchImpl: Fetch): ApiClient {
+export interface ApiClientOptions {
+  /** "data" for the API's own routes: there a 409 isn't Better Auth's "email in use". */
+  area?: ErrorArea;
+  /** Called when the API answers 401 (the session cookie expired or was revoked). */
+  onUnauthorized?: () => void;
+}
+
+export function createApiClient(baseUrl: string, fetchImpl: Fetch, options: ApiClientOptions = {}): ApiClient {
   const origin = baseUrl.replace(/\/+$/, "");
 
-  async function send<T>(method: "GET" | "POST", path: string, body?: unknown): Promise<T> {
+  async function send<T>(method: ApiMethod, path: string, body?: unknown): Promise<T> {
+    const withBody = method !== "GET";
     let response: Response;
     try {
       response = await fetchImpl(`${origin}${path}`, {
         method,
         credentials: "include",
-        headers: method === "POST" ? { "Content-Type": "application/json" } : undefined,
-        body: method === "POST" ? JSON.stringify(body ?? {}) : undefined,
+        headers: withBody ? { "Content-Type": "application/json" } : undefined,
+        body: withBody ? JSON.stringify(body ?? {}) : undefined,
       });
     } catch (error) {
       throw new BackendError("unavailable", `Couldn't reach the API: ${(error as Error).message}`);
     }
     const payload: unknown = await response.json().catch(() => null);
-    if (!response.ok) throw toBackendError(response.status, payload);
+    if (!response.ok) {
+      if (response.status === 401) options.onUnauthorized?.();
+      throw toBackendError(response.status, payload, options.area);
+    }
     return payload as T;
   }
 
   return {
     get: (path) => send("GET", path),
     post: (path, body) => send("POST", path, body),
+    request: send,
   };
 }
 
@@ -85,8 +101,17 @@ const STATUS_CODES: Partial<Record<number, BackendErrorCode>> = {
   422: "invalid-input",
 };
 
-/** The BackendError for a failed response, from its code if it has a known one, else from its status. */
-export function toBackendError(status: number, payload: unknown): BackendError {
+/** Which part of the API answered: Better Auth (/api/auth) or the data routes (/api/v1). */
+export type ErrorArea = "auth" | "data";
+
+/**
+ * The BackendError for a failed response, from its code if it has a known one, else from its status.
+ * A 409 means "email in use" only from auth; from the data routes it's a conflict, read as invalid input.
+ */
+export function toBackendError(status: number, payload: unknown, area: ErrorArea = "auth"): BackendError {
+  if (area === "data" && status === 409) {
+    return new BackendError("invalid-input", errorFields(payload).message ?? "The API answered 409");
+  }
   const { code, message } = errorFields(payload);
   if (code && BACKEND_CODES.has(code as BackendErrorCode)) return new BackendError(code as BackendErrorCode, message);
   if (code && BETTER_AUTH_CODES[code]) return new BackendError(BETTER_AUTH_CODES[code], MESSAGES[code] ?? message);

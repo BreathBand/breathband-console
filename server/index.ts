@@ -11,7 +11,9 @@ import { AUTH_BASE_PATH, type Auth } from "./auth";
 import type { Db } from "./db/client";
 import type { Mode } from "./env";
 import { authRoutes } from "./routes/auth";
+import { DATA_BASE_PATH, dataRoutes } from "./routes/data";
 import { serveExport } from "./static";
+import type { StorageService } from "./storage";
 
 export type AppDeps = {
   db: Db;
@@ -24,6 +26,8 @@ export type AppDeps = {
   log?: boolean;
   /** Better Auth (server/auth.ts), mounted at /api/auth. Without it there are no auth routes. */
   auth?: Auth;
+  /** Where waveforms live (server/storage). With `auth`, mounts the data routes at /api/v1. */
+  storage?: StorageService;
 };
 
 /** nginx.conf's `add_header ... always` set, now on every response including /_next/static/. */
@@ -62,6 +66,9 @@ export function createApp(deps: AppDeps) {
   });
 
   if (deps.auth) app.route(AUTH_BASE_PATH, authRoutes(deps.auth));
+  if (deps.auth && deps.storage) {
+    app.route(DATA_BASE_PATH, dataRoutes({ db: deps.db, auth: deps.auth, storage: deps.storage }));
+  }
 
   if (deps.staticDir) {
     const serve = serveExport(deps.staticDir);

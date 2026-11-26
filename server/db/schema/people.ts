@@ -39,6 +39,10 @@ export const proProfiles = sqliteTable("pro_profiles", {
   organisation: text("organisation"),
   profession: text("profession"),
   sports: text("sports", { mode: "json" }).$type<string[]>().notNull().default([]),
+  /** `ProProfile.sportOther`, `level`, `country` (added in 0002 so the profile round-trips). */
+  sportOther: text("sport_other"),
+  level: text("level"),
+  country: text("country"),
   useCases: text("use_cases", { mode: "json" }).$type<string[]>().notNull().default([]),
   /** How they refer to people: "athletes", "clients", "students". */
   terminology: text("terminology").notNull(),
