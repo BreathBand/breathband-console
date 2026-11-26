@@ -4,13 +4,16 @@ import { useState, type FormEvent } from "react";
 import { Icon } from "@/components/Icon";
 import { ErrorState, Skeleton } from "@/components/States";
 import { useBackend } from "@/lib/backend/BackendProvider";
+import { defaultFlags, rulesInForce } from "@/lib/domain/default-flags";
 import { DEFAULT_ALERTS, type AlertRules } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
+import { useProKind, useTerms } from "../useTerms";
 
-/** What puts an athlete under "Needs a look" on the coach's dashboard and roster. */
+/** What puts someone under "Needs a look" on the coach's dashboard and roster. */
 export function AlertRulesSection({ coachId }: { coachId: string }) {
   const backend = useBackend();
-  const rules = useLoad(`alerts:${coachId}`, () => backend.data.getAlertRules(coachId));
+  const kind = useProKind();
+  const rules = useLoad(`alerts:${coachId}:${kind}`, async () => rulesInForce(await backend.data.getAlertRules(coachId), kind));
   return (
     <section className="pane pane-pad" aria-labelledby="alerts-h" id="alerts">
       <div className="pane-h">
@@ -30,6 +33,8 @@ export function AlertRulesSection({ coachId }: { coachId: string }) {
 
 function RulesForm({ coachId, initial }: { coachId: string; initial: AlertRules }) {
   const backend = useBackend();
+  const kind = useProKind();
+  const t = useTerms();
   const [r, setR] = useState(initial);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const dirty = JSON.stringify(r) !== JSON.stringify(initial) && status !== "saved";
@@ -92,12 +97,12 @@ function RulesForm({ coachId, initial }: { coachId: string; initial: AlertRules 
         {boolRule("rateOutOfRange", "An open session with a breathing rate outside their target range")}
         {boolRule("practiceBehind", "Practice falling behind its pace")}
       </ul>
-      <p className="label">Comments waiting for your reply always show. Each athlete&apos;s targets are on their Trends tab.</p>
+      <p className="label">Comments waiting for your reply always show. Each {t.one}&apos;s targets are on their Trends tab.</p>
       <div className="row">
         <button type="submit" className="button" data-size="small" disabled={!dirty || status === "saving"}>
           {status === "saving" ? "Saving…" : "Save"}
         </button>
-        <button type="button" className="button" data-variant="ghost" data-size="small" onClick={() => change(DEFAULT_ALERTS)}>
+        <button type="button" className="button" data-variant="ghost" data-size="small" onClick={() => change(defaultFlags(kind))}>
           Back to defaults
         </button>
         {status === "saved" && (

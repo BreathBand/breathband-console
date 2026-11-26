@@ -83,7 +83,7 @@ export function AlignedLanes({
   const clip = useSvgId("lanes");
 
   return (
-    <svg className="chart lanes" width={width} height={height} role="img" aria-label={`Breathing of ${lanes.length} athletes on one time axis, ${formatDuration(Math.max(0, t0))} to ${formatDuration(t1)}`}>
+    <svg className="chart lanes" width={width} height={height} role="img" aria-label={`Breathing of ${lanes.length} people on one time axis, ${formatDuration(Math.max(0, t0))} to ${formatDuration(t1)}`}>
       <defs>
         <clipPath id={clip}>
           <rect x={pad.l} y={0} width={w} height={height} />

@@ -60,3 +60,8 @@ export function countPeople(n: number, nouns: PeopleNouns): string {
   if (n === 0) return `no ${nouns.many}`;
   return `${n} ${n === 1 ? nouns.one : nouns.many}`;
 }
+
+/** "an athlete", "a client", "a student". */
+export function aPerson(nouns: PeopleNouns): string {
+  return `${/^[aeiou]/.test(nouns.one) ? "an" : "a"} ${nouns.one}`;
+}

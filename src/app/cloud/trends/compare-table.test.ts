@@ -29,9 +29,9 @@ function rules(source: string): { selector: string; within: string[] }[] {
 describe("Compare page side-by-side table", () => {
   it("labels every cell with its column header, in the same order", () => {
     const headers = [...page.matchAll(/<th(?: className="num")?>([^<]+)<\/th>/g)].map((m) => m[1]);
-    const labels = [...page.matchAll(/<Cell label="([^"]+)"/g)].map((m) => m[1]);
+    const labels = [...page.matchAll(/<Cell label=(?:"([^"]+)"|(\{[^}]+\}))/g)].map((m) => m[1] ?? m[2]);
     expect(headers).toEqual([
-      "Athlete",
+      "{terms.One}",
       "Sessions",
       "A week",
       "Average score",

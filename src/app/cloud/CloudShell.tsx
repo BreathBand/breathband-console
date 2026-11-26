@@ -8,9 +8,11 @@ import type { Backend } from "@/lib/backend";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { resetBrowserDb } from "@/lib/backend/local/db";
 import { initials } from "@/lib/domain/format";
+import type { PeopleNouns } from "@/lib/domain/terminology";
 import { AthletePicker } from "./AthletePicker";
 import { CloudLanding } from "./CloudLanding";
 import { DeviceStatus } from "./device/DeviceStatus";
+import { termsOf } from "./useTerms";
 
 /** Pages for signed-out visitors. They render without the app chrome and bring their own header. */
 const PUBLIC_PATHS = ["/cloud/login/", "/cloud/signup/", "/cloud/reset/"];
@@ -60,9 +62,10 @@ const ATHLETE_NAV: NavItem[] = [
   { href: "/cloud/account/", label: "Settings", icon: "settings", match: ["/cloud/account/", "/cloud/sharing/"] },
 ];
 
-const COACH_NAV: NavItem[] = [
+/** The roster's label is what the professional calls the people they work with. */
+const coachNav = (t: PeopleNouns): NavItem[] => [
   { href: "/cloud/", label: "Dashboard", icon: "dashboard", match: ["/cloud/"] },
-  { href: "/cloud/athletes/", label: "Athletes", icon: "athletes", match: ["/cloud/athletes/", "/cloud/sessions/", "/cloud/session/"] },
+  { href: "/cloud/athletes/", label: t.Many, icon: "athletes", match: ["/cloud/athletes/", "/cloud/sessions/", "/cloud/session/"] },
   { href: "/cloud/trends/", label: "Compare", icon: "compare", match: ["/cloud/trends/"] },
   { href: "/cloud/group/", label: "Live group", icon: "group", match: ["/cloud/group/", "/cloud/group/live/"] },
   { href: "/cloud/record/duo/", label: "Two-person", icon: "users", match: ["/cloud/record/duo/"] },
@@ -124,7 +127,7 @@ export function CloudShell({ children }: { children: ReactNode }) {
 
   const role = auth.profile?.role ?? "athlete";
   const name = auth.profile?.displayName ?? auth.user.email ?? "You";
-  const nav = role === "coach" ? COACH_NAV : ATHLETE_NAV;
+  const nav = role === "coach" ? coachNav(termsOf(auth)) : ATHLETE_NAV;
   const inAthlete = pathname === "/cloud/sessions/" || pathname === "/cloud/session/";
 
   return (

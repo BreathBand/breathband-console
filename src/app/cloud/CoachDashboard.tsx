@@ -11,9 +11,11 @@ import { daysAgoText } from "@/lib/domain/activity";
 import { dayKey, describeAssignment, dueText, isOpen, lastDays, timeAgo } from "@/lib/domain/coaching";
 import { describeMode, formatDay, formatDuration, formatTime, initials } from "@/lib/domain/format";
 import { formatScore, headline, isTransitionScores, scoreWord } from "@/lib/domain/scores";
+import { aPerson } from "@/lib/domain/terminology";
 import type { SessionSummary } from "@/lib/domain/types";
 import { athleteHref, sessionHref } from "./links";
 import { inSquad, SquadFilter } from "./SquadFilter";
+import { useTerms } from "./useTerms";
 import { REVIEW_WINDOW_DAYS, useTeam, type Team, type TeamMember } from "./useTeam";
 
 const DAY_MS = 86_400_000;
@@ -27,6 +29,7 @@ export function CoachDashboard({ coachId }: { coachId: string }) {
   const auth = useAuth();
   const [now] = useState(() => new Date());
   const team = useTeam(coachId, now);
+  const t = useTerms();
   const name = auth.status === "signed-in" ? auth.profile?.displayName : undefined;
 
   return (
@@ -39,23 +42,23 @@ export function CoachDashboard({ coachId }: { coachId: string }) {
         <span>
           {now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
           {team.status === "ready" &&
-            ` · ${team.data.members.length} ${team.data.members.length === 1 ? "athlete" : "athletes"}`}
+            ` · ${team.data.members.length} ${team.data.members.length === 1 ? t.one : t.many}`}
         </span>
       </div>
 
       {team.status === "loading" ? (
-        <Skeleton lines={8} label="Loading your athletes…" />
+        <Skeleton lines={8} label={`Loading your ${t.many}…`} />
       ) : team.status === "error" ? (
-        <ErrorState error={team.error} what="your athletes" onRetry={team.retry} />
+        <ErrorState error={team.error} what={`your ${t.many}`} onRetry={team.retry} />
       ) : team.data.members.length === 0 ? (
-        <EmptyState title="No athletes yet">
+        <EmptyState title={`No ${t.many} yet`}>
           <p className="muted">
-            Athletes share their sessions with you by creating an invite code under <b>Sharing</b> in BreathCloud. Enter
-            it on the <Link href="/cloud/athletes/">Athletes</Link> page and they&apos;ll appear here.
+            {t.Many} share their sessions with you by creating an invite code under <b>Sharing</b> in BreathCloud. Enter
+            it on the <Link href="/cloud/athletes/">{t.Many}</Link> page and they&apos;ll appear here.
           </p>
           <Link className="button" href="/cloud/athletes/#invite-athlete">
             <Icon name="plus" size={18} />
-            Add an athlete
+            Add {aPerson(t)}
           </Link>
         </EmptyState>
       ) : (
@@ -66,6 +69,7 @@ export function CoachDashboard({ coachId }: { coachId: string }) {
 }
 
 function Dashboard({ team, now, coachId, onChange }: { team: Team; now: Date; coachId: string; onChange: () => void }) {
+  const t = useTerms();
   const [squad, setSquad] = useState("");
   const members = inSquad(team.members, team.squads, squad);
   return (
@@ -75,7 +79,7 @@ function Dashboard({ team, now, coachId, onChange }: { team: Team; now: Date; co
           <SquadFilter squads={team.squads} value={squad} onChange={setSquad} />
           {squad && (
             <span className="label">
-              Showing {members.length} of {team.members.length} athletes
+              Showing {members.length} of {team.members.length} {t.many}
             </span>
           )}
         </div>
@@ -121,6 +125,7 @@ function TeamStats({ members, now }: { members: TeamMember[]; now: Date }) {
   const behind = open.filter((p) => p.status === "behind").length;
   const unseen = members.reduce((n, m) => n + m.unseen.length, 0);
   const round1 = (n: number) => Math.round(n * 10) / 10;
+  const t = useTerms();
 
   return (
     <div className="stats">
@@ -129,7 +134,7 @@ function TeamStats({ members, now }: { members: TeamMember[]; now: Date }) {
         <span className="n">{thisWeek.length}</span>
         <span className="d">
           {lastWeek.length} the week before · {members.filter((m) => m.activity.lastWeek > 0).length} of {members.length}{" "}
-          athletes trained
+          {t.many} practised
         </span>
       </section>
       <section className="pane stat">
@@ -344,6 +349,7 @@ function ToReview({
 
 function TrainingGrid({ members, now }: { members: TeamMember[]; now: Date }) {
   const days = lastDays(now, GRID_DAYS);
+  const t = useTerms();
   return (
     <section className="pane pane-pad" aria-labelledby="grid-h">
       <div className="pane-h">
@@ -355,7 +361,7 @@ function TrainingGrid({ members, now }: { members: TeamMember[]; now: Date }) {
           <thead>
             <tr>
               <th>
-                <span className="sr-only">Athlete</span>
+                <span className="sr-only">{t.One}</span>
               </th>
               {days.map((d) => (
                 <th key={dayKey(d)} scope="col" data-weekend={d.getDay() === 0 || d.getDay() === 6 || undefined}>
@@ -467,9 +473,10 @@ function PracticeDue({ members }: { members: TeamMember[] }) {
   );
 }
 
-// ---------------------------------------------------------------- from athletes
+// ---------------------------------------------------------------- from the people they work with
 
 function FromAthletes({ members, now }: { members: TeamMember[]; now: Date }) {
+  const t = useTerms();
   const since = now.getTime() - REVIEW_WINDOW_DAYS * DAY_MS;
   const items = members
     .flatMap((m) => [
@@ -486,7 +493,7 @@ function FromAthletes({ members, now }: { members: TeamMember[]; now: Date }) {
   return (
     <section className="pane pane-pad" aria-labelledby="from-h">
       <div className="pane-h">
-        <h2 id="from-h">From your athletes</h2>
+        <h2 id="from-h">From your {t.many}</h2>
         <span className="meta">Notes and comments</span>
       </div>
       {items.length === 0 ? (

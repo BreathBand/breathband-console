@@ -7,6 +7,7 @@ import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { useDevice } from "@/lib/device/DeviceProvider";
 import { formatLongDay, initials } from "@/lib/domain/format";
 import { defaultPreferences, GOALS, goalOf, SKILL_LEVELS, skillBandText } from "@/lib/domain/preferences";
+import { peopleNouns } from "@/lib/domain/terminology";
 import type { UserPreferences, UserProfile } from "@/lib/domain/types";
 import { LENGTHS } from "@/lib/prefs";
 import { signOutToLanding } from "../CloudShell";
@@ -235,6 +236,7 @@ function ProfileSection({ profile }: { profile: UserProfile }) {
   const [name, setName] = useState(profile.displayName);
   const [status, setStatus] = useState<SaveState>("idle");
   const coach = profile.role === "coach";
+  const terms = peopleNouns(profile);
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -264,7 +266,7 @@ function ProfileSection({ profile }: { profile: UserProfile }) {
       </div>
       <form className="invite-form" onSubmit={onSubmit}>
         <label className="field grow">
-          Name shown to {coach ? "your athletes" : "your coaches"}
+          Name shown to {coach ? `your ${terms.many}` : "your coaches"}
           <input
             required
             maxLength={80}
