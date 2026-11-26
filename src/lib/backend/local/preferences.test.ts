@@ -4,6 +4,10 @@ import { BackendError, type Backend } from "../types";
 import { createSeededDb, memoryStore } from "./db";
 import { createLocalBackend } from "./index";
 import { DEMO_ATHLETE, DEMO_COACH, DEMO_PASSWORD } from "./seed";
+import { currentConsents } from "@/lib/domain/consent";
+
+// Sign-up needs the consents and a 16+ birth year since T-0103.
+const ADULT = { consents: currentConsents(), birthYear: 1990 };
 
 let backend: Backend;
 
@@ -63,7 +67,7 @@ describe("updateProfile with preferences", () => {
   });
 
   it("starts a new account with no preferences, so it goes through onboarding", async () => {
-    const user = await backend.auth.signUp({ email: "new@example.com", password: "long-enough", displayName: "New", role: "athlete" });
+    const user = await backend.auth.signUp({ ...ADULT, email: "new@example.com", password: "long-enough", displayName: "New", role: "athlete" });
     expect((await backend.data.getProfile(user.uid))?.preferences ?? null).toBeNull();
   });
 });

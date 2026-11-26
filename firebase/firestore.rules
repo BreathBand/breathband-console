@@ -27,13 +27,25 @@ service cloud.firestore {
     match /users/{uid} {
       allow read: if canReadAthlete(uid)
                   || (signedIn() && coachLinked(uid, request.auth.uid));
+      // Sign-up carries the 16+ age gate (by year of birth) and one consent
+      // record per kind, in lib/domain/consent.ts order. Versions are checked
+      // by the client and adapter, not here.
       allow create: if isSelf(uid)
                     && request.resource.data.role in ['athlete', 'coach']
-                    && request.resource.data.email == request.auth.token.email;
-      // Role and email are fixed after sign-up.
+                    && request.resource.data.email == request.auth.token.email
+                    && request.resource.data.birthYear is int
+                    && request.resource.data.birthYear <= request.time.year() - 16
+                    && request.resource.data.consents is list
+                    && request.resource.data.consents.size() == 3
+                    && request.resource.data.consents[0].kind == 'terms'
+                    && request.resource.data.consents[1].kind == 'privacy'
+                    && request.resource.data.consents[2].kind == 'breathing-data';
+      // Role, email, consents and birth year are fixed after sign-up.
       allow update: if isSelf(uid)
                     && request.resource.data.role == resource.data.role
-                    && request.resource.data.email == resource.data.email;
+                    && request.resource.data.email == resource.data.email
+                    && request.resource.data.get('consents', null) == resource.data.get('consents', null)
+                    && request.resource.data.get('birthYear', null) == resource.data.get('birthYear', null);
       allow delete: if false; // Account deletion runs in a Cloud Function.
 
       // Sessions: written by the athlete's app, read by them and linked coaches.

@@ -471,6 +471,44 @@
   font: 500 var(--t-15) / 1.2 var(--f-sans);
 }
 
+.bc-consents {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.bc-consents legend {
+  padding: 0;
+  margin-bottom: var(--s-2);
+  font: 500 var(--t-15) / 1.2 var(--f-sans);
+}
+
+.bc-consent {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  min-height: 44px;
+  font: 400 var(--t-15) / 1.4 var(--f-sans);
+  color: var(--c-ink);
+  cursor: pointer;
+}
+
+.bc-consent input {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  accent-color: var(--c-action);
+}
+
+.bc-consent input[aria-invalid="true"] {
+  outline: 2px solid var(--c-danger);
+  outline-offset: 2px;
+}
+
 .bc-role-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
