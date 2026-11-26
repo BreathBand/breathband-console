@@ -1,4 +1,5 @@
 import { index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import type { ProTemplateId } from "@/lib/domain/pro-templates";
 import type { AthleteTargets } from "@/lib/domain/types";
 import { ROLES, user } from "./auth";
 import { id, SESSION_MODES, timestamps } from "./columns";
@@ -56,6 +57,8 @@ export const coachInvites = sqliteTable(
       .notNull()
       .default("pending"),
     athleteId: text("athlete_id").references(() => user.id, { onDelete: "cascade" }),
+    /** The first practice set with the invite (T-0123): one of the coach's kind's templates; accepting makes it an assignment. */
+    practice: text("practice").$type<ProTemplateId>(),
     ...timestamps,
   },
   (t) => [index("coach_invites_coach_idx").on(t.coachId)],

@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { DEFAULT_ALERTS, type AlertRules } from "@/lib/domain/types";
+import { withProDefaults } from "@/lib/domain/pro-defaults";
+import { defaultProProfile } from "@/lib/domain/pro-profile";
+import { DEFAULT_ALERTS, type AlertRules, type ProProfile } from "@/lib/domain/types";
 import type { DataContractHarness, Person } from "./data.harness";
 import { refusal } from "./data.harness";
 
@@ -11,6 +13,14 @@ import { refusal } from "./data.harness";
 const CODE = /^[A-HJ-NP-Z2-9]{8}$/;
 
 const days = (iso: string) => (Date.parse(iso) - Date.now()) / 86_400_000;
+
+/** A physiotherapist (T-0123): a clinician's kind, a profession, and the kind's defaults (scores and curves asked for). */
+const physio: ProProfile = withProDefaults({
+  ...defaultProProfile("clinician"),
+  profession: "physiotherapist",
+  country: "Ireland",
+  useCases: ["between-visits"],
+});
 
 export function describeCoachToolsContract(adapter: string, setup: () => DataContractHarness | Promise<DataContractHarness>) {
   describe(`DataService contract, coach tools: ${adapter}`, () => {
@@ -138,7 +148,18 @@ export function describeCoachToolsContract(adapter: string, setup: () => DataCon
       it("shows whoever opens the link who is asking, without the contact details", async () => {
         const sent = await invite();
         const seen = await ana.backend.data.getCoachInvite(` ${sent.code.toLowerCase()} `);
-        expect(seen).toEqual({ code: sent.code, coachId: cara.uid, coachName: "Cara Coach", expiresAt: sent.expiresAt, status: "pending" });
+        // A coach with no kind yet: nothing about them beyond their name, and no practice (T-0123).
+        expect(seen).toEqual({
+          code: sent.code,
+          coachId: cara.uid,
+          coachName: "Cara Coach",
+          expiresAt: sent.expiresAt,
+          status: "pending",
+          practice: null,
+          coachKind: null,
+          coachProfession: null,
+          scopeRequested: null,
+        });
         expect(await ana.backend.data.getCoachInvite("ZZZZ2222")).toBeNull();
         await refusal(h.signedOut().data.getCoachInvite(sent.code), "not-signed-in");
       });
@@ -199,6 +220,68 @@ export function describeCoachToolsContract(adapter: string, setup: () => DataCon
         await refusal(ben.backend.data.respondToCoachInvite(ana.uid, sent.code, { accept: true, scope: "curves" }), "permission-denied");
         await refusal(h.signedOut().data.respondToCoachInvite(ana.uid, sent.code, { accept: false }), "not-signed-in");
         expect(await ana.backend.data.getCoachInvite(sent.code)).toMatchObject({ status: "pending" });
+      });
+
+      describe("with a first practice (T-0123)", () => {
+        beforeEach(async () => {
+          await cara.backend.data.updateProfile(cara.uid, { proKind: "clinician", proProfile: physio });
+        });
+
+        it("keeps one of the professional's kind's templates with the invite, and refuses any other practice", async () => {
+          const sent = await cara.backend.data.createCoachInvite(cara.uid, { athleteName: "Jo", contact: "jo@example.com", practice: "between-visits" });
+          expect(sent.practice).toBe("between-visits");
+          expect(await cara.backend.data.listCoachInvites(cara.uid)).toEqual([sent]);
+          const plain = await invite();
+          expect(plain).not.toHaveProperty("practice");
+          for (const practice of ["focus-sprint", "nope"]) {
+            await refusal(cara.backend.data.createCoachInvite(cara.uid, { athleteName: "Jo", contact: "jo@example.com", practice: practice as never }), "invalid-input");
+          }
+          expect(await cara.backend.data.listCoachInvites(cara.uid)).toHaveLength(2);
+        });
+
+        it("refuses practice from a coach with no kind", async () => {
+          const other = await h.person("coach");
+          await refusal(other.backend.data.createCoachInvite(other.uid, { athleteName: "Jo", contact: "jo@example.com", practice: "between-visits" }), "invalid-input");
+        });
+
+        it("shows who's asking in their own terms, what they ask to see and the practice", async () => {
+          const sent = await cara.backend.data.createCoachInvite(cara.uid, { athleteName: "Jo", contact: "jo@example.com", practice: "between-visits" });
+          expect(await ana.backend.data.getCoachInvite(sent.code)).toEqual({
+            code: sent.code,
+            coachId: cara.uid,
+            coachName: "Cara Coach",
+            expiresAt: sent.expiresAt,
+            status: "pending",
+            practice: "between-visits",
+            coachKind: "clinician",
+            coachProfession: "physiotherapist",
+            scopeRequested: physio.scopeRequested,
+          });
+        });
+
+        it("makes the practice the athlete's assignment when they accept, and nothing when they decline", async () => {
+          const sent = await cara.backend.data.createCoachInvite(cara.uid, { athleteName: "Ana", contact: "ana@example.com", practice: "between-visits" });
+          await ana.backend.data.respondToCoachInvite(ana.uid, sent.code, { accept: true, scope: "scores" });
+          const [assignment, ...more] = await ana.backend.data.listAssignments(ana.uid);
+          expect(more).toEqual([]);
+          expect(assignment).toMatchObject({
+            coachId: cara.uid,
+            athleteId: ana.uid,
+            mode: "paced",
+            pacerHalfCycleSec: 5,
+            durationSec: 300,
+            target: 14,
+            note: "Between visits",
+            cancelled: false,
+          });
+          expect(days(assignment.dueAt)).toBeGreaterThan(13.9);
+          expect(days(assignment.dueAt)).toBeLessThanOrEqual(14);
+          expect(await cara.backend.data.listAssignments(ana.uid)).toEqual([assignment]);
+
+          const declined = await cara.backend.data.createCoachInvite(cara.uid, { athleteName: "Ben", contact: "ben@example.com", practice: "between-visits" });
+          await ben.backend.data.respondToCoachInvite(ben.uid, declined.code, { accept: false });
+          expect(await ben.backend.data.listAssignments(ben.uid)).toEqual([]);
+        });
       });
 
       it("refuses a code that doesn't exist", async () => {

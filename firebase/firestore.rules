@@ -222,7 +222,8 @@ service cloud.firestore {
 
     // Coach-to-athlete invites. The coach creates and revokes them; athletes
     // open them through the getCoachInvite / respondToCoachInvite Cloud
-    // Functions, which hide the contact details and create the coach link.
+    // Functions, which hide the contact details, add who's asking (kind,
+    // profession, scope asked for; T-0123) and create the coach link.
     match /coachInvites/{code} {
       allow read: if signedIn() && resource.data.coachId == request.auth.uid;
       allow create: if signedIn()
