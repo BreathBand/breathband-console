@@ -143,7 +143,7 @@ export function PeopleStep({ value, onChange }: { value: ProProfile; onChange: (
   return (
     <>
       <h1>How do you refer to the people you work with?</h1>
-      <p className="welcome-lede">BreathCloud will call them this. Some pages still say &ldquo;athletes&rdquo; for now.</p>
+      <p className="welcome-lede">BreathCloud will call them this.</p>
       <div className="level-list" role="radiogroup" aria-label="People are called">
         {PEOPLE_TERMS.map((t) => (
           <button key={t.id} type="button" role="radio" aria-checked={value.terminology === t.id} className="level-opt" onClick={() => onChange({ ...value, terminology: t.id })}>

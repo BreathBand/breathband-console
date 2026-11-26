@@ -28,6 +28,7 @@ import {
   isTransitionScores,
   scoreWord,
 } from "@/lib/domain/scores";
+import { aPerson } from "@/lib/domain/terminology";
 import {
   buckets,
   inPeriod,
@@ -43,7 +44,9 @@ import {
   type UserProfile,
 } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
+import { PRO_WORD } from "../home/tailor";
 import { athleteHref, sessionHref } from "../links";
+import { useProKind, useTerms } from "../useTerms";
 import "./report.css";
 
 const DAY_MS = 86_400_000;
@@ -90,6 +93,7 @@ function ReportRoute() {
 /** A coach opened the report without saying whose: pick an athlete. */
 function ChooseAthlete({ coachId, days }: { coachId: string; days: number }) {
   const backend = useBackend();
+  const terms = useTerms();
   const athletes = useLoad(`report-athletes:${coachId}`, () =>
     backend.data.listAthletes(coachId),
   );
@@ -97,21 +101,21 @@ function ChooseAthlete({ coachId, days }: { coachId: string; days: number }) {
     <div className="container review rp-choose">
       <div className="title-row">
         <h1>Progress report</h1>
-        <span>Choose an athlete</span>
+        <span>Choose {aPerson(terms)}</span>
       </div>
       {athletes.status === "loading" ? (
         <Skeleton lines={3} />
       ) : athletes.status === "error" ? (
         <ErrorState
           error={athletes.error}
-          what="your athletes"
+          what={`your ${terms.many}`}
           onRetry={athletes.retry}
         />
       ) : athletes.data.length === 0 ? (
-        <EmptyState title="No athletes yet">
+        <EmptyState title={`No ${terms.many} yet`}>
           <p className="muted">
-            Reports are for athletes who share with you. Invite one on the{" "}
-            <Link href="/cloud/athletes/">Athletes</Link> page.
+            Reports are for {terms.many} who share with you. Invite one on the{" "}
+            <Link href="/cloud/athletes/">{terms.Many}</Link> page.
           </p>
         </EmptyState>
       ) : (
@@ -163,6 +167,7 @@ function Report({
   linkAthlete: boolean;
 }) {
   const backend = useBackend();
+  const terms = useTerms();
   const [now] = useState(() => new Date());
   const self = athleteId === viewerId;
 
@@ -205,14 +210,14 @@ function Report({
     data.status === "ready"
       ? self
         ? viewerName
-        : (data.data.athlete?.displayName ?? "Athlete")
+        : (data.data.athlete?.displayName ?? terms.One)
       : "";
   const back = self
     ? { href: "/cloud/sessions/?tab=trends", label: "Your trends" }
     : viewerIsCoach
       ? {
           href: athleteHref(athleteId, "trends"),
-          label: athleteName || "Athlete",
+          label: athleteName || terms.One,
         }
       : { href: "/cloud/", label: "Your sessions" };
 
@@ -291,6 +296,7 @@ function ReportDocument({
   viewerIsCoach: boolean;
 }) {
   const { targets } = data;
+  const viewerWord = PRO_WORD[useProKind() ?? "coach"];
   const t1 = now.getTime();
   const t0 = t1 - days * DAY_MS;
   const span = rangeLabel(days);
@@ -386,7 +392,7 @@ function ReportDocument({
           </div>
           <div>
             <dt>{viewerIsCoach ? "Prepared by" : "Prepared for"}</dt>
-            <dd>{viewerIsCoach ? `${viewerName}, coach` : athleteName}</dd>
+            <dd>{viewerIsCoach ? `${viewerName}, ${viewerWord}` : athleteName}</dd>
           </div>
           {!viewerIsCoach && data.coachName && (
             <div>

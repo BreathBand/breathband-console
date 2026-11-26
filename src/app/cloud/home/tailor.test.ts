@@ -111,6 +111,13 @@ describe("the professional's card", () => {
     expect(professionalOf(undefined)).toBeNull();
     expect(professionalOf("")).toBeNull();
   });
+
+  it("reads the linked professional's kind when their profile has one", () => {
+    expect(professionalOf("Niamh Byrne", "clinician")).toEqual({ name: "Niamh Byrne", kind: "clinician" });
+    expect(professionalOf("Owen Hart", "educator")).toEqual({ name: "Owen Hart", kind: "educator" });
+    expect(professionalOf("Lena Vos", null)).toEqual(coach);
+    expect(professionalOf(undefined, "clinician")).toBeNull();
+  });
 });
 
 describe("trendPeriod", () => {

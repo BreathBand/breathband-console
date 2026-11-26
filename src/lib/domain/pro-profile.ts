@@ -5,6 +5,7 @@
 // §4.1 steps 2–5 and §7 (`proKind`, `proProfile`).
 
 import { MAX_SPORT_OTHER, TRAIN_SPORTS } from "./goal-questions";
+import { proDefaultsProblem, scopeText, targetsText } from "./pro-defaults";
 import { DEFAULT_TERMS, isPeopleTerm, PEOPLE_TERMS } from "./terminology";
 import type {
   ClinicianProfession,
@@ -106,7 +107,7 @@ export function cleanProProfile(p: ProProfile): ProProfile {
 
 const labelOf = (options: Option<string>[], id: string | null) => options.find((o) => o.id === id)?.label ?? "";
 
-/** The done step's summary, as term and detail pairs: "Your work", "Practice", "Using it for", "People are". */
+/** The done step's summary, as term and detail pairs: "Your work", "Practice", "Using it for", "People are", then the defaults when set. */
 export function proSummary(p: ProProfile): [string, string][] {
   const practice =
     p.kind === "coach"
@@ -119,6 +120,8 @@ export function proSummary(p: ProProfile): [string, string][] {
     ["Practice", practice.filter(Boolean).join(" · ")],
     ["Using it for", p.useCases.map((u) => labelOf(USE_CASES[p.kind], u)).join(", ")],
     ["People are", labelOf(PEOPLE_TERMS, p.terminology)],
+    ...(p.defaultTargets ? [["Starting targets", targetsText(p.defaultTargets)] as [string, string]] : []),
+    ...(p.scopeRequested ? [["Invites ask for", scopeText(p.scopeRequested)] as [string, string]] : []),
   ];
 }
 
@@ -191,5 +194,10 @@ export function proProblem(proKind: unknown, proProfile: unknown): string | null
   if (proKind === undefined) return "proProfile: needs proKind";
   if (proProfile.kind !== proKind) return "proProfile.kind: must match proKind";
   const p = proProfile as unknown as ProProfile;
-  return practiceProblem(p) ?? usesProblem(p) ?? (isPeopleTerm(p.terminology) ? null : "proProfile.terminology: athletes, clients or students");
+  return (
+    practiceProblem(p) ??
+    usesProblem(p) ??
+    (isPeopleTerm(p.terminology) ? null : "proProfile.terminology: athletes, clients or students") ??
+    proDefaultsProblem(p)
+  );
 }

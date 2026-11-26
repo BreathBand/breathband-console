@@ -60,7 +60,7 @@ export function AthleteHome({ ws }: { ws: Workspace }) {
 
   if (sessions.length === 0) return <FirstRun name={first} now={now} />;
 
-  const professional = professionalOf(ws.coachName);
+  const professional = professionalOf(ws.coachName, ws.coachKind);
   const mechanics = mechanicsOf(prefs, professional?.kind === "clinician");
   const layout = withMechanics(homeLayout({ goal: prefs?.goal ?? null, professional, plans: ws.plans }), mechanics);
   const a = activity(sessions, now, ws.rules, targets);

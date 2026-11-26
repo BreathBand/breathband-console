@@ -9,9 +9,11 @@ import { BackendError } from "@/lib/backend";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { formatDay, formatDuration, formatTime, initials } from "@/lib/domain/format";
 import { describeGroupAverage, describePacer, GROUP_SIZE } from "@/lib/domain/group";
+import { aPerson } from "@/lib/domain/terminology";
 import type { GroupSession, PacerHalfCycle } from "@/lib/domain/types";
 import { useLoad } from "@/lib/useLoad";
 import { sessionHref } from "../links";
+import { useTerms } from "../useTerms";
 import "./group.css";
 
 const LENGTHS = [3, 5, 10];
@@ -26,12 +28,13 @@ export default function GroupPage() {
 function GroupHome({ coachId }: { coachId: string }) {
   const backend = useBackend();
   const history = useLoad(`groups:${coachId}`, () => backend.data.listGroupSessions(coachId));
+  const t = useTerms();
 
   return (
     <div className="container review">
       <div className="title-row">
         <h1>Group sessions</h1>
-        <span>Several athletes follow one pacer at the same time. You lead it and see everyone&apos;s breathing, lined up in time.</span>
+        <span>Several {t.many} follow one pacer at the same time. You lead it and see everyone&apos;s breathing, lined up in time.</span>
       </div>
       <NewGroup coachId={coachId} />
       <section className="pane pane-pad" aria-labelledby="history-h">
@@ -102,6 +105,7 @@ const STATUS: Record<GroupSession["status"], string> = {
 function NewGroup({ coachId }: { coachId: string }) {
   const backend = useBackend();
   const router = useRouter();
+  const t = useTerms();
   const athletes = useLoad(`group-athletes:${coachId}`, async () => {
     const [list, squads] = await Promise.all([backend.data.listAthletes(coachId), backend.data.listSquads(coachId)]);
     const links = await Promise.all(list.map((a) => backend.data.getCoachLink(coachId, a.uid)));
@@ -140,7 +144,7 @@ function NewGroup({ coachId }: { coachId: string }) {
         busy: false,
         error:
           e instanceof BackendError && e.code === "permission-denied"
-            ? "One of these athletes no longer shares with you. Reload and try again."
+            ? `One of these ${t.many} no longer shares with you. Reload and try again.`
             : "Couldn't open the lobby. Try again.",
       });
     }
@@ -150,17 +154,17 @@ function NewGroup({ coachId }: { coachId: string }) {
     <section className="pane pane-pad" aria-labelledby="new-group-h">
       <div className="pane-h">
         <h2 id="new-group-h">Start a group session</h2>
-        <span className="meta">Each athlete gets a Join notification in the Breathband app</span>
+        <span className="meta">Each {t.one} gets a Join notification in the Breathband app</span>
       </div>
       {athletes.status === "loading" ? (
         <Skeleton lines={3} />
       ) : athletes.status === "error" ? (
-        <ErrorState error={athletes.error} what="your athletes" onRetry={athletes.retry} />
+        <ErrorState error={athletes.error} what={`your ${t.many}`} onRetry={athletes.retry} />
       ) : everyone.length < GROUP_SIZE.min ? (
-        <EmptyState title="You need at least two athletes">
+        <EmptyState title={`You need at least two ${t.many}`}>
           <p className="muted">
-            Group sessions are for {GROUP_SIZE.min} to {GROUP_SIZE.max} athletes.{" "}
-            <Link href="/cloud/athletes/#invite-athlete">Invite an athlete</Link> by text or email.
+            Group sessions are for {GROUP_SIZE.min} to {GROUP_SIZE.max} {t.many}.{" "}
+            <Link href="/cloud/athletes/#invite-athlete">Invite {aPerson(t)}</Link> by text or email.
           </p>
         </EmptyState>
       ) : (
@@ -234,7 +238,7 @@ function NewGroup({ coachId }: { coachId: string }) {
             </fieldset>
           </div>
           <p className="label">
-            You can switch the pacer and drop markers while it runs. Each athlete&apos;s app records and scores their own session, and
+            You can switch the pacer and drop markers while it runs. Each {t.one}&apos;s app records and scores their own session, and
             it shows up in their history and yours.
           </p>
           {status.error && (
@@ -247,7 +251,7 @@ function NewGroup({ coachId }: { coachId: string }) {
               <Icon name="group" size={18} />
               {status.busy ? "Opening…" : "Open the lobby"}
             </button>
-            {chosen.size < GROUP_SIZE.min && <span className="label">Pick at least {GROUP_SIZE.min} athletes.</span>}
+            {chosen.size < GROUP_SIZE.min && <span className="label">Pick at least {GROUP_SIZE.min} {t.many}.</span>}
           </div>
         </form>
       )}

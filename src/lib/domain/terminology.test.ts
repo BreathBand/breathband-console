@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { defaultProProfile } from "./pro-profile";
-import { countPeople, defaultTerm, nounsFor, peopleNouns } from "./terminology";
+import { aPerson, countPeople, defaultTerm, nounsFor, peopleNouns } from "./terminology";
 import type { ProKind } from "./types";
 
 describe("terminology per kind", () => {
@@ -38,5 +38,13 @@ describe("terminology per override", () => {
     expect(countPeople(0, nounsFor("students"))).toBe("no students");
     expect(countPeople(1, nounsFor("students"))).toBe("1 student");
     expect(countPeople(12, nounsFor("athletes"))).toBe("12 athletes");
+  });
+});
+
+describe("aPerson", () => {
+  it("puts the right article before each term", () => {
+    expect(aPerson(nounsFor("athletes"))).toBe("an athlete");
+    expect(aPerson(nounsFor("clients"))).toBe("a client");
+    expect(aPerson(nounsFor("students"))).toBe("a student");
   });
 });
