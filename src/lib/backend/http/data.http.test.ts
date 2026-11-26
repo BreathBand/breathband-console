@@ -16,16 +16,20 @@ import { authSecret, createAuth } from "../../../../server/auth";
 import { createDb } from "../../../../server/db/client";
 import { MIGRATIONS_DIR } from "../../../../server/db/env";
 import { assertLocalDatabaseUrl } from "../../../../server/db/guard";
-import { coachLinks, consents, invites, user as userTable } from "../../../../server/db/schema";
+import { coachInvites, coachLinks, consents, invites, squadMembers, user as userTable, waitlist } from "../../../../server/db/schema";
 import { createApp } from "../../../../server/index";
-import { hashCode } from "../../../../server/routes/coaching";
+import { hashCode } from "../../../../server/routes/codes";
 import type { Email, Mailer } from "../../../../server/mailer";
 import { createFsStorage } from "../../../../server/storage";
+import { describeCoachToolsContract } from "../contract/coach-tools.contract";
 import { describeCoachingContract } from "../contract/coaching.contract";
 import type { DataContractHarness, Person } from "../contract/data.harness";
 import { linkThroughInvites, PASSWORD, refusal, signUpInput, uniqueEmail } from "../contract/data.harness";
+import { describeGroupContract } from "../contract/group.contract";
+import { describeMoodContract } from "../contract/mood.contract";
 import { describeProfileContract } from "../contract/profile.contract";
 import { describeSessionsContract } from "../contract/sessions.contract";
+import { describeWaitlistContract } from "../contract/waitlist.contract";
 import type { AuthUser } from "../types";
 import type { Fetch } from "./client";
 import { createHttpBackend } from "./index";
@@ -149,7 +153,11 @@ const harness = (): DataContractHarness => ({
 
 describeProfileContract("http", harness);
 describeSessionsContract("http", harness);
+describeMoodContract("http", harness);
 describeCoachingContract("http", harness);
+describeCoachToolsContract("http", harness);
+describeGroupContract("http", harness);
+describeWaitlistContract("http", harness);
 
 describe("the API behind the http DataService", () => {
   const post = (path: string, body: unknown) =>
@@ -297,5 +305,61 @@ describe("the coaching API behind the http DataService", () => {
     await cara.backend.data.redeemInvite(cara.uid, invite.code);
     await refusal(cara.backend.data.markSessionSeen(cara.uid, ana.uid, "no-such-session"), "not-found");
     expect(await cara.backend.data.listSeenSessions(cara.uid)).toEqual([]);
+  });
+});
+
+describe("the I-10 API behind the http DataService", () => {
+  it("stores only a hash of a coach's invite code, and lists the code back to the coach", async () => {
+    const cara = await harness().person("coach");
+    const sent = await cara.backend.data.createCoachInvite(cara.uid, { athleteName: "Jo", contact: "jo@example.com" });
+    const [row] = await handle.db.select().from(coachInvites).where(eq(coachInvites.coachId, cara.uid));
+    expect(row.codeHash).toBe(hashCode(sent.code));
+    expect(JSON.stringify(row)).not.toContain(sent.code);
+    expect((await cara.backend.data.listCoachInvites(cara.uid)).map((i) => i.code)).toEqual([sent.code]);
+  });
+
+  it("refuses a coach's invite once it has expired, and makes no link", async () => {
+    const [ana, cara] = await Promise.all([harness().person(), harness().person("coach")]);
+    const sent = await cara.backend.data.createCoachInvite(cara.uid, { athleteName: "Ana", contact: "ana@example.com" });
+    await handle.db.update(coachInvites).set({ expiresAt: new Date(Date.now() - 1000) }).where(eq(coachInvites.codeHash, hashCode(sent.code)));
+    await refusal(ana.backend.data.respondToCoachInvite(ana.uid, sent.code, { accept: true, scope: "curves" }), "invite-invalid");
+    expect(await cara.backend.data.getCoachLink(cara.uid, ana.uid)).toBeNull();
+  });
+
+  it("removes a squad's members with the squad", async () => {
+    const [ana, cara] = await Promise.all([harness().person(), harness().person("coach")]);
+    await linkThroughInvites(people)(cara.uid, ana.uid, "curves");
+    const squad = await cara.backend.data.saveSquad(cara.uid, { name: "Solo", athleteIds: [ana.uid] });
+    await cara.backend.data.deleteSquad(cara.uid, squad.id);
+    expect(await handle.db.select().from(squadMembers).where(eq(squadMembers.squadId, squad.id))).toEqual([]);
+  });
+
+  it("keeps the live view to the host, and reports everyone gone once the session ends", async () => {
+    const [ana, ben, cara] = await Promise.all([harness().person(), harness().person(), harness().person("coach")]);
+    for (const athlete of [ana, ben]) await linkThroughInvites(people)(cara.uid, athlete.uid, "curves");
+    const group = await cara.backend.data.createGroupSession(cara.uid, { title: "", athleteIds: [ana.uid, ben.uid], pacerHalfCycleSec: 5, durationSec: 60 });
+    const live = (uid: string) => browsers.get(uid)!(`${api}/api/v1/group-sessions/${group.id}/live`);
+    expect((await live(ana.uid)).status).toBe(403);
+
+    await cara.backend.data.startGroupSession(group.id);
+    await cara.backend.data.endGroupSession(group.id);
+    expect(await (await live(cara.uid)).json()).toEqual({ status: "ended", presence: { [ana.uid]: "left", [ben.uid]: "left" } });
+  });
+
+  it("stores a waitlist address once, trimmed and in lower case", async () => {
+    const visitor = open().data;
+    const email = `Waiting-${Date.now()}@Example.test`;
+    await visitor.joinWaitlist({ email: ` ${email} `, source: "hero" });
+    await visitor.joinWaitlist({ email: email.toUpperCase(), source: "footer" });
+    const rows = await handle.db.select().from(waitlist).where(eq(waitlist.email, email.toLowerCase()));
+    expect(rows).toMatchObject([{ email: email.toLowerCase(), source: "hero" }]);
+  });
+
+  it.each<[string, { email: string; source: string }, string]>([
+    ["an address over 254 characters", { email: `${"a".repeat(250)}@example.test`, source: "hero" }, "invalid-email"],
+    ["a source over 32 characters", { email: "fine@example.test", source: "s".repeat(33) }, "invalid-input"],
+  ])("refuses a waitlist entry with %s", async (_, entry, code) => {
+    await refusal(open().data.joinWaitlist(entry), code as "invalid-email");
+    expect(await handle.db.select().from(waitlist).where(eq(waitlist.email, entry.email))).toEqual([]);
   });
 });

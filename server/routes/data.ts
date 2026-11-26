@@ -1,6 +1,6 @@
 // /api/v1/*: the data routes behind the http adapter's DataService
-// (src/lib/backend/http/routes.ts names them). Every route needs a signed-in
-// person; access rules come from ../authz.ts. Errors answer
+// (src/lib/backend/http/routes.ts names them). Every route but the waitlist
+// needs a signed-in person; access rules come from ../authz.ts. Errors answer
 // `{ error: { code, message } }` with the adapter's BackendError codes.
 
 import { and, eq } from "drizzle-orm";
@@ -14,10 +14,16 @@ import type { LinkScope } from "../authz";
 import type { Db } from "../db/client";
 import { coachLinks } from "../db/schema";
 import type { StorageService } from "../storage";
+import { alertRoutes } from "./alerts";
+import { coachInviteRoutes } from "./coach-invites";
 import { coachingRoutes } from "./coaching";
 import { feedbackRoutes } from "./coaching-feedback";
+import { groupRoutes } from "./group";
+import { moodRoutes } from "./mood";
 import { profileRoutes } from "./profile";
 import { sessionRoutes } from "./sessions";
+import { squadRoutes } from "./squads";
+import { waitlistRoutes } from "./waitlist";
 import { waveformRoutes } from "./waveforms";
 
 export const DATA_BASE_PATH = "/api/v1";
@@ -38,6 +44,9 @@ export function dataRoutes(deps: DataDeps) {
   const smallBodies = bodyLimit({ maxSize: MAX_BODY_BYTES, onError: () => fail("invalid-input", "request body too large") });
   routes.use((c, next) => (c.req.method === "POST" && /\/sessions$/.test(c.req.path) ? next() : smallBodies(c, next)));
 
+  // Public: registered before the session check below, so it answers without one.
+  waitlistRoutes(routes, deps);
+
   routes.use(async (c, next) => {
     const session = await deps.auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) fail("not-signed-in", "Sign in first.");
@@ -56,8 +65,13 @@ export function dataRoutes(deps: DataDeps) {
   profileRoutes(routes, deps);
   sessionRoutes(routes, deps);
   waveformRoutes(routes, deps);
+  moodRoutes(routes, deps);
   coachingRoutes(routes, deps);
   feedbackRoutes(routes, deps);
+  squadRoutes(routes, deps);
+  alertRoutes(routes, deps);
+  coachInviteRoutes(routes, deps);
+  groupRoutes(routes, deps);
   return routes;
 }
 
