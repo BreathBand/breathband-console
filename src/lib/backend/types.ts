@@ -45,6 +45,12 @@ export interface SignUpInput {
   birthYear: number;
 }
 
+/** What updateProfile takes. */
+export type ProfileChanges = Partial<Pick<UserProfile, "displayName" | "preferences" | "proKind" | "proProfile">> & {
+  /** Professionals only: the terms they agreed to at the end of onboarding. */
+  proConsents?: Pick<ConsentRecord, "kind" | "version">[];
+};
+
 export interface AuthService {
   currentUser(): AuthUser | null;
   /** Calls back immediately with the current state, then on every change. Returns an unsubscribe function. */
@@ -102,9 +108,14 @@ export interface DataService {
   /**
    * Own profile only: name, preferences and, for professionals (role "coach"),
    * `proKind` and `proProfile` (whose kind must match). Role and email are fixed.
+   * `proConsents` records the professional terms at the end of onboarding: every
+   * kind the professional's kind needs (lib/domain/pro-terms), at its current
+   * version; the backend stamps the time and appends them to `consents`, once
+   * (a kind already held at that version isn't added again). Sign-up's consents
+   * never change.
    * Throws BackendError("permission-denied") when an athlete sends the professional fields.
    */
-  updateProfile(uid: string, changes: Partial<Pick<UserProfile, "displayName" | "preferences" | "proKind" | "proProfile">>): Promise<UserProfile>;
+  updateProfile(uid: string, changes: ProfileChanges): Promise<UserProfile>;
 
   /** Newest first. Throws BackendError("permission-denied") if the caller can't read this athlete. */
   listSessions(athleteId: string, options?: ListSessionsOptions): Promise<SessionSummary[]>;

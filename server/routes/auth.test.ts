@@ -130,20 +130,20 @@ async function session(app: App, cookie: string) {
 }
 
 describe("sign up", () => {
-  it("creates the user with role, pro kind and birth year, sends a verification email and no session", async () => {
+  it("creates the user with role and birth year, sends a verification email and no session", async () => {
     const app = build();
-    const { email, response } = await signUp(app, { role: "coach", proKind: "clinician", birthYear: 1988 });
+    const { email, response } = await signUp(app, { role: "coach", birthYear: 1988 });
 
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       token: null,
-      user: { email, name: "Ana", emailVerified: false, role: "coach", proKind: "clinician", birthYear: 1988 },
+      user: { email, name: "Ana", emailVerified: false, role: "coach", proKind: null, birthYear: 1988 },
     });
     expect(response.headers.getSetCookie()).toEqual([]);
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) expect(response.headers.get(name)).toBe(value);
 
     const [row] = await db.select().from(user).where(eq(user.email, email));
-    expect(row).toMatchObject({ role: "coach", proKind: "clinician", birthYear: 1988, emailVerified: false });
+    expect(row).toMatchObject({ role: "coach", proKind: null, birthYear: 1988, emailVerified: false });
 
     const mail = lastEmailTo(email);
     expect(mail?.subject).toMatch(/confirm your email/i);
@@ -208,9 +208,9 @@ describe("sign in", () => {
     expect(verified.headers.get("Location")).toBe(`${APP}/`);
   });
 
-  it("works after the verification link, and the session carries role and pro kind", async () => {
+  it("works after the verification link, and the session carries the role", async () => {
     const app = build();
-    const { email } = await signUp(app, { role: "coach", proKind: "educator" });
+    const { email } = await signUp(app, { role: "coach" });
 
     const verified = await get(app, linkIn(lastEmailTo(email)));
     expect(verified.status).toBe(302);
@@ -223,7 +223,7 @@ describe("sign in", () => {
     const cookie = cookiesFrom(response);
     expect(cookie).toContain("breathband.session_token=");
     expect(await session(app, cookie)).toMatchObject({
-      user: { email, emailVerified: true, role: "coach", proKind: "educator" },
+      user: { email, emailVerified: true, role: "coach", proKind: null },
     });
   });
 

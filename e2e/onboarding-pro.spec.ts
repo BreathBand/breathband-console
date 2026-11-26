@@ -24,6 +24,20 @@ async function signUpAsProfessional(page: Page, name: string): Promise<string> {
 }
 
 const next = (page: Page) => page.getByRole("button", { name: "Continue" }).click();
+
+// T-0118 added three steps after "Your people": defaults, templates and the
+// professional terms (every box required). Taken with their defaults here;
+// e2e/onboarding-pro-terms.spec.ts covers them.
+async function acceptDefaultsAndTerms(page: Page) {
+  await next(page);
+  await expect(page.getByRole("heading", { name: /^Defaults for the/ })).toBeVisible();
+  await next(page);
+  await expect(page.getByRole("heading", { name: "Practice templates" })).toBeVisible();
+  await next(page);
+  await expect(page.getByRole("heading", { name: "Professional terms" })).toBeVisible();
+  for (const box of await page.getByRole("checkbox").all()) await box.check();
+  await next(page);
+}
 const pick = (page: Page, question: string, option: string) =>
   page.getByRole("group", { name: question, exact: true }).getByRole("button", { name: option, exact: true }).click();
 
@@ -63,7 +77,7 @@ test("a coach: sports, level and team, use cases, and athletes by default", asyn
 
   await expect(page.getByRole("heading", { name: /How do you refer to the people/ })).toBeVisible();
   await expect(page.getByRole("radio", { name: /^Athletes/ })).toHaveAttribute("aria-checked", "true");
-  await next(page);
+  await acceptDefaultsAndTerms(page);
 
   await expect(page.getByRole("heading", { name: "You're set, Marta." })).toBeVisible();
   await expect(page.getByText("Add your first athletes")).toBeVisible();
@@ -116,7 +130,7 @@ test("a clinician: profession and country, their own use cases, and clients by d
 
   await expect(page.getByRole("radio", { name: /^Clients/ })).toHaveAttribute("aria-checked", "true");
   await expect(page.getByRole("radio", { name: /Patients/ })).toHaveCount(0);
-  await next(page);
+  await acceptDefaultsAndTerms(page);
 
   await expect(page.getByText("Add your first clients")).toBeVisible();
   await expect(page.getByText("Physiotherapist · Ireland")).toBeVisible();
@@ -154,7 +168,7 @@ test("an educator who calls people athletes: the override is stored and used", a
   await next(page);
   await expect(page.getByRole("radio", { name: /^Students/ })).toHaveAttribute("aria-checked", "true");
   await page.getByRole("radio", { name: /^Athletes/ }).click();
-  await next(page);
+  await acceptDefaultsAndTerms(page);
 
   await expect(page.getByRole("button", { name: "Add athletes" })).toBeVisible();
   await page.getByRole("button", { name: "Add athletes" }).click();

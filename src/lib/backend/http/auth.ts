@@ -23,7 +23,13 @@ export interface HttpAuthOptions {
   now: () => Date;
 }
 
-export function createHttpAuth(api: ApiClient, options: HttpAuthOptions): AuthService {
+/** AuthService, plus a way for the data routes to say the session is gone. */
+export interface HttpAuth extends AuthService {
+  /** The API answered 401: count the person as signed out and tell listeners. */
+  expire(): void;
+}
+
+export function createHttpAuth(api: ApiClient, options: HttpAuthOptions): HttpAuth {
   const listeners = new Set<(user: AuthUser | null) => void>();
   let user: AuthUser | null = null;
   let loaded = false;
@@ -50,6 +56,10 @@ export function createHttpAuth(api: ApiClient, options: HttpAuthOptions): AuthSe
   };
 
   return {
+    expire() {
+      if (user) set(null);
+    },
+
     currentUser() {
       void load();
       return user;
@@ -75,8 +85,8 @@ export function createHttpAuth(api: ApiClient, options: HttpAuthOptions): AuthSe
     },
 
     async signUp({ email, password, displayName, role, consents, birthYear }) {
-      // The same checks, in the same order, as the local adapter. The API repeats the
-      // email and password ones; the age and consent ones live only here for now (I-08).
+      // The same checks, in the same order, as the local adapter, so nothing is sent
+      // that would be refused. The API repeats them all and stores the consents (I-08).
       const address = normalize(email);
       if (!EMAIL_PATTERN.test(address)) throw new BackendError("invalid-email");
       if (password.length < MIN_PASSWORD_LENGTH) throw new BackendError("weak-password");
@@ -89,8 +99,6 @@ export function createHttpAuth(api: ApiClient, options: HttpAuthOptions): AuthSe
       const missing = consentsProblem(consents);
       if (missing) throw new BackendError("invalid-input", missing);
 
-      // TODO(I-08): the consent records aren't stored yet. The API has a `consents` table
-      // but no route that writes it; I-08 adds one and this call sends `consents` with it.
       const { token, user: created } = await api.post<{ token: string | null; user: ApiUser }>(
         ROUTES.signUp.path,
         {
@@ -99,6 +107,7 @@ export function createHttpAuth(api: ApiClient, options: HttpAuthOptions): AuthSe
           password,
           role,
           birthYear,
+          consents,
           // Relative: the API points it at APP_URL (callbackOnApp in server/auth.ts).
           callbackURL: AFTER_VERIFY_PATH,
         },

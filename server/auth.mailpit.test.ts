@@ -101,7 +101,6 @@ describe.skipIf(!process.env.MAILPIT_E2E)("auth with Mailpit", () => {
       email,
       password: PASSWORD,
       role: "coach",
-      proKind: "clinician",
       callbackURL: `${APP}/cloud/`,
     });
     expect(signUp.status).toBe(200);
@@ -127,7 +126,7 @@ describe.skipIf(!process.env.MAILPIT_E2E)("auth with Mailpit", () => {
 
     const session = await fetch(`${api}/api/auth/get-session`, { headers: { Cookie: cookie } });
     expect(await session.json()).toMatchObject({
-      user: { email, emailVerified: true, role: "coach", proKind: "clinician" },
+      user: { email, emailVerified: true, role: "coach", proKind: null },
     });
   });
 });

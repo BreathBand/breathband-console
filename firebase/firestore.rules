@@ -30,7 +30,37 @@ service cloud.firestore {
               && after.get('proKind', null) in ['coach', 'clinician', 'educator']
               && (after.get('proProfile', null) == null
                   || (after.proProfile.kind == after.proKind
-                      && after.proProfile.terminology in ['athletes', 'clients', 'students'])));
+                      && after.proProfile.terminology in ['athletes', 'clients', 'students']
+                      && after.proProfile.get('scopeRequested', 'scores') in ['scores', 'curves'])));
+    }
+
+    // One professional consent record (lib/domain/pro-terms.ts): the terms for
+    // every professional, the wellness acknowledgement for a clinician, the 16+
+    // acknowledgement for an educator. Versions are checked by the client and
+    // adapter, not here.
+    function proConsentOk(c, after) {
+      return c.keys().hasOnly(['kind', 'version', 'acceptedAt'])
+          && c.version is string
+          && c.acceptedAt is string
+          && (c.kind == 'professional-terms'
+              || (c.kind == 'wellness-acknowledgement' && after.proKind == 'clinician')
+              || (c.kind == 'student-age-acknowledgement' && after.proKind == 'educator'));
+    }
+
+    // Sign-up's consents never change. A professional (with a kind) may append
+    // one or two professional records at the end of onboarding; nothing else.
+    function consentsOk(before, after) {
+      let held = before.get('consents', []);
+      let next = after.get('consents', []);
+      let n = held.size();
+      return next == held
+          || (before.role == 'coach'
+              && after.get('proKind', null) != null
+              && next.size() > n
+              && next.size() <= n + 2
+              && next[0:n] == held
+              && proConsentOk(next[n], after)
+              && (next.size() == n + 1 || proConsentOk(next[n + 1], after)));
     }
 
     // Profiles: readable by the owner and by either side of a coach link.
@@ -54,14 +84,16 @@ service cloud.firestore {
                     && request.resource.data.consents[0].kind == 'terms'
                     && request.resource.data.consents[1].kind == 'privacy'
                     && request.resource.data.consents[2].kind == 'breathing-data';
-      // Role, email, consents and birth year are fixed after sign-up.
-      // proKind and proProfile are for professionals (role "coach") only, and the
-      // profile's kind matches proKind; the rest of proProfile is checked by the
-      // client and adapter (lib/domain/pro-profile.ts), not here.
+      // Role, email and birth year are fixed after sign-up; consents only grow
+      // by a professional's terms (consentsOk). proKind and proProfile are for
+      // professionals (role "coach") only, and the profile's kind matches
+      // proKind; the rest of proProfile (including defaultTargets and
+      // scopeRequested) is checked by the client and adapter
+      // (lib/domain/pro-profile.ts, pro-defaults.ts), not here.
       allow update: if isSelf(uid)
                     && request.resource.data.role == resource.data.role
                     && request.resource.data.email == resource.data.email
-                    && request.resource.data.get('consents', null) == resource.data.get('consents', null)
+                    && consentsOk(resource.data, request.resource.data)
                     && request.resource.data.get('birthYear', null) == resource.data.get('birthYear', null)
                     && proFieldsOk(resource.data, request.resource.data);
       allow delete: if false; // Account deletion runs in a Cloud Function.

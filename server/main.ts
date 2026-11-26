@@ -13,6 +13,7 @@ import { createDb } from "./db/client";
 import { readEnv } from "./env";
 import { createApp } from "./index";
 import { createMailer } from "./mailer";
+import { createFsStorage } from "./storage";
 
 const STATIC_DIR = "out";
 const SHUTDOWN_TIMEOUT_MS = 10_000;
@@ -41,6 +42,7 @@ const app = createApp({
   staticDir: production ? STATIC_DIR : undefined,
   log: env.mode !== "test",
   auth,
+  storage: createFsStorage(env.storageDir),
 });
 
 const server = serve({ fetch: app.fetch, port: env.port }, (info) => {
