@@ -1,22 +1,29 @@
-import type { ConsentKind, ConsentRecord } from "./types";
+import type { ConsentKind, ConsentRecord, ProConsentKind, SignUpConsentKind } from "./types";
 
 // DRAFT, for counsel: these versions name draft documents. When the reviewed
 // terms, privacy notice and processing wording land, give each a new version;
-// sign-up then records the new one.
+// sign-up (or professional onboarding) then records the new one.
 export const CONSENT_VERSIONS: Record<ConsentKind, string> = {
   terms: "draft-2026-11-26",
   privacy: "draft-2026-11-26",
   "breathing-data": "draft-2026-11-26",
+  "professional-terms": "draft-2026-11-26",
+  "wellness-acknowledgement": "draft-2026-11-26",
+  "student-age-acknowledgement": "draft-2026-11-26",
 };
 
-export const CONSENT_KINDS = Object.keys(CONSENT_VERSIONS) as ConsentKind[];
+/** What sign-up records, in this order (firebase/firestore.rules checks it). */
+export const CONSENT_KINDS: SignUpConsentKind[] = ["terms", "privacy", "breathing-data"];
+
+/** What professional onboarding can record, after sign-up's (see lib/domain/pro-terms). */
+export const PRO_CONSENT_KINDS: ProConsentKind[] = ["professional-terms", "wellness-acknowledgement", "student-age-acknowledgement"];
 
 /** What sign-up sends: the current version of every kind the person ticked. */
 export function currentConsents(kinds: readonly ConsentKind[] = CONSENT_KINDS): Pick<ConsentRecord, "kind" | "version">[] {
   return kinds.map((kind) => ({ kind, version: CONSENT_VERSIONS[kind] }));
 }
 
-/** Why these consents can't open an account, or null when every kind is there at its current version. */
+/** Why these consents can't open an account, or null when every sign-up kind is there at its current version. */
 export function consentsProblem(consents: readonly Pick<ConsentRecord, "kind" | "version">[]): string | null {
   for (const kind of CONSENT_KINDS) {
     const given = consents.find((c) => c.kind === kind);

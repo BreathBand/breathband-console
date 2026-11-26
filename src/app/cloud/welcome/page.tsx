@@ -10,22 +10,41 @@ import { currentSupport, supportAdvice, UNKNOWN_SUPPORT, type BandSupport } from
 import { firstSession, firstSessionHref } from "@/lib/domain/first-session";
 import { defaultDetails, planDefaults, withOnboardingAnswers, type Plan, type TrackDetails } from "@/lib/domain/goal-questions";
 import { defaultPreferences, GOALS, goalOf, SKILL_LEVELS, skillBandText } from "@/lib/domain/preferences";
+import { withProDefaults } from "@/lib/domain/pro-defaults";
 import { cleanProProfile, defaultProProfile, practiceProblem, proSummary, usesProblem } from "@/lib/domain/pro-profile";
+import { hasProTerms, proConsents, requiredProConsents } from "@/lib/domain/pro-terms";
 import { peopleNouns } from "@/lib/domain/terminology";
-import type { BandRoute, BreathGoal, GoalDetails, ProKind, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
+import type { BandRoute, BreathGoal, GoalDetails, ProConsentKind, ProKind, ProProfile, UserPreferences, UserProfile } from "@/lib/domain/types";
 import { LENGTHS } from "@/lib/prefs";
 import { markSetupFinished } from "../CloudShell";
 import { stateWords } from "../device/words";
 import { bandSummary, deviceKindFor, finishActions, initialRoute, onboardingFor, ROUTE_OPTIONS, routeAvailable } from "./band-route";
 import { GoalQuestions } from "./GoalQuestions";
 import { daysText, PlanStep } from "./PlanStep";
+import { DefaultsStep, TemplatesStep, termsAgreed, TermsStep } from "./ProFinishSteps";
 import { KindStep, PeopleStep, PracticeStep, UsesStep } from "./ProSteps";
 import { Waitlist } from "./Waitlist";
 
-type Step = "name" | "goal" | "questions" | "level" | "sessions" | "plan" | "band" | "kind" | "practice" | "uses" | "people" | "done";
+type Step =
+  | "name"
+  | "goal"
+  | "questions"
+  | "level"
+  | "sessions"
+  | "plan"
+  | "band"
+  | "kind"
+  | "practice"
+  | "uses"
+  | "people"
+  | "defaults"
+  | "templates"
+  | "terms"
+  | "done";
 const ATHLETE_STEPS: Step[] = ["name", "goal", "questions", "level", "sessions", "plan", "band", "done"];
 // Professionals sign up with role "coach"; the kind step says which kind of work (planning/v1/02 §4.1).
-const COACH_STEPS: Step[] = ["name", "kind", "practice", "uses", "people", "done"];
+// The terms come last, just before Finish, so they're agreed with everything else in view.
+const COACH_STEPS: Step[] = ["name", "kind", "practice", "uses", "people", "defaults", "templates", "terms", "done"];
 const STEP_LABELS: Record<Step, string> = {
   name: "You",
   goal: "Your goal",
@@ -38,6 +57,9 @@ const STEP_LABELS: Record<Step, string> = {
   practice: "Your practice",
   uses: "What it's for",
   people: "Your people",
+  defaults: "Defaults",
+  templates: "Templates",
+  terms: "Terms",
   done: "Ready",
 };
 
@@ -77,6 +99,10 @@ function Welcome({ profile }: { profile: UserProfile }) {
   const [proAnswers, setProAnswers] = useState<Partial<Record<ProKind, ProProfile>>>(() =>
     profile.proProfile ? { [profile.proProfile.kind]: profile.proProfile } : {},
   );
+  // The terms step's ticked boxes; already ticked when onboarding runs again after they were recorded.
+  const [agreed, setAgreed] = useState<ProConsentKind[]>(() =>
+    profile.proKind && hasProTerms(profile.proKind, profile.consents) ? requiredProConsents(profile.proKind) : [],
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const index = steps.indexOf(step);
@@ -92,7 +118,8 @@ function Welcome({ profile }: { profile: UserProfile }) {
   const withBand = choice ? deviceKindFor(choice.bandRoute) !== null : false;
   const actions = finishActions(choice, firstSessionHref(suggested));
   const secondary = actions.secondary;
-  const pro = proKind ? cleanProProfile(proAnswers[proKind] ?? defaultProProfile(proKind)) : null;
+  const pro = proKind ? withProDefaults(cleanProProfile(proAnswers[proKind] ?? defaultProProfile(proKind))) : null;
+  const agreedToTerms = pro ? termsAgreed(pro, agreed) : false;
   const shownPro = proKind ? (proAnswers[proKind] ?? defaultProProfile(proKind)) : null;
   const setPro = (next: ProProfile) => setProAnswers((a) => ({ ...a, [next.kind]: next }));
   const nouns = peopleNouns(pro ? { proKind: pro.kind, proProfile: pro } : profile);
@@ -104,13 +131,18 @@ function Welcome({ profile }: { profile: UserProfile }) {
   };
 
   async function finish(next: string) {
+    // A professional can't finish without the terms (and a clinician's or educator's acknowledgement).
+    if (coach && pro && !agreedToTerms) {
+      setStep("terms");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       await backend.data.updateProfile(profile.uid, {
         displayName: name.trim() || profile.displayName,
         preferences: { ...final, onboardedAt: new Date().toISOString() },
-        ...(coach && pro ? { proKind: pro.kind, proProfile: pro } : {}),
+        ...(coach && pro ? { proKind: pro.kind, proProfile: pro, proConsents: proConsents(pro.kind) } : {}),
       });
       markSetupFinished();
       router.replace(next);
@@ -233,6 +265,27 @@ function Welcome({ profile }: { profile: UserProfile }) {
             <section>
               <PeopleStep value={shownPro} onChange={setPro} />
               <Nav onBack={() => go(-1)} onNext={() => go(1)} />
+            </section>
+          )}
+
+          {step === "defaults" && shownPro && (
+            <section>
+              <DefaultsStep value={shownPro} onChange={setPro} />
+              <Nav onBack={() => go(-1)} onNext={() => go(1)} />
+            </section>
+          )}
+
+          {step === "templates" && shownPro && (
+            <section>
+              <TemplatesStep value={shownPro} />
+              <Nav onBack={() => go(-1)} onNext={() => go(1)} />
+            </section>
+          )}
+
+          {step === "terms" && pro && (
+            <section>
+              <TermsStep value={pro} agreed={agreed} onAgreed={setAgreed} />
+              <Nav onBack={() => go(-1)} onNext={() => go(1)} nextDisabled={!agreedToTerms} />
             </section>
           )}
 

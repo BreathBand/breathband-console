@@ -66,10 +66,27 @@ export interface ProProfile {
   useCases: ProUseCase[];
   /** How they refer to the people they work with. Defaults by kind. */
   terminology: PeopleTerm;
+  /**
+   * The targets the people they invite start with (§4.1 step 7). Partial: a
+   * clinician starts with no score target. Absent on profiles saved before
+   * T-0118. Server: `pro_profiles.default_targets`.
+   */
+  defaultTargets?: Partial<AthleteTargets>;
+  /** What their invites ask people to share by default. Absent on profiles saved before T-0118. */
+  scopeRequested?: ShareScope;
 }
 
 /** `terms` and `privacy` share one checkbox; `breathing-data` is processing breathing data to give scores. */
-export type ConsentKind = "terms" | "privacy" | "breathing-data";
+export type SignUpConsentKind = "terms" | "privacy" | "breathing-data";
+
+/**
+ * Agreed at the end of professional onboarding (planning/v1/02 §4.1 step 6):
+ * every professional the professional terms; a clinician also the wellness
+ * acknowledgement, an educator the 16+ acknowledgement.
+ */
+export type ProConsentKind = "professional-terms" | "wellness-acknowledgement" | "student-age-acknowledgement";
+
+export type ConsentKind = SignUpConsentKind | ProConsentKind;
 
 /** One agreement, kept as a legal record: which document, which version of it, and when. */
 export interface ConsentRecord {
