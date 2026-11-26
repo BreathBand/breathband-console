@@ -16,6 +16,13 @@ import { termsOf } from "./useTerms";
 
 /** Pages for signed-out visitors. They render without the app chrome and bring their own header. */
 const PUBLIC_PATHS = ["/cloud/login/", "/cloud/signup/", "/cloud/reset/"];
+/**
+ * Pages anyone may open (T-0129): signed out they render bare, like the auth
+ * screens, and bring their own frame; signed in they are ordinary pages (no
+ * bounce to `?next=`). A professional's invite link shows who's asking before
+ * sign-up.
+ */
+const OPEN_PATHS = ["/cloud/join/"];
 const LANDING = "/cloud/";
 /** Full-screen pages: the recording instrument brings its own frame. */
 const BARE_PATHS = ["/cloud/record/live/", "/cloud/record/duo/", "/cloud/welcome/"];
@@ -89,10 +96,12 @@ export function CloudShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const isPublic = PUBLIC_PATHS.includes(pathname);
+  const isOpen = OPEN_PATHS.includes(pathname);
   const isLanding = pathname === LANDING;
 
   useEffect(() => {
-    if (auth.status === "signed-out" && !isPublic && !isLanding) {
+    // An open page stays put for a visitor, but signing out from it still lands on /cloud/.
+    if (auth.status === "signed-out" && !isPublic && !isLanding && (!isOpen || exit.toLanding)) {
       const here = window.location.pathname + window.location.search;
       router.replace(exit.toLanding ? LANDING : `/cloud/login/?next=${encodeURIComponent(here)}`);
     }
@@ -106,7 +115,7 @@ export function CloudShell({ children }: { children: ReactNode }) {
     // New accounts set up their goal, level and sessions before anything else.
     const needsSetup = auth.status === "signed-in" && auth.profile !== null && !auth.profile.preferences?.onboardedAt && !setup.finished;
     if (needsSetup && !isPublic && !BEFORE_SETUP.includes(pathname)) router.replace("/cloud/welcome/");
-  }, [auth, isPublic, isLanding, pathname, router]);
+  }, [auth, isPublic, isOpen, isLanding, pathname, router]);
 
   if (auth.status === "loading") {
     return (
@@ -120,7 +129,7 @@ export function CloudShell({ children }: { children: ReactNode }) {
   // Signed-out pages are full-bleed: the landing page and the auth screens.
   if (auth.status === "signed-out") {
     if (isLanding) return <CloudLanding />;
-    return isPublic ? <>{children}</> : null;
+    return isPublic || isOpen ? <>{children}</> : null;
   }
   if (isPublic) return null;
   if (BARE_PATHS.includes(pathname)) return <>{children}</>;

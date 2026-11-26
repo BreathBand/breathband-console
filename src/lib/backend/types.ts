@@ -90,6 +90,22 @@ export type CoachInviteLookup = Pick<CoachInvite, "code" | "coachId" | "coachNam
   scopeRequested?: ShareScope | null;
 };
 
+/**
+ * What anyone, signed in or not, sees on opening a professional's invite link
+ * before they have an account (T-0129, planning/v1/02 §2): who's asking, in
+ * their own terms, what they ask to see and the first practice. The minimum:
+ * no ids, code, dates, contact or athleteId. Only a pending, unexpired invite
+ * has one; for anything else (unknown, expired, revoked, declined, accepted)
+ * the lookup answers null, so an unknown code and a used one look the same.
+ */
+export interface PublicCoachInvite {
+  coachName: CoachInvite["coachName"];
+  coachKind: ProKind | null;
+  coachProfession: ClinicianProfession | EducatorRole | null;
+  scopeRequested: ShareScope | null;
+  practice: NonNullable<CoachInvite["practice"]> | null;
+}
+
 /** A session as the recorder hands it over: everything but what the store assigns. */
 export type NewSession = Omit<SessionSummary, "id" | "athleteId" | "waveformPath">;
 
@@ -229,6 +245,14 @@ export interface DataService {
    * it can still be accepted. Leaves out the contact details.
    */
   getCoachInvite(code: string): Promise<CoachInviteLookup | null>;
+  /**
+   * Anyone, signed in or not (T-0129): the invite page before sign-up. The
+   * professional's name, kind, profession, the scope they ask for and the
+   * practice of a pending, unexpired invite; null for every other code. In
+   * production the lookup is rate limited per client (the API: per IP; on
+   * Firebase, a Cloud Function), so codes can't be guessed through it.
+   */
+  getPublicCoachInvite(code: string): Promise<PublicCoachInvite | null>;
   /**
    * Athletes only: accept (choosing what to share) or decline. Accepting
    * creates the CoachLink and, when the invite carries practice, the

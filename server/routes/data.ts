@@ -1,6 +1,6 @@
 // /api/v1/*: the data routes behind the http adapter's DataService
 // (src/lib/backend/http/routes.ts names them). Every route but the waitlist
-// needs a signed-in person; access rules come from ../authz.ts. Errors answer
+// and an invite's preview (rate limited per IP) needs a signed-in person; access rules come from ../authz.ts. Errors answer
 // `{ error: { code, message } }` with the adapter's BackendError codes.
 
 import { and, eq, inArray, notExists } from "drizzle-orm";
@@ -17,7 +17,7 @@ import { pendingDeletions } from "../jobs/deletion";
 import type { StorageService } from "../storage";
 import { accountRoutes } from "./account";
 import { alertRoutes } from "./alerts";
-import { coachInviteRoutes } from "./coach-invites";
+import { coachInviteRoutes, publicCoachInviteRoutes } from "./coach-invites";
 import { coachingRoutes } from "./coaching";
 import { feedbackRoutes } from "./coaching-feedback";
 import { groupRoutes } from "./group";
@@ -46,8 +46,9 @@ export function dataRoutes(deps: DataDeps) {
   const smallBodies = bodyLimit({ maxSize: MAX_BODY_BYTES, onError: () => fail("invalid-input", "request body too large") });
   routes.use((c, next) => (c.req.method === "POST" && /\/sessions$/.test(c.req.path) ? next() : smallBodies(c, next)));
 
-  // Public: registered before the session check below, so it answers without one.
+  // Public: registered before the session check below, so they answer without one.
   waitlistRoutes(routes, deps);
+  publicCoachInviteRoutes(routes, deps);
 
   routes.use(async (c, next) => {
     const session = await deps.auth.api.getSession({ headers: c.req.raw.headers });
