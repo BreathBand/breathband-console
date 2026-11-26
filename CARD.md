@@ -1,7 +1,7 @@
 # T-0109 · feat: onboarding band step: browser check, four routes and sample-data mode
 
-Status: in progress
-Branch: card/T-0109 · Held by: AB_Rouge
+Status: done
+Branch: card/T-0109 · Held by: nobody
 Created: 2026-11-26 · Source: planning/v1/02-onboarding-and-tailoring.md §3.1 step 9, §2 "No band yet", §6 edge cases; 03-launch-checklist.md D9, D11
 
 ## Why
@@ -10,15 +10,15 @@ The welcome flow's band step offers only "My Breathband" and the simulator, says
 
 ## Acceptance criteria
 
-- [ ] A1: support detection tells Bluetooth available / not available / insecure context apart, and names the browser problem · check: `npx vitest run src/lib/device/support.test.ts`
-- [ ] A2: the route choice (which routes are open, what is recorded, where finishing goes) is unit tested · check: `npx vitest run src/app/cloud/welcome`
-- [ ] A3: the chosen route and sample mode are recorded (additive `preferences.onboarding`) and validated by the local adapter · check: `npx vitest run src/lib/backend/local/onboarding-band.test.ts`
-- [ ] A4: without Web Bluetooth the band step shows the guidance and the person can still finish; the simulated route and the sample-data route complete onboarding · check: `PORT=3202 npx playwright test e2e/onboarding-band.spec.ts e2e/onboarding.spec.ts e2e/onboarding-tracks.spec.ts`
-- [ ] A5: `npm run check` is green
+- [x] A1: support detection tells Bluetooth available / not available / insecure context apart, and names the browser problem · check: `npx vitest run src/lib/device/support.test.ts`
+- [x] A2: the route choice (which routes are open, what is recorded, where finishing goes) is unit tested · check: `npx vitest run src/app/cloud/welcome`
+- [x] A3: the chosen route and sample mode are recorded (additive `preferences.onboarding`) and validated by the local adapter · check: `npx vitest run src/lib/backend/local/onboarding-band.test.ts`
+- [x] A4: without Web Bluetooth the band step shows the guidance and the person can still finish; the simulated route and the sample-data route complete onboarding · check: `PORT=3202 npx playwright test e2e/onboarding-band.spec.ts e2e/onboarding.spec.ts e2e/onboarding-tracks.spec.ts`
+- [x] A5: `npm run check` is green
 
 ## Files in scope
 
-- `src/app/cloud/welcome/**` (band step, done step, new `sample/` page, route and sample modules, their tests)
+- `src/app/cloud/welcome/**` (band step, done step, new `sample/` page, `band-route.ts`, `sample-sessions.ts`, `Waitlist.tsx`, their tests)
 - `src/lib/device/support.ts`, `src/lib/device/support.test.ts` (new)
 - `src/lib/domain/types.ts` (additive `UserPreferences.onboarding` only)
 - `src/lib/domain/onboarding.ts` (new: band routes and their validation)
@@ -47,25 +47,64 @@ The welcome flow's band step offers only "My Breathband" and the simulator, says
 
 ## Next step
 
-Build the support helper, the route module and the band step; then the sample page and e2e.
+Review and merge; then a Home card shows the sample person and a "Set up your band" card when `preferences.onboarding` says so (see Parked).
 
 ## Decisions
 
 - 2026-11-26: Owner approved 2026-11-26 (overnight note): additive contract field `onboarding` (chosen band route / sample mode) in src/lib/domain/types.ts; existing tests may change where said which and why; no dependencies.
+- 2026-11-26: Contract: `UserPreferences.onboarding?: { bandRoute: "bluetooth" | "app" | "none" | "simulated"; sampleData: boolean }` (+ `BandRoute`, `OnboardingChoices`). On preferences because `updateProfile` only takes name and preferences; no backend capability added, so `backend/types.ts` and the rules are unchanged (Firestore rules don't check preference contents).
+- 2026-11-26: New modules beyond the prompt's list, clearly part of the card: `src/lib/domain/onboarding.ts` (route list + `onboardingProblem`, used by the local adapter and the welcome flow) and `src/lib/backend/local/onboarding-band.test.ts`.
+- 2026-11-26: decided for the owner: sample-data mode stores nothing but the flag; the sample person's sessions (Riley, 6 sessions, scored by the real analysis) are built in the browser and shown on a new `/cloud/welcome/sample/` page with "Sample" on every row, a waitlist button and "Leave sample mode". Leaving clears the flag, so "leaving wipes the sample" holds trivially (alternative: write sample sessions into the account; rejected: they would reach linked coaches, streaks and the ring).
+- 2026-11-26: decided for the owner: "Skip for now" stays on the band step (records no route), so the existing onboarding e2e specs pass unchanged (alternative: make the band step required as the spec's bold step says, which would change both existing specs).
+- 2026-11-26: decided for the owner: the simulated band is offered to everyone, not only in dev/demo, because it is the spec's fallback for unsupported browsers (alternative: hide it behind a demo flag).
+- 2026-11-26: decided for the owner: done step leads to the first session for Bluetooth/simulated/skip (as before), to the sample page in sample mode, and Home for the phone app or no band; a "Band" row is added to the summary.
+- 2026-11-26: Existing tests: none changed.
 
 ## Questions for me
 
+- [ ] `preferences.onboarding` (band route) and the server's `profiles.onboarding` column (step progress, D14) share a name. Keep both? — Recommended: keep; the D14 card stores progress under its own column and reads the band route from preferences. Options: rename the preferences field to `band` now (still unshipped); move the band route into `profiles.onboarding` when D14 lands.
+
 ## Parked
+
+- 2026-11-26 [product] Home should show the sample person (or link to /cloud/welcome/sample/) and a "Set up your band" card when `preferences.onboarding` is "none"/"app" · seen on T-0109 · src/app/cloud/AthleteHome.tsx
+- 2026-11-26 [product] /cloud/device/ has its own Bluetooth wording; switch it to `supportAdvice()` from src/lib/device/support.ts so both screens say the same · seen on T-0109 · src/app/cloud/device/page.tsx
+- 2026-11-26 [product] The http backend/server should validate `preferences.onboarding` with `onboardingProblem` as the local adapter does · seen on T-0109 · server/**
 
 ## Done
 
-- [ ] Every criterion ticked, with the command run and its result pasted below
-- [ ] Tests, lint and typecheck run; output below
-- [ ] No edits outside "Files in scope" (`git diff --stat` below)
-- [ ] Anything not run is marked UNTESTED, never "verified"
+- [x] Every criterion ticked, with the command run and its result pasted below
+- [x] Tests, lint and typecheck run; output below
+- [x] No edits outside "Files in scope" (`git diff --stat` below)
+- [x] Anything not run is marked UNTESTED, never "verified"
 - [ ] Draft PR opened: # (not tonight: the lead merges cards)
 
 ### Evidence
 
 ```
+$ npx vitest run src/lib/device/support.test.ts src/app/cloud/welcome src/lib/backend/local/onboarding-band.test.ts
+ Test Files  4 passed (4)
+      Tests  27 passed (27)
+
+$ PORT=3202 npx playwright test e2e/onboarding-band.spec.ts e2e/onboarding.spec.ts e2e/onboarding-tracks.spec.ts
+  ✓ onboarding-band.spec.ts › without Web Bluetooth the band step says what to do, and the phone-app route still finishes
+  ✓ onboarding-tracks.spec.ts › Train: sport, wants and training days shape the plan and are stored
+  ✓ onboarding.spec.ts › a new athlete is set up by onboarding and their goal sets their sessions
+  ✓ onboarding-tracks.spec.ts › Focus: exam dates, study and class times and the mood check-in are stored
+  ✓ onboarding-band.spec.ts › the simulated band connects in the band step and leads to the first session
+  ✓ onboarding-tracks.spec.ts › Calm, skipping both steps: the track's defaults are stored
+  ✓ onboarding-band.spec.ts › no band yet: sample-data mode shows labelled sample sessions, and leaving it goes home
+  7 passed (20.1s)
+
+$ npm run check   (lint, typecheck, tests, build) → exit 0
+ Test Files  55 passed (55)
+      Tests  580 passed (580)
+✓ Compiled successfully
+✓ Generating static pages (27/27)   ├ ○ /cloud/welcome/sample
+
+$ git diff --stat main...   (all inside Files in scope)
+ CARD.md, e2e/onboarding-band.spec.ts, src/app/cloud/welcome/{page.tsx,welcome.css,Waitlist.tsx,band-route.ts,band-route.test.ts,
+ sample-sessions.ts,sample-sessions.test.ts,sample/page.tsx}, src/lib/device/{support.ts,support.test.ts},
+ src/lib/domain/{types.ts,onboarding.ts}, src/lib/backend/local/{index.ts,onboarding-band.test.ts}
+
+UNTESTED: a real band over Web Bluetooth (no hardware here); real Safari/Firefox/iOS (the no-Bluetooth path is tested by removing navigator.bluetooth in Chromium); axe/screenshots not run.
 ```
