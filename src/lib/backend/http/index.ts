@@ -1,12 +1,12 @@
-import { BackendError, type Backend, type DataService } from "../types";
+import type { Backend } from "../types";
 import { createHttpAuth } from "./auth";
 import { createApiClient, type Fetch } from "./client";
 import { createHttpData } from "./data";
-import { HTTP_ROUTES } from "./routes";
 
 // The adapter for the API in server/ (planning/v1/04-infrastructure.md).
 // AuthService talks to Better Auth (I-07); DataService to /api/v1: profile,
-// preferences, sessions and waveforms (I-08), coaching (I-09), the rest with I-10.
+// preferences, sessions and waveforms (I-08), coaching (I-09), and squads,
+// alert rules, a coach's invites, group sessions and the waitlist (I-10).
 
 export * from "./routes";
 export { toBackendError } from "./client";
@@ -31,28 +31,5 @@ export function createHttpBackend(options: HttpBackendOptions = {}): Backend {
   });
   // A 401 from a data route means the session is gone: the person counts as signed out.
   const api = createApiClient(baseUrl, fetchImpl, { area: "data", onUnauthorized: () => auth.expire() });
-  return { kind: "http", auth, data: { ...unavailableData(), ...createHttpData(api) } };
-}
-
-/**
- * The DataService methods the API doesn't serve yet fail with BackendError("unavailable"):
- * squads, alerts, coach invites, groups, the waitlist and mood check-ins arrive with I-10.
- * TODO(I-10): mood check-ins (J6), on the server's `mood_checkins` table.
- */
-function unavailableData(): DataService {
-  const notYet = (method: string) =>
-    new BackendError(
-      "unavailable",
-      `${method}: the API doesn't serve this yet (API card I-10). Use NEXT_PUBLIC_BACKEND=local for now.`,
-    );
-  const methods = Object.keys(HTTP_ROUTES.data).map((method) => [
-    method,
-    // watchGroupLive hands back an unsubscribe function, not a promise.
-    method === "watchGroupLive"
-      ? () => {
-          throw notYet(method);
-        }
-      : () => Promise.reject(notYet(method)),
-  ]);
-  return Object.fromEntries(methods) as DataService;
+  return { kind: "http", auth, data: createHttpData(api) };
 }
