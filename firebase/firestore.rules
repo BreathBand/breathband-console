@@ -222,13 +222,21 @@ service cloud.firestore {
 
     // Coach-to-athlete invites. The coach creates and revokes them; athletes
     // open them through the getCoachInvite / respondToCoachInvite Cloud
-    // Functions, which hide the contact details and create the coach link.
+    // Functions, which hide the contact details, add who's asking (kind,
+    // profession, scope asked for; T-0123) and create the coach link.
     match /coachInvites/{code} {
       allow read: if signedIn() && resource.data.coachId == request.auth.uid;
       allow create: if signedIn()
                     && request.resource.data.coachId == request.auth.uid
                     && request.resource.data.status == 'pending'
-                    && request.resource.data.athleteId == null;
+                    && request.resource.data.athleteId == null
+                    // Practice set with the invite (T-0123): a template id, or absent. The
+                    // Cloud Functions that look up and accept invites check it against the
+                    // professional's kind; accepting writes users/{athleteId}/assignments.
+                    && (!('practice' in request.resource.data)
+                        || request.resource.data.practice == null
+                        || (request.resource.data.practice is string
+                            && request.resource.data.practice.size() <= 40));
       allow update: if signedIn()
                     && resource.data.coachId == request.auth.uid
                     && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])

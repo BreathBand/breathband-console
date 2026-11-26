@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseSetup } from "@/lib/prefs";
 import { defaultDetails } from "./goal-questions";
-import { FIRST_SESSION_SEC, firstSession, firstSessionHref, firstSessionName } from "./first-session";
+import { assignedFirstSession, FIRST_SESSION_SEC, firstSession, firstSessionHref, firstSessionName, suggestedFirstSession } from "./first-session";
 import { defaultPreferences } from "./preferences";
 
 describe("the first suggested session per track", () => {
@@ -69,5 +69,41 @@ describe("the hand-off to the instrument", () => {
     expect(firstSessionName(new URLSearchParams("mode=paced&pacer=5&len=300"))).toBeNull();
     expect(firstSessionName(new URLSearchParams("first=toString"))).toBeNull();
     expect(firstSessionName(new URLSearchParams("first=nope"))).toBeNull();
+  });
+});
+
+describe("the first session of someone a professional invited (T-0123, §3.5)", () => {
+  const betweenVisits = { mode: "paced" as const, pacerHalfCycleSec: 5 as const, durationSec: 300, note: "Between visits" };
+
+  it("is the assignment when one exists, locked to its mode, pacer and length, at the person's level and tones", () => {
+    const s = suggestedFirstSession(defaultPreferences("calm", "beginner"), betweenVisits);
+    expect(s.id).toBe("assigned-practice");
+    expect(s.name).toBe("Between visits");
+    // Calm starts silent; the person's tones choice is kept.
+    expect(s.setup).toEqual({ mode: "paced", pacer: 5, lengthSec: 300, view: "circle", sound: false, skill: "beginner" });
+    expect(suggestedFirstSession(defaultPreferences("train"), betweenVisits).setup.sound).toBe(true);
+  });
+
+  it("is the track's default when there is no assignment", () => {
+    for (const none of [null, undefined]) {
+      expect(suggestedFirstSession(defaultPreferences("calm"), none)).toEqual(firstSession(defaultPreferences("calm")));
+      expect(suggestedFirstSession(defaultPreferences("train"), none).id).toBe("breath-control");
+    }
+  });
+
+  it("an open assignment is tones off on the line view; a quick pacer keeps its 2-2", () => {
+    const open = assignedFirstSession({ mode: "open", pacerHalfCycleSec: null, durationSec: 180, note: "Weekly open check" }, defaultPreferences("focus"));
+    expect(open.setup).toEqual({ mode: "open", pacer: 5, lengthSec: 180, view: "line", sound: false, skill: "intermediate" });
+    const quick = assignedFirstSession({ mode: "paced", pacerHalfCycleSec: 2, durationSec: 120, note: " " }, null);
+    expect(quick.setup).toMatchObject({ mode: "paced", pacer: 2, lengthSec: 120 });
+    expect(quick.name).toBe("Assigned practice");
+  });
+
+  it("hands off to the instrument with the practice's settings and a name it knows", () => {
+    const s = suggestedFirstSession(defaultPreferences("calm"), betweenVisits);
+    const q = new URLSearchParams(firstSessionHref(s).split("?")[1]);
+    expect(parseSetup(q)).toEqual(s.setup);
+    expect(q.get("first")).toBe("assigned-practice");
+    expect(firstSessionName(q)).toBe("Assigned practice");
   });
 });
