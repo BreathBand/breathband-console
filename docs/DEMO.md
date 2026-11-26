@@ -1,70 +1,188 @@
-# Investor demo: BreathCloud
+# Investor demo: script v2
 
-A 10-minute walkthrough of Breathband on the web, with no hardware needed. Every number on screen comes from the console's own analysis library (method C for paced sessions, the Appendix metrics for open ones); the simulated band streams exactly the way the real band does.
+About 12 minutes, on the laptop, offline. The story is **one product that fits each person who uses it**: two individuals on
+different tracks, a new Calm user set up live, a clinician who onboards, invites, assigns and reviews, and a coach.
 
-## Before you start
+This follows `planning/v1/05-demo-plan.md` ("Demo script v2") and uses only what the app does today on the **local**
+backend (accounts and data live in the browser). Where the plan asks for something the app doesn't do yet, the step says
+**not built** with its id in `planning/v1/03-launch-checklist.md`. Skip those parts; don't talk around them.
 
-- Run it: `npm run dev` and open <http://localhost:3000/>, or the container (`docker build -t breathband-console . && docker run -p 8080:8080 breathband-console`, then <http://localhost:8080/>).
-- Use Chrome or Edge, full screen, at 1440 px or wider. Turn the sound on: the pacer plays tones.
-- Start from clean demo data: sign in, then **Reset** at the bottom of the sidebar.
-- With a real band: switch it on, open **Band**, choose **Breathband over Bluetooth** and **Connect your band**. The rest of the script is the same.
+`e2e/demo-script.spec.ts` walks this script, one test per part. If you change a step here, change the spec in the same
+commit, and run it before every rehearsal.
 
-## 1. The product in one screen (1 min)
+## The people
 
-1. Open <http://localhost:3000/>. The site explains the band: wear it on your belly, follow the pacer, get a score from 1 to 10. Scroll to the score card and "Where Breathband is today".
-2. Click **try BreathCloud with a demo account**, then **Sign in as Alex Morgan** (athlete).
+All are demo accounts on the login page (**Try a demo account**). Every demo password is `breathband`; the buttons sign
+in without typing it.
 
-**Say:** the app and the web share one account; BreathCloud is where you review, train on a computer, and share with a coach.
-
-## 2. Alex's home (1 min)
-
-- The dark card is the last session: the Total Breath Score, the first minute of the actual breath (red in, blue out, over the grey pacer), and timing and depth for the in- and out-breath.
-- Below it: this week against the coach's target, the streak, the average, breathing at rest, and the 8-week trend with the target line.
-- **From your coach**: practice Lena set (Paced 5-5, 5 minutes, 4 times).
-
-## 3. Record a paced session (3 min)
-
-1. In the sidebar, **Band** → **Simulated band** → **Start the simulated band**. Point out the live signal, the battery, and the strap gauge moving into the green as the strap "tightens".
-2. **Start a session**. Tap **Use these settings** on the coach's practice, choose **2 min** to keep it short, and press **Start session**.
-3. The room goes dark. The strap check passes by itself, then **Full breaths for 20 seconds** (Harry's rule: once each time the band goes on): the circle fills to the outer ring on each breath in and empties to the inner ring on each breath out, calibrating the band to Alex's range (the Appendix A100 and midline).
-4. **Begin**. Follow the circle: the ring is the pacer, the filled disc is Alex. Low note at the bottom of each breath, high at the top. The strip below shows the breath against the pacer, with the next turn coming.
-5. At the end: the score (a steady athlete gets about 9), the breakdown, on-target percentages, and which way the breathing leaned. Add a note, **Save session**.
-
-**Show a fault:** before starting, set **Simulated athlete** to **Shallow** or **Rushed** on the New session page. Depth (or timing) drops, and the results say why.
-
-## 4. The review (2 min)
-
-The saved session opens in the review:
-
-- **Total Breath Score** with the change since the last one, timing and depth for in and out, and the share of turns on target.
-- **How close you were**: the deviation histogram from −1 to +1 SD, with the on-target band for Alex's level shaded, and what a missed turn costs.
-- **Breathing vs pacer** in % of Alex's maximum with the ±3 % band, the per-turn timing and depth strip, zoom from 5 s to the full session, and a scrubber.
-- **Each turn of the pacer**: when it came, how far off Alex was, and the points.
-- Note, comments with the coach, and **Print or PDF**.
-
-Then open the fault sessions from the last ten days in the list on the left. Each has a note saying what went wrong:
-
-| Days ago | Note | What the review shows |
+| On screen | Email | Who they are in the demo |
 | --- | --- | --- |
-| 3 | "Kept jumping ahead of the pacer…" | Early: timing scores drop and the histogram leans left |
-| 5 | "Tired. Only half filled each breath." | Shallow: depth drops, timing holds |
-| 6 | "Overdid it with huge breaths…" | Too deep: depth drops the most |
-| 8 | "Rushed it…" | Too fast: timing drops and turns are missed |
-| 9 | "Band slipped after a minute…" | Lost then recovered: a stretch of missed turns |
+| Maya Brooks | `maya@demo.local` | Calm: ten days in a row, Foundations under way, one milestone waiting |
+| Alex Morgan | `athlete@demo.local` | Train, coached by Lena: 8 weeks of sessions, the fault sessions |
+| Ana Ruiz | `ana@demo.local` | Clinician (physiotherapist, Harbour Physiotherapy): two clients on a between-visits plan |
+| Jordan Lee | `jordan@demo.local` | Ana's client: joined through her invite, 3 weeks of her plan |
+| Lena Vos | `coach@demo.local` | Coach with five athletes |
+| Sam Okafor, Chris Park | `sam@demo.local`, `chris@demo.local` | Seeded (Focus with an exam; an educator with a class of six) but not in the script |
 
-And an **Open** session with markers (4 or 10 days ago, "Marked the start and end of the hard set…"): rate, rhythm (in : out), depth, and the before / between / after table, where breathing runs faster between the markers.
+The people you make live (Sofia, Aoife) use any email, a password of at least 8 characters, and a year of birth that
+makes them 16 or over.
 
-## 5. The coach (2 min)
+## Before the demo
 
-1. Sign out (bottom of the sidebar), then **Sign in as Lena Vos**.
-2. **Dashboard**: who needs a look and why, sessions not yet opened, the 14-day grid, practice due.
-3. **Athletes** → Alex → **Sessions**: the session recorded in step 3 is there, with exactly the same numbers (open it).
-4. **Compare**: five athletes week by week.
-5. **Two-person**: **Connect both bands**, **Calibrate both**, **Begin**. One pacer, two people in two lanes; at the end, side-by-side scores (User 1 steady, User 2 rushed).
-6. Optional: **Live group** for a squad on one pacer.
+On the demo laptop, in this order, the day before and again on the morning.
 
-## Things to know
+1. **Build and serve the demo build.** In the repo, with `NEXT_PUBLIC_BACKEND` unset or `local` in `.env.local`:
+   `npm ci`, `npm run build`, then `npm run preview` (serves `out/` at <http://localhost:3000/>). `preview` fetches
+   `serve@14.2.4` through npx the first time, so run it once while online. Leave it running.
+   *Not built: one command that does all of this, offline (U3).*
+2. **Run the e2e against it.** In a second terminal:
+   `npx playwright test e2e/demo-script.spec.ts e2e/demo-path.spec.ts e2e/demo-people.spec.ts e2e/smoke.spec.ts`.
+   With the preview on port 3000, Playwright uses it, so this tests the build you'll show. All must pass. They run in
+   their own browser and don't touch your demo windows.
+3. **Clear site data in every demo window,** after the last rehearsal: DevTools → Application → Storage → **Clear site
+   data** (or, signed in, **Reset** at the bottom of the sidebar). The demo data is made the first time a browser opens
+   the console, and its dates are fixed from then: Maya's streak, Sam's exam date and Jordan's plan go stale in a
+   browser that has had it for days, and Maya's milestone shows only once per browser.
+4. **Two windows that don't share data.** Window A: your normal Chrome profile. Window B: a second Chrome profile or a
+   Guest window (Edge: InPrivate). Two windows of one profile share one sign-in: while Maya is signed in, the second
+   window can't sign in as Alex. Open <http://localhost:3000/cloud/login/> in each, so each makes its demo data now.
+5. Chrome or Edge, full screen, at the room's resolution (it must work at 1280 wide). Sound on: the pacer plays tones.
+6. **Band.** For the live sign-up (part 3), the real band if it's charged and rehearsed on this laptop; otherwise the
+   simulated band, which streams exactly the way the band does. *Not verified: the band's Bluetooth profile (the UUIDs
+   are assumed, F1) and a rehearsal with it on the demo laptop (U4).*
 
-- Data lives in the browser (the local adapter). Real accounts, sync with the phone app and storage come with the backend (`docs/PLAN.md`, decisions 1 and 2).
-- The Bluetooth protocol follows the Flutter app; the service UUIDs are an assumption, labelled in `src/lib/device/config.ts`.
-- Transition timing for open sessions is provisional pending Harm (decision 8 in `docs/PLAN.md`).
+## 1. The product (1 min)
+
+1. Window A: open <http://localhost:3000/>. "The band that scores your breathing.": a band worn on the belly, follow the
+   pacer, a score from 1 to 10.
+2. Scroll to "One number, and exactly what's behind it." (the score), then "One band, set up for why you breathe."
+   (Train, Focus, Calm: who it's for).
+3. Click **try BreathCloud with a demo account** (in the hero). The login page lists the demo people and says every demo
+   account's password is `breathband`.
+
+**Say:** one band, one score, and the product sets itself up around why you breathe.
+
+## 2. Same band, different product (1 min)
+
+1. Window A: **Sign in as Maya Brooks**. Window B: **Sign in as Alex Morgan**. Put them side by side.
+2. Point at the differences:
+   - **Maya (Calm)**: one warm line ("Ten days in a row. Three minutes today keeps it going."), the band card offers
+     **Start Open · 3 min**, a **New milestone** ("Seven days in a row"), **Foundations** at 10 of 14 days done, and her
+     last session as a breathing rate. No score charts.
+   - **Alex (Train)**: dense. The band card offers **Start Paced 5-5 · 10 min**; the last session's Total Breath Score
+     with timing and depth for each breath; the week against his plan; **Total Breath Score, last 8 weeks** with the
+     target line; the breathing-rate chart; **From your coach** (Lena's practice and her comment).
+
+**Say:** same band, same scoring underneath; the goal changes what you see, the default session and the tone.
+
+Close window B.
+
+## 3. A new person, live (4 min)
+
+Window A: **Sign out** (bottom of the sidebar), then **Create account** (top right).
+
+1. **Sign-up.** Leave **Athlete** selected. Name "Sofia Reyes", an email, a password, **Year of birth** (the age step:
+   16 and over), tick both agreements, **Create account**.
+2. **Welcome to Breathband.** → **Continue**.
+3. **What brings you to Breathband, Sofia?** → **Calm** → **Continue**.
+4. **What would help?** The two Calm questions: **Less stress**, and **Evening** for "When suits you best?" →
+   **Continue**.
+5. **How much breath training have you done?** → **New to it** → **Continue**.
+6. **Your sessions**: set up for Calm (Open, 3 min, silent) → **Continue**.
+7. **Your plan**: 7 a week, 3 min a day, a reminder at 18:30 every day → **Continue**.
+8. **Your band**: **Simulated band** → **Start the simulated band** (or **Connect my Breathband** → **Connect** with the
+   real band). "Simulated band connected. That's your breathing." → **Continue**.
+9. **You're ready, Sofia.** The summary ends with "First session: Just breathe · Open · 3 min, after a strap check and
+   calibration". → **Start my first session**.
+10. **Check the strap**: the gauge reads "Good fit" and the step moves on by itself (with a real band: tighten until the
+    marker is in the green, then **It's snug, calibrate**). *Not built: the three strap-fit cards with the gauge (D10).*
+11. **Full breaths for 20 seconds**: "Imagine your belly as a balloon." The circle fills to the outer ring on each breath
+    in and empties on each breath out. Then **Calibrated**. *Not built: "Good job." after calibration; the screen says
+    "Calibrated" (D10).*
+12. **Begin**. Calm's first session, Just breathe, is open and 3 minutes (the plan's 2 minutes isn't offered); after
+    about 40 seconds press **Stop early**.
+13. **The result**: the breathing rate (about 14 br/min), its word ("In the normal range"), one line ("Done for today.
+    Nice.") and one tip ("Same again next time."). → **Save session** opens the review.
+14. **Home** (sidebar): **Streak 1 day**, the session under **Last session**, and a "First calibration" milestone.
+
+**Say:** a couple of minutes from sign-up to a scored session, guided the whole way.
+
+## 4. A clinician (3 min)
+
+**Sign out**, then **Create account**.
+
+1. **Sign-up.** Select **Coach** ("I coach people who do"), name "Aoife Byrne", an email, a password, a year of birth,
+   both agreements → **Create account**.
+2. **Welcome to BreathCloud.** → **Continue**.
+3. **What kind of work do you do, Aoife?** → **Clinician or therapist** → **Continue**.
+4. **Your practice**: **Physiotherapist**, Country "Ireland" → **Continue**.
+5. **What will you use it for?** → **Breathing pattern practice between visits** → **Continue**.
+6. **How do you refer to the people you work with?** **Clients** is already chosen → **Continue**.
+7. **Defaults for the clients you invite** (targets, and what invites ask them to share) → **Continue**.
+8. **Practice templates** (Between visits and the clinician's others) → **Continue**.
+9. **Professional terms**: tick **I agree to the professional terms.** and the wellness acknowledgement ("Breathband is
+   a wellness tool. It doesn't diagnose, treat or monitor any condition. …") → **Continue**.
+10. **Try it yourself** → **Skip for now**.
+11. **Invite your first client**: Client's name "Sean Murphy", an email, **First practice**: "Between visits · Paced 5-5
+    · 5 min · daily for 14 days" → **Create invite link**. The link and its **QR code** appear (a client scans it in
+    the room) → **Continue**.
+12. **You're set, Aoife.** → **Go to the dashboard**: a **Getting started** checklist for a clinician, and **Sample
+    client: Riley**, clearly marked, until a real client joins.
+
+Now a clinician three weeks in. **Sign out** → **Sign in** → **Sign in as Jordan Lee** (Ana's client, already joined through her
+invite):
+
+13. Home leads with **From Ana**: "Ana Ruiz, your clinician", "Ana has set your practice: Paced 5-5 · 5:00 · 14 times",
+    10 of 14 done, and her comment. Note the score under **Last session** (6.5 in a fresh seed).
+14. **Record** (sidebar) → **Use these settings** on Ana's practice: Paced, 5 min. Don't start it: that's the assigned
+    session.
+
+**Sign out** → **Sign in** → **Sign in as Ana Ruiz**:
+
+15. **Dashboard**: "2 clients"; **Needs a look** (Jordan's comment to answer, Tom behind on his plan); sessions **To
+    review**; the 14-day grid; **Practice due**.
+16. **Clients** → **Jordan Lee** → **Plan**: the practice and its adherence: 10 of 14 sessions done, On track, and the
+    days that counted.
+17. **Sessions** → the newest session: exactly Jordan's numbers (the score on his Home), timing and depth, the curve.
+    Under **Comments**, write "Steady again, Jordan. Keep the evenings." → **Comment**.
+18. **Clients** → **Jordan Lee** → **Report**: the **Breathing progress report**, prepared by "Ana Ruiz, clinician",
+    with **Print or save as PDF**.
+
+**Say:** it's a wellness product; clinicians use it for breathing practice between visits.
+
+*Not built here:* the private-notes hint on a client's **Notes** tab (E14; only the terms step mentions it). The invite
+page for someone who hasn't signed up yet is in progress (T-0129), so the script shows Jordan already joined.
+
+## 5. A coach (2 min)
+
+**Sign out** → **Sign in** → **Sign in as Lena Vos**.
+
+1. **Dashboard** → **Needs a look**: who needs a look and why (Sam's scores falling and his missed practice, rates out of
+   range).
+2. **Compare**: five athletes week by week on one chart, and the side-by-side table. **Pick a squad** narrows it
+   (Juniors, Sprint squad). *Not built: the plan's squad "Rowing 1st VIII" (U2); the seed has Juniors and Sprint squad.*
+3. **Two-person**: **Connect both bands** → **Calibrate both** → **Both calibrated** → **Begin**. One pacer, two people
+   in two lanes. After about 40 seconds, **Stop**: **Side by side**, User 1 (steady) scores higher than User 2
+   (rushed). **Done**.
+
+## 6. What's next (1 min)
+
+Talk only; nothing on screen. The phone app on the same account (*not built: the app syncing with this console's
+backend, T4, V5*); the real backend on Cloud Run (*not in this demo, which runs on the local adapter; Q5*); the beta.
+
+## Don't open
+
+Settings, **Live group**, Sam and Chris, or anything marked Later. Don't linger where a clinician's client still sees a
+coach's words: "From your coach" above Jordan's practice on **Record**, and "· coach" after Ana's name on her comments
+(E4). Nothing clinical, no condition, never "patient"; never the calibration percentage or scoring internals.
+
+## If something goes wrong
+
+| What | Do |
+| --- | --- |
+| The real band won't connect | **Band** → **Simulated band**; same screens. Say so plainly |
+| The band drops mid-session | It shows "Reconnecting…"; let it |
+| A page shows old dates, or Maya has no milestone | That browser's demo data is old: clear site data (or **Reset**) and sign in again |
+| One window can't sign in while the other is | They share a profile: use a Guest window for window B |
+| Someone asks about medical use | "It's a wellness product. Clinicians use it for breathing practice between visits; it doesn't diagnose or treat anything." |
+| Someone asks how scoring works | Timing and depth against the pacer, against your own calibrated range. Never the percentages |
