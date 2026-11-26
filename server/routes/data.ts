@@ -3,7 +3,7 @@
 // needs a signed-in person; access rules come from ../authz.ts. Errors answer
 // `{ error: { code, message } }` with the adapter's BackendError codes.
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, notExists } from "drizzle-orm";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
@@ -12,8 +12,10 @@ import type { BackendErrorCode } from "@/lib/backend/types";
 import type { Auth } from "../auth";
 import type { LinkScope } from "../authz";
 import type { Db } from "../db/client";
-import { coachLinks } from "../db/schema";
+import { accountDeletions, coachLinks } from "../db/schema";
+import { pendingDeletions } from "../jobs/deletion";
 import type { StorageService } from "../storage";
+import { accountRoutes } from "./account";
 import { alertRoutes } from "./alerts";
 import { coachInviteRoutes } from "./coach-invites";
 import { coachingRoutes } from "./coaching";
@@ -54,6 +56,19 @@ export function dataRoutes(deps: DataDeps) {
     await next();
   });
 
+  // An account waiting to be deleted (routes/account.ts) is hidden at once: its owner can
+  // only reach /account (status, cancel, export), and to everyone else it doesn't exist.
+  routes.use(async (c, next) => {
+    const viewer = c.get("uid");
+    const others = peopleInPath(c.req.path).filter((uid) => uid !== viewer);
+    const pending = await pendingDeletions(deps.db, [viewer, ...others]);
+    if (pending.has(viewer) && !c.req.path.startsWith(`${DATA_BASE_PATH}/account/`)) {
+      fail("permission-denied", "This account is being deleted. Cancel the deletion to use it again.");
+    }
+    if (others.some((uid) => pending.has(uid))) fail("not-found");
+    await next();
+  });
+
   routes.onError((error, c) => {
     if (error instanceof DataError) {
       return c.json({ error: { code: error.code, message: error.message } }, error.status);
@@ -72,6 +87,7 @@ export function dataRoutes(deps: DataDeps) {
   alertRoutes(routes, deps);
   coachInviteRoutes(routes, deps);
   groupRoutes(routes, deps);
+  accountRoutes(routes, deps);
   return routes;
 }
 
@@ -95,13 +111,31 @@ export function fail(code: BackendErrorCode, message: string = code): never {
   throw new DataError(code, message);
 }
 
-/** The coach's link to the athlete, or null when there is none. */
+/** The coach's link to the athlete, or null when there is none or either account is waiting to be deleted. */
 export async function linkScope(db: Db, coachId: string, athleteId: string): Promise<LinkScope> {
+  const beingDeleted = db
+    .select({ userId: accountDeletions.userId })
+    .from(accountDeletions)
+    .where(inArray(accountDeletions.userId, [coachId, athleteId]));
   const [link] = await db
     .select({ scope: coachLinks.scope })
     .from(coachLinks)
-    .where(and(eq(coachLinks.coachId, coachId), eq(coachLinks.athleteId, athleteId)));
+    .where(and(eq(coachLinks.coachId, coachId), eq(coachLinks.athleteId, athleteId), notExists(beingDeleted)));
   return link?.scope ?? null;
+}
+
+/** The people a data path names: `/users/{uid}`, `/athletes/{id}`, `/coaches/{id}`, `/coach-links/{coachId}/{athleteId}`. */
+export function peopleInPath(path: string): string[] {
+  const ids = [...path.matchAll(/\/(?:users|athletes|coaches)\/([^/]+)/g)].map((m) => m[1]);
+  const link = path.match(/\/coach-links\/([^/]+)\/([^/]+)/);
+  if (link) ids.push(link[1], link[2]);
+  return ids.map((id) => {
+    try {
+      return decodeURIComponent(id);
+    } catch {
+      return id;
+    }
+  });
 }
 
 /** The request's JSON body as an object; anything else is invalid input. */
