@@ -4,11 +4,13 @@
 //
 // Caveats, as for Better Auth's limiter (T-0111, parked): the buckets are in
 // memory, so they reset on restart and each API instance keeps its own (two
-// Cloud Run instances allow twice the limit); and the client's address comes
-// from X-Forwarded-For, which is only as good as the proxy that writes it (see
-// `clientIp`).
+// Cloud Run instances allow twice the limit). The client's address is the
+// socket's unless TRUSTED_PROXY_HOPS says which proxy's X-Forwarded-For entry
+// to believe (T-0133; see `clientIp`).
 
+import { isIPv4, isIPv6 } from "node:net";
 import type { Context, Env, MiddlewareHandler } from "hono";
+import { trustedProxyHops } from "./env";
 
 export interface RateLimitOptions {
   /** Requests a key may make at once, and per window on average. */
@@ -75,25 +77,70 @@ export function createRateLimiter({ limit, windowMs, maxKeys = DEFAULT_MAX_KEYS,
 }
 
 /**
- * The client's address. Behind a proxy that appends the address it saw to
- * X-Forwarded-For (Cloud Run's front end does), the entry `trustedHops` from
- * the right is the one no client can forge; anything left of it may be. With
- * no X-Forwarded-For (or fewer entries than `trustedHops`), the socket's address; failing that, "unknown" (one
- * bucket for everyone, which fails closed rather than open).
+ * The client's address, as a rate-limit key (see `addressKey`).
  *
- * `trustedHops` must match the deployment: 1 for Cloud Run alone, 2 behind a
- * load balancer as well (I-16, parked on T-0111 and T-0129). Too few, and
- * every client shares the proxy's bucket; with no proxy at all, a client can
- * write the header itself and pick its own bucket.
+ * `trustedHops` is how many proxies in front of the API append to
+ * X-Forwarded-For: TRUSTED_PROXY_HOPS, 0 unless set (server/env.ts). With 0 the
+ * header is ignored and the socket's address is used, since with no proxy a
+ * client writes that header itself and could pick a new bucket per request.
+ * With N > 0, the Nth entry from the right: the one the outermost trusted
+ * proxy wrote, which no client can forge (anything left of it may be).
+ *
+ * With fewer entries than N, or no header, the socket's address (then the
+ * proxy's own: one bucket, which fails closed); with no socket either,
+ * "unknown" (one bucket for everyone, likewise).
+ *
+ * N must match the deployment (I-16): too low and every client shares the
+ * proxy's bucket; too high and a client picks its own.
  */
-export function clientIp(c: Context, trustedHops = 1): string {
-  const forwarded = (c.req.header("x-forwarded-for") ?? "")
-    .split(",")
-    .map((part) => part.trim())
-    .filter(Boolean);
-  if (trustedHops > 0 && forwarded.length >= trustedHops) return forwarded[forwarded.length - trustedHops];
+export function clientIp(c: Context, trustedHops: number = trustedProxyHops()): string {
+  if (trustedHops > 0) {
+    const forwarded = (c.req.header("x-forwarded-for") ?? "")
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    if (forwarded.length >= trustedHops) return addressKey(forwarded[forwarded.length - trustedHops]);
+  }
   const socket = (c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined)?.incoming?.socket?.remoteAddress;
-  return socket || "unknown";
+  return socket ? addressKey(socket) : "unknown";
+}
+
+/**
+ * One bucket per client: an IPv4 address as it is; an IPv6 address by its /64
+ * prefix (one subscriber's network, whose addresses it can rotate freely),
+ * written `2001:db8:1:2::/64`; an IPv4-mapped IPv6 address (`::ffff:1.2.3.4`,
+ * which Node reports for IPv4 clients on a dual-stack socket) as its IPv4
+ * address. Brackets, a zone (`%eth0`) and a port on an IPv4 address are
+ * dropped. Anything else is kept as it is.
+ */
+export function addressKey(address: string): string {
+  let a = address.trim();
+  const bracketed = /^\[([^\]]+)\](?::\d+)?$/.exec(a);
+  if (bracketed) a = bracketed[1];
+  const v4WithPort = /^(\d{1,3}(?:\.\d{1,3}){3}):\d+$/.exec(a);
+  if (v4WithPort) a = v4WithPort[1];
+  if (isIPv4(a)) return a;
+  a = a.replace(/%.*$/, "");
+  if (!isIPv6(a)) return address;
+  const groups = ipv6Groups(a);
+  const mapped = groups.slice(0, 5).every((g) => g === 0) && groups[5] === 0xffff;
+  if (mapped) return [groups[6] >> 8, groups[6] & 0xff, groups[7] >> 8, groups[7] & 0xff].join(".");
+  return `${groups.slice(0, 4).map((g) => g.toString(16)).join(":")}::/64`;
+}
+
+/** The eight 16-bit groups of a valid IPv6 address (with `::` expanded and a dotted IPv4 tail converted). */
+function ipv6Groups(address: string): number[] {
+  let a = address.toLowerCase();
+  const tail = /(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(a);
+  if (tail) {
+    const [b0, b1, b2, b3] = tail.slice(1).map(Number);
+    a = `${a.slice(0, tail.index)}${((b0 << 8) | b1).toString(16)}:${((b2 << 8) | b3).toString(16)}`;
+  }
+  const [head, rest] = a.split("::");
+  const left = head ? head.split(":") : [];
+  const right = rest ? rest.split(":") : [];
+  const zeros = rest === undefined ? [] : Array<string>(8 - left.length - right.length).fill("0");
+  return [...left, ...zeros, ...right].map((g) => parseInt(g, 16));
 }
 
 /**
