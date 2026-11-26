@@ -18,6 +18,12 @@ const schema = z.object({
   SMTP_HOST: z.preprocess(blankAsUndefined, z.string().optional()),
   SMTP_PORT: z.preprocess(blankAsUndefined, z.coerce.number().int().min(1).max(65535).optional()),
   SMTP_FROM: z.preprocess(blankAsUndefined, z.string().optional()),
+  SMTP_USER: z.preprocess(blankAsUndefined, z.string().optional()),
+  SMTP_PASS: z.preprocess(blankAsUndefined, z.string().optional()),
+  // Checked by authSecret() in server/auth.ts: required in production, a dev-only fallback otherwise.
+  AUTH_SECRET: z.preprocess(blankAsUndefined, z.string().optional()),
+  // The API's public address; links in auth emails point here. See authBaseUrl() in server/auth.ts.
+  API_URL: z.preprocess(blankAsUndefined, z.url().optional()),
 });
 
 export type Env = {
@@ -27,8 +33,12 @@ export type Env = {
   databaseUrl: string;
   databaseAuthToken: string | undefined;
   storageDir: string;
-  smtp: { host?: string; port?: number; from?: string };
+  smtp: SmtpEnv;
+  authSecret?: string;
+  apiUrl?: string;
 };
+
+export type SmtpEnv = { host?: string; port?: number; from?: string; user?: string; pass?: string };
 
 export function readEnv(source: Record<string, string | undefined> = process.env): Env {
   const parsed = schema.safeParse(source);
@@ -48,6 +58,8 @@ export function readEnv(source: Record<string, string | undefined> = process.env
     databaseUrl: databaseUrl(database),
     databaseAuthToken: databaseAuthToken(database),
     storageDir: env.STORAGE_DIR,
-    smtp: { host: env.SMTP_HOST, port: env.SMTP_PORT, from: env.SMTP_FROM },
+    smtp: { host: env.SMTP_HOST, port: env.SMTP_PORT, from: env.SMTP_FROM, user: env.SMTP_USER, pass: env.SMTP_PASS },
+    authSecret: env.AUTH_SECRET,
+    apiUrl: env.API_URL,
   };
 }
