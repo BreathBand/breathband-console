@@ -7,8 +7,10 @@ import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import { logger } from "hono/logger";
+import { AUTH_BASE_PATH, type Auth } from "./auth";
 import type { Db } from "./db/client";
 import type { Mode } from "./env";
+import { authRoutes } from "./routes/auth";
 import { serveExport } from "./static";
 
 export type AppDeps = {
@@ -20,6 +22,8 @@ export type AppDeps = {
   staticDir?: string;
   /** Log each request to stdout. */
   log?: boolean;
+  /** Better Auth (server/auth.ts), mounted at /api/auth. Without it there are no auth routes. */
+  auth?: Auth;
 };
 
 /** nginx.conf's `add_header ... always` set, now on every response including /_next/static/. */
@@ -56,6 +60,8 @@ export function createApp(deps: AppDeps) {
     const db = (await databaseIsUp(deps.db)) ? "up" : "down";
     return c.json({ ok: db === "up", db });
   });
+
+  if (deps.auth) app.route(AUTH_BASE_PATH, authRoutes(deps.auth));
 
   if (deps.staticDir) {
     const serve = serveExport(deps.staticDir);

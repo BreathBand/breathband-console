@@ -172,8 +172,9 @@ export function trainWeek(sessions: SessionSummary[], now: Date, planned: number
 }
 
 const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
-const word = (n: number) => WORDS[n] ?? String(n);
-const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+/** "three" for 3, the digits past ten. Shared with the results' coaching lines (results/tone.ts). */
+export const word = (n: number) => WORDS[n] ?? String(n);
+export const capital = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
  * Calm's one encouraging line (02 §5.1: "Nice. Three days in a row."). With

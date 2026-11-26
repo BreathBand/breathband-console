@@ -12,6 +12,8 @@ import { BAND_COMMANDS, SAMPLE_RATE_HZ, STRAP_TENSION } from "@/lib/device/confi
 import { formatDuration } from "@/lib/domain/format";
 import { parseSetup } from "@/lib/prefs";
 import { buildSession, MIN_RECORDING_S, type BuiltSession } from "@/lib/recording";
+import { useLoad } from "@/lib/useLoad";
+import { streakDays } from "../../AthleteHome";
 import { sessionHref } from "../../links";
 import { fitOf } from "../../device/TensionGauge";
 import { stateWords } from "../../device/words";
@@ -280,6 +282,15 @@ function Instrument() {
   };
 
   const uid = auth.status === "signed-in" ? auth.user.uid : null;
+  // The results speak in the person's goal's tone; Calm's line counts the days in a row, this session included.
+  const goal = auth.status === "signed-in" ? (auth.profile?.preferences?.goal ?? null) : null;
+  const history = useLoad(uid && goal === "calm" ? `results-history:${uid}` : null, () => backend.data.listSessions(uid!, { limit: 60 }));
+  const streak = useMemo(() => {
+    if (!built || !uid) return 0;
+    const before = history.status === "ready" ? history.data : [];
+    const now = new Date(built.session.startedAt);
+    return streakDays([{ ...built.session, id: "new", athleteId: uid, waveformPath: "" }, ...before], now);
+  }, [built, uid, history]);
   const save = async (note: string) => {
     if (!built || !uid) return;
     const saved = await backend.data.saveSession(uid, { ...built.session, note }, built.waveform);
@@ -470,6 +481,8 @@ function Instrument() {
             built={built}
             tooShort={tooShort}
             title={title}
+            goal={goal}
+            streakDays={streak}
             onSave={save}
             onDiscard={() => router.push("/cloud/record/")}
             onRestart={() => {

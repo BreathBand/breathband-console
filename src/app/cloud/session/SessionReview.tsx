@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 import { Measured } from "@/components/Measured";
 import { Progress } from "@/components/Progress";
@@ -12,13 +12,15 @@ import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { assignmentProgress, countsToward, describeAssignment, timeAgo } from "@/lib/domain/coaching";
 import { describeMode, formatDay, formatDuration, formatLongDay, formatTime, initials } from "@/lib/domain/format";
 import { formatScore, isLegacyScores, isTransitionScores, legacyBand, scoreWord } from "@/lib/domain/scores";
-import type { SessionComment, SessionSummary } from "@/lib/domain/types";
+import type { BreathGoal, SessionComment, SessionSummary } from "@/lib/domain/types";
 import { breathDeviations, waveFrame } from "@/lib/domain/waveform";
 import { analyzePacedRecording } from "@/lib/analysis/session";
 import { SCORING_VERSIONS } from "@/lib/domain/types";
 import { MethodCScores, OpenScores, TurnTable, turnsAsBreaths } from "./MethodC";
 import { useLoad, type Loaded } from "@/lib/useLoad";
 import type { ConsoleContext } from "../AthleteConsole";
+import { streakDays } from "../AthleteHome";
+import { coaching, onTargetShare, rateChange, resultsEmphasis, type ResultsEmphasis, type TurnPoints } from "../results/tone";
 import { BreathTable, DeviationStrip, SessionScrubber, WaveChart } from "./Waveform";
 
 const ZOOMS = [
@@ -64,6 +66,24 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
     }
     return { frame, breaths: breathDeviations(signal, frame), turns: null };
   }, [signal, methodC, session.pacerHalfCycleSec, session.skillLevel]);
+
+  // The person's own review follows their goal (results/tone.ts); a coach sees every number and no coaching line.
+  const goal = ctx.self && auth.status === "signed-in" ? (auth.profile?.preferences?.goal ?? null) : null;
+  const emphasis = resultsEmphasis(goal);
+  const rates = useMemo(
+    () => (emphasis.rateChange && signal && signal.units === "pct-max" && !signal.pacer && analysis ? rateChange(signal.user, analysis.frame.hz) : null),
+    [emphasis.rateChange, signal, analysis],
+  );
+  const lead = ctx.self ? (
+    <CoachingPane
+      goal={goal}
+      emphasis={emphasis}
+      session={session}
+      sessions={ctx.sessions}
+      turns={analysis?.turns?.transitions ?? null}
+      rates={rates}
+    />
+  ) : null;
 
   const paced = session.mode === "paced";
   const zooms = ZOOMS.filter((z) => z.sec < session.durationSec || z.sec === Infinity);
@@ -114,7 +134,7 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
       {session.groupSessionId && <GroupLine groupId={session.groupSessionId} viewerId={viewerId} />}
       {ctx.self && comments.status === "ready" && <KudosLine comments={comments.data} />}
 
-      <ScoreRow session={session} sessions={ctx.sessions} />
+      <ScoreRow session={session} sessions={ctx.sessions} emphasis={emphasis} lead={lead} />
 
       <section className="pane wave-pane" aria-label="Waveform">
         <div className="wave-h">
@@ -258,14 +278,85 @@ function Legend({ paced }: { paced: boolean }) {
   );
 }
 
-/** Headline, breakdown and explainer, shaped by the session's scoring version. */
-function ScoreRow({ session, sessions }: { session: SessionSummary; sessions: SessionSummary[] }) {
+/**
+ * The one coaching line in the person's goal's tone, beside or under the
+ * score; Focus also gets the share on target (or the rate falling), Calm one tip.
+ */
+function CoachingPane({
+  goal,
+  emphasis,
+  session,
+  sessions,
+  turns,
+  rates,
+}: {
+  goal: BreathGoal | null;
+  emphasis: ResultsEmphasis;
+  session: SessionSummary;
+  sessions: SessionSummary[];
+  turns: readonly TurnPoints[] | null;
+  rates: { from: number; to: number } | null;
+}) {
+  const at = Date.parse(session.startedAt);
+  const streak = streakDays(sessions.filter((s) => Date.parse(s.startedAt) <= at), new Date(at));
+  const { line, tip } = coaching({ goal, session, streakDays: streak, turns, rates });
+  const share = emphasis.share ? onTargetShare(session) : null;
+  if (!line) return null;
+  return (
+    <section className="pane pane-pad mc-lead" aria-label="Coaching" data-goal={goal ?? undefined}>
+      {share !== null && (
+        <p className="mc-share">
+          <b className="display">{share}%</b> of the session on target
+        </p>
+      )}
+      {rates && (
+        <p className="mc-share">
+          <b className="display">
+            {rates.from} → {rates.to}
+          </b>{" "}
+          br/min, start to end
+        </p>
+      )}
+      <p className="mc-line">{line}</p>
+      {tip && (
+        <p className="mc-tip">
+          <Icon name="info" size={16} />
+          {tip}
+        </p>
+      )}
+    </section>
+  );
+}
+
+/** Headline, breakdown and explainer, shaped by the session's scoring version; `lead` is the coaching pane. */
+function ScoreRow({
+  session,
+  sessions,
+  emphasis,
+  lead,
+}: {
+  session: SessionSummary;
+  sessions: SessionSummary[];
+  emphasis: ResultsEmphasis;
+  lead: ReactNode;
+}) {
   const { scores } = session;
 
   if (session.scoringVersion === SCORING_VERSIONS.methodC && isTransitionScores(scores)) {
-    return <MethodCScores session={session} sessions={sessions} scores={scores} />;
+    return <MethodCScores session={session} sessions={sessions} scores={scores} emphasis={emphasis} lead={lead} />;
   }
-  if (session.open) return <OpenScores session={session} />;
+  if (session.open) return <OpenScores session={session} emphasis={emphasis} lead={lead} />;
+  return (
+    <>
+      <EarlierScores session={session} sessions={sessions} />
+      {lead}
+    </>
+  );
+}
+
+/** Sessions scored before method C: the transition-v1 and legacy scores, and open sessions without metrics. */
+function EarlierScores({ session, sessions }: { session: SessionSummary; sessions: SessionSummary[] }) {
+  const { scores } = session;
 
   if (isTransitionScores(scores)) {
     const { word, band } = scoreWord(scores.total);

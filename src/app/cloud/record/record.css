@@ -837,6 +837,48 @@
   font: 400 var(--t-28) / 1.1 var(--f-display);
 }
 
+/* Per goal (results/tone.ts): Focus's share on target, the coaching line, Calm's tip, and the numbers folded away. */
+.res-share {
+  color: var(--c-ink-2);
+}
+
+.res-share b {
+  margin-right: var(--s-2);
+  font-size: var(--t-36);
+  font-weight: 400;
+  color: var(--c-ink);
+}
+
+.res-line {
+  max-width: 44ch;
+  font: 600 var(--t-20) / 1.35 var(--f-sans);
+}
+
+.res-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  max-width: 44ch;
+  color: var(--c-ink-2);
+}
+
+.res-tip svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--c-ink);
+}
+
+.res-more summary {
+  cursor: pointer;
+  width: max-content;
+  font-weight: 600;
+  color: var(--c-ink-2);
+}
+
+.res-more[open] summary {
+  margin-bottom: var(--s-5);
+}
+
 .res-save {
   grid-column: 1 / -1;
   display: flex;
