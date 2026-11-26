@@ -18,6 +18,21 @@ export interface UserProfile {
   createdAt: string;
   /** Set during onboarding and in Settings; absent until then. Shared with the app. */
   preferences?: UserPreferences | null;
+  /** What the person agreed to at sign-up, one record per kind. Absent on accounts made before consents were recorded. */
+  consents?: ConsentRecord[];
+  /** Year of birth, asked at sign-up for the 16+ age gate. Absent on older accounts. */
+  birthYear?: number;
+}
+
+/** `terms` and `privacy` share one checkbox; `breathing-data` is processing breathing data to give scores. */
+export type ConsentKind = "terms" | "privacy" | "breathing-data";
+
+/** One agreement, kept as a legal record: which document, which version of it, and when. */
+export interface ConsentRecord {
+  kind: ConsentKind;
+  version: string;
+  /** ISO 8601 */
+  acceptedAt: string;
 }
 
 /** Why someone breathes with Breathband; the site's Train / Focus / Calm. Sets defaults, never scoring. */

@@ -1,7 +1,7 @@
 # T-0103 · feat: account step consents and the 16+ age gate
 
-Status: in progress
-Branch: card/T-0103 · Held by: AB_Rouge
+Status: done
+Branch: card/T-0103 · Held by: nobody
 Created: 2026-11-26 · Source: planning/v1/02-onboarding-and-tailoring.md §3.1 steps 1–2 and §7 (`consents[]`, `birthYear`); 03-launch-checklist.md D1, D2 (and C8, C9)
 
 ## Why
@@ -12,17 +12,18 @@ before an account exists, so we never hold an under-16's data.
 
 ## Acceptance criteria
 
-- [ ] A1: sign-up stores one consent record per kind (`terms`, `privacy`, `breathing-data`) with version and time on the profile, plus `birthYear` · check: `npx vitest run src/lib/backend/local/consents.test.ts` ("stores the consents and birth year on the profile")
-- [ ] A2: an under-16 birth year is refused with a clear message ("Breathband is for people 16 and over for now.") and no account is created · check: same file, "refuses an under-16 birth year"
-- [ ] A3: a 16+ birth year is accepted · check: same file, "accepts someone who turns 16 this year"
-- [ ] A4: missing or stale consents are refused · check: same file, "refuses sign-up without every consent"
-- [ ] A5: in the browser, sign-up needs both checkboxes and a birth year; under-16 sees the message and stays on sign-up; 16+ with consents reaches /cloud/welcome/ · check: `PORT=3202 npx playwright test e2e/signup-consents.spec.ts`
-- [ ] A6: everything else still passes · check: `npm run check`
+- [x] A1: sign-up stores one consent record per kind (`terms`, `privacy`, `breathing-data`) with version and time on the profile, plus `birthYear` · check: `npx vitest run src/lib/backend/local/consents.test.ts` ("stores the consents and birth year on the profile")
+- [x] A2: an under-16 birth year is refused with a clear message ("Breathband is for people 16 and over for now.") and no account is created · check: same file, "refuses an under-16 birth year"
+- [x] A3: a 16+ birth year is accepted · check: same file, "accepts someone who turns 16 this year"
+- [x] A4: missing or stale consents are refused · check: same file, "refuses sign-up without every consent"
+- [x] A5: in the browser, sign-up needs both checkboxes and a birth year; under-16 sees the message and stays on sign-up; 16+ with consents reaches /cloud/welcome/ · check: `PORT=3202 npx playwright test e2e/signup-consents.spec.ts`
+- [x] A6: everything else still passes · check: `npm run check`
 
 ## Files in scope
 
 - `src/app/cloud/signup/page.tsx`
 - `src/app/cloud/auth.css` (only if the checkboxes need styles)
+- `src/app/cloud/auth/fields.tsx` (added in build: `inputMode="numeric"` for the year field)
 - `src/lib/domain/types.ts` (additive `consents`, `birthYear` on `UserProfile`, and the `ConsentRecord` type they use)
 - `src/lib/domain/consent.ts` (new: consent kinds, draft versions, age gate rule)
 - `src/lib/backend/types.ts`
@@ -56,25 +57,73 @@ before an account exists, so we never hold an under-16's data.
 
 ## Next step
 
-Build: domain consent module and types, then adapter + tests, then the sign-up form and e2e.
+Review and open the draft PR; owner answers the questions below (age rule, coach visibility of birth year, legal copy).
 
 ## Decisions
 
 - 2026-11-26: Owner approved 2026-11-26 (overnight note): additive contract fields in `src/lib/domain/types.ts` (`consents`, `birthYear`); existing tests may change where named; draft legal copy allowed if marked draft and logged.
+- 2026-11-26: Existing tests changed: `local.test.ts` and `preferences.test.ts` add `...ADULT` (current consents, birthYear 1990) to every `signUp` call, because sign-up now requires both; no assertion changed. `e2e/onboarding.spec.ts` fills the year and ticks both boxes for the same reason.
+- 2026-11-26: Added `src/app/cloud/auth/fields.tsx` to scope: one-word change letting `TextField` take `inputMode="numeric"`.
+- 2026-11-26: decided for the owner: age is asked on the sign-up form, before any account exists, so an under-16's details are never stored (alternative: the spec's separate Age step after Account, which would create the account first).
+- 2026-11-26: decided for the owner: with only a year, someone counts as 16 from 1 January of the year they turn 16 (`thisYear - birthYear >= 16`), which admits some 15-year-olds until their birthday (alternative: `>= 17`, which turns away some real 16-year-olds).
+- 2026-11-26: decided for the owner: both checkboxes are required to create an account; the breathing-data one too, since scoring is the product (alternative: optional, with scoring switched off until given).
+- 2026-11-26: decided for the owner: three records (`terms`, `privacy`, `breathing-data`) from two checkboxes; terms and privacy share one box as the spec table says. Shape `{ kind, version, acceptedAt }`; the backend stamps the time and stores the current versions.
+- 2026-11-26: decided for the owner: under-16 refusals use a new `BackendErrorCode` `"under-age"` (alternative: `"invalid-input"` with a message, which the form couldn't tell apart).
+- 2026-11-26: DRAFT legal copy, for the owner and counsel: checkbox wording in `src/app/cloud/signup/page.tsx` (`CONSENT_TERMS`, `CONSENT_DATA`) and versions `draft-2026-11-26` in `src/lib/domain/consent.ts`, both commented as drafts. There are no terms or privacy pages to link to yet.
+- 2026-11-26: firestore.rules (draft, not deployed): users create needs an int `birthYear <= year - 16` and three consents in kind order; update keeps `consents` and `birthYear` unchanged. Versions are not checked in rules. Not run against the emulator: UNTESTED.
 
 ## Questions for me
 
+- [ ] Year-of-birth gate: count someone as 16 from 1 January of the year they turn 16? — Recommended: yes for v1, revisit with counsel (N6). Options: require `thisYear - birthYear >= 17`; ask full date of birth.
+- [ ] Linked coaches can read the athlete's profile, so they can now see `birthYear` and `consents`. OK? — Recommended: move both to a private subdocument before Phase 4. Options: accept for v1; strip them in the adapter for non-self reads.
+- [ ] Should the age step move to its own screen later, as in the spec table (step 2)? — Recommended: keep it on sign-up. Options: separate step after Account.
+
 ## Parked
+
+- 2026-11-26 [product] No terms-of-use or privacy pages exist to link from the sign-up checkboxes · seen on T-0103 · src/app/(site)
+- 2026-11-26 [product] Seeded demo accounts have no `consents`/`birthYear`; existing accounts need a re-consent path when versions change · seen on T-0103 · src/lib/backend/local/seed.ts
+- 2026-11-26 [product] Spec D1's role choice ("For myself" / "I work with people", proKind) not done; sign-up still offers Athlete / Coach · seen on T-0103 · src/app/cloud/signup/page.tsx
 
 ## Done
 
-- [ ] Every criterion ticked, with the command run and its result pasted below
-- [ ] Tests, lint and typecheck run; output below
-- [ ] No edits outside "Files in scope" (`git diff --stat` below)
-- [ ] Anything not run is marked UNTESTED, never "verified"
+- [x] Every criterion ticked, with the command run and its result pasted below
+- [x] Tests, lint and typecheck run; output below
+- [x] No edits outside "Files in scope" (`git diff --stat` below)
+- [x] Anything not run is marked UNTESTED, never "verified"
 - [ ] Draft PR opened: # (not tonight: the lead opens PRs)
 
 ### Evidence
 
 ```
+$ npx vitest run src/lib/backend/local/consents.test.ts src/lib/domain/consent.test.ts --reporter=verbose
+ ✓ consent.test.ts > ageGateProblem > lets in anyone who turns 16 this calendar year or earlier
+ ✓ consent.test.ts > ageGateProblem > stops anyone younger with the spec's message
+ ✓ consent.test.ts > ageGateProblem > calls a future, ancient or fractional year invalid
+ ✓ consent.test.ts > consentsProblem > is happy with every kind at its current version
+ ✓ consent.test.ts > consentsProblem > names the missing kind
+ ✓ consents.test.ts > stores the consents and birth year on the profile
+ ✓ consents.test.ts > refuses an under-16 birth year with a clear message and creates no account
+ ✓ consents.test.ts > accepts someone who turns 16 this year
+ ✓ consents.test.ts > refuses a birth year that can't be real
+ ✓ consents.test.ts > refuses sign-up without every consent, or with an old version
+ ✓ consents.test.ts > keeps consents and birth year out of profile updates
+ Test Files  2 passed (2)   Tests  11 passed (11)
+
+$ PORT=3202 npx playwright test e2e/signup-consents.spec.ts e2e/onboarding.spec.ts
+  ✓ signup-consents.spec.ts › sign-up needs both consents and stores them with the birth year (2.4s)
+  ✓ signup-consents.spec.ts › an under-16 birth year stops sign-up with the age message (999ms)
+  ✓ onboarding.spec.ts › a new athlete is set up by onboarding and their goal sets their sessions (5.5s)
+  3 passed (9.0s)   (Playwright's own dev server on 3202, stopped after)
+
+$ npm run check   (lint, typecheck, vitest, next build)
+ EXIT=0 · Test Files 46 passed (46) · Tests 500 passed (500) · ✓ Compiled successfully · all routes static
+
+$ git diff --stat origin/card/T-0103   (before commit)
+ e2e/onboarding.spec.ts, firebase/firestore.rules, src/app/cloud/auth.css, src/app/cloud/auth/fields.tsx,
+ src/app/cloud/signup/page.tsx, src/lib/backend/local/{index,local.test,preferences.test}.ts,
+ src/lib/backend/types.ts, src/lib/domain/types.ts: 10 files, +213 −18
+ new: src/lib/domain/consent.ts, src/lib/domain/consent.test.ts, src/lib/backend/local/consents.test.ts,
+      e2e/signup-consents.spec.ts
+
+UNTESTED: firebase/firestore.rules changes (no emulator run); other e2e specs (demo-path, smoke) not run; no screenshots or axe run.
 ```

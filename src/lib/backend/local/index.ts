@@ -1,3 +1,4 @@
+import { ageGateProblem, CONSENT_KINDS, CONSENT_VERSIONS, consentsProblem } from "@/lib/domain/consent";
 import { GROUP_SIZE, pacerAt } from "@/lib/domain/group";
 import { isTransitionScores } from "@/lib/domain/scores";
 import { preferencesProblem } from "@/lib/domain/preferences";
@@ -152,22 +153,34 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       return toAuthUser(account.profile);
     },
 
-    async signUp({ email, password, displayName, role }) {
+    async signUp({ email, password, displayName, role, consents, birthYear }) {
       await delay();
       const normalized = email.trim().toLowerCase();
       if (!EMAIL_PATTERN.test(normalized)) throw new BackendError("invalid-email");
       if (password.length < 8) throw new BackendError("weak-password");
+      // Mirrors the users/{uid} create rule in firebase/firestore.rules.
+      const tooYoung = ageGateProblem(birthYear, now());
+      if (tooYoung) {
+        throw tooYoung.code === "under-age"
+          ? new BackendError("under-age", tooYoung.message)
+          : new BackendError("invalid-input", `birthYear: ${tooYoung.message}`);
+      }
+      const missing = consentsProblem(consents);
+      if (missing) throw new BackendError("invalid-input", missing);
       const taken = Object.values(store.read().accounts).some(
         (a) => a.profile.email.toLowerCase() === normalized,
       );
       if (taken) throw new BackendError("email-in-use");
 
+      const createdAt = now().toISOString();
       const profile: UserProfile = {
         uid: `local-${crypto.randomUUID()}`,
         email: normalized,
         displayName: displayName.trim(),
         role,
-        createdAt: now().toISOString(),
+        createdAt,
+        consents: CONSENT_KINDS.map((kind) => ({ kind, version: CONSENT_VERSIONS[kind], acceptedAt: createdAt })),
+        birthYear,
       };
       mutate((db) => {
         db.accounts[profile.uid] = { password, profile };
