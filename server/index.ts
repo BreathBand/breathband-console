@@ -22,7 +22,7 @@ export type AppDeps = {
   appUrl: string;
   /** Serve this static export (`out/`) for everything outside /api. Production only. */
   staticDir?: string;
-  /** Log each request to stdout. */
+  /** Log each request to stdout, with invite codes redacted (`redactInviteCodes`). */
   log?: boolean;
   /** Better Auth (server/auth.ts), mounted at /api/auth. Without it there are no auth routes. */
   auth?: Auth;
@@ -49,7 +49,7 @@ const ERROR_CODES: Partial<Record<number, string>> = {
 export function createApp(deps: AppDeps) {
   const app = new Hono();
 
-  if (deps.log) app.use(logger());
+  if (deps.log) app.use(logger((line, ...rest) => console.log(redactInviteCodes(line), ...rest)));
 
   app.use(async (c, next) => {
     await next();
@@ -98,6 +98,24 @@ export function createApp(deps: AppDeps) {
 }
 
 export type App = ReturnType<typeof createApp>;
+
+const REDACTED = "[code]";
+
+/**
+ * A logged request line without invite codes (T-0133). The database keeps only
+ * their hashes, so the logs mustn't keep them either. Redacts the code segment
+ * of every coach-invite route (`/coach-invites/{code}`, `/preview`, `/revoke`,
+ * `/response`), and the `code` and `invite` query values of the pages that
+ * carry one (`/cloud/join/?code=`, `/cloud/welcome/?invite=`), also when
+ * they're percent-encoded inside another value (sign-in's `?next=`). Athletes'
+ * own invite codes travel in request bodies, which aren't logged.
+ */
+export function redactInviteCodes(line: string): string {
+  return line
+    .replace(/(\/coach-invites\/)[^/?#\s]+/gi, `$1${REDACTED}`)
+    .replace(/([?&](?:code|invite)=)[^&#\s]*/gi, `$1${REDACTED}`)
+    .replace(/((?:%3F|%26)(?:code|invite)%3D)(?:(?!%26)[^&#\s])*/gi, `$1${REDACTED}`);
+}
 
 function isApiPath(path: string): boolean {
   return path === "/api" || path.startsWith("/api/");

@@ -9,7 +9,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { eq } from "drizzle-orm";
 import { migrate } from "drizzle-orm/libsql/migrator";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { currentConsents } from "@/lib/domain/consent";
 import { withProDefaults } from "@/lib/domain/pro-defaults";
 import { defaultProProfile } from "@/lib/domain/pro-profile";
@@ -105,7 +105,16 @@ async function clinicianWithInvite(app: App) {
 
 const preview = (app: App, code: string, ip: string) => call(app, "GET", `/api/v1/coach-invites/${encodeURIComponent(code)}/preview`, { ip });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("the invite's public preview", () => {
+  // These cases simulate Cloud Run's front end, one proxy appending to X-Forwarded-For (T-0133 made 0 the default).
+  beforeEach(() => {
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+  });
+
   it("answers without a session with the minimum: name, kind, profession, scope asked for and practice", async () => {
     const app = build();
     const { invite } = await clinicianWithInvite(app);
@@ -170,5 +179,36 @@ describe("the invite's public preview", () => {
     expect((await call(app, "GET", `/api/v1/coach-invites/${code}`, { cookie: jordan.cookie })).status).toBe(429);
     expect((await call(app, "GET", `/api/v1/coach-invites/${code}`, { cookie: sam.cookie })).status).toBe(200);
     expect((await call(app, "GET", `/api/v1/coach-invites/${code}`)).status).toBe(401);
+  });
+});
+
+// T-0133: with no proxy configured the header is the client's to write, so it buys no new bucket; IPv6 clients share their /64's.
+describe("the invite's public preview, keyed by the client's address", () => {
+  it("ignores X-Forwarded-For with TRUSTED_PROXY_HOPS unset (0): a new forged address per request is still the same client", async () => {
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "");
+    const app = build();
+    const { invite } = await clinicianWithInvite(app);
+    const code = await invite();
+    for (let i = 0; i < PUBLIC_LOOKUP_LIMIT.limit; i++) {
+      expect((await preview(app, code, `192.0.2.${i + 1}`)).status).toBe(200);
+    }
+    expect((await preview(app, code, "192.0.2.200")).status).toBe(429);
+    expect((await preview(app, code, "2001:db8:ffff::1")).status).toBe(429);
+  });
+
+  it("keys IPv6 clients by /64 behind a proxy: rotating addresses in one /64 shares a bucket, another /64 doesn't", async () => {
+    vi.stubEnv("TRUSTED_PROXY_HOPS", "1");
+    const app = build();
+    const { invite } = await clinicianWithInvite(app);
+    const code = await invite();
+    for (let i = 0; i < PUBLIC_LOOKUP_LIMIT.limit; i++) {
+      expect((await preview(app, code, `2001:db8:5:6::${(i + 1).toString(16)}`)).status).toBe(200);
+    }
+    expect((await preview(app, code, "2001:db8:5:6:ffff:ffff:ffff:ffff")).status).toBe(429);
+    expect((await preview(app, code, "2001:db8:5:7::1")).status).toBe(200);
+    // An IPv4 client seen as IPv4-mapped IPv6 is the same client as its IPv4 address.
+    expect((await preview(app, code, "::ffff:203.0.113.77")).status).toBe(200);
+    for (let i = 1; i < PUBLIC_LOOKUP_LIMIT.limit; i++) await preview(app, code, "203.0.113.77");
+    expect((await preview(app, code, "::ffff:203.0.113.77")).status).toBe(429);
   });
 });
