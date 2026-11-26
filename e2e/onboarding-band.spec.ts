@@ -89,7 +89,8 @@ test("the simulated band connects in the band step and leads to the first sessio
   await expect(page.getByRole("heading", { name: /You're ready/ })).toBeVisible();
   await expect(page.getByText("Simulated band", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Start my first session" }).click();
-  await page.waitForURL(/\/cloud\/record\/$/);
+  // T-0115: straight into fit, calibration and the track's first session (Calm: Just breathe), not the New session page.
+  await page.waitForURL(/\/cloud\/record\/live\/\?.*first=just-breathe/);
 
   expect((await storedPreferences(page, email))?.onboarding).toEqual({ bandRoute: "simulated", sampleData: false });
 });

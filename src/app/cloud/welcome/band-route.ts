@@ -85,13 +85,20 @@ export interface FinishAction {
 
 /**
  * Where the done step leads. With a band (or the simulator) the first session
- * comes next; with the phone app or no band, Home; in sample mode, the sample
- * sessions. Home is always offered too.
+ * comes next: given `firstSession` (the instrument's address for the track's
+ * suggested session), straight into fit, calibration and that session;
+ * otherwise, and when the band step was skipped, the New session page. With
+ * the phone app or no band, Home; in sample mode, the sample sessions. Home is
+ * always offered too ("do it later").
  */
-export function finishActions(choice: OnboardingChoices | null): { primary: FinishAction; secondary: FinishAction | null } {
+export function finishActions(
+  choice: OnboardingChoices | null,
+  firstSession?: string,
+): { primary: FinishAction; secondary: FinishAction | null } {
   const home: FinishAction = { label: "Go to my home", href: "/cloud/" };
   if (!choice || choice.bandRoute === "bluetooth" || choice.bandRoute === "simulated") {
-    return { primary: { label: "Start my first session", href: "/cloud/record/", record: true }, secondary: home };
+    const href = choice && firstSession ? firstSession : "/cloud/record/";
+    return { primary: { label: "Start my first session", href, record: true }, secondary: home };
   }
   if (choice.sampleData) return { primary: { label: "Explore sample sessions", href: SAMPLE_PATH }, secondary: home };
   return { primary: home, secondary: null };
