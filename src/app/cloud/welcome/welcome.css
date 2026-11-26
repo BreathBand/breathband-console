@@ -725,3 +725,53 @@
   gap: var(--s-4);
   align-items: center;
 }
+
+/* Professional finish steps (T-0118): templates, terms. */
+.welcome-templates {
+  display: grid;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-templates li {
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-sheet);
+  border: 1px solid var(--c-rule);
+  background: var(--c-pane);
+}
+
+.welcome-templates b {
+  font: 600 var(--t-15) / 1.35 var(--f-sans);
+}
+
+.welcome-template-line {
+  font-size: var(--t-13);
+  color: var(--c-ink);
+}
+
+.welcome-templates small {
+  font-size: var(--t-13);
+  line-height: 1.45;
+  color: var(--c-ink-2);
+}
+
+.welcome-terms {
+  display: grid;
+  gap: var(--s-2);
+  margin: 0;
+  padding-left: var(--s-5);
+  color: var(--c-ink-2);
+  line-height: 1.5;
+}
+
+.welcome-agree {
+  display: grid;
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
