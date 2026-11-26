@@ -12,7 +12,10 @@ import { dayKey, describeAssignment, dueText, isOpen, lastDays, timeAgo } from "
 import { describeMode, formatDay, formatDuration, formatTime, initials } from "@/lib/domain/format";
 import { formatScore, headline, isTransitionScores, scoreWord } from "@/lib/domain/scores";
 import { aPerson } from "@/lib/domain/terminology";
+import { showSamplePerson } from "@/lib/domain/getting-started";
 import type { SessionSummary } from "@/lib/domain/types";
+import { GettingStarted } from "./dashboard/GettingStarted";
+import { SamplePerson } from "./dashboard/SamplePerson";
 import { athleteHref, sessionHref } from "./links";
 import { inSquad, SquadFilter } from "./SquadFilter";
 import { useProKind, useTerms } from "./useTerms";
@@ -30,6 +33,7 @@ export function CoachDashboard({ coachId }: { coachId: string }) {
   const [now] = useState(() => new Date());
   const team = useTeam(coachId, now);
   const t = useTerms();
+  const kind = useProKind();
   const name = auth.status === "signed-in" ? auth.profile?.displayName : undefined;
 
   return (
@@ -50,19 +54,28 @@ export function CoachDashboard({ coachId }: { coachId: string }) {
         <Skeleton lines={8} label={`Loading your ${t.many}…`} />
       ) : team.status === "error" ? (
         <ErrorState error={team.error} what={`your ${t.many}`} onRetry={team.retry} />
-      ) : team.data.members.length === 0 ? (
-        <EmptyState title={`No ${t.many} yet`}>
-          <p className="muted">
-            {t.Many} share their sessions with you by creating an invite code under <b>Sharing</b> in BreathCloud. Enter
-            it on the <Link href="/cloud/athletes/">{t.Many}</Link> page and they&apos;ll appear here.
-          </p>
-          <Link className="button" href="/cloud/athletes/#invite-athlete">
-            <Icon name="plus" size={18} />
-            Add {aPerson(t)}
-          </Link>
-        </EmptyState>
       ) : (
-        <Dashboard team={team.data} now={now} coachId={coachId} onChange={team.retry} />
+        <>
+          {/* A professional's first steps, for their kind (T-0120); older coach accounts have no kind and never see it. */}
+          {kind && <GettingStarted coachId={coachId} kind={kind} team={team.data} />}
+          {team.data.members.length === 0 ? (
+            <>
+              <EmptyState title={`No ${t.many} yet`}>
+                <p className="muted">
+                  {t.Many} share their sessions with you by creating an invite code under <b>Sharing</b> in BreathCloud. Enter
+                  it on the <Link href="/cloud/athletes/">{t.Many}</Link> page and they&apos;ll appear here.
+                </p>
+                <Link className="button" href="/cloud/athletes/#invite-athlete">
+                  <Icon name="plus" size={18} />
+                  Add {aPerson(t)}
+                </Link>
+              </EmptyState>
+              {showSamplePerson(team.data.members.length) && <SamplePerson />}
+            </>
+          ) : (
+            <Dashboard team={team.data} now={now} coachId={coachId} onChange={team.retry} />
+          )}
+        </>
       )}
     </div>
   );
