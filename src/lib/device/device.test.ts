@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { calibrate, toPctOfMax } from "../analysis/calibration";
+import { CALIBRATION_MIN_BREATHS, CALIBRATION_WINDOW_S, calibrationProgress } from "../analysis/calibrationProgress";
 import { analyzeOpenRecording, analyzePacedRecording } from "../analysis/session";
 import { BAND_COMMANDS, SAMPLE_RATE_HZ, STRAP_TENSION } from "./config";
 import { SIM_SCALE, SimulatedBand } from "./simulated";
@@ -117,6 +118,41 @@ describe("SimulatedBand", () => {
     expect(result!.a100).toBeGreaterThan(SIM_SCALE.a100 * 0.85);
     expect(result!.a100).toBeLessThan(SIM_SCALE.a100 * 1.1);
     expect(Math.abs(result!.midline - SIM_SCALE.midline)).toBeLessThan(SIM_SCALE.a100 * 0.05);
+  });
+
+  it("finishes calibrating 20–22 s after the command, as the recorder polls it once a second", async () => {
+    // The recorder seeds the simulator from the clock and the command lands anywhere in a resting breath.
+    for (const seed of [3, 11, 4242, 77_777]) {
+      for (const restS of [5, 6.3, 7.1, 8.6]) {
+        now = 0;
+        const band = new SimulatedBand(seed, () => now);
+        const samples: number[] = [];
+        band.subscribe((s) => samples.push(s.value));
+        const ready = band.connect();
+        await vi.advanceTimersByTimeAsync(1000);
+        await ready;
+        now += restS * 1000;
+        band.tick();
+        const from = samples.length;
+        await band.send(BAND_COMMANDS.calibrate);
+        let doneAt: number | null = null;
+        let progress = calibrationProgress([], SAMPLE_RATE_HZ, 0);
+        for (let s = 1; s <= 30 && doneAt === null && !progress.failed; s++) {
+          now += 1000;
+          band.tick();
+          progress = calibrationProgress(samples.slice(from), SAMPLE_RATE_HZ, s);
+          if (progress.result) doneAt = s;
+        }
+        const where = `seed ${seed}, command after ${restS} s`;
+        expect(progress.failed, where).toBe(false);
+        expect(doneAt, where).toBeGreaterThanOrEqual(CALIBRATION_WINDOW_S);
+        expect(doneAt, where).toBeLessThanOrEqual(CALIBRATION_WINDOW_S + 2);
+        expect(progress.breaths, where).toBeGreaterThanOrEqual(CALIBRATION_MIN_BREATHS);
+        expect(progress.result!.a100, where).toBeGreaterThan(SIM_SCALE.a100 * 0.85);
+        expect(progress.result!.a100, where).toBeLessThan(SIM_SCALE.a100 * 1.1);
+        await band.disconnect();
+      }
+    }
   });
 
   async function pacedSession(persona: SimPersona) {

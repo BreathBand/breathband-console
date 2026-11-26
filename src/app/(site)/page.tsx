@@ -27,7 +27,7 @@ const COMPARE = [
 const STEPS = [
   {
     t: "Put it on",
-    d: "Wrap the band below your ribs and tighten it until the gauge reads In range. A few deep breaths set your range, once.",
+    d: "Wrap the band below your ribs and tighten it until the gauge reads In range. Twenty seconds of full breaths set your range each time you put it on.",
     src: "/site/app-calibrate.webp",
     alt: "Breathband app setup screen: a strap tension gauge reading In range, with steps to wrap, tighten and lock the strap.",
   },

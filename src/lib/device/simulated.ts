@@ -16,8 +16,12 @@ export const SIM_SCALE = { a100: 900, midline: (STRAP_TENSION.min + STRAP_TENSIO
 const SLACK_LEVEL = 1150;
 const TIGHTEN_S = 3.5;
 const CONNECT_MS = 900;
-/** Deep breaths of ±50 % of max with little scatter, so the simulator's calibration lands on SIM_SCALE. */
-const CALIBRATION = { breaths: 5, inhaleS: 3, exhaleS: 4, peakPct: 50, scatterPct: 0.4 } as const;
+/**
+ * Full breaths of ±50 % of max with little scatter, so the simulator's calibration lands on SIM_SCALE.
+ * Five of 5.5 s keep going past the 20-second calibration window, with three or four peaks inside it
+ * wherever the command lands in a resting breath.
+ */
+const CALIBRATION = { breaths: 5, inhaleS: 2.5, exhaleS: 3, peakPct: 50, scatterPct: 0.4 } as const;
 
 const PERSONAS: Record<SimPersona, { shiftS: number; depth: number; rate: number; timingSd: number; ampSd: number }> = {
   steady: { shiftS: 0, depth: 1, rate: 1, timingSd: 0.12, ampSd: 0.25 },
