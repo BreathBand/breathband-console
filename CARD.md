@@ -74,7 +74,8 @@ Review and open the draft PR; owner answers the questions below (age rule, coach
 
 ## Questions for me
 
-- [ ] Year-of-birth gate: count someone as 16 from 1 January of the year they turn 16? — Recommended: yes for v1, revisit with counsel (N6). Options: require `thisYear - birthYear >= 17`; ask full date of birth.
+- [x] Year-of-birth gate: count someone as 16 from 1 January of the year they turn 16? — Recommended: yes for v1, revisit with counsel (N6). Options: require `thisYear - birthYear >= 17`; ask full date of birth.
+  Answer: yes for v1, revisit with counsel (N6)
 - [ ] Linked coaches can read the athlete's profile, so they can now see `birthYear` and `consents`. OK? — Recommended: move both to a private subdocument before Phase 4. Options: accept for v1; strip them in the adapter for non-self reads.
 - [ ] Should the age step move to its own screen later, as in the spec table (step 2)? — Recommended: keep it on sign-up. Options: separate step after Account.
 
