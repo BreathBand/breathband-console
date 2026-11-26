@@ -1,0 +1,69 @@
+/* Focus's mood check-in (J6), on the dark instrument: five faces, one tap. */
+
+.mood-check {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.mood-check legend {
+  padding: 0;
+  margin-bottom: var(--s-3);
+  font: 600 var(--t-15) / 1.3 var(--f-sans);
+  color: var(--c-ink);
+  text-align: center;
+}
+
+.mood-faces {
+  display: flex;
+  justify-content: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.mood-faces button {
+  display: grid;
+  justify-items: center;
+  gap: var(--s-1);
+  min-width: 56px;
+  padding: var(--s-2) var(--s-2) var(--s-3);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+  background: var(--c-well);
+  color: var(--c-ink-2);
+  font: 600 var(--t-12) / 1 var(--f-sans);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.mood-faces button:hover {
+  color: var(--c-ink);
+}
+
+.mood-faces button[aria-pressed="true"] {
+  border-color: var(--c-ok);
+  background: var(--c-ok-tint);
+  color: var(--c-ink);
+}
+
+.mood-faces button:focus-visible {
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+/* On the results the check-in sits with the note, left-aligned. */
+.res-save .mood-check {
+  align-items: flex-start;
+}
+
+.res-save .mood-check legend {
+  text-align: left;
+}

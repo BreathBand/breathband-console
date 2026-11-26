@@ -150,6 +150,18 @@ export interface GamificationPreferences {
   milestones?: boolean;
   /** Milestones already shown, with when (ISO 8601). A milestone in here is never shown again. */
   awarded?: Partial<Record<MilestoneKey, string>>;
+  /** The self-serve program the person follows (J5). Absent until they enrol. */
+  program?: ProgramEnrolment;
+}
+
+/** Self-serve programs (planning/v1/01 §3.8). The content lives in lib/domain/programs.ts. */
+export type ProgramId = "foundations";
+
+/** Enrolment in a program. Its days are done by sessions from `startedAt` on, so only this is stored. */
+export interface ProgramEnrolment {
+  id: ProgramId;
+  /** When the person enrolled (ISO 8601). */
+  startedAt: string;
 }
 
 /**
@@ -344,6 +356,27 @@ export interface SessionSummary {
   open?: OpenDetails | null;
   /** Where the session was recorded: the phone app, or BreathCloud in a browser. */
   source?: "app" | "web";
+}
+
+/** A mood on the five faces, 1 (worst) to 5 (best). */
+export type MoodScore = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * One mood check-in around a session (Focus, J6): before it starts or after
+ * it ends. Kept beside the session, not on it, so a check-in never rewrites
+ * the summary. Private to the person: linked professionals don't read it.
+ *
+ * Firestore: users/{athleteId}/moodCheckins/{id}. Server: `mood_checkins`.
+ */
+export interface MoodCheckin {
+  id: string;
+  athleteId: string;
+  /** The session it was taken around; null once that session is deleted. */
+  sessionId: string | null;
+  phase: "before" | "after";
+  mood: MoodScore;
+  /** ISO 8601 */
+  createdAt: string;
 }
 
 export type WaveformUnits = "raw" | "pct-max";

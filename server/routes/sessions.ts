@@ -187,7 +187,7 @@ function toRow(s: SessionSummary): typeof breathSessions.$inferInsert {
     paced: s.paced ?? null,
     open: s.open ?? null,
     note: s.note,
-    // Group sessions are stored by I-10; until then a client can't point at one.
+    // Athletes join group sessions over the realtime channel (a later card); until then a client can't point at one.
     groupSessionId: null,
     waveformPath: s.waveformPath,
     appVersion: s.appVersion,

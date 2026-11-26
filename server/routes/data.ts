@@ -1,9 +1,9 @@
 // /api/v1/*: the data routes behind the http adapter's DataService
-// (src/lib/backend/http/routes.ts names them). Every route needs a signed-in
-// person; access rules come from ../authz.ts. Errors answer
+// (src/lib/backend/http/routes.ts names them). Every route but the waitlist
+// needs a signed-in person; access rules come from ../authz.ts. Errors answer
 // `{ error: { code, message } }` with the adapter's BackendError codes.
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray, notExists } from "drizzle-orm";
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { HTTPException } from "hono/http-exception";
@@ -12,12 +12,20 @@ import type { BackendErrorCode } from "@/lib/backend/types";
 import type { Auth } from "../auth";
 import type { LinkScope } from "../authz";
 import type { Db } from "../db/client";
-import { coachLinks } from "../db/schema";
+import { accountDeletions, coachLinks } from "../db/schema";
+import { pendingDeletions } from "../jobs/deletion";
 import type { StorageService } from "../storage";
+import { accountRoutes } from "./account";
+import { alertRoutes } from "./alerts";
+import { coachInviteRoutes } from "./coach-invites";
 import { coachingRoutes } from "./coaching";
 import { feedbackRoutes } from "./coaching-feedback";
+import { groupRoutes } from "./group";
+import { moodRoutes } from "./mood";
 import { profileRoutes } from "./profile";
 import { sessionRoutes } from "./sessions";
+import { squadRoutes } from "./squads";
+import { waitlistRoutes } from "./waitlist";
 import { waveformRoutes } from "./waveforms";
 
 export const DATA_BASE_PATH = "/api/v1";
@@ -38,10 +46,26 @@ export function dataRoutes(deps: DataDeps) {
   const smallBodies = bodyLimit({ maxSize: MAX_BODY_BYTES, onError: () => fail("invalid-input", "request body too large") });
   routes.use((c, next) => (c.req.method === "POST" && /\/sessions$/.test(c.req.path) ? next() : smallBodies(c, next)));
 
+  // Public: registered before the session check below, so it answers without one.
+  waitlistRoutes(routes, deps);
+
   routes.use(async (c, next) => {
     const session = await deps.auth.api.getSession({ headers: c.req.raw.headers });
     if (!session) fail("not-signed-in", "Sign in first.");
     c.set("uid", session.user.id);
+    await next();
+  });
+
+  // An account waiting to be deleted (routes/account.ts) is hidden at once: its owner can
+  // only reach /account (status, cancel, export), and to everyone else it doesn't exist.
+  routes.use(async (c, next) => {
+    const viewer = c.get("uid");
+    const others = peopleInPath(c.req.path).filter((uid) => uid !== viewer);
+    const pending = await pendingDeletions(deps.db, [viewer, ...others]);
+    if (pending.has(viewer) && !c.req.path.startsWith(`${DATA_BASE_PATH}/account/`)) {
+      fail("permission-denied", "This account is being deleted. Cancel the deletion to use it again.");
+    }
+    if (others.some((uid) => pending.has(uid))) fail("not-found");
     await next();
   });
 
@@ -56,8 +80,14 @@ export function dataRoutes(deps: DataDeps) {
   profileRoutes(routes, deps);
   sessionRoutes(routes, deps);
   waveformRoutes(routes, deps);
+  moodRoutes(routes, deps);
   coachingRoutes(routes, deps);
   feedbackRoutes(routes, deps);
+  squadRoutes(routes, deps);
+  alertRoutes(routes, deps);
+  coachInviteRoutes(routes, deps);
+  groupRoutes(routes, deps);
+  accountRoutes(routes, deps);
   return routes;
 }
 
@@ -81,13 +111,31 @@ export function fail(code: BackendErrorCode, message: string = code): never {
   throw new DataError(code, message);
 }
 
-/** The coach's link to the athlete, or null when there is none. */
+/** The coach's link to the athlete, or null when there is none or either account is waiting to be deleted. */
 export async function linkScope(db: Db, coachId: string, athleteId: string): Promise<LinkScope> {
+  const beingDeleted = db
+    .select({ userId: accountDeletions.userId })
+    .from(accountDeletions)
+    .where(inArray(accountDeletions.userId, [coachId, athleteId]));
   const [link] = await db
     .select({ scope: coachLinks.scope })
     .from(coachLinks)
-    .where(and(eq(coachLinks.coachId, coachId), eq(coachLinks.athleteId, athleteId)));
+    .where(and(eq(coachLinks.coachId, coachId), eq(coachLinks.athleteId, athleteId), notExists(beingDeleted)));
   return link?.scope ?? null;
+}
+
+/** The people a data path names: `/users/{uid}`, `/athletes/{id}`, `/coaches/{id}`, `/coaches/{id}/seen/{athleteId}`, `/coach-links/{coachId}/{athleteId}`. */
+export function peopleInPath(path: string): string[] {
+  const ids = [...path.matchAll(/\/(?:users|athletes|coaches|seen)\/([^/]+)/g)].map((m) => m[1]);
+  const link = path.match(/\/coach-links\/([^/]+)\/([^/]+)/);
+  if (link) ids.push(link[1], link[2]);
+  return ids.map((id) => {
+    try {
+      return decodeURIComponent(id);
+    } catch {
+      return id;
+    }
+  });
 }
 
 /** The request's JSON body as an object; anything else is invalid input. */

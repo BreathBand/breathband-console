@@ -4,6 +4,7 @@ import { isTransitionScores } from "@/lib/domain/scores";
 import { goalPlanProblem } from "@/lib/domain/goal-questions";
 import { gamificationProblem } from "@/lib/domain/habit";
 import { invitePractice, practiceAssignment } from "@/lib/domain/invite-context";
+import { moodsProblem } from "@/lib/domain/mood";
 import { onboardingProblem } from "@/lib/domain/onboarding";
 import { proProblem } from "@/lib/domain/pro-profile";
 import { proTermsProblem } from "@/lib/domain/pro-terms";
@@ -15,6 +16,7 @@ import {
   type CoachLink,
   type GroupSession,
   type Invite,
+  type MoodCheckin,
   type SessionComment,
   type SessionSummary,
   type Squad,
@@ -347,8 +349,39 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
         for (const coachId of Object.keys(db.seen)) {
           db.seen[coachId] = db.seen[coachId].filter((key) => key !== `${athleteId}/${sessionId}`);
         }
+        // Mirrors the server's `on delete set null` (and the moodCheckins update rule): the check-ins stay, unlinked.
+        for (const c of db.moodCheckins[athleteId] ?? []) {
+          if (c.sessionId === sessionId) c.sessionId = null;
+        }
       });
       if (!found) throw new BackendError("not-found");
+    },
+
+    // Mirrors firestore.rules users/{uid}/moodCheckins: the person's own, on one of their sessions, 1–5.
+    async saveMoodCheckins(athleteId, sessionId, moods) {
+      await delay();
+      assertIsSelf(athleteId);
+      const problem = moodsProblem(moods);
+      if (problem) throw new BackendError("invalid-input", problem);
+      const session = (store.read().sessions[athleteId] ?? []).find((s) => s.id === sessionId);
+      if (!session) throw new BackendError("not-found");
+      // The before check-in was taken as the session began; the after one is stored now.
+      const at = { before: session.startedAt, after: now().toISOString() };
+      const saved: MoodCheckin[] = (["after", "before"] as const).flatMap((phase) => {
+        const mood = moods[phase];
+        return mood === null ? [] : [{ id: newId("m"), athleteId, sessionId, phase, mood, createdAt: at[phase] }];
+      });
+      mutate((db) => {
+        const others = (db.moodCheckins[athleteId] ?? []).filter((c) => c.sessionId !== sessionId);
+        db.moodCheckins[athleteId] = [...saved, ...others].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      });
+      return saved;
+    },
+
+    async listMoodCheckins(athleteId, { limit = 200 } = {}) {
+      await delay();
+      assertIsSelf(athleteId);
+      return (store.read().moodCheckins[athleteId] ?? []).slice(0, limit);
     },
 
     async listAthletes(coachId) {

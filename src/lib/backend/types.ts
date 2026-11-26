@@ -10,6 +10,8 @@ import type {
   GroupSession,
   PacerHalfCycle,
   Invite,
+  MoodCheckin,
+  MoodScore,
   ProKind,
   SessionComment,
   SessionSummary,
@@ -91,6 +93,12 @@ export type CoachInviteLookup = Pick<CoachInvite, "code" | "coachId" | "coachNam
 /** A session as the recorder hands it over: everything but what the store assigns. */
 export type NewSession = Omit<SessionSummary, "id" | "athleteId" | "waveformPath">;
 
+/** The two check-ins around one session; null when that one wasn't given. */
+export interface SessionMoods {
+  before: MoodScore | null;
+  after: MoodScore | null;
+}
+
 export type NewGroupSession =Pick<GroupSession, "title" | "athleteIds" | "pacerHalfCycleSec" | "durationSec">;
 
 /** Where an invited athlete is: still to answer, in the session, briefly lost, or gone. */
@@ -138,8 +146,20 @@ export interface DataService {
    * with its signal, and returns the stored summary (with its id and waveformPath).
    */
   saveSession(athleteId: string, session: NewSession, waveform: Waveform): Promise<SessionSummary>;
-  /** Athletes only, on their own sessions: removes the session, its signal and its comments. */
+  /**
+   * Athletes only, on their own sessions: removes the session, its signal and
+   * its comments. Its mood check-ins stay, unlinked (sessionId null), as the server keeps them.
+   */
   deleteSession(athleteId: string, sessionId: string): Promise<void>;
+
+  /**
+   * Athletes only, on their own sessions (Focus, J6): the mood before and after
+   * one session, 1–5. Replaces whatever that session had; a null phase stores
+   * nothing for it. Returns what is now stored for the session.
+   */
+  saveMoodCheckins(athleteId: string, sessionId: string, moods: SessionMoods): Promise<MoodCheckin[]>;
+  /** Athletes only, their own check-ins, newest first. Professionals can't read them. */
+  listMoodCheckins(athleteId: string, options?: { limit?: number }): Promise<MoodCheckin[]>;
 
   /** Athletes the signed-in coach is linked to. */
   listAthletes(coachId: string): Promise<UserProfile[]>;

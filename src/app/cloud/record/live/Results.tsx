@@ -4,9 +4,10 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 import { SAMPLE_RATE_HZ } from "@/lib/device/config";
 import { formatScore, scoreWord } from "@/lib/domain/scores";
-import type { BreathGoal } from "@/lib/domain/types";
+import type { BreathGoal, MoodScore } from "@/lib/domain/types";
 import type { BuiltSession } from "@/lib/recording";
 import { coaching, onTargetShare, rateChange, rateWord, resultsEmphasis } from "../../results/tone";
+import { MoodFaces } from "./MoodFaces";
 
 /** "0.4 s early", "0.2 s late", "on time". */
 function timingWords(s: number | undefined): string {
@@ -38,6 +39,8 @@ export function Results({
   title,
   goal,
   streakDays,
+  askMood = false,
+  moodBefore = null,
   onSave,
   onDiscard,
   onRestart,
@@ -48,11 +51,16 @@ export function Results({
   goal: BreathGoal | null;
   /** Days in a row with a session, this one included. */
   streakDays: number;
-  onSave: (note: string) => Promise<void>;
+  /** Focus with the mood check-in on (J6): ask how they feel now, and name the change in the line. */
+  askMood?: boolean;
+  /** The mood picked before Begin, if any. */
+  moodBefore?: MoodScore | null;
+  onSave: (note: string, moodAfter: MoodScore | null) => Promise<void>;
   onDiscard: () => void;
   onRestart: () => void;
 }) {
   const [note, setNote] = useState("");
+  const [moodAfter, setMoodAfter] = useState<MoodScore | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const emphasis = resultsEmphasis(goal);
@@ -82,7 +90,7 @@ export function Results({
     setSaving(true);
     setError(null);
     try {
-      await onSave(note);
+      await onSave(note, askMood ? moodAfter : null);
     } catch (e) {
       setSaving(false);
       setError(e instanceof Error ? e.message : "The session couldn't be saved.");
@@ -91,7 +99,8 @@ export function Results({
 
   const { session, paced, open } = built;
   const total = paced?.scores.total;
-  const coach = coaching({ goal, session, streakDays, turns: paced?.transitions, rates });
+  const mood = askMood ? { before: moodBefore, after: moodAfter } : null;
+  const coach = coaching({ goal, session, streakDays, turns: paced?.transitions, rates, mood });
   const share = emphasis.share ? onTargetShare(session) : null;
   const rate = open?.whole.metrics?.rateBpm;
 
@@ -253,6 +262,7 @@ export function Results({
         ))}
 
       <div className="res-save">
+        {askMood && <MoodFaces question="And now, how do you feel?" value={moodAfter} onChange={setMoodAfter} />}
         <label className="field">
           Note <span className="muted">(optional)</span>
           <textarea

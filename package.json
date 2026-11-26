@@ -17,6 +17,8 @@
     "infra:down": "docker compose --profile \"*\" down",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx server/db/migrate.ts",
+    "db:reset": "tsx server/db/reset.ts",
+    "db:seed": "tsx server/db/seed.ts",
     "db:studio": "drizzle-kit studio",
     "db:check": "drizzle-kit check",
     "api:dev": "tsx watch --env-file=server/development.env server/main.ts",
