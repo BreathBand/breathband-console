@@ -14,6 +14,7 @@ import { signOutToLanding } from "../CloudShell";
 import { stateWords } from "../device/words";
 import { SharingPanel } from "../settings/SharingPanel";
 import { AlertRulesSection } from "./AlertRulesForm";
+import { withChanges } from "./merge-preferences";
 import { AppearanceSection } from "./Preferences";
 
 // /cloud/account/ — Settings: who you are, what you're working towards, how
@@ -34,10 +35,13 @@ function Settings({ profile }: { profile: UserProfile }) {
 
   /** Saves a preferences change straight away, the way the app's settings do. */
   async function save(next: UserPreferences) {
+    const before = prefs;
     setPrefs(next);
     setPrefsState("saving");
     try {
-      await backend.data.updateProfile(profile.uid, { preferences: next });
+      // `profile` is from sign-in; Home may have written since (a program, milestones), so only this change goes over the stored preferences.
+      const stored = (await backend.data.getProfile(profile.uid))?.preferences;
+      await backend.data.updateProfile(profile.uid, { preferences: stored ? withChanges(stored, before, next) : next });
       setPrefsState("saved");
     } catch {
       setPrefsState("error");
