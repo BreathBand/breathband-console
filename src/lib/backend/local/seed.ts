@@ -22,6 +22,8 @@ import {
   type PacerHalfCycle,
   type Assignment,
   type CoachInvite,
+  type MoodCheckin,
+  type MoodScore,
   type Squad,
   type SessionComment,
   type SessionSummary,
@@ -481,6 +483,34 @@ export function seedCoaching(
   ];
 
   return { assignments, comments, seen, coachNotes, squads, coachInvites };
+}
+
+/** Maya studies (Focus) and checks in on her mood around her sessions of the last two weeks. */
+const MOOD_ATHLETE = "demo-athlete-4";
+const MOOD_SEED: { before: MoodScore; after: MoodScore }[] = [
+  { before: 3, after: 4 },
+  { before: 2, after: 4 },
+  { before: 3, after: 3 },
+  { before: 2, after: 3 },
+  { before: 4, after: 5 },
+  { before: 3, after: 4 },
+];
+
+/** Mood check-ins (J6), by athlete id, newest first, each a minute either side of its session. */
+export function seedMoodCheckins(sessions: Record<string, SessionSummary[]>, now: Date): Record<string, MoodCheckin[]> {
+  const recent = (sessions[MOOD_ATHLETE] ?? [])
+    .filter((s) => Date.parse(s.startedAt) > now.getTime() - 14 * DAY)
+    .slice(0, MOOD_SEED.length);
+  const checkins = recent.flatMap((s, i): MoodCheckin[] => {
+    const start = Date.parse(s.startedAt);
+    const stamp = (ms: number) => new Date(ms).toISOString();
+    const base = { athleteId: MOOD_ATHLETE, sessionId: s.id };
+    return [
+      { ...base, id: `m-${s.id}-a`, phase: "after", mood: MOOD_SEED[i].after, createdAt: stamp(Math.min(now.getTime(), start + (s.durationSec + 60) * 1000)) },
+      { ...base, id: `m-${s.id}-b`, phase: "before", mood: MOOD_SEED[i].before, createdAt: stamp(start - 60_000) },
+    ];
+  });
+  return { [MOOD_ATHLETE]: checkins };
 }
 
 /**

@@ -11,6 +11,8 @@ import { useDevice } from "@/lib/device/DeviceProvider";
 import { BAND_COMMANDS, SAMPLE_RATE_HZ, STRAP_TENSION } from "@/lib/device/config";
 import { firstSessionName } from "@/lib/domain/first-session";
 import { formatDuration } from "@/lib/domain/format";
+import { asksMood } from "@/lib/domain/mood";
+import type { MoodScore } from "@/lib/domain/types";
 import { parseSetup } from "@/lib/prefs";
 import { buildSession, MIN_RECORDING_S, type BuiltSession } from "@/lib/recording";
 import { useLoad } from "@/lib/useLoad";
@@ -19,6 +21,7 @@ import { sessionHref } from "../../links";
 import { fitOf } from "../../device/TensionGauge";
 import { stateWords } from "../../device/words";
 import { CalibrationRing } from "./CalibrationRing";
+import { MoodFaces } from "./MoodFaces";
 import { BreathLine } from "./BreathLine";
 import { PacerCircle, type PacerFrame } from "./PacerCircle";
 import { Results } from "./Results";
@@ -81,6 +84,7 @@ function Instrument() {
   const [liveRate, setLiveRate] = useState<number | null>(null);
   const [built, setBuilt] = useState<BuiltSession | null>(null);
   const [tooShort, setTooShort] = useState(false);
+  const [moodBefore, setMoodBefore] = useState<MoodScore | null>(null);
 
   useEffect(() => {
     phaseRef.current = phase;
@@ -294,9 +298,15 @@ function Instrument() {
     const now = new Date(built.session.startedAt);
     return streakDays([{ ...built.session, id: "new", athleteId: uid, waveformPath: "" }, ...before], now);
   }, [built, uid, history]);
-  const save = async (note: string) => {
+  // Focus's mood check-in (J6): asked before Begin and on the results, when the person has it on.
+  const askMood = auth.status === "signed-in" && asksMood(auth.profile?.preferences);
+  const save = async (note: string, moodAfter: MoodScore | null) => {
     if (!built || !uid) return;
     const saved = await backend.data.saveSession(uid, { ...built.session, note }, built.waveform);
+    if (askMood && (moodBefore !== null || moodAfter !== null)) {
+      // The session is already safe: a check-in that can't be stored (http, until I-08) never holds it up.
+      await backend.data.saveMoodCheckins(uid, saved.id, { before: moodBefore, after: moodAfter }).catch(() => undefined);
+    }
     router.replace(`${sessionHref(uid, saved.id)}&new=1`);
   };
 
@@ -438,6 +448,7 @@ function Instrument() {
                 ? `Follow the ${setup.view === "circle" ? "circle" : "line"}: breathe in as it ${setup.view === "circle" ? "grows" : "rises"}, out as it ${setup.view === "circle" ? "shrinks" : "falls"}. ${sound ? "A low note marks the bottom of each breath, a high note the top." : ""}`
                 : "Breathe however feels natural. Tap Mark a moment when something changes, up to twice."}
             </p>
+            {askMood && <MoodFaces question="Before you begin, how do you feel?" value={moodBefore} onChange={setMoodBefore} />}
             <div className="inst-actions">
               <button type="button" className="button" data-size="large" onClick={begin} autoFocus>
                 <span className="rec-dot" aria-hidden="true" />
@@ -495,11 +506,15 @@ function Instrument() {
             title={title}
             goal={goal}
             streakDays={streak}
+            askMood={askMood}
+            moodBefore={moodBefore}
             onSave={save}
             onDiscard={() => router.push("/cloud/record/")}
             onRestart={() => {
               setBuilt(null);
               setTooShort(false);
+              // A new attempt asks the mood afresh.
+              setMoodBefore(null);
               setPhase("ready");
             }}
           />

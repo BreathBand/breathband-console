@@ -36,13 +36,14 @@ export function createHttpBackend(options: HttpBackendOptions = {}): Backend {
 
 /**
  * The DataService methods the API doesn't serve yet fail with BackendError("unavailable"):
- * squads, alerts, coach invites, groups and the waitlist arrive with I-10.
+ * squads, alerts, coach invites, groups, the waitlist and mood check-ins arrive with I-10.
+ * TODO(I-10): mood check-ins (J6), on the server's `mood_checkins` table.
  */
 function unavailableData(): DataService {
   const notYet = (method: string) =>
     new BackendError(
       "unavailable",
-      `${method}: the API doesn't serve this yet (I-10). Use NEXT_PUBLIC_BACKEND=local for now.`,
+      `${method}: the API doesn't serve this yet (API card I-10). Use NEXT_PUBLIC_BACKEND=local for now.`,
     );
   const methods = Object.keys(HTTP_ROUTES.data).map((method) => [
     method,
