@@ -17,14 +17,15 @@ npm run dev        # http://localhost:3000
 
 ### Run in a container
 
-The same static build the deploy uses, served by nginx on port 8080:
+The production image (`Dockerfile`) is one service, the way Cloud Run will run it: the API, compiled by `npm run build:server` (esbuild, no tsx at run time), serves `/api/*` and the static export with the security headers on `$PORT` (8080). It runs as a non-root user and holds no secrets. With Mailpit, a one-shot migration and a file database in a volume:
 
 ```bash
-docker build -t breathband-console .
-docker run -p 8080:8080 breathband-console
+AUTH_SECRET=$(openssl rand -base64 32) docker compose --profile full up --build
 ```
 
-Then open <http://localhost:8080/>. The backend is chosen at build time with `--build-arg NEXT_PUBLIC_BACKEND=local` (the default); see [Cloud Run](docs/PLAN.md#cloud-run).
+Then open <http://localhost:8080/> (emails land in Mailpit on <http://localhost:8025>). `docker compose --profile full down` stops it; add `-v` to drop the database volume. `npm run docker:smoke` builds the image, runs it, applies the migrations, checks `/api/health`, two pages, the headers and the caching, then removes the container.
+
+The image builds with `NEXT_PUBLIC_BACKEND=http` and an empty API base URL (same origin); `--build-arg NEXT_PUBLIC_BACKEND=local` builds the demo fallback instead. At run time it needs `AUTH_SECRET` (32+ characters) and `SMTP_HOST`; `TURSO_DATABASE_URL` defaults to `file:/app/data/breathband.db`.
 
 Open <http://localhost:3000/cloud/> and sign in with a demo account (password `breathband`, or use the one-click buttons on the sign-in page):
 
@@ -86,7 +87,7 @@ npm run infra:down           # stops every service in the project
 - **Optional sqld.** For parity with Turso's wire protocol: `docker compose --profile sqld up -d --wait sqld`, then `TURSO_DATABASE_URL=http://127.0.0.1:8081`. Its data lives in the `breathband_sqld-data` volume.
 - **One Compose project for every worktree.** `docker-compose.yml` sets `name: breathband`, so running `infra:up` from any checkout or worktree reuses the same containers and ports instead of starting a second set. `infra:down` from any of them stops it for all.
 
-Ports: 1025 (SMTP), 8025 (Mailpit UI), 8081 (sqld, only with its profile). Port 8080 stays free for the container smoke test.
+Ports: 1025 (SMTP), 8025 (Mailpit UI), 8081 (sqld, only with its profile). Port 8080 belongs to the production image: `--profile full` and `docker:smoke`, one at a time.
 
 ## Scripts
 
@@ -101,6 +102,8 @@ Ports: 1025 (SMTP), 8025 (Mailpit UI), 8081 (sqld, only with its profile). Port 
 | `npm run check`     | All of the above, as CI runs it                         |
 | `npm run infra:up`  | Starts Mailpit in Docker and waits until it's healthy   |
 | `npm run infra:down`| Stops and removes the local infrastructure containers   |
+| `npm run build:server` | Compiles the API to `build/server/` for the image    |
+| `npm run docker:smoke` | Builds, runs and checks the production image         |
 
 ## How it's put together
 
@@ -119,7 +122,7 @@ src/
 │       └── firebase/         stub, implemented in Phase 4
 firebase/                     draft Firestore/Storage rules + indexes (not deployed)
 firebase.json                 Hosting + emulator config (kept, not used)
-Dockerfile, nginx.conf        Cloud Run image: static export served by nginx on :8080
+Dockerfile                    Cloud Run image: the API serving /api/* and the static export on :8080
 ```
 
 - **The build is fully static.** `next build` emits HTML/JS/CSS only. The browser talks to the backend directly, and access control lives in the backend's rules (`firebase/firestore.rules`), not in a server. The local adapter enforces the same rules, so permission errors show up in development.
@@ -127,7 +130,7 @@ Dockerfile, nginx.conf        Cloud Run image: static export served by nginx on 
 
 ## Deploy target: Cloud Run (prepared, not deployed)
 
-The deploy target is **Google Cloud Run**. `gcloud run deploy breathband-web --source . --region <region> --allow-unauthenticated` builds the `Dockerfile` (nginx on :8080). A person runs that by hand; CI and agents don't. Details are in [docs/PLAN.md](docs/PLAN.md#cloud-run).
+The deploy target is **Google Cloud Run**. `gcloud run deploy breathband-web --source . --region <region> --allow-unauthenticated` builds the `Dockerfile` (the API and the static export on :8080; it also needs `AUTH_SECRET`, `SMTP_*` and the database settings, see [Run in a container](#run-in-a-container)). A person runs that by hand; CI and agents don't. Details are in [docs/PLAN.md](docs/PLAN.md#cloud-run).
 
 Firebase Hosting is no longer a target. `firebase.json` and `firebase/` stay in the repo unchanged, but nothing deploys them.
 

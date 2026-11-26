@@ -1,8 +1,17 @@
 node_modules
 .next
 out
+build
 .git
 coverage
 .env*
 !.env.example
 firebase-debug.log*
+# Local databases, blobs and test output never go into the build context.
+data
+*.db
+*.db-*
+test-results
+playwright-report
+blob-report
+.claude

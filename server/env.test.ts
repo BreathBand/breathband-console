@@ -45,7 +45,22 @@ describe("readEnv", () => {
     });
   });
 
+  it("listens on PORT in production when API_PORT is unset (Cloud Run)", () => {
+    expect(readEnv({ PORT: "8080" }).port).toBe(8080);
+    expect(readEnv({ NODE_ENV: "production", PORT: "9000", API_PORT: "" }).port).toBe(9000);
+  });
+
+  it("lets API_PORT win over PORT", () => {
+    expect(readEnv({ NODE_ENV: "production", PORT: "8080", API_PORT: "8790" }).port).toBe(8790);
+  });
+
+  it("ignores PORT outside production, where it is Next's dev port", () => {
+    expect(readEnv({ NODE_ENV: "development", PORT: "3000" }).port).toBe(8787);
+    expect(readEnv({ NODE_ENV: "test", PORT: "3201" }).port).toBe(8787);
+  });
+
   it.each([
+    ["PORT", "http"],
     ["API_PORT", "http"],
     ["API_PORT", "70000"],
     ["APP_URL", "not a url"],
