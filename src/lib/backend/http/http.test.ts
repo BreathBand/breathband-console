@@ -5,7 +5,8 @@ import { currentConsents } from "@/lib/domain/consent";
 import { backendKind, createBackend } from "../index";
 import { createSeededDb, memoryStore } from "../local/db";
 import { createLocalBackend } from "../local";
-import { BackendError, type BackendErrorCode, type SignUpInput } from "../types";
+import type { SessionSummary, Waveform } from "@/lib/domain/types";
+import { BackendError, type BackendErrorCode, type NewAssignment, type NewSession, type SignUpInput } from "../types";
 import { createHttpBackend, HTTP_METHODS, HTTP_ROUTES, toBackendError } from "./index";
 
 const NOW = new Date("2026-11-18T12:00:00.000Z");
@@ -116,14 +117,15 @@ describe("http AuthService", () => {
       password: "correct horse battery",
       role: "athlete",
       birthYear: 1990,
+      consents: currentConsents(),
       callbackURL: "/cloud/",
     });
   });
 
-  it("I-08: checks the consents but doesn't send them: the API has no route that stores them yet", async () => {
+  it("sends the consents, which the API checks and stores (I-08)", async () => {
     const { fetch, calls } = fakeFetch(json({ token: null, user: apiUser }));
     await httpBackend(fetch).auth.signUp(signUpInput());
-    expect(calls[0].body).not.toHaveProperty("consents");
+    expect(calls[0].body).toHaveProperty("consents", currentConsents());
   });
 
   it.each<[string, Partial<SignUpInput>, BackendErrorCode]>([
@@ -193,10 +195,114 @@ describe("toBackendError", () => {
 });
 
 describe("http DataService", () => {
-  it("I-08: every method fails with BackendError('unavailable') until the API serves data", async () => {
+  const SERVED = ["getProfile", "updateProfile", "listSessions", "getSession", "getWaveform", "updateSessionNote", "saveSession", "deleteSession"];
+  const COACHING = [
+    "listAthletes", "listCoaches", "getCoachLink", "setCoachScope", "createInvite", "redeemInvite", "revokeCoach",
+    "listAssignments", "createAssignment", "cancelAssignment", "listComments", "addComment", "deleteComment",
+    "listSeenSessions", "markSessionSeen", "getCoachNote", "saveCoachNote", "setTargets",
+  ];
+  const session = { id: "s 1", athleteId: "a/1" } as SessionSummary;
+
+  it("I-08: serves profile, sessions and waveforms under /api/v1, path parameters encoded", async () => {
+    const { fetch, calls } = fakeFetch();
+    const { data } = httpBackend(fetch);
+    await data.getProfile("u-1");
+    await data.updateProfile("u-1", { displayName: "Ana" });
+    await data.listSessions("a/1", { limit: 5, before: "2026-11-18T00:00:00.000Z" });
+    await data.getSession("a/1", "s 1");
+    await data.getWaveform(session);
+    await data.updateSessionNote("a/1", "s 1", "ok");
+    await data.saveSession("a/1", {} as NewSession, {} as Waveform);
+    await data.deleteSession("a/1", "s 1");
+    expect(calls.map((c) => `${c.init.method} ${c.url}`)).toEqual([
+      `GET ${API}/api/v1/users/u-1`,
+      `PATCH ${API}/api/v1/users/u-1`,
+      `GET ${API}/api/v1/athletes/a%2F1/sessions?limit=5&before=2026-11-18T00%3A00%3A00.000Z`,
+      `GET ${API}/api/v1/athletes/a%2F1/sessions/s%201`,
+      `GET ${API}/api/v1/athletes/a%2F1/sessions/s%201/waveform`,
+      `PUT ${API}/api/v1/athletes/a%2F1/sessions/s%201/note`,
+      `POST ${API}/api/v1/athletes/a%2F1/sessions`,
+      `DELETE ${API}/api/v1/athletes/a%2F1/sessions/s%201`,
+    ]);
+    expect(calls.every((c) => c.init.credentials === "include")).toBe(true);
+    expect(calls[1].body).toEqual({ displayName: "Ana" });
+    expect(calls[5].body).toEqual({ note: "ok" });
+    expect(calls[6].body).toEqual({ session: {}, waveform: {} });
+  });
+
+  it("I-08: answers null for a profile or session the API says isn't there", async () => {
+    const notFound = () => json({ error: { code: "not-found", message: "Not found" } }, 404);
+    const { fetch } = fakeFetch(notFound(), notFound(), notFound());
+    const { data } = httpBackend(fetch);
+    expect(await data.getProfile("u-1")).toBeNull();
+    expect(await data.getSession("a-1", "s-1")).toBeNull();
+    await expect(data.deleteSession("a-1", "s-1")).rejects.toMatchObject({ code: "not-found" });
+  });
+
+  it("I-08: a data route's 409 isn't 'email in use'", async () => {
+    const { fetch } = fakeFetch(json({ message: "conflict" }, 409));
+    await expect(httpBackend(fetch).data.getProfile("u-1")).rejects.toMatchObject({ code: "invalid-input" });
+  });
+
+  it("I-09: serves coaching under /api/v1: verbs, encoded path parameters and bodies", async () => {
+    const { fetch, calls } = fakeFetch();
+    const { data } = httpBackend(fetch);
+    const targets = { score: 8, rateLow: 10, rateHigh: 14, sessionsPerWeek: 4 };
+    const assignment = { athleteId: "a/1" } as NewAssignment;
+    await data.listAthletes("c 1");
+    await data.listCoaches("a/1");
+    await data.getCoachLink("c 1", "a/1");
+    await data.setCoachScope("a/1", "c 1", "scores");
+    await data.createInvite("a/1", "curves");
+    await data.redeemInvite("c 1", "ABCD2345");
+    await data.revokeCoach("a/1", "c 1");
+    await data.listAssignments("a/1");
+    await data.createAssignment("c 1", assignment);
+    await data.cancelAssignment("a/1", "x 1");
+    await data.listComments("a/1", "s 1");
+    await data.addComment("a/1", "s 1", { kind: "comment", text: "Nice" });
+    await data.deleteComment("a/1", "s 1", "m 1");
+    await data.listSeenSessions("c 1");
+    await data.markSessionSeen("c 1", "a/1", "s 1");
+    await data.saveCoachNote("c 1", "a/1", "private");
+    await data.setTargets("c 1", "a/1", targets);
+    expect(calls.map((c) => `${c.init.method} ${c.url}`)).toEqual([
+      `GET ${API}/api/v1/coaches/c%201/athletes`,
+      `GET ${API}/api/v1/athletes/a%2F1/coaches`,
+      `GET ${API}/api/v1/coach-links/c%201/a%2F1`,
+      `PATCH ${API}/api/v1/athletes/a%2F1/coaches/c%201/scope`,
+      `POST ${API}/api/v1/athletes/a%2F1/invites`,
+      `POST ${API}/api/v1/coaches/c%201/invites/redeem`,
+      `DELETE ${API}/api/v1/athletes/a%2F1/coaches/c%201`,
+      `GET ${API}/api/v1/athletes/a%2F1/assignments`,
+      `POST ${API}/api/v1/coaches/c%201/assignments`,
+      `POST ${API}/api/v1/athletes/a%2F1/assignments/x%201/cancel`,
+      `GET ${API}/api/v1/athletes/a%2F1/comments?sessionId=s+1`,
+      `POST ${API}/api/v1/athletes/a%2F1/sessions/s%201/comments`,
+      `DELETE ${API}/api/v1/athletes/a%2F1/sessions/s%201/comments/m%201`,
+      `GET ${API}/api/v1/coaches/c%201/seen`,
+      `PUT ${API}/api/v1/coaches/c%201/seen/a%2F1/s%201`,
+      `PUT ${API}/api/v1/coaches/c%201/athletes/a%2F1/note`,
+      `PUT ${API}/api/v1/coaches/c%201/athletes/a%2F1/targets`,
+    ]);
+    expect(calls.map((c) => c.body)).toEqual([
+      null, null, null, { scope: "scores" }, { scope: "curves" }, { code: "ABCD2345" }, {},
+      null, assignment, {}, null, { kind: "comment", text: "Nice" }, {},
+      null, {}, { text: "private" }, targets,
+    ]);
+  });
+
+  it("I-09: reads a coach note out of its answer, and a missing link as null", async () => {
+    const { fetch } = fakeFetch(json({ text: "private" }), json({ error: { code: "not-found", message: "Not found" } }, 404));
+    const { data } = httpBackend(fetch);
+    expect(await data.getCoachNote("c-1", "a-1")).toBe("private");
+    expect(await data.getCoachLink("c-1", "a-1")).toBeNull();
+  });
+
+  it("I-10: every other method fails with BackendError('unavailable') until the API serves it", async () => {
     const { fetch } = fakeFetch();
     const { data } = httpBackend(fetch);
-    for (const method of Object.keys(HTTP_ROUTES.data) as (keyof typeof data)[]) {
+    for (const method of (Object.keys(HTTP_ROUTES.data) as (keyof typeof data)[]).filter((m) => !SERVED.includes(m) && !COACHING.includes(m))) {
       let error: unknown;
       try {
         await (data[method] as () => unknown)();
@@ -204,7 +310,7 @@ describe("http DataService", () => {
         error = e;
       }
       expect(error, method).toBeInstanceOf(BackendError);
-      expect(error, method).toMatchObject({ code: "unavailable", message: expect.stringContaining("I-08") });
+      expect(error, method).toMatchObject({ code: "unavailable", message: expect.stringContaining("I-10") });
     }
     expect(fetch).not.toHaveBeenCalled();
   });

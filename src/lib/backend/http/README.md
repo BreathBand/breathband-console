@@ -3,7 +3,7 @@
 The adapter for the API in `server/` (planning/v1/04-infrastructure.md). It has the same interface as the local adapter (`../types.ts`), so screens don't change when a build sets `NEXT_PUBLIC_BACKEND=http`.
 
 - **AuthService works** (I-07): it talks to Better Auth at `/api/auth/*` (`server/auth.ts`).
-- **DataService doesn't yet**: every method fails with `BackendError("unavailable")` naming I-08. The API's data routes arrive with I-08 (profile, preferences, sessions, waveforms), I-09 (coaching) and I-10 (squads, alerts, groups, waitlist).
+- **DataService, parts 1 and 2 work**: profile and preferences, sessions and waveforms (I-08), and coaching (I-09: coach links, invites, scope, revoke, assignments, comments and kudos, seen marks, private notes, targets), at `/api/v1/*` (`server/routes/data.ts`, `coaching.ts`, `coaching-feedback.ts`). The other methods fail with `BackendError("unavailable")` naming I-10 (squads, alerts, coach invites, groups, waitlist).
 
 ## Settings
 
@@ -26,8 +26,8 @@ Every request is a `fetch` with `credentials: "include"`, so the browser sends t
 | `signOut` | `POST` | `/api/auth/sign-out` |
 
 - **Session state.** `currentUser()` is synchronous, so the adapter keeps a copy of who is signed in. The first call to `currentUser()` or `onAuthStateChanged()` reads `get-session` once; sign-in and sign-out update the copy. Until that first read answers, `currentUser()` is `null` and `onAuthStateChanged()` waits rather than reporting "signed out" (so the console doesn't flash the login page). If the read fails, the person counts as signed out.
-- **Sign-up** sends `name`, `email`, `password`, `role`, `birthYear` and `callbackURL: "/cloud/"`. The API emails a confirmation link (the server points the relative callback at `APP_URL`); following it confirms the address, signs the person in and lands on `/cloud/`. Until then there is no session: `signUp` returns the account with `emailVerified: false` and the person stays signed out.
-- **Checks done here first**, in the local adapter's order: email shape (`invalid-email`), password length (`weak-password`), age 16+ (`under-age`) and consents (`invalid-input`). The API repeats the first two. The age and consent rules live only here until I-08 (see Gaps).
+- **Sign-up** sends `name`, `email`, `password`, `role`, `birthYear`, `consents` and `callbackURL: "/cloud/"`. The API emails a confirmation link (the server points the relative callback at `APP_URL`); following it confirms the address, signs the person in and lands on `/cloud/`. Until then there is no session: `signUp` returns the account with `emailVerified: false` and the person stays signed out.
+- **Checks done here first**, in the local adapter's order: email shape (`invalid-email`), password length (`weak-password`), age 16+ (`under-age`) and consents (`invalid-input`). The API repeats them all: Better Auth the first two, and a sign-up hook (`signUpHooks` in `server/routes/profile.ts`) the 16+ rule and the consents, which it stores with the profile.
 - **Sign-in** also sends `callbackURL: "/cloud/"`: when the address isn't confirmed, the API emails a fresh link and refuses with `EMAIL_NOT_VERIFIED`.
 - **Password reset** sends `redirectTo: <app origin>/cloud/reset/`. The emailed link goes through the API and lands on `/cloud/reset/?token=…`; the reset page then POSTs `/api/auth/reset-password` with the token and the new password. The API answers the same whether or not the address has an account.
 - **Sign-out** clears the copy even when the request fails, and reports the failure.
@@ -57,12 +57,17 @@ The shared contract suite (`../contract/auth.contract.ts`) names these as traits
 
 ### Gaps
 
-- **Consents are not stored** (TODO(I-08) in `auth.ts`). Sign-up checks them but the API has no route that writes the `consents` table yet.
-- **The 16+ rule is checked only here.** The API validates `birthYear` as a year, not the age.
+- **Consents and birth year are optional for the API.** A direct API sign-up without them still makes an account (the API's own auth tests do this); with them, under 16 and missing or outdated consents are refused. See CARD T-0117's questions.
 
-## Proposed data routes
+## Data routes
 
-These are proposals, not a published API; I-08..I-10 settle them. They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments; everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
+The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}` (`DATA_PREFIX` in `data.ts`). I-08 serves profile and preferences (`getProfile`, `updateProfile`) and sessions and waveforms (`listSessions` … `deleteSession`); I-09 serves coaching (`listAthletes` … `setTargets`); the rest are proposals until I-10 settles them. They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments (URL-encoded); everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
+
+- Errors are `{ error: { code, message } }` with this adapter's codes. `not-found` from `getProfile` and `getSession` becomes `null`. A 401 means the session is gone: the adapter counts the person as signed out and tells `onAuthStateChanged` listeners. A 409 from a data route is `invalid-input`, never `email-in-use`.
+- `saveSession` posts `{ session, waveform }` in one request (under 6 MB; the signal under 5 MB). The API stores the signal gzipped through its `StorageService` at `waveforms/{athleteId}/{id}.json.gz` and the summary in `breath_sessions`.
+- `getProfile` for someone else (either side of a coach link) leaves out their `birthYear` and `consents`; so do `listAthletes` and `listCoaches`.
+- Invite codes are stored only as a SHA-256 hash, last 7 days and redeem once (`invite-invalid` otherwise). `getCoachLink` answers `null` for no link. `getCoachNote` reads `{ text }`. `listComments` merges comments and kudos (two tables) oldest first.
+- `markSessionSeen` is stricter than the local adapter: the session has to exist (`not-found`) and the coach has to be linked to the athlete (`permission-denied`).
 
 ### DataService
 
@@ -122,7 +127,8 @@ Data methods that are not a single request:
 
 ## Tests
 
-- `http.test.ts`: the adapter with a fake `fetch` (requests, session state, error mapping, the I-08 gaps) and the route table against this README.
+- `http.test.ts`: the adapter with a fake `fetch` (requests, session state, error mapping, the data paths, the I-10 gaps) and the route table against this README.
+- `data.http.test.ts`: the profile, sessions and coaching contract sections (`../contract/profile.contract.ts`, `../contract/sessions.contract.ts`, `../contract/coaching.contract.ts`) against the real API, with a temp `STORAGE_DIR`; `../contract/data.local.test.ts` runs them on the local adapter.
 - `auth.http.test.ts`: the shared auth contract (`../contract/auth.contract.ts`) against the real API, started in-process on a free port with a temp migrated file database and a mailer that keeps emails in memory, so the tests follow the confirmation and reset links. No Docker. `../contract/auth.local.test.ts` runs the same suite on the local adapter.
 
 Adding an HTTP client library is a new dependency and needs a person's approval first; the browser's `fetch` is enough.

@@ -10,6 +10,7 @@ import type { Db } from "./db/client";
 import { account, PRO_KINDS, ROLES, session, user as userTable, verification } from "./db/schema/auth";
 import type { Env, Mode } from "./env";
 import { resetPasswordEmail, verificationEmail, type Mailer } from "./mailer";
+import { signUpHooks } from "./routes/profile";
 
 export const AUTH_BASE_PATH = "/api/auth";
 
@@ -107,6 +108,8 @@ export function createAuth(deps: AuthDeps) {
         await deps.mailer.send(verificationEmail(user.email, user.name, callbackOnApp(url, deps.appUrl)));
       },
     },
+    // 16+ by year of birth, and the consent records with the profile row (I-08).
+    databaseHooks: { user: signUpHooks(deps.db) },
     rateLimit: {
       // On in every mode, so tests see what production does. In memory: one API instance for now.
       enabled: true,
