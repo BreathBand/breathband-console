@@ -65,16 +65,17 @@ Appended by the session, one line each, newest last.
 - 2026-11-26: decided for the owner: check-ins are private: a linked coach can't list them, in the adapter and in `firestore.rules` (alternative: readable with the "curves" scope).
 - 2026-11-26: decided for the owner: deleting a session leaves its check-ins unlinked (sessionId null), mirroring the server's `on delete set null` (alternative: delete them with the session).
 - 2026-11-26: decided for the owner: a Focus profile without goal answers counts as check-in on, the question's default (alternative: off until asked).
-- 2026-11-26: decided for the owner: a check-in that fails to save (the http adapter until I-08) never blocks the session save (alternative: surface the error).
+- 2026-11-26: decided for the owner: a check-in that fails to save (the http adapter until I-10) never blocks the session save (alternative: surface the error).
 - 2026-11-26: decided for the owner: the before prompt sits on the Calibrated step above Begin and is optional; the after prompt sits with the note; a second tap clears a face.
-- 2026-11-26: the local DB's version goes 8 → 9 (new `moodCheckins` field and Maya's seeded check-ins), so browsers reseed demo data once. Another lane bumping it too will conflict trivially.
+- 2026-11-26: the local DB's version goes 8 → 9 (new `moodCheckins` field and Maya's seeded check-ins). Fix round: a v8 database is migrated in place (`migrateDb` in `local/db.ts`), so accounts and sessions recorded in the browser survive; seeded check-ins land only on seeded (non-web) sessions; versions older than 8 or unknown still reseed.
 - 2026-11-26: the exam countdown was cheap (a pure `nextExam` + one line), so `focus-exams` now shows "Exam in N days."; the study-day strip stays a seam.
-- 2026-11-26: no existing test changed. New tests: `src/lib/domain/mood.test.ts`, `src/lib/backend/local/mood.test.ts`, `src/app/cloud/results/tone-mood.test.ts`, `src/app/cloud/home/focus.test.ts`, `e2e/mood.spec.ts`.
+- 2026-11-26: fix round: one existing test changed: `src/lib/backend/http/http.test.ts` "every other method fails ... unavailable" now accepts a message naming I-09 or I-10 (was I-09 only), because the mood routes' message names "API card I-10". New test: `src/lib/backend/local/db-migrate.test.ts`. Restart now clears the before-mood.
+- 2026-11-26: before the fix round, no existing test changed. New tests: `src/lib/domain/mood.test.ts`, `src/lib/backend/local/mood.test.ts`, `src/app/cloud/results/tone-mood.test.ts`, `src/app/cloud/home/focus.test.ts`, `e2e/mood.spec.ts`.
 - 2026-11-26: styles went in new files beside the components (`record/live/mood.css`, `home/focus.css`) rather than `record.css` / `home.css`, which are outside the card's scope; no new colour tokens were needed.
 
 ## Questions for me
 
-- [ ] Should the HTTP routes for mood check-ins be part of I-08 or a card of their own? — Recommended: fold into I-08 (the TODO in `routes.ts` names it). Options: a new I-card after I-08.
+- [ ] Should the HTTP routes for mood check-ins be part of I-10 or a card of their own? — Recommended: I-10 (the TODO in `routes.ts` and the http error name it). Options: a new I-card after I-08.
 
 ## Parked
 
@@ -120,6 +121,14 @@ $ git diff --stat 9601548   (after the card draft)
  src/lib/backend/http/{README.md,routes.ts}, src/lib/backend/local/{db.ts,index.ts,mood.test.ts,seed.ts},
  src/lib/backend/types.ts, src/lib/domain/{mood.test.ts,mood.ts,types.ts}
  23 files changed, 1082 insertions(+), 16 deletions(-)
+
+Fix round (after merging night/2026-11-26):
+$ npx vitest run src/lib/backend/local src/lib/domain/mood.test.ts
+ Test Files  14 passed (14)
+      Tests  120 passed (120)
+$ rm -rf playwright-report test-results && npm run check
+exit 0 · lint clean · Test Files 89 passed | 1 skipped · Tests 1093 passed | 1 skipped · build 27/27 pages
+e2e not rerun in the fix round (UNTESTED after the fix; the UI change is one setState on restart).
 
 Screenshots looked at (Playwright attachments): Calibrated step with the five faces; Focus results with
 "32 calm seconds. On target 83% of the time. Mood up from low to good."; Maya's Home with the mood strokes,

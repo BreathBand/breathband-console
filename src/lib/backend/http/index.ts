@@ -34,15 +34,23 @@ export function createHttpBackend(options: HttpBackendOptions = {}): Backend {
   return { kind: "http", auth, data: { ...unavailableData(), ...createHttpData(api) } };
 }
 
+/** The API card that serves a method, where it isn't the usual I-09..I-10 range. */
+const SERVED_BY: Partial<Record<keyof DataService, string>> = {
+  // TODO(I-10): mood check-ins (J6), on the server's `mood_checkins` table.
+  saveMoodCheckins: "API card I-10",
+  listMoodCheckins: "API card I-10",
+};
+
 /**
  * The DataService methods the API doesn't serve yet fail with BackendError("unavailable"):
- * coaching arrives with I-09, squads, alerts, coach invites, groups and the waitlist with I-10.
+ * coaching arrives with I-09; squads, alerts, coach invites, groups, the waitlist and mood
+ * check-ins with I-10.
  */
 function unavailableData(): DataService {
   const notYet = (method: string) =>
     new BackendError(
       "unavailable",
-      `${method}: the API doesn't serve this yet (I-09..I-10). Use NEXT_PUBLIC_BACKEND=local for now.`,
+      `${method}: the API doesn't serve this yet (${SERVED_BY[method as keyof DataService] ?? "I-09..I-10"}). Use NEXT_PUBLIC_BACKEND=local for now.`,
     );
   const methods = Object.keys(HTTP_ROUTES.data).map((method) => [
     method,

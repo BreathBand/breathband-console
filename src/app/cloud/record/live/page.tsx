@@ -513,6 +513,8 @@ function Instrument() {
             onRestart={() => {
               setBuilt(null);
               setTooShort(false);
+              // A new attempt asks the mood afresh.
+              setMoodBefore(null);
               setPhase("ready");
             }}
           />

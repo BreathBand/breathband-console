@@ -250,7 +250,7 @@ describe("http DataService", () => {
         error = e;
       }
       expect(error, method).toBeInstanceOf(BackendError);
-      expect(error, method).toMatchObject({ code: "unavailable", message: expect.stringContaining("I-09") });
+      expect(error, method).toMatchObject({ code: "unavailable", message: expect.stringMatching(/I-09|I-10/) });
     }
     expect(fetch).not.toHaveBeenCalled();
   });
