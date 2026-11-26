@@ -47,7 +47,7 @@ export function TextField({
   type = "text",
   inputMode,
   ...props
-}: Base & { type?: "text" | "email"; inputMode?: "email" | "text" }) {
+}: Base & { type?: "text" | "email"; inputMode?: "email" | "text" | "numeric" }) {
   const { id, label, value, onChange, autoComplete, error, aside, readOnly } = props;
   return (
     <div className="field bc-field">

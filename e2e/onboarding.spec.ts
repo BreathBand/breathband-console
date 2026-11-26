@@ -8,6 +8,9 @@ test("a new athlete is set up by onboarding and their goal sets their sessions",
   await page.getByLabel("Name").fill("Jordan Lee");
   await page.getByLabel("Email").fill(`jordan${Date.now()}@example.com`);
   await page.getByLabel(/^Password/).first().fill("breathe-easy-123");
+  await page.getByLabel("Year of birth").fill("1996");
+  await page.getByLabel(/terms of use/).check();
+  await page.getByLabel(/breathing data/).check();
   await page.getByRole("button", { name: /Create/ }).click();
 
   await page.waitForURL(/\/cloud\/welcome\//, { timeout: 60_000 });

@@ -3,6 +3,7 @@ import type {
   Assignment,
   AthleteTargets,
   CoachInvite,
+  ConsentRecord,
   CoachLink,
   GroupSession,
   PacerHalfCycle,
@@ -36,6 +37,10 @@ export interface SignUpInput {
   password: string;
   displayName: string;
   role: UserProfile["role"];
+  /** Every kind at its current version (see lib/domain/consent); the backend stamps the time. */
+  consents: Pick<ConsentRecord, "kind" | "version">[];
+  /** Under 16 is refused with BackendError("under-age"). */
+  birthYear: number;
 }
 
 export interface AuthService {
@@ -43,7 +48,7 @@ export interface AuthService {
   /** Calls back immediately with the current state, then on every change. Returns an unsubscribe function. */
   onAuthStateChanged(callback: (user: AuthUser | null) => void): () => void;
   signIn(email: string, password: string): Promise<AuthUser>;
-  /** Creates the account and its UserProfile. */
+  /** Creates the account and its UserProfile, with its consent records and birth year. */
   signUp(input: SignUpInput): Promise<AuthUser>;
   sendPasswordReset(email: string): Promise<void>;
   signOut(): Promise<void>;
@@ -219,6 +224,7 @@ export type BackendErrorCode =
   | "not-found"
   | "invite-invalid"
   | "invalid-input"
+  | "under-age"
   | "unavailable";
 
 export class BackendError extends Error {
