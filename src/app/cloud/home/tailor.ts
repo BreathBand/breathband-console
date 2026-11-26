@@ -4,6 +4,7 @@
 
 import type { AssignmentProgress } from "@/lib/domain/coaching";
 import { isTransitionScores } from "@/lib/domain/scores";
+import type { Mechanics } from "@/lib/domain/habit";
 import type { BreathGoal, SessionSummary } from "@/lib/domain/types";
 import { weekStart } from "../SessionsTab";
 
@@ -28,7 +29,7 @@ export const PRO_WORD: Record<ProKind, string> = {
  * Places later cards fill. Each renders nothing until its data exists:
  * - `focus-mood`: mood before and after (J6)
  * - `focus-exams`: exam countdown and study-day strip (D4–D6 goal details)
- * - `calm-ring`: the daily ring (J1)
+ * - `calm-ring`: the daily ring (J1), when the ring is on
  */
 export type HomeSlot = "focus-mood" | "focus-exams" | "calm-ring";
 
@@ -125,6 +126,29 @@ export function homeLayout({
         slots: [],
       };
   }
+}
+
+/**
+ * The layout with the person's habit switches applied (lib/domain/habit.ts):
+ * the streak only where both the layout and the switch allow it, Calm's ring
+ * only when it's on.
+ */
+export function withMechanics(layout: HomeLayout, mechanics: Mechanics): HomeLayout {
+  return {
+    ...layout,
+    streak: layout.streak && mechanics.streak,
+    slots: layout.slots.filter((s) => s !== "calm-ring" || mechanics.ring),
+  };
+}
+
+/**
+ * The streak's paused line in the goal's tone (02 §8, "Streak paused"):
+ * kind, never "lost", never red. Focus names the minutes that pick it back up.
+ */
+export function pausedLine(goal: BreathGoal | null, dailyMinutes: number): string {
+  if (goal === "train") return "Streak paused. Back at it today.";
+  if (goal === "focus") return `Your streak paused. ${capital(word(dailyMinutes))} ${dailyMinutes === 1 ? "minute" : "minutes"} picks it back up.`;
+  return "Your streak paused. Start today to pick it back up.";
 }
 
 /** "last 8 weeks", "last 2 weeks", "last 10 days". */

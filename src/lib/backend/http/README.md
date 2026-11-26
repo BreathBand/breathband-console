@@ -1,30 +1,68 @@
-# HTTP backend adapter (stub)
+# HTTP backend adapter
 
-This folder holds a placeholder adapter for a future BreathCloud API on Cloud Run.
+The adapter for the API in `server/` (planning/v1/04-infrastructure.md). It has the same interface as the local adapter (`../types.ts`), so screens don't change when a build sets `NEXT_PUBLIC_BACKEND=http`.
 
-Decision 2 (2026-11-23): BreathCloud runs on the local adapter for now. The backend seam (`../types.ts`) also gets an `http` adapter with the same interface, so a later move to a Cloud Run API means writing one adapter, not touching screens.
+- **AuthService works** (I-07): it talks to Better Auth at `/api/auth/*` (`server/auth.ts`).
+- **DataService doesn't yet**: every method fails with `BackendError("unavailable")` naming I-08. The API's data routes arrive with I-08 (profile, preferences, sessions, waveforms), I-09 (coaching) and I-10 (squads, alerts, groups, waitlist).
 
-## What the stub does
+## Settings
 
-- `createHttpBackend()` in `index.ts` only throws an `Error` that names `NEXT_PUBLIC_BACKEND=http` and points back to this folder. It never returns a backend.
-- **The stub makes no network calls.** It does not call `fetch`, open sockets or read any URL, and it imports only types from `../types.ts`.
-- `HTTP_ROUTES` in `index.ts` is the proposed REST route for every `AuthService` and `DataService` method. Its type is `Record<keyof AuthService, HttpRoute>` and `Record<keyof DataService, HttpRoute>`, so typecheck fails when a method is added to `../types.ts` without a route. `http.test.ts` also checks its keys against the local adapter's methods.
-- `createBackend("http")` in `../index.ts` calls `createHttpBackend()`, so a build with `NEXT_PUBLIC_BACKEND=http` fails loudly instead of quietly showing demo data.
+Both are inlined into the static build (see `.env.example`):
 
-## Proposed routes
+- `NEXT_PUBLIC_BACKEND=http` picks this adapter.
+- `NEXT_PUBLIC_API_BASE_URL` is the API's origin, e.g. `http://localhost:8787` in development. Empty means the page's own origin (the production image serves the app and the API together).
 
-These are proposals, not a published API. They are copied from `HTTP_ROUTES`; if the two disagree, `index.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments; everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
+Every request is a `fetch` with `credentials: "include"`, so the browser sends the session cookie (HttpOnly, set by the API). In development the API allows the app's origin with credentials (`server/index.ts`).
 
-### AuthService
+## How AuthService maps to the API
 
 | Method | Verb | Path |
 | --- | --- | --- |
-| `currentUser` | `GET` | `/v1/auth/me` |
-| `onAuthStateChanged` | `GET` | `/v1/auth/session` |
-| `signIn` | `POST` | `/v1/auth/sign-in` |
-| `signUp` | `POST` | `/v1/auth/sign-up` |
-| `sendPasswordReset` | `POST` | `/v1/auth/password-reset` |
-| `signOut` | `POST` | `/v1/auth/sign-out` |
+| `currentUser` | `GET` | `/api/auth/get-session` |
+| `onAuthStateChanged` | `GET` | `/api/auth/get-session` |
+| `signIn` | `POST` | `/api/auth/sign-in/email` |
+| `signUp` | `POST` | `/api/auth/sign-up/email` |
+| `sendPasswordReset` | `POST` | `/api/auth/request-password-reset` |
+| `signOut` | `POST` | `/api/auth/sign-out` |
+
+- **Session state.** `currentUser()` is synchronous, so the adapter keeps a copy of who is signed in. The first call to `currentUser()` or `onAuthStateChanged()` reads `get-session` once; sign-in and sign-out update the copy. Until that first read answers, `currentUser()` is `null` and `onAuthStateChanged()` waits rather than reporting "signed out" (so the console doesn't flash the login page). If the read fails, the person counts as signed out.
+- **Sign-up** sends `name`, `email`, `password`, `role`, `birthYear` and `callbackURL: "/cloud/"`. The API emails a confirmation link (the server points the relative callback at `APP_URL`); following it confirms the address, signs the person in and lands on `/cloud/`. Until then there is no session: `signUp` returns the account with `emailVerified: false` and the person stays signed out.
+- **Checks done here first**, in the local adapter's order: email shape (`invalid-email`), password length (`weak-password`), age 16+ (`under-age`) and consents (`invalid-input`). The API repeats the first two. The age and consent rules live only here until I-08 (see Gaps).
+- **Sign-in** also sends `callbackURL: "/cloud/"`: when the address isn't confirmed, the API emails a fresh link and refuses with `EMAIL_NOT_VERIFIED`.
+- **Password reset** sends `redirectTo: <app origin>/cloud/reset/`. The emailed link goes through the API and lands on `/cloud/reset/?token=…`; the reset page then POSTs `/api/auth/reset-password` with the token and the new password. The API answers the same whether or not the address has an account.
+- **Sign-out** clears the copy even when the request fails, and reports the failure.
+
+### Errors
+
+Better Auth answers errors as `{ code, message }`; the API's own routes answer `{ error: { code, message } }` with this adapter's codes, which pass through. `toBackendError()` in `client.ts`:
+
+| From the API | `BackendError` code |
+| --- | --- |
+| `INVALID_EMAIL_OR_PASSWORD` | `invalid-credentials` |
+| `USER_ALREADY_EXISTS`, `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL` | `email-in-use` |
+| `INVALID_EMAIL` | `invalid-email` |
+| `PASSWORD_TOO_SHORT` | `weak-password` |
+| `EMAIL_NOT_VERIFIED` | `permission-denied`, with a message saying a new link was sent |
+| `PASSWORD_TOO_LONG`, `VALIDATION_ERROR`, `MISSING_FIELD`, `FIELD_NOT_ALLOWED`, `INVALID_TOKEN`, `TOKEN_EXPIRED` | `invalid-input` |
+| 429 (rate limited) | `unavailable`, "Too many attempts" |
+| otherwise by status: 400/422, 401, 403, 404, 409 | `invalid-input`, `not-signed-in`, `permission-denied`, `not-found`, `email-in-use` |
+| 5xx, no answer, network failure | `unavailable` |
+
+### Where http differs from local on purpose
+
+The shared contract suite (`../contract/auth.contract.ts`) names these as traits rather than skipping tests:
+
+- `confirmsEmail`: a new account signs in only after the emailed link. Local accounts are confirmed from the start.
+- `revealsEmailInUse: false`: signing up with an address that has an account answers like a new sign-up (Better Auth's protection against finding out who has an account); no second account is made and the existing password still works. Local says `email-in-use`.
+
+### Gaps
+
+- **Consents are not stored** (TODO(I-08) in `auth.ts`). Sign-up checks them but the API has no route that writes the `consents` table yet.
+- **The 16+ rule is checked only here.** The API validates `birthYear` as a year, not the age.
+
+## Proposed data routes
+
+These are proposals, not a published API; I-08..I-10 settle them. They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments; everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
 
 ### DataService
 
@@ -77,22 +115,14 @@ These are proposals, not a published API. They are copied from `HTTP_ROUTES`; if
 | `watchGroupLive` | `GET` | `/v1/group-sessions/{id}/live` |
 | `joinWaitlist` | `POST` | `/v1/waitlist` |
 
-### Methods that are not a single request
+Data methods that are not a single request:
 
-- `currentUser()` is synchronous and `onAuthStateChanged()` calls back immediately, so the adapter needs a client-side session cache. `GET /v1/auth/session` fills it at start-up and after sign-in, sign-up and sign-out; `GET /v1/auth/me` reads the signed-in user. Neither method should block on the network.
 - `watchGroupLive()` is a stream of about ten frames a second, not a request and response. `GET /v1/group-sessions/{id}/live` is meant for a streaming transport (server-sent events or a WebSocket upgrade); which one is part of the API design.
 - `getWaveform()` takes a whole `SessionSummary`; the route uses its `athleteId` and `id`.
 
-## Auth is an open decision
+## Tests
 
-How the Cloud Run API authenticates callers is **not decided** and this stub does not decide it. The candidates include Firebase Auth ID tokens sent as a bearer token, Cloud Run IAM in front of the service, or sessions issued by the API itself. The `/v1/auth/*` routes above assume the API handles sign-in itself; if Firebase Auth or another identity provider is chosen, `AuthService` would talk to that provider instead and those routes would go away. Settle this before implementing the adapter, together with how the API enforces the same access rules as `firebase/firestore.rules` and `firebase/storage.rules`.
+- `http.test.ts`: the adapter with a fake `fetch` (requests, session state, error mapping, the I-08 gaps) and the route table against this README.
+- `auth.http.test.ts`: the shared auth contract (`../contract/auth.contract.ts`) against the real API, started in-process on a free port with a temp migrated file database and a mailer that keeps emails in memory, so the tests follow the confirmation and reset links. No Docker. `../contract/auth.local.test.ts` runs the same suite on the local adapter.
 
-## Activating it later
-
-1. Settle the auth decision above and publish the API's routes; update `HTTP_ROUTES` and this table if they change.
-2. Implement `createHttpBackend()` in `index.ts` against the interfaces in `../types.ts`, building each request from `HTTP_ROUTES`. Return `kind: "http"`.
-3. Map HTTP failures to `BackendErrorCode`: 401 → `"not-signed-in"` (or `"invalid-credentials"` from sign-in), 403 → `"permission-denied"`, 404 → `"not-found"`, 409 → `"email-in-use"`, 400/422 → `"invalid-input"` or the more specific code the API returns, network errors and 5xx → `"unavailable"`.
-4. Set `NEXT_PUBLIC_BACKEND=http` and `NEXT_PUBLIC_API_BASE_URL` in `.env.local` (see `.env.example`). Both are inlined into the static build.
-5. Run the behaviours in `../local/local.test.ts` against the new adapter and a test deployment of the API; they describe what every adapter has to match.
-
-Adding an HTTP client library is a new dependency and needs a person's approval first; the browser's `fetch` is enough for the routes above.
+Adding an HTTP client library is a new dependency and needs a person's approval first; the browser's `fetch` is enough.

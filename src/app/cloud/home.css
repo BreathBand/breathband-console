@@ -158,6 +158,75 @@
   font-weight: 600;
 }
 
+/* Calm's daily ring (J1): today's minutes against the plan. Quiet; it closes, it doesn't celebrate. */
+.home-ring {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+}
+
+.home-ring svg {
+  flex: none;
+}
+
+.home-ring p {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.home-ring b {
+  font-size: var(--t-28);
+  font-weight: 400;
+  color: var(--c-ink);
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--c-well);
+}
+
+.ring-fill {
+  fill: none;
+  stroke: var(--c-ok);
+  stroke-linecap: round;
+}
+
+/* A paused streak is a word in the ink's own colour: never red, never a zero (01 §2.5). */
+.home-paused {
+  font: 400 var(--t-20) / 1.4 var(--f-display);
+  color: var(--c-ink);
+}
+
+/* New milestones, each shown once (J3). */
+.home-milestones {
+  padding: var(--s-4) var(--s-5);
+}
+
+.home-milestones ul {
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-6);
+}
+
+.home-milestones li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.home-milestones b {
+  font: 400 var(--t-17) / 1.3 var(--f-display);
+  color: var(--c-ink);
+}
+
 /* Calm's one encouraging line, under the greeting. */
 .home-line {
   margin-top: var(--s-2);

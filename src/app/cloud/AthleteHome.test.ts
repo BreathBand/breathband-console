@@ -19,7 +19,8 @@ describe("streakDays", () => {
   const now = new Date("2026-11-24T15:00:00");
 
   it("counts consecutive days back from today", () => {
-    expect(streakDays([at("2026-11-24T08:00:00"), at("2026-11-23T08:00:00"), at("2026-11-22T20:00:00"), at("2026-11-20T08:00:00")], now)).toBe(3);
+    // T-0113: one missed day is now a rest day that holds the streak, so the older session sits two missed days back.
+    expect(streakDays([at("2026-11-24T08:00:00"), at("2026-11-23T08:00:00"), at("2026-11-22T20:00:00"), at("2026-11-19T08:00:00")], now)).toBe(3);
   });
 
   it("still counts from yesterday when there's no session yet today", () => {
