@@ -76,7 +76,8 @@ Appended by the session, one line each, newest last.
 
 ## Questions for me
 
-- [ ] Should the HTTP routes for mood check-ins be part of I-10 or a card of their own? — Recommended: I-10 (the TODO in `routes.ts` and the http error name it). Options: a new I-card after I-08.
+- [x] Should the HTTP routes for mood check-ins be part of I-10 or a card of their own? — Recommended: I-10 (the TODO in `routes.ts` and the http error name it). Options: a new I-card after I-08.
+  Answer: I-10 (the TODO in `routes.ts` and the http error name it)
 
 ## Parked
 
