@@ -91,7 +91,7 @@ export function feedbackRoutes(routes: DataApp, { db }: DataDeps) {
       db.select().from(kudos).where(and(eq(kudos.athleteId, athleteId), sessionId ? eq(kudos.sessionId, sessionId) : undefined)).orderBy(asc(kudos.createdAt), asc(sql`rowid`)),
     ]);
     const thread = [...said.map((r) => toComment(r, "comment", r.text)), ...marks.map((r) => toComment(r, "kudos", ""))];
-    // Stable, so rows written in the same millisecond keep their table order.
+    // Every createdAt is distinct per athlete (threadTime), so this is write order.
     thread.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
     return c.json(thread);
   });
@@ -112,14 +112,14 @@ export function feedbackRoutes(routes: DataApp, { db }: DataDeps) {
 
     if (kind === "kudos") {
       // One per person per session (a unique index): a second is a no-op that returns the first.
-      await db.insert(kudos).values(by).onConflictDoNothing();
+      await db.insert(kudos).values({ ...by, createdAt: threadTime(athleteId) }).onConflictDoNothing();
       const [row] = await db.select().from(kudos).where(and(eq(kudos.sessionId, sessionId), eq(kudos.authorId, viewer)));
       return c.json(toComment(row, "kudos", ""));
     }
     if (kind !== "comment") fail("invalid-input", "kind: comment or kudos");
     const body = typeof text === "string" ? text.trim().slice(0, MAX_COMMENT) : "";
     if (!body) fail("invalid-input", "text: empty");
-    const [row] = await db.insert(comments).values({ ...by, text: body }).returning();
+    const [row] = await db.insert(comments).values({ ...by, text: body, createdAt: threadTime(athleteId) }).returning();
     return c.json(toComment(row, "comment", row.text));
   });
 
@@ -135,6 +135,21 @@ export function feedbackRoutes(routes: DataApp, { db }: DataDeps) {
     }
     fail("not-found");
   });
+}
+
+/**
+ * The createdAt for a new comment or kudos: now, or 1 ms after the athlete's newest comment or
+ * kudos when that isn't earlier. The two tables merge by createdAt when listed, so a time that
+ * only ever goes up per athlete keeps the thread in write order. It is computed inside the
+ * INSERT itself, which SQLite (and libSQL) runs under the write lock: two writers in the same
+ * millisecond still get two different times.
+ */
+function threadTime(athleteId: string) {
+  return sql`max(
+    cast(unixepoch('subsecond') * 1000 as integer),
+    coalesce((select max(created_at) from comments where athlete_id = ${athleteId}), 0) + 1,
+    coalesce((select max(created_at) from kudos where athlete_id = ${athleteId}), 0) + 1
+  )`;
 }
 
 function toAssignment(row: AssignmentRow): Assignment {
