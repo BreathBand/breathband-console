@@ -39,8 +39,8 @@ const paced = (min: number, view: DayPreset["view"] = "circle", sound = true): D
 /**
  * Foundations, Calm's 14 days: open breathing first, the 5-5 pacer from day 3
  * (02 §3.4: "paced suggested on day 3"), sessions growing from three minutes
- * to ten, and day 14 repeating day 1 so the two can be compared. Draft
- * content until J4's programs are approved.
+ * to ten, and day 14 repeating day 1 so the two can be compared. Approved
+ * as written (D-L, 2026-11-27).
  */
 const FOUNDATIONS: [string, string, DayPreset][] = [
   ["Just breathe", "Breathe the way you usually do. This first one is your baseline.", open(3)],
