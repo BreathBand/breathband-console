@@ -102,7 +102,8 @@ Window A: **Sign out** (bottom of the sidebar), then **Create account** (top rig
 9. **You're ready, Sofia.** The summary ends with "First session: Just breathe · Open · 3 min, after a strap check and
    calibration". → **Start my first session**.
 10. **Check the strap**: the gauge reads "Good fit" and the step moves on by itself (with a real band: tighten until the
-    marker is in the green, then **It's snug, calibrate**). *Not built: the three strap-fit cards with the gauge (D10).*
+    marker is in the green, then **It's snug, calibrate**). Three cards above the gauge say where it goes, how to thread
+    the clip, and to tighten then lock.
 11. **Full breaths for 20 seconds**: "Imagine your belly as a balloon." The circle fills to the outer ring on each breath
     in and empties on each breath out. Then **Calibrated**. *Not built: "Good job." after calibration; the screen says
     "Calibrated" (D10).*

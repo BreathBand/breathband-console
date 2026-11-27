@@ -1171,3 +1171,35 @@
     flex-direction: column;
   }
 }
+
+/* The strap guide's three steps, numbered, above the live gauge (D10, F6). */
+.strap-cards {
+  list-style: none;
+  counter-reset: strap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--s-3);
+  padding: 0;
+  margin: 0 0 var(--s-4);
+}
+
+.strap-cards li {
+  counter-increment: strap;
+  display: grid;
+  gap: var(--s-1);
+  padding: var(--s-3);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-2);
+  background: var(--c-pane);
+}
+
+.strap-cards li::before {
+  content: counter(strap);
+  font-weight: 600;
+  color: var(--c-ink-2);
+  font-size: var(--t-13);
+}
+
+.strap-cards span {
+  color: var(--c-ink-2);
+}

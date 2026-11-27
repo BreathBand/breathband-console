@@ -32,6 +32,13 @@ import { TONES, useTones } from "./useTones";
 
 type Phase = "strap" | "calibrate" | "ready" | "countdown" | "live" | "review";
 
+/** The strap guide's three steps (02 §3 step 10), beside the live gauge. */
+const STRAP_STEPS = [
+  { title: "Where it goes", text: "Around your belly, between your belly button and the bottom of your ribs." },
+  { title: "Thread the clip", text: "Thread the strap through the clip and pull your stomach in as you do." },
+  { title: "Tighten, then lock", text: "Tighten until the marker sits in the green, then lock the clip." },
+] as const;
+
 const MAX_MARKERS = 2;
 
 export default function LivePage() {
@@ -403,12 +410,22 @@ function Instrument() {
         ) : phase === "strap" ? (
           <section className="inst-step">
             <h1>Check the strap</h1>
-            <p>
-              {calError ??
-                (reuse
-                  ? "You calibrated when you put the band on. If it has stayed on since, keep that calibration; if you took it off, calibrate again."
-                  : "Wrap the band around your belly, just below the ribs, and tighten it until the marker sits in the green.")}
-            </p>
+            {calError || reuse ? (
+              <p>
+                {calError ??
+                  "You calibrated when you put the band on. If it has stayed on since, keep that calibration; if you took it off, calibrate again."}
+              </p>
+            ) : null}
+            {!reuse && (
+              <ol className="strap-cards" aria-label="Fitting the strap">
+                {STRAP_STEPS.map((step) => (
+                  <li key={step.title}>
+                    <strong>{step.title}</strong>
+                    <span>{step.text}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
             {firstSession && !calError && (
               <p className="inst-small">
                 Your first session: fit the strap, calibrate for 20 seconds, then {firstSession} for {Math.round(setup.lengthSec / 60)} minutes.
