@@ -151,6 +151,11 @@ function Instrument() {
       if (result) {
         device.setCalibration(result);
         scale.current = { a100: result.a100, midline: result.midline };
+        // Kept with its band (F8); a failed save doesn't stop the session.
+        if (auth.status === "signed-in") {
+          const calibration = { a100: result.a100, midline: result.midline, source: device.kind, bandName: device.status.deviceName ?? null };
+          backend.data.saveCalibration(auth.user.uid, calibration).catch(() => undefined);
+        }
         setPhase("ready");
         return;
       }
@@ -161,7 +166,7 @@ function Instrument() {
       }
     }, 700);
     return () => clearInterval(timer);
-  }, [phase, device]);
+  }, [phase, device, auth, backend]);
 
   const calibrationFill = useCallback(() => {
     const s = calRaw.current;

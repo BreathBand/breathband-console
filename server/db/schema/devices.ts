@@ -34,6 +34,10 @@ export const calibrations = sqliteTable(
     midline: real("midline").notNull(),
     min: real("min").notNull(),
     max: real("max").notNull(),
+    /** "bluetooth" or "simulated": which kind of band took it. */
+    source: text("source", { enum: ["bluetooth", "simulated"] }).notNull().default("bluetooth"),
+    /** The band's name as it advertised, until bands are registered in `devices`. */
+    bandName: text("band_name"),
     /** The person's normal breathing reference; its shape waits on decision D-J. */
     normalReference: text("normal_reference", { mode: "json" }).$type<Record<string, unknown>>(),
     ...timestamps,

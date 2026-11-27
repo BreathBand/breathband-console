@@ -1,6 +1,6 @@
 import { FIXED_CONSTANTS, OPEN_CONSTANTS } from "@/lib/analysis/config";
 import type { SessionSummary, Waveform } from "@/lib/domain/types";
-import { BackendError } from "../types";
+import { BackendError, type NewCalibration } from "../types";
 
 const { minSd, maxSd, stepSd } = FIXED_CONSTANTS.deviationHistogram;
 const HISTOGRAM_BINS = Math.round((maxSd - minSd) / stepSd);
@@ -33,4 +33,15 @@ export function checkSessionContract(summary: SessionSummary, waveform: Waveform
   if (summary.skillLevel !== undefined && !Object.hasOwn(OPEN_CONSTANTS.skillBandK, summary.skillLevel)) {
     throw invalid("skillLevel", `unknown level "${String(summary.skillLevel)}"`);
   }
+}
+
+const MAX_BAND_NAME = 64;
+
+/** Why a calibration can't be kept, or null: the API refuses the same (server/routes/calibrations.ts). */
+export function calibrationProblem(c: NewCalibration): string | null {
+  if (typeof c.a100 !== "number" || !Number.isFinite(c.a100) || c.a100 <= 0) return "a100: a positive number";
+  if (typeof c.midline !== "number" || !Number.isFinite(c.midline)) return "midline: a number";
+  if (c.source !== "bluetooth" && c.source !== "simulated") return 'source: "bluetooth" or "simulated"';
+  if (c.bandName !== null && (typeof c.bandName !== "string" || c.bandName.length > MAX_BAND_NAME)) return `bandName: null or text up to ${MAX_BAND_NAME}`;
+  return null;
 }

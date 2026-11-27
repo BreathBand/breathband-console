@@ -498,3 +498,10 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* The newest kept calibration, under the connection's own (F8). */
+.device-last-cal {
+  display: block;
+  color: var(--c-ink-2);
+  font-size: var(--t-13);
+}

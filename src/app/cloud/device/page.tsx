@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useSyncExternalStore } from "react";
 import { Icon } from "@/components/Icon";
 import { LiveTrace } from "@/components/LiveTrace";
+import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
+import { formatLongDay, formatTime } from "@/lib/domain/format";
 import { useDevice } from "@/lib/device/DeviceProvider";
+import { useLoad } from "@/lib/useLoad";
 import { bluetoothSupport } from "@/lib/device/bluetooth";
 import { NUS, SAMPLE_RATE_HZ } from "@/lib/device/config";
 import type { SourceKind } from "@/lib/device/types";
@@ -140,7 +143,10 @@ export default function DevicePage() {
               </div>
               <div>
                 <dt>Calibration</dt>
-                <dd>{device.calibration ? "Done for this connection" : "Runs at the start of each session"}</dd>
+                <dd>
+                  {device.calibration ? "Done for this connection" : "Runs at the start of each session"}
+                  <LastCalibration />
+                </dd>
               </div>
             </dl>
           </>
@@ -236,5 +242,21 @@ function BandFigure() {
       <rect x="80" y="34" width="60" height="52" rx="14" className="band-pod" />
       <circle cx="110" cy="60" r="9" className="band-led" />
     </svg>
+  );
+}
+
+/** The newest calibration kept for the person (F8), with its band and when. */
+function LastCalibration() {
+  const backend = useBackend();
+  const auth = useAuth();
+  const uid = auth.status === "signed-in" ? auth.user.uid : null;
+  const last = useLoad(uid ? `calibration:${uid}` : null, () => backend.data.getLatestCalibration(uid!));
+  if (last.status !== "ready" || !last.data) return null;
+  const { at, bandName } = last.data;
+  return (
+    <small className="device-last-cal">
+      Last: {formatLongDay(at)}, {formatTime(at)}
+      {bandName ? ` on ${bandName}` : ""}
+    </small>
   );
 }

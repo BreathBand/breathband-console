@@ -1,5 +1,5 @@
 import type { GroupSession } from "@/lib/domain/types";
-import { BackendError, type AccountDeletion, type DataService, type Presence } from "../types";
+import { BackendError, type AccountDeletion, type CalibrationRecord, type DataService, type Presence } from "../types";
 import type { ApiClient } from "./client";
 import { HTTP_ROUTES } from "./routes";
 
@@ -171,5 +171,8 @@ export function createHttpData(api: ApiClient): DataService {
     },
     exportMyData: () => call(R.exportMyData, {}),
     listAccessLog: () => call(R.listAccessLog, {}),
+
+    saveCalibration: (uid, calibration) => call(R.saveCalibration, { uid }, calibration),
+    getLatestCalibration: async (uid) => (await call<{ calibration: CalibrationRecord | null }>(R.getLatestCalibration, { uid })).calibration,
   };
 }

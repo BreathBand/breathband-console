@@ -33,7 +33,7 @@ import {
 import { browserStore, type DbStore, type LocalDb } from "./db";
 import { joinOffset, LIVE_HZ, liveProfile, liveSample, presenceAt, recordGroupSession } from "./live";
 import { generateWaveform } from "./seed";
-import { checkSessionContract } from "./validate";
+import { calibrationProblem, checkSessionContract } from "./validate";
 
 // Local adapter: behaves like the Firebase setup will — including the access
 // rules in firebase/firestore.rules — so screens hit the same permission and
@@ -107,6 +107,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
     delete db.alertRules[uid];
     delete db.moodCheckins[uid];
     delete db.accountDeletions?.[uid];
+    delete db.calibrations?.[uid];
     db.coachLinks = db.coachLinks.filter((l) => l.coachId !== uid && l.athleteId !== uid);
     db.invites = db.invites.filter((i) => i.athleteId !== uid);
     db.coachInvites = db.coachInvites.filter((i) => i.coachId !== uid);
@@ -1057,6 +1058,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       if (!deletionOf(store.read(), uid)) throw new BackendError("not-found", "No deletion is waiting.");
       mutate((db) => {
         delete db.accountDeletions?.[uid];
+    delete db.calibrations?.[uid];
       });
     },
 
@@ -1077,8 +1079,28 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
         coach_invites: db.coachInvites.filter((i) => i.coachId === uid),
         squads: db.squads[uid] ?? [],
         alert_rules: db.alertRules[uid] ?? null,
+        calibrations: (db.calibrations?.[uid] ?? []).map(({ source, bandName, at }) => ({ source, bandName, at })),
         access_log: (db.accessLog ?? []).filter((e) => e.athleteId === uid || e.viewerId === uid),
       };
+    },
+
+    async saveCalibration(uid, calibration) {
+      await delay();
+      assertIsSelf(uid);
+      const problem = calibrationProblem(calibration);
+      if (problem) throw new BackendError("invalid-input", problem);
+      const { a100, midline, source, bandName } = calibration;
+      const record = { a100, midline, source, bandName, at: now().toISOString() };
+      mutate((db) => {
+        db.calibrations = { ...db.calibrations, [uid]: [...(db.calibrations?.[uid] ?? []), record] };
+      });
+      return record;
+    },
+
+    async getLatestCalibration(uid) {
+      await delay();
+      assertIsSelf(uid);
+      return store.read().calibrations?.[uid]?.at(-1) ?? null;
     },
 
     async listAccessLog() {

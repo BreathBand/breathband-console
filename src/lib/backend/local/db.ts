@@ -15,6 +15,7 @@ import type {
   Waveform,
 } from "@/lib/domain/types";
 import { defaultPreferences } from "@/lib/domain/preferences";
+import type { CalibrationRecord } from "../types";
 import {
   DEMO_ATHLETE,
   DEMO_COACH,
@@ -75,6 +76,8 @@ export interface LocalDb {
   accountDeletions?: Record<string, string>;
   /** Newest last: who opened whose session (C10). Missing in older databases. */
   accessLog?: { viewerId: string; athleteId: string; sessionId: string | null; at: string }[];
+  /** By uid, oldest first (F8). Missing in older databases. */
+  calibrations?: Record<string, CalibrationRecord[]>;
   currentUid: string | null;
 }
 

@@ -21,6 +21,7 @@ import { coachInviteRoutes, publicCoachInviteRoutes } from "./coach-invites";
 import { coachingRoutes } from "./coaching";
 import { feedbackRoutes } from "./coaching-feedback";
 import { groupRoutes } from "./group";
+import { calibrationRoutes } from "./calibrations";
 import { moodRoutes } from "./mood";
 import { profileRoutes } from "./profile";
 import { sessionRoutes } from "./sessions";
@@ -82,6 +83,7 @@ export function dataRoutes(deps: DataDeps) {
   sessionRoutes(routes, deps);
   waveformRoutes(routes, deps);
   moodRoutes(routes, deps);
+  calibrationRoutes(routes, deps);
   coachingRoutes(routes, deps);
   feedbackRoutes(routes, deps);
   squadRoutes(routes, deps);

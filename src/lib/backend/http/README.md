@@ -135,6 +135,8 @@ The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}
 | `cancelAccountDeletion` | `POST` | `/v1/account/delete/cancel` |
 | `exportMyData` | `GET` | `/v1/account/export` |
 | `listAccessLog` | `GET` | `/v1/account/access-log` |
+| `saveCalibration` | `POST` | `/v1/users/{uid}/calibrations` |
+| `getLatestCalibration` | `GET` | `/v1/users/{uid}/calibrations/latest` |
 
 Data methods that are not a single request:
 

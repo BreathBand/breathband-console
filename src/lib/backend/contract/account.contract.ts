@@ -57,6 +57,21 @@ export function describeAccountContract(adapter: string, setup: () => DataContra
       expect(JSON.stringify(data)).toContain(saved.id);
     });
 
+    it("keeps calibrations with their band, answers the newest, and only to the person", async () => {
+      expect(await ana.backend.data.getLatestCalibration(ana.uid)).toBeNull();
+      await ana.backend.data.saveCalibration(ana.uid, { a100: 120, midline: 512, source: "simulated", bandName: "Simulated band" });
+      const newest = await ana.backend.data.saveCalibration(ana.uid, { a100: 140, midline: 500, source: "bluetooth", bandName: "BreathBand" });
+      expect(newest).toMatchObject({ a100: 140, midline: 500, source: "bluetooth", bandName: "BreathBand" });
+      expect(Date.parse(newest.at)).not.toBeNaN();
+      expect(await ana.backend.data.getLatestCalibration(ana.uid)).toEqual(newest);
+
+      await refusal(ana.backend.data.saveCalibration(ana.uid, { a100: 0, midline: 500, source: "bluetooth", bandName: null }), "invalid-input");
+      const cara = await h.person("coach");
+      await h.link(cara.uid, ana.uid, "curves");
+      await refusal(cara.backend.data.getLatestCalibration(ana.uid), "permission-denied");
+      await refusal(cara.backend.data.saveCalibration(ana.uid, { a100: 100, midline: 0, source: "bluetooth", bandName: null }), "permission-denied");
+    });
+
     it("logs a professional opening a session, never the person's own, newest first", async () => {
       const cara = await h.person("coach");
       await h.link(cara.uid, ana.uid, "scores");

@@ -36,6 +36,13 @@
       "when": 1795714019426,
       "tag": "0004_coach_invite_practice",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1795809407337,
+      "tag": "0005_calibration_source",
+      "breakpoints": true
     }
   ]
 }

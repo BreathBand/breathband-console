@@ -316,6 +316,25 @@ export interface DataService {
   exportMyData(): Promise<Record<string, unknown>>;
   /** Who else opened the signed-in person's sessions, newest first (C10). */
   listAccessLog(): Promise<AccessLogEntry[]>;
+
+  /** Own only: keeps a calibration with its band and time (F8). */
+  saveCalibration(uid: string, calibration: NewCalibration): Promise<CalibrationRecord>;
+  /** Own only: the newest calibration, or null before the first. */
+  getLatestCalibration(uid: string): Promise<CalibrationRecord | null>;
+}
+
+/** A calibration as the record screen takes it: the scale, and which band. */
+export interface NewCalibration {
+  a100: number;
+  midline: number;
+  source: "bluetooth" | "simulated";
+  /** The band's name as it advertised; null when unknown. */
+  bandName: string | null;
+}
+
+export interface CalibrationRecord extends NewCalibration {
+  /** ISO 8601 */
+  at: string;
 }
 
 /** A deletion waiting its 24 hours. ISO 8601 times. */

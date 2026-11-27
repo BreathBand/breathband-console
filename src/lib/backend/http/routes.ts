@@ -98,5 +98,8 @@ export const HTTP_ROUTES: HttpRoutes = {
     cancelAccountDeletion: { method: "POST", path: "/v1/account/delete/cancel" },
     exportMyData: { method: "GET", path: "/v1/account/export" },
     listAccessLog: { method: "GET", path: "/v1/account/access-log" },
+
+    saveCalibration: { method: "POST", path: "/v1/users/{uid}/calibrations" },
+    getLatestCalibration: { method: "GET", path: "/v1/users/{uid}/calibrations/latest" },
   },
 };
