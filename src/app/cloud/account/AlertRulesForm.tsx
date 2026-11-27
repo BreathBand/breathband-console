@@ -18,7 +18,7 @@ export function AlertRulesSection({ coachId }: { coachId: string }) {
   const kind = useProKind();
   const rules = useLoad(`alerts:${coachId}:${kind ?? ""}`, async () => rulesInForce(await backend.data.getAlertRules(coachId), kind));
   return (
-    <section className="pane pane-pad" aria-labelledby="alerts-h" id="alerts">
+    <section className="pane pane-pad" aria-labelledby="alerts-h">
       <div className="pane-h">
         <h2 id="alerts-h">What needs a look</h2>
         <span className="meta">Flags on your dashboard and roster</span>
