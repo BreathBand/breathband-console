@@ -2,15 +2,20 @@
 // once. The answer is the same whether or not the address was already there.
 
 import { waitlist } from "../db/schema";
-import { fail, jsonObject, type DataApp, type DataDeps } from "./data";
+import { clientIp, createRateLimiter, rateLimit } from "../rate-limit";
+import { fail, jsonObject, type DataApp, type DataDeps, type DataEnv } from "./data";
 
 /** firestore.rules (waitlist create): the local adapter's email pattern, 254 characters, a source of up to 32. */
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_EMAIL = 254;
 const MAX_SOURCE = 32;
 
+/** Per client IP, as the public invite lookup is: a person signs up once, a script gets a 429. */
+export const WAITLIST_LIMIT = { limit: 30, windowMs: 60_000 } as const;
+
 export function waitlistRoutes(routes: DataApp, { db }: DataDeps) {
-  routes.post("/waitlist", async (c) => {
+  const limiter = createRateLimiter(WAITLIST_LIMIT);
+  routes.post("/waitlist", rateLimit<DataEnv>(limiter, (c) => clientIp(c)), async (c) => {
     const { email, source } = await jsonObject(c.req.raw);
     const address = typeof email === "string" ? email.trim().toLowerCase() : "";
     if (address.length > MAX_EMAIL || !EMAIL.test(address)) fail("invalid-email", "Enter a valid email address.");
