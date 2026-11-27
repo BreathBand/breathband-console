@@ -17,6 +17,7 @@ import type { MoodScore } from "@/lib/domain/types";
 import { parseSetup } from "@/lib/prefs";
 import { buildSession, MIN_RECORDING_S, type BuiltSession } from "@/lib/recording";
 import { useLoad } from "@/lib/useLoad";
+import { useWakeLock } from "@/lib/useWakeLock";
 import { streakDays } from "../../AthleteHome";
 import { minutesLeftToday, professionalFrom } from "../../home/tailor";
 import { sessionHref } from "../../links";
@@ -58,6 +59,8 @@ function Instrument() {
   const backend = useBackend();
   const device = useDevice();
   const [phase, setPhase] = useState<Phase>("strap");
+  // Calibrating, counting in and recording are hands-off: the screen stays on.
+  useWakeLock(phase === "calibrate" || phase === "countdown" || phase === "live");
   const [sound, setSound] = useState(setup.sound);
   const tones = useTones(sound);
   const paced = setup.mode === "paced";

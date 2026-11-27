@@ -14,6 +14,7 @@ import { SimulatedBand } from "@/lib/device/simulated";
 import type { SignalSource, SimPersona, SourceKind, SourceStatus } from "@/lib/device/types";
 import { formatDuration } from "@/lib/domain/format";
 import { formatScore, scoreWord } from "@/lib/domain/scores";
+import { useWakeLock } from "@/lib/useWakeLock";
 import { BreathLine } from "../live/BreathLine";
 import { TONES, useTones } from "../live/useTones";
 import { PERSONAS, stateWords } from "../../device/words";
@@ -57,6 +58,7 @@ export default function DuoPage() {
   const [pacer, setPacer] = useState<2 | 5>(5);
   const [lengthSec, setLengthSec] = useState(120);
   const [phase, setPhase] = useState<Phase>("setup");
+  useWakeLock(phase === "calibrate" || phase === "countdown" || phase === "live");
   const [statuses, setStatuses] = useState<[SourceStatus, SourceStatus]>([{ state: "idle" }, { state: "idle" }]);
   const [calDone, setCalDone] = useState<[boolean, boolean]>([false, false]);
   const [calError, setCalError] = useState<string | null>(null);
