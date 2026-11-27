@@ -30,3 +30,13 @@ test("Alex downloads their data, asks for deletion, then signs back in and keeps
   await expect(page.getByRole("heading", { name: "Your account is set to be deleted" })).toHaveCount(0, { timeout: 30_000 });
   await expect(page.getByRole("button", { name: "Sign out" }).first()).toBeVisible();
 });
+
+test("Alex shares a session as an image: on a computer it downloads a PNG", async ({ page }) => {
+  await signInAsAthlete(page);
+  await page.goto("/cloud/sessions/");
+  await page.locator('main a[href*="/cloud/session/"]').first().click();
+  await page.waitForURL(/\/cloud\/session\//);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Share as image" }).click();
+  expect((await download).suggestedFilename()).toMatch(/^breathband-\d{4}-\d{2}-\d{2}\.png$/);
+});

@@ -25,6 +25,7 @@ import { streakDays } from "../AthleteHome";
 import { commentAuthorWord, minutesLeftToday, professionalFrom, yourProfessionals, type Professional } from "../home/tailor";
 import { coaching, onTargetShare, rateChange, resultsEmphasis, type ResultsEmphasis, type TurnPoints } from "../results/tone";
 import { ImplausibleRate } from "./ImplausibleRate";
+import { shareCardOf, shareCardPng, shareOrDownload } from "./shareCard";
 import { BreathTable, DeviationStrip, SessionScrubber, WaveChart } from "./Waveform";
 
 const ZOOMS = [
@@ -135,6 +136,7 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
           {!ctx.self && comments.status === "ready" && (
             <KudosButton session={session} comments={comments.data} viewerId={viewerId} onChange={comments.retry} />
           )}
+          {ctx.self && <ShareImageButton session={session} />}
           <button type="button" className="button" data-variant="ghost" data-size="small" onClick={() => window.print()}>
             <Icon name="print" size={16} />
             Print or PDF
@@ -783,5 +785,25 @@ function GroupLine({ groupId, viewerId }: { groupId: string; viewerId: string })
         </Link>
       )}
     </p>
+  );
+}
+
+/** The person's own session as an image card (I6): shared on a phone, downloaded elsewhere. */
+function ShareImageButton({ session }: { session: SessionSummary }) {
+  const [state, setState] = useState<"idle" | "working" | "error">("idle");
+  async function share() {
+    setState("working");
+    try {
+      await shareOrDownload(await shareCardPng(shareCardOf(session)), `breathband-${session.startedAt.slice(0, 10)}.png`);
+      setState("idle");
+    } catch {
+      setState("error");
+    }
+  }
+  return (
+    <button type="button" className="button" data-variant="ghost" data-size="small" onClick={share} disabled={state === "working"}>
+      <Icon name="share" size={16} />
+      {state === "error" ? "Couldn't make the image" : "Share as image"}
+    </button>
   );
 }
