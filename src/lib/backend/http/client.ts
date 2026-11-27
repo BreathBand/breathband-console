@@ -1,4 +1,4 @@
-import { BackendError, type BackendErrorCode } from "../types";
+import { BackendError, RATE_LIMITED_MESSAGE, type BackendErrorCode } from "../types";
 
 // One request to the API, with the browser's cookies, and every failure turned
 // into a BackendError. Better Auth (/api/auth/*) answers errors as
@@ -65,6 +65,7 @@ const BACKEND_CODES = new Set<BackendErrorCode>([
   "invite-invalid",
   "invalid-input",
   "under-age",
+  "email-not-verified",
   "unavailable",
 ]);
 
@@ -78,7 +79,7 @@ const BETTER_AUTH_CODES: Record<string, BackendErrorCode> = {
   PASSWORD_TOO_SHORT: "weak-password",
   PASSWORD_TOO_LONG: "invalid-input",
   // Sign-in before the emailed link was followed; the API has just sent a fresh one.
-  EMAIL_NOT_VERIFIED: "permission-denied",
+  EMAIL_NOT_VERIFIED: "email-not-verified",
   INVALID_TOKEN: "invalid-input",
   TOKEN_EXPIRED: "invalid-input",
   VALIDATION_ERROR: "invalid-input",
@@ -115,7 +116,7 @@ export function toBackendError(status: number, payload: unknown, area: ErrorArea
   const { code, message } = errorFields(payload);
   if (code && BACKEND_CODES.has(code as BackendErrorCode)) return new BackendError(code as BackendErrorCode, message);
   if (code && BETTER_AUTH_CODES[code]) return new BackendError(BETTER_AUTH_CODES[code], MESSAGES[code] ?? message);
-  if (status === 429) return new BackendError("unavailable", "Too many attempts. Wait a minute and try again.");
+  if (status === 429) return new BackendError("unavailable", RATE_LIMITED_MESSAGE);
   return new BackendError(STATUS_CODES[status] ?? "unavailable", message ?? `The API answered ${status}`);
 }
 

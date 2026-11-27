@@ -6,7 +6,7 @@ import { backendKind, createBackend } from "../index";
 import { createSeededDb, memoryStore } from "../local/db";
 import { createLocalBackend } from "../local";
 import type { SessionSummary, Waveform } from "@/lib/domain/types";
-import { BackendError, type BackendErrorCode, type NewAssignment, type NewSession, type SignUpInput } from "../types";
+import { BackendError, isRateLimited, RATE_LIMITED_MESSAGE, type BackendErrorCode, type NewAssignment, type NewSession, type SignUpInput } from "../types";
 import { LIVE_POLL_MS } from "./data";
 import { createHttpBackend, HTTP_METHODS, HTTP_ROUTES, toBackendError } from "./index";
 
@@ -145,6 +145,20 @@ describe("http AuthService", () => {
     expect(calls[0].body).toEqual({ email: "ana@example.test", redirectTo: `${APP}/cloud/reset/` });
   });
 
+  it("asks for a fresh confirmation link, which lands on /cloud/ (T-0139)", async () => {
+    const { fetch, calls } = fakeFetch(json({ status: true }));
+    await httpBackend(fetch).auth.sendVerificationEmail(" Ana@Example.test ");
+    expect(calls[0].url).toBe(`${API}/api/auth/send-verification-email`);
+    expect(calls[0].init).toMatchObject({ method: "POST", credentials: "include" });
+    expect(calls[0].body).toEqual({ email: "ana@example.test", callbackURL: "/cloud/" });
+  });
+
+  it("says an unconfirmed sign-in is 'email-not-verified', not a wrong password", async () => {
+    const { fetch } = fakeFetch(json({ code: "EMAIL_NOT_VERIFIED", message: "Email not verified" }, 403));
+    const error = await httpBackend(fetch).auth.signIn("ana@example.test", "x").catch((e: unknown) => e);
+    expect(error).toMatchObject({ code: "email-not-verified" });
+  });
+
   it("signs out locally even when the API can't be reached, and reports it", async () => {
     const { fetch } = fakeFetch(json({ user: apiUser }), new TypeError("fetch failed"));
     const { auth } = httpBackend(fetch);
@@ -165,7 +179,7 @@ describe("toBackendError", () => {
   it.each<[number, unknown, BackendErrorCode]>([
     // Better Auth's own bodies: { code, message }
     [401, { code: "INVALID_EMAIL_OR_PASSWORD", message: "Invalid email or password" }, "invalid-credentials"],
-    [403, { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" }, "permission-denied"],
+    [403, { code: "EMAIL_NOT_VERIFIED", message: "Email not verified" }, "email-not-verified"],
     [422, { code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL", message: "User already exists." }, "email-in-use"],
     [400, { code: "INVALID_EMAIL", message: "Invalid email" }, "invalid-email"],
     [400, { code: "PASSWORD_TOO_SHORT", message: "Password too short" }, "weak-password"],
@@ -186,6 +200,15 @@ describe("toBackendError", () => {
     const error = toBackendError(status, body);
     expect(error).toBeInstanceOf(BackendError);
     expect(error.code).toBe(code);
+  });
+
+  it("says a rate-limited request is too many attempts, and isRateLimited tells it from a lost connection", () => {
+    const limited = toBackendError(429, { message: "Too many requests. Please try again later." });
+    expect(limited).toMatchObject({ code: "unavailable", message: RATE_LIMITED_MESSAGE });
+    expect(isRateLimited(limited)).toBe(true);
+    expect(isRateLimited(toBackendError(502, null))).toBe(false);
+    expect(isRateLimited(new BackendError("unavailable", "Couldn't reach the API: fetch failed"))).toBe(false);
+    expect(isRateLimited(new Error(RATE_LIMITED_MESSAGE))).toBe(false);
   });
 
   it("tells an unconfirmed person what to do", () => {

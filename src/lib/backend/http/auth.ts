@@ -125,6 +125,15 @@ export function createHttpAuth(api: ApiClient, options: HttpAuthOptions): HttpAu
       });
     },
 
+    async sendVerificationEmail(email) {
+      // Better Auth answers the same for an unknown or confirmed address, so this reveals nothing.
+      await api.post(ROUTES.sendVerificationEmail.path, {
+        email: normalize(email),
+        // Relative, as at sign-up: the API points it at APP_URL.
+        callbackURL: AFTER_VERIFY_PATH,
+      });
+    },
+
     async signOut() {
       try {
         await api.post(ROUTES.signOut.path);

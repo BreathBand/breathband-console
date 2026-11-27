@@ -4,11 +4,12 @@ import { join, resolve } from "node:path";
 import { eq } from "drizzle-orm";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { currentConsents } from "@/lib/domain/consent";
 import { authSecret, createAuth, SIGN_IN_RATE_LIMIT } from "../auth";
 import { createDb, type Db } from "../db/client";
 import { MIGRATIONS_DIR } from "../db/env";
 import { assertLocalDatabaseUrl } from "../db/guard";
-import { user } from "../db/schema";
+import { consents, user } from "../db/schema";
 import type { Mode } from "../env";
 import { createApp, SECURITY_HEADERS } from "../index";
 import type { Email, Mailer } from "../mailer";
@@ -104,6 +105,9 @@ function lastEmailTo(address: string): Email | undefined {
   return outbox.filter((email) => email.to === address).at(-1);
 }
 
+/** What every sign-up needs (T-0139): a 16+ year of birth and the current consents. */
+const ADULT = { birthYear: 1990, consents: currentConsents() };
+
 async function signUp(app: App, fields: Record<string, unknown> = {}) {
   const email = nextEmail();
   const response = await post(app, "/sign-up/email", {
@@ -111,6 +115,7 @@ async function signUp(app: App, fields: Record<string, unknown> = {}) {
     email,
     password: PASSWORD,
     callbackURL: `${APP}/cloud/`,
+    ...ADULT,
     ...fields,
   });
   return { email, response };
@@ -155,7 +160,37 @@ describe("sign up", () => {
     const { email, response } = await signUp(app);
     expect(response.status).toBe(200);
     const [row] = await db.select().from(user).where(eq(user.email, email));
-    expect(row).toMatchObject({ role: "athlete", proKind: null, birthYear: null });
+    expect(row).toMatchObject({ role: "athlete", proKind: null, birthYear: 1990 });
+  });
+
+  it("stores the consent records with the account", async () => {
+    const app = build();
+    const { email } = await signUp(app);
+    const [row] = await db.select().from(user).where(eq(user.email, email));
+    const stored = await db.select().from(consents).where(eq(consents.userId, row.id));
+    expect(stored.map((c) => [c.kind, c.version]).sort()).toEqual(currentConsents().map((c) => [c.kind, c.version]).sort());
+  });
+
+  // A direct API call can't skip the age gate or the consents (T-0139).
+  it.each<[string, Record<string, unknown>, string]>([
+    ["no birth year", { birthYear: undefined }, "invalid-input"],
+    ["a null birth year", { birthYear: null }, "invalid-input"],
+    ["someone under 16", { birthYear: new Date().getUTCFullYear() - 15 }, "under-age"],
+    ["no consents", { consents: undefined }, "invalid-input"],
+    ["null consents", { consents: null }, "invalid-input"],
+    ["a missing consent", { consents: currentConsents(["terms", "privacy"]) }, "invalid-input"],
+  ])("refuses a sign-up with %s, and makes no account or email", async (_, fields, code) => {
+    const app = build();
+    const { email, response } = await signUp(app, fields);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code });
+    expect(await db.select().from(user).where(eq(user.email, email))).toEqual([]);
+    expect(outbox).toEqual([]);
+  });
+
+  it("counts someone as 16 from 1 January of the year they turn 16, as the web does", async () => {
+    const { response } = await signUp(build(), { birthYear: new Date().getUTCFullYear() - 16 });
+    expect(response.status).toBe(200);
   });
 
   it.each([
@@ -179,7 +214,7 @@ describe("sign up", () => {
   it("answers a duplicate sign-up like a new one, without a second account", async () => {
     const app = build();
     const email = await signUpVerified(app);
-    const again = await post(app, "/sign-up/email", { name: "Someone", email, password: "another password" });
+    const again = await post(app, "/sign-up/email", { name: "Someone", email, password: "another password", ...ADULT });
     expect(again.status).toBe(200);
     expect(await db.select().from(user).where(eq(user.email, email))).toHaveLength(1);
   });

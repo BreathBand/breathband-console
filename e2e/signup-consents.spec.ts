@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { e2eBackend, submitLoginForm } from "./auth";
 
 const DB_KEY = "breathband-console:local-db";
 
@@ -24,6 +25,26 @@ test("sign-up needs both consents and stores them with the birth year", async ({
   await expect(page.getByText("Breathband needs this to score your sessions.")).toBeVisible();
   await page.getByLabel(/breathing data/).check();
   await create(page);
+
+  if (e2eBackend() === "http") {
+    // No session until the emailed link is followed (T-0139): the page says where it went.
+    const check = page.getByRole("region", { name: "Check your email" });
+    await expect(check.getByRole("heading", { name: "Check your email" })).toBeFocused({ timeout: 60_000 });
+    await expect(check.getByText(email).first()).toBeVisible();
+    await expect(page).toHaveURL(/\/cloud\/signup\//);
+    await check.getByRole("button", { name: "Send the link again" }).click();
+    await expect(check.getByRole("status")).toHaveText(`We've sent another link to ${email}.`);
+
+    // Signing in before following it says why, with the same way to get a new link.
+    expect(await submitLoginForm(page, email, "breathe-easy-123")).toBe(403);
+    const refused = page.getByRole("region", { name: "Check your email" });
+    await expect(refused.getByText("You need to confirm your email address before you can sign in.")).toBeVisible();
+    await expect(refused.getByText(email).first()).toBeVisible();
+    await expect(refused.getByRole("button", { name: "Send the link again" })).toBeVisible();
+    await refused.getByRole("button", { name: "Back to sign in" }).click();
+    await expect(page.locator("#email")).toBeFocused();
+    return;
+  }
 
   await page.waitForURL(/\/cloud\/welcome\//, { timeout: 60_000 });
   const profile = await page.evaluate(

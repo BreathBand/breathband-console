@@ -183,15 +183,17 @@ const consentsIn = (context: HookContext): unknown =>
   context?.body && typeof context.body === "object" ? (context.body as { consents?: unknown }).consents : undefined;
 
 /**
- * Better Auth's `databaseHooks.user`: sign-up refuses under 16 (by year of birth)
- * and consents that aren't every kind at its current version, then stores the
- * profile row and the consent records; refuses proKind at sign-up, and role,
- * proKind and birth year on update-user. Accounts made without a birth year or
- * consents (older clients, the API's own tests) are still allowed; see CARD.md.
+ * Better Auth's `databaseHooks.user`: sign-up needs a year of birth and the
+ * consents, and refuses under 16 (by year of birth, the web's rule) and consents
+ * that aren't every kind at its current version, then stores the profile row and
+ * the consent records; refuses proKind at sign-up, and role, proKind and birth
+ * year on update-user. A direct API call can skip neither (T-0139).
  */
 export function signUpHooks(db: Db) {
   const refuseUnderAge = (birthYear: unknown) => {
-    if (typeof birthYear !== "number") return;
+    if (typeof birthYear !== "number") {
+      throw new APIError("BAD_REQUEST", { code: "invalid-input", message: "birthYear: required" });
+    }
     const problem = ageGateProblem(birthYear, new Date());
     if (problem) {
       const code = problem.code === "under-age" ? "under-age" : "invalid-input";
@@ -209,8 +211,12 @@ export function signUpHooks(db: Db) {
         }
         refuseUnderAge(created.birthYear);
         const given = consentsIn(context);
-        if (given === undefined) return;
-        const problem = Array.isArray(given) ? consentsProblem(given) : "consents: a list";
+        const problem =
+          given === undefined || given === null
+            ? "consents: required"
+            : Array.isArray(given)
+              ? consentsProblem(given)
+              : "consents: a list";
         if (problem) throw new APIError("BAD_REQUEST", { code: "invalid-input", message: problem });
       },
       after: async (created: { id: string; name: string } & Record<string, unknown>, context: HookContext) => {

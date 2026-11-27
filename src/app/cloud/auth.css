@@ -637,6 +637,21 @@
   color: var(--c-action);
 }
 
+/* "Send the link again" worked (CheckEmail.tsx): a tick and the words, never colour alone. */
+.bc-resent {
+  display: flex;
+  gap: var(--s-2);
+  align-items: flex-start;
+  font: 400 var(--t-15) / 1.45 var(--f-sans);
+  color: var(--c-ink);
+}
+
+.bc-resent svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--c-ok);
+}
+
 /* ---------------------------------------------------------------- demo accounts */
 
 .bc-demo {

@@ -7,6 +7,7 @@ import { BackendError } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { AuthFrame } from "../auth/AuthFrame";
 import { EMAIL_SHAPE, FormError, SubmitButton, TextField } from "../auth/fields";
+import { failureMessage } from "../auth/messages";
 import { noNext, useNext, type WithNext } from "../auth/useNext";
 
 export default function ResetPage() {
@@ -65,7 +66,7 @@ function ResetForm({ withNext }: { withNext: WithNext }) {
       const code = e instanceof BackendError ? e.code : null;
       if (code === "invalid-email") fail({ field: "email", message: "That email address doesn't look right." });
       else if (code === "unavailable" || !(e instanceof BackendError))
-        fail({ message: "Couldn't send the email right now. Check your connection and try again." });
+        fail({ message: failureMessage(e, "Couldn't send the email right now. Check your connection and try again.") });
       // Any other answer (e.g. no such account) looks exactly like success, so the page never reveals who has an account.
       else setSentTo(address);
     } finally {

@@ -23,12 +23,14 @@ Every request is a `fetch` with `credentials: "include"`, so the browser sends t
 | `signIn` | `POST` | `/api/auth/sign-in/email` |
 | `signUp` | `POST` | `/api/auth/sign-up/email` |
 | `sendPasswordReset` | `POST` | `/api/auth/request-password-reset` |
+| `sendVerificationEmail` | `POST` | `/api/auth/send-verification-email` |
 | `signOut` | `POST` | `/api/auth/sign-out` |
 
 - **Session state.** `currentUser()` is synchronous, so the adapter keeps a copy of who is signed in. The first call to `currentUser()` or `onAuthStateChanged()` reads `get-session` once; sign-in and sign-out update the copy. Until that first read answers, `currentUser()` is `null` and `onAuthStateChanged()` waits rather than reporting "signed out" (so the console doesn't flash the login page). If the read fails, the person counts as signed out.
 - **Sign-up** sends `name`, `email`, `password`, `role`, `birthYear`, `consents` and `callbackURL: "/cloud/"`. The API emails a confirmation link (the server points the relative callback at `APP_URL`); following it confirms the address, signs the person in and lands on `/cloud/`. Until then there is no session: `signUp` returns the account with `emailVerified: false` and the person stays signed out.
 - **Checks done here first**, in the local adapter's order: email shape (`invalid-email`), password length (`weak-password`), age 16+ (`under-age`) and consents (`invalid-input`). The API repeats them all: Better Auth the first two, and a sign-up hook (`signUpHooks` in `server/routes/profile.ts`) the 16+ rule and the consents, which it stores with the profile.
-- **Sign-in** also sends `callbackURL: "/cloud/"`: when the address isn't confirmed, the API emails a fresh link and refuses with `EMAIL_NOT_VERIFIED`.
+- **Sign-in** also sends `callbackURL: "/cloud/"`: when the address isn't confirmed, the API emails a fresh link and refuses with `EMAIL_NOT_VERIFIED` (`email-not-verified` here; the login page then says "Check your email").
+- **Send the link again** (`sendVerificationEmail`) sends `callbackURL: "/cloud/"` too. Better Auth answers the same for an unknown or already confirmed address, and allows 3 a minute per client.
 - **Password reset** sends `redirectTo: <app origin>/cloud/reset/`. The emailed link goes through the API and lands on `/cloud/reset/?token=…`; the reset page then POSTs `/api/auth/reset-password` with the token and the new password. The API answers the same whether or not the address has an account.
 - **Sign-out** clears the copy even when the request fails, and reports the failure.
 
@@ -42,9 +44,9 @@ Better Auth answers errors as `{ code, message }`; the API's own routes answer `
 | `USER_ALREADY_EXISTS`, `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL` | `email-in-use` |
 | `INVALID_EMAIL` | `invalid-email` |
 | `PASSWORD_TOO_SHORT` | `weak-password` |
-| `EMAIL_NOT_VERIFIED` | `permission-denied`, with a message saying a new link was sent |
+| `EMAIL_NOT_VERIFIED` | `email-not-verified`, with a message saying a new link was sent |
 | `PASSWORD_TOO_LONG`, `VALIDATION_ERROR`, `MISSING_FIELD`, `FIELD_NOT_ALLOWED`, `INVALID_TOKEN`, `TOKEN_EXPIRED` | `invalid-input` |
-| 429 (rate limited) | `unavailable`, "Too many attempts" |
+| 429 (rate limited) | `unavailable`, with `RATE_LIMITED_MESSAGE` ("Too many attempts…"); `isRateLimited()` tells it apart, and screens show it as it is |
 | otherwise by status: 400/422, 401, 403, 404, 409 | `invalid-input`, `not-signed-in`, `permission-denied`, `not-found`, `email-in-use` |
 | 5xx, no answer, network failure | `unavailable` |
 
@@ -55,9 +57,9 @@ The shared contract suite (`../contract/auth.contract.ts`) names these as traits
 - `confirmsEmail`: a new account signs in only after the emailed link. Local accounts are confirmed from the start.
 - `revealsEmailInUse: false`: signing up with an address that has an account answers like a new sign-up (Better Auth's protection against finding out who has an account); no second account is made and the existing password still works. Local says `email-in-use`.
 
-### Gaps
+### The API enforces sign-up too
 
-- **Consents and birth year are optional for the API.** A direct API sign-up without them still makes an account (the API's own auth tests do this); with them, under 16 and missing or outdated consents are refused. See CARD T-0117's questions.
+A direct API sign-up needs `birthYear` and `consents`, like the adapter (T-0139): without either, under 16, or with missing or outdated consents, it is refused with 400 and no account is made.
 
 ## Data routes
 

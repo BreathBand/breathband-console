@@ -139,7 +139,7 @@ export function describeAuthContract(
         it("refuses sign-in before the emailed link, then allows it after", async () => {
           const input = signUpInput();
           await auth.signUp(input);
-          await refusal(auth.signIn(input.email, input.password), "permission-denied");
+          await refusal(auth.signIn(input.email, input.password), "email-not-verified");
           expect(auth.currentUser()).toBeNull();
           await h.confirmEmail(input.email);
           expect(await auth.signIn(input.email, input.password)).toMatchObject({ email: input.email, emailVerified: true });
@@ -237,6 +237,27 @@ export function describeAuthContract(
         const input = await existingAccount();
         await expect(auth.sendPasswordReset(input.email)).resolves.toBeUndefined();
         await expect(auth.sendPasswordReset(uniqueEmail())).resolves.toBeUndefined();
+      });
+    });
+
+    describe("sendVerificationEmail", () => {
+      it("answers the same for an unconfirmed address, a confirmed one and one with no account", async () => {
+        const unconfirmed = signUpInput();
+        await auth.signUp(unconfirmed);
+        if (auth.currentUser()) await auth.signOut();
+        const confirmed = await existingAccount();
+        await expect(auth.sendVerificationEmail(unconfirmed.email)).resolves.toBeUndefined();
+        await expect(auth.sendVerificationEmail(confirmed.email)).resolves.toBeUndefined();
+        await expect(auth.sendVerificationEmail(uniqueEmail())).resolves.toBeUndefined();
+      });
+
+      it("sends a link that confirms the address, after which sign-in works", async () => {
+        const input = signUpInput();
+        await auth.signUp(input);
+        if (auth.currentUser()) await auth.signOut();
+        await auth.sendVerificationEmail(` ${input.email.toUpperCase()} `);
+        await h.confirmEmail(input.email);
+        expect(await auth.signIn(input.email, input.password)).toMatchObject({ email: input.email, emailVerified: true });
       });
     });
   });
