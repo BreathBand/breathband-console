@@ -18,7 +18,7 @@ import { parseSetup } from "@/lib/prefs";
 import { buildSession, MIN_RECORDING_S, type BuiltSession } from "@/lib/recording";
 import { useLoad } from "@/lib/useLoad";
 import { streakDays } from "../../AthleteHome";
-import { minutesLeftToday } from "../../home/tailor";
+import { minutesLeftToday, professionalFrom } from "../../home/tailor";
 import { sessionHref } from "../../links";
 import { fitOf } from "../../device/TensionGauge";
 import { stateWords } from "../../device/words";
@@ -303,6 +303,10 @@ function Instrument() {
     const all = [{ ...built.session, id: "new", athleteId: uid, waveformPath: "" }, ...before];
     return { streak: streakDays(all, now), leftToday: minutesLeftToday(ringOf(all, now, dailyMinutesOf(prefs))) };
   }, [built, uid, history, prefs]);
+  // The person's professional, as Home has them (their first): a clinician's client hears the clinician's line, not streaks.
+  const isAthlete = auth.status === "signed-in" && auth.profile?.role === "athlete";
+  const linked = useLoad(uid && isAthlete ? `coaches:${uid}` : null, () => backend.data.listCoaches(uid!));
+  const professional = linked.status === "ready" ? professionalFrom(linked.data[0]) : null;
   // Focus's mood check-in (J6): asked before Begin and on the results, when the person has it on.
   const askMood = auth.status === "signed-in" && asksMood(auth.profile?.preferences);
   const save = async (note: string, moodAfter: MoodScore | null) => {
@@ -512,6 +516,7 @@ function Instrument() {
             goal={goal}
             streakDays={streak}
             leftToday={leftToday}
+            professional={professional}
             askMood={askMood}
             moodBefore={moodBefore}
             onSave={save}

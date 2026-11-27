@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { signInAsAthlete, signInAsCalm, signInAsClient } from "./auth";
+import { signInAsAthlete, signInAsCalm, signInAsClient, signInAsClinician, signInAsFocus } from "./auth";
 
 // The four things T-0131's review of the demo script found wrong on screen
 // (T-0137): Home's start action and an assigned practice, the professional's
@@ -142,4 +142,75 @@ test("a clinician's client's own tabs name the clinician, not a coach", async ({
   const tabs = page.getByRole("navigation", { name: "Your data" });
   await expect(tabs.getByRole("link", { name: /^From your clinician/ })).toHaveAttribute("aria-current", "page", { timeout: 30_000 });
   await expect(page.getByText("From your coach")).toHaveCount(0);
+});
+
+// T-0148: a clinician's client hears from their clinician everywhere, and the private notes say who sees them.
+
+/** The id of the session Ana commented on, from Jordan's local DB. */
+async function sessionAnaCommentedOn(page: Page): Promise<string> {
+  return page.evaluate((key) => {
+    const db = JSON.parse(localStorage.getItem(key)!);
+    const comments = db.comments["demo-jordan"] as { authorId: string; kind: string; sessionId: string }[];
+    return comments.find((c) => c.authorId === "demo-ana" && c.kind === "comment")!.sessionId;
+  }, DB_KEY);
+}
+
+test("a clinician's client's review: the clinician's line, her comment tagged clinician, and no coach anywhere", async ({ page }) => {
+  await signInAsClient(page);
+  await expect(page.getByRole("region", { name: "From Ana" })).toBeVisible({ timeout: 30_000 });
+  const id = await sessionAnaCommentedOn(page);
+  await page.goto(`/cloud/session/?athlete=demo-jordan&id=${id}`);
+
+  const thread = page.locator("ol.thread");
+  await expect(thread).toContainText("Ana Ruiz · clinician", { timeout: 30_000 });
+  await expect(thread).not.toContainText("· coach");
+  const coachingLine = page.getByRole("region", { name: "Coaching" });
+  await expect(coachingLine).toContainText("Ana will see this before your next visit.");
+  await expect(coachingLine).not.toContainText("in a row");
+  await expect(page.getByRole("region", { name: "Comments" })).toContainText("Between you and your clinician");
+  await expect(page.getByLabel("Write a comment")).toHaveAttribute("placeholder", "Reply to your clinician…");
+  await expect(page.getByRole("region", { name: "Session note" })).toContainText("Visible to your clinician");
+  await expect(page.getByText(/your coach/)).toHaveCount(0);
+});
+
+test("a clinician's client's Plan tab asks in the clinician's words", async ({ page }) => {
+  await signInAsClient(page);
+  await expect(page.getByRole("region", { name: "From Ana" })).toBeVisible({ timeout: 30_000 });
+  await page.goto("/cloud/sessions/?tab=plan");
+  await expect(page.getByRole("heading", { level: 2, name: "What your clinician asked for" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/set by Ana Ruiz/).first()).toBeVisible();
+  await expect(page.getByText(/your coach/)).toHaveCount(0);
+});
+
+test("Focus with no professional: Home and the Sessions tabs both say teacher", async ({ page }) => {
+  await signInAsFocus(page);
+  await expect(page.locator(".home")).toHaveAttribute("data-goal", "focus", { timeout: 30_000 });
+  // Sam without Lena: no link and no practice.
+  await page.evaluate((key) => {
+    const db = JSON.parse(localStorage.getItem(key)!);
+    db.coachLinks = db.coachLinks.filter((l: { athleteId: string }) => l.athleteId !== "demo-athlete-2");
+    db.assignments["demo-athlete-2"] = [];
+    localStorage.setItem(key, JSON.stringify(db));
+  }, DB_KEY);
+  await page.goto("/cloud/");
+  const side = page.getByRole("region", { name: "Teacher and recent sessions" });
+  await expect(side.getByRole("heading", { name: "From your teacher" })).toBeVisible({ timeout: 30_000 });
+
+  await page.goto("/cloud/sessions/?tab=plan");
+  const tabs = page.getByRole("navigation", { name: "Your data" });
+  await expect(tabs.getByRole("link", { name: /^From your teacher/ })).toHaveAttribute("aria-current", "page", { timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 2, name: "What your teacher asked for" })).toBeVisible();
+  await expect(page.getByText("When your teacher sets practice, it shows here and in the app.")).toBeVisible();
+  await expect(page.getByText(/your coach/i)).toHaveCount(0);
+});
+
+test("a professional's private notes carry the hint, and the prompt doesn't ask for injuries", async ({ page }) => {
+  await signInAsClinician(page);
+  await page.goto("/cloud/sessions/?athlete=demo-jordan&tab=notes");
+  const notes = page.getByRole("region", { name: "Your notes on Jordan" });
+  await expect(notes).toContainText("Only you can see these", { timeout: 30_000 });
+  await expect(notes).toContainText("For practice notes only. Don't record diagnoses or medical history here.");
+  const box = notes.getByRole("textbox", { name: "Notes" });
+  await expect(box).toHaveAttribute("placeholder", "Goals, what works for them, what to try next…");
+  await expect(box).toHaveAccessibleDescription("For practice notes only. Don't record diagnoses or medical history here.");
 });

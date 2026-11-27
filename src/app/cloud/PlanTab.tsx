@@ -21,7 +21,7 @@ const LENGTHS = [3, 5, 10];
 
 /**
  * Practice for one athlete. Coaches set it and can cancel what they set;
- * athletes see what their coach asked for and how far along they are.
+ * athletes see what their professional asked for and how far along they are.
  */
 export function PlanTab({ ws, startOpen }: { ws: Workspace; startOpen: boolean }) {
   const backend = useBackend();
@@ -30,7 +30,7 @@ export function PlanTab({ ws, startOpen }: { ws: Workspace; startOpen: boolean }
   // Athletes see who set each plan; their coaches' profiles are readable to them.
   const coaches = useLoad(ws.self ? `coaches:${ws.athleteId}` : null, () => backend.data.listCoaches(ws.athleteId));
   const coachName = (uid: string) =>
-    uid === ws.viewerId ? "you" : (coaches.status === "ready" && coaches.data.find((c) => c.uid === uid)?.displayName) || "your coach";
+    uid === ws.viewerId ? "you" : (coaches.status === "ready" && coaches.data.find((c) => c.uid === uid)?.displayName) || `your ${ws.proWord}`;
 
   const open = ws.plans.filter(isOpen);
   const past = ws.plans.filter((p) => !isOpen(p));
@@ -65,14 +65,14 @@ export function PlanTab({ ws, startOpen }: { ws: Workspace; startOpen: boolean }
 
       <section className="pane pane-pad" aria-labelledby="current-h">
         <div className="pane-h">
-          <h2 id="current-h">{ws.self ? "What your coach asked for" : "Current practice"}</h2>
+          <h2 id="current-h">{ws.self ? `What your ${ws.proWord} asked for` : "Current practice"}</h2>
           <span className="meta">Sessions count when the type and length match, before the due date</span>
         </div>
         {open.length === 0 ? (
           <EmptyState title="Nothing set right now">
             <p className="muted">
               {ws.self
-                ? "When your coach sets practice, it shows here and in the app."
+                ? `When your ${ws.proWord} sets practice, it shows here and in the app.`
                 : `Set ${ws.name.split(" ")[0]} a session type, a length and how many times, with a note on what to focus on.`}
             </p>
           </EmptyState>

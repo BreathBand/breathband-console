@@ -12,7 +12,6 @@ import { describeAssignment, dueText, isOpen, timeAgo } from "@/lib/domain/coach
 import { describeMode, formatDay, formatLongDay, formatTime } from "@/lib/domain/format";
 import { formatScore, scoreWord } from "@/lib/domain/scores";
 import type { Workspace } from "./AthleteWorkspace";
-import { PRO_WORD } from "./home/tailor";
 
 const TREND_LENGTH = 12;
 
@@ -186,7 +185,7 @@ function PracticeCard({ ws }: { ws: Workspace }) {
   return (
     <section className="pane pane-pad" aria-labelledby="practice-h">
       <div className="pane-h">
-        <h2 id="practice-h">{ws.self ? `From your ${PRO_WORD[ws.coachKind ?? "coach"]}` : "Practice"}</h2>
+        <h2 id="practice-h">{ws.self ? `From your ${ws.proWord}` : "Practice"}</h2>
         <Link className="link small" href={ws.tabHref("plan", !ws.self && open.length === 0)}>
           {ws.self || open.length > 0 ? "See all" : "Assign practice"}
           <Icon name="chevronRight" size={16} />
@@ -223,7 +222,7 @@ function ConversationCard({ ws }: { ws: Workspace }) {
       </div>
       {latest.length === 0 ? (
         <p className="muted small-text">
-          {ws.self ? `Comments from your ${PRO_WORD[ws.coachKind ?? "coach"]} show up here.` : "Comment on a session from its review page."}
+          {ws.self ? `Comments from your ${ws.proWord} show up here.` : "Comment on a session from its review page."}
         </p>
       ) : (
         <ul className="quotes">

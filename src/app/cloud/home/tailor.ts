@@ -5,7 +5,7 @@
 import type { AssignmentProgress } from "@/lib/domain/coaching";
 import { isTransitionScores } from "@/lib/domain/scores";
 import type { Mechanics, Ring } from "@/lib/domain/habit";
-import type { Assignment, BreathGoal, ProKind, SessionSummary } from "@/lib/domain/types";
+import type { Assignment, BreathGoal, ProKind, SessionComment, SessionSummary, UserProfile } from "@/lib/domain/types";
 import { parseSetup, type SessionSetup } from "@/lib/prefs";
 import { weekStart } from "../SessionsTab";
 
@@ -57,6 +57,50 @@ export interface HomeLayout {
  */
 export function professionalOf(coachName: string | undefined, kind?: ProKind | null): Professional | null {
   return coachName ? { name: coachName, kind: kind ?? "coach" } : null;
+}
+
+/** A professional's profile, as `listCoaches` gives it. */
+type ProfessionalProfile = Pick<UserProfile, "uid" | "displayName" | "proKind" | "proProfile">;
+
+/** A linked professional's profile, named as `professionalOf` names them; null with none. */
+export function professionalFrom(profile: ProfessionalProfile | null | undefined): Professional | null {
+  return profile ? professionalOf(profile.displayName, profile.proKind ?? profile.proProfile?.kind) : null;
+}
+
+/**
+ * What the person calls their professional on their own screens: the linked
+ * one's word; with none, the word Home's side pane uses (a teacher for Focus,
+ * otherwise a coach; see `sidePractice`).
+ */
+export function proWordFor(goal: BreathGoal | null, professional: Professional | null): string {
+  if (professional) return PRO_WORD[professional.kind];
+  return goal === "focus" ? "teacher" : "coach";
+}
+
+const PLURAL: Record<ProKind, string> = { coach: "coaches", clinician: "clinicians", educator: "teachers" };
+
+/**
+ * Who reads the person's note and comments on their own session review:
+ * "your clinician" with one professional (the goal's word with none), "your
+ * coaches" with several of one kind, "the people you share with" otherwise.
+ */
+export function yourProfessionals(goal: BreathGoal | null, professionals: readonly Professional[]): string {
+  if (professionals.length <= 1) return `your ${proWordFor(goal, professionals[0] ?? null)}`;
+  const kinds = new Set(professionals.map((p) => p.kind));
+  return kinds.size === 1 ? `your ${PLURAL[professionals[0].kind]}` : "the people you share with";
+}
+
+/**
+ * The word beside a professional's comment ("· clinician"), from the author's
+ * kind among the reader's linked professionals; null for anyone else's
+ * comment. An author not among them (no longer linked, or the reader is
+ * another professional, who can't list them) reads as a coach, as older
+ * accounts do.
+ */
+export function commentAuthorWord(comment: Pick<SessionComment, "authorId" | "authorRole">, professionals: readonly ProfessionalProfile[]): string | null {
+  if (comment.authorRole !== "coach") return null;
+  const author = professionals.find((p) => p.uid === comment.authorId);
+  return PRO_WORD[author?.proKind ?? author?.proProfile?.kind ?? "coach"];
 }
 
 /**
@@ -146,10 +190,11 @@ export function withMechanics(layout: HomeLayout, mechanics: Mechanics): HomeLay
  * sharing is off, shows no block, so its Home stays minimal.
  */
 export function sidePractice(goal: BreathGoal | null, professional: Professional | null): { word: string; empty: string } | null {
-  if (professional) return { word: PRO_WORD[professional.kind], empty: "Nothing set right now." };
+  const word = proWordFor(goal, professional);
+  if (professional) return { word, empty: "Nothing set right now." };
   if (goal === "calm") return null;
-  if (goal === "focus") return { word: "teacher", empty: "Share with a teacher or counsellor in Settings and their practice shows up here." };
-  return { word: "coach", empty: "Share with a coach in Settings and their practice shows up here." };
+  if (goal === "focus") return { word, empty: "Share with a teacher or counsellor in Settings and their practice shows up here." };
+  return { word, empty: "Share with a coach in Settings and their practice shows up here." };
 }
 
 /** What a start button needs to name a session; the person's defaults and an assignment both have it. */

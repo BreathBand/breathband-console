@@ -6,6 +6,7 @@ import { SAMPLE_RATE_HZ } from "@/lib/device/config";
 import { formatScore, scoreWord } from "@/lib/domain/scores";
 import type { BreathGoal, MoodScore } from "@/lib/domain/types";
 import type { BuiltSession } from "@/lib/recording";
+import type { Professional } from "../../home/tailor";
 import { coaching, onTargetShare, rateChange, rateWord, resultsEmphasis } from "../../results/tone";
 import { MoodFaces } from "./MoodFaces";
 
@@ -40,6 +41,7 @@ export function Results({
   goal,
   streakDays,
   leftToday = 0,
+  professional = null,
   askMood = false,
   moodBefore = null,
   onSave,
@@ -54,6 +56,8 @@ export function Results({
   streakDays: number;
   /** Whole minutes still to close today's ring, this session included (home/tailor.ts `minutesLeftToday`); 0 once closed. */
   leftToday?: number;
+  /** The person's professional, as Home has them; a clinician's client hears the clinician's line, never streaks. */
+  professional?: Professional | null;
   /** Focus with the mood check-in on (J6): ask how they feel now, and name the change in the line. */
   askMood?: boolean;
   /** The mood picked before Begin, if any. */
@@ -103,7 +107,7 @@ export function Results({
   const { session, paced, open } = built;
   const total = paced?.scores.total;
   const mood = askMood ? { before: moodBefore, after: moodAfter } : null;
-  const coach = coaching({ goal, session, streakDays, leftToday, turns: paced?.transitions, rates, mood });
+  const coach = coaching({ goal, session, streakDays, leftToday, professional, turns: paced?.transitions, rates, mood });
   const share = emphasis.share ? onTargetShare(session) : null;
   const rate = open?.whole.metrics?.rateBpm;
 
