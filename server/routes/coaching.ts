@@ -107,7 +107,8 @@ export function coachingRoutes(routes: DataApp, { db }: DataDeps) {
     if (typeof code !== "string") fail("invalid-input", "code: text");
     const codeHash = hashCode(normaliseCode(code));
     const [invite] = await db.select().from(invites).where(eq(invites.codeHash, codeHash));
-    if (!invite || invite.status !== "pending" || invite.expiresAt.getTime() < Date.now() || !canRedeemInvite(c.get("uid"), coachId, invite.athleteId)) {
+    const redeemer = await loadProfile(db, coachId, false);
+    if (!invite || invite.status !== "pending" || invite.expiresAt.getTime() < Date.now() || !canRedeemInvite(c.get("uid"), coachId, invite.athleteId, redeemer?.role)) {
       fail("invite-invalid");
     }
     // Claimed atomically, so a code redeems once even when two requests race,

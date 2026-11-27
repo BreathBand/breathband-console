@@ -107,6 +107,14 @@ export function describeCoachingContract(adapter: string, setup: () => DataContr
         expect(await ana.backend.data.listCoaches(ana.uid)).toEqual([]);
       });
 
+      it("lets only a professional redeem a code, and leaves it good for one", async () => {
+        const invite = await ana.backend.data.createInvite(ana.uid);
+        const friend = await h.person();
+        await refusal(friend.backend.data.redeemInvite(friend.uid, invite.code), "invite-invalid");
+        expect(await ana.backend.data.listCoaches(ana.uid)).toEqual([]);
+        expect(await cara.backend.data.redeemInvite(cara.uid, invite.code)).toMatchObject({ coachId: cara.uid, athleteId: ana.uid });
+      });
+
       it("lets only the athlete invite for themselves, and each coach redeem only as themselves", async () => {
         await refusal(cara.backend.data.createInvite(ana.uid), "permission-denied");
         const invite = await ana.backend.data.createInvite(ana.uid);

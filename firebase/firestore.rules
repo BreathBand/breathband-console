@@ -163,7 +163,8 @@ service cloud.firestore {
       }
     }
 
-    // Coach links: created only by the redeemInvite Cloud Function (Admin SDK
+    // Coach links: created only by the redeemInvite Cloud Function, for a
+    // professional (role "coach") redeeming an athlete's code (Admin SDK
     // bypasses rules). Either party can see the link; the athlete can change
     // its scope or revoke it.
     match /coachLinks/{linkId} {

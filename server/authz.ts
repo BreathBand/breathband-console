@@ -68,9 +68,9 @@ export function canManageSharing(viewerId: string, athleteId: string): boolean {
   return isSelf(viewerId, athleteId);
 }
 
-/** The redeemInvite function: the redeemer acts as themselves, never on their own invite. */
-export function canRedeemInvite(viewerId: string, coachId: string, inviteAthleteId: string): boolean {
-  return isSelf(viewerId, coachId) && coachId !== inviteAthleteId;
+/** The redeemInvite function: a professional (role "coach") acting as themselves, never on their own invite. */
+export function canRedeemInvite(viewerId: string, coachId: string, inviteAthleteId: string, role: Role | undefined): boolean {
+  return isSelf(viewerId, coachId) && coachId !== inviteAthleteId && role === "coach";
 }
 
 /**

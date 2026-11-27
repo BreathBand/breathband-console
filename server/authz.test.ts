@@ -96,10 +96,12 @@ describe("coach links and invites (I-09)", () => {
     expect(canManageSharing(STRANGER, ATHLETE)).toBe(false);
   });
 
-  it("redeems an invite only as yourself, and never your own", () => {
-    expect(canRedeemInvite(COACH, COACH, ATHLETE)).toBe(true);
-    expect(canRedeemInvite(STRANGER, COACH, ATHLETE)).toBe(false);
-    expect(canRedeemInvite(ATHLETE, ATHLETE, ATHLETE)).toBe(false);
+  it("redeems an invite only as a professional acting as yourself, and never your own", () => {
+    expect(canRedeemInvite(COACH, COACH, ATHLETE, "coach")).toBe(true);
+    expect(canRedeemInvite(STRANGER, COACH, ATHLETE, "coach")).toBe(false);
+    expect(canRedeemInvite(ATHLETE, ATHLETE, ATHLETE, "coach")).toBe(false);
+    expect(canRedeemInvite(STRANGER, STRANGER, ATHLETE, "athlete")).toBe(false);
+    expect(canRedeemInvite(STRANGER, STRANGER, ATHLETE, undefined)).toBe(false);
   });
 });
 

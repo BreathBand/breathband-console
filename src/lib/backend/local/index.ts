@@ -457,7 +457,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       const normalized = code.trim().toUpperCase();
       const db = store.read();
       const invite = db.invites.find((i) => i.code === normalized);
-      if (!invite || invite.expiresAt < now().toISOString() || invite.athleteId === coachId) {
+      if (!invite || invite.expiresAt < now().toISOString() || invite.athleteId === coachId || db.accounts[coachId]?.profile.role !== "coach") {
         throw new BackendError("invite-invalid");
       }
       const link: CoachLink = {
