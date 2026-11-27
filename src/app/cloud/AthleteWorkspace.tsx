@@ -16,7 +16,7 @@ import { useLoad } from "@/lib/useLoad";
 import type { ConsoleContext } from "./AthleteConsole";
 import { AthleteHome } from "./AthleteHome";
 import { AthleteOverview } from "./AthleteOverview";
-import { PRO_WORD } from "./home/tailor";
+import { professionalOf, proWordFor } from "./home/tailor";
 import { athleteHref, sessionHref, type AthleteTab } from "./links";
 import { NotesTab } from "./NotesTab";
 import { PlanTab } from "./PlanTab";
@@ -40,6 +40,8 @@ export interface Workspace extends ConsoleContext {
   coachName?: string;
   /** What kind of professional `coachName` is; unset for older accounts (read as a coach). */
   coachKind?: ProKind;
+  /** On the person's own screens, what they call their professional ("clinician"); Home's side pane uses the same word. */
+  proWord: string;
   now: Date;
   tabHref: (tab: AthleteTab, assign?: boolean) => string;
   reload: () => void;
@@ -113,6 +115,7 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
     targets: targetsFor(self ? coach?.link : link, self ? ownPreferences : profile?.preferences),
     coachName: coach?.name,
     coachKind: coach?.kind,
+    proWord: proWordFor(self ? (ownPreferences?.goal ?? null) : null, professionalOf(coach?.name, coach?.kind)),
     now,
     tabHref,
     reload: data.retry,
@@ -125,7 +128,7 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
     ? [
         { id: "sessions", label: "Sessions", count: sessions.length },
         { id: "trends", label: "Trends" },
-        { id: "plan", label: `From your ${PRO_WORD[ws.coachKind ?? "coach"]}`, count: ws.plans.filter(isOpen).length || undefined },
+        { id: "plan", label: `From your ${ws.proWord}`, count: ws.plans.filter(isOpen).length || undefined },
       ]
     : [
         { id: "overview", label: "Overview" },

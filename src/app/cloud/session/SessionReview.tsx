@@ -13,7 +13,7 @@ import { assignmentProgress, countsToward, describeAssignment, timeAgo } from "@
 import { describeMode, formatDay, formatDuration, formatLongDay, formatTime, initials } from "@/lib/domain/format";
 import { dailyMinutesOf, ringOf } from "@/lib/domain/habit";
 import { formatScore, isLegacyScores, isTransitionScores, legacyBand, scoreWord } from "@/lib/domain/scores";
-import type { BreathGoal, SessionComment, SessionSummary } from "@/lib/domain/types";
+import type { BreathGoal, SessionComment, SessionSummary, UserProfile } from "@/lib/domain/types";
 import { breathDeviations, waveFrame } from "@/lib/domain/waveform";
 import { analyzePacedRecording } from "@/lib/analysis/session";
 import { SCORING_VERSIONS } from "@/lib/domain/types";
@@ -21,7 +21,7 @@ import { MethodCScores, OpenScores, TurnTable, turnsAsBreaths } from "./MethodC"
 import { useLoad, type Loaded } from "@/lib/useLoad";
 import type { ConsoleContext } from "../AthleteConsole";
 import { streakDays } from "../AthleteHome";
-import { minutesLeftToday } from "../home/tailor";
+import { commentAuthorWord, minutesLeftToday, professionalFrom, yourProfessionals, type Professional } from "../home/tailor";
 import { coaching, onTargetShare, rateChange, resultsEmphasis, type ResultsEmphasis, type TurnPoints } from "../results/tone";
 import { BreathTable, DeviationStrip, SessionScrubber, WaveChart } from "./Waveform";
 
@@ -73,6 +73,11 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
   const prefs = ctx.self && auth.status === "signed-in" ? auth.profile?.preferences : null;
   const goal = prefs?.goal ?? null;
   const emphasis = resultsEmphasis(goal);
+  // The person's own professionals, to name them as Home does: the coaching line and who reads the comments.
+  const linked = useLoad(ctx.self ? `coaches:${session.athleteId}` : null, () => backend.data.listCoaches(session.athleteId));
+  const professionals = linked.status === "ready" ? linked.data : [];
+  const named = professionals.map(professionalFrom).filter((p): p is Professional => p !== null);
+  const audience = yourProfessionals(goal, named);
   const rates = useMemo(
     () => (emphasis.rateChange && signal && signal.units === "pct-max" && !signal.pacer && analysis ? rateChange(signal.user, analysis.frame.hz) : null),
     [emphasis.rateChange, signal, analysis],
@@ -84,6 +89,7 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
       session={session}
       sessions={ctx.sessions}
       dailyMinutes={dailyMinutesOf(prefs)}
+      professional={named[0] ?? null}
       turns={analysis?.turns?.transitions ?? null}
       rates={rates}
     />
@@ -251,8 +257,8 @@ export function SessionReview({ session, ctx }: { session: SessionSummary; ctx: 
           </section>
         )}
         <div className="stack">
-          <NotePane session={session} ctx={ctx} />
-          <CommentsPane session={session} ctx={ctx} viewerId={viewerId} comments={comments} />
+          <NotePane session={session} ctx={ctx} audience={audience} />
+          <CommentsPane session={session} ctx={ctx} viewerId={viewerId} comments={comments} audience={audience} professionals={professionals} />
         </div>
       </div>
     </div>
@@ -286,12 +292,13 @@ function Legend({ paced }: { paced: boolean }) {
  * The one coaching line in the person's goal's tone, beside or under the
  * score; Focus also gets the share on target (or the rate falling), Calm one tip.
  */
-function CoachingPane({
+export function CoachingPane({
   goal,
   emphasis,
   session,
   sessions,
   dailyMinutes,
+  professional,
   turns,
   rates,
 }: {
@@ -301,6 +308,8 @@ function CoachingPane({
   sessions: SessionSummary[];
   /** The ring's minutes a day, for Home's rule on "done for today". */
   dailyMinutes: number;
+  /** The person's professional, as Home has them: a clinician's client hears the clinician's line, not streaks. */
+  professional: Professional | null;
   turns: readonly TurnPoints[] | null;
   rates: { from: number; to: number } | null;
 }) {
@@ -310,7 +319,7 @@ function CoachingPane({
   const now = new Date();
   const today = new Date(at).toDateString() === now.toDateString();
   const leftToday = today ? minutesLeftToday(ringOf([session, ...sessions.filter((s) => s.id !== session.id)], now, dailyMinutes)) : 0;
-  const { line, tip } = coaching({ goal, session, streakDays: streak, leftToday, turns, rates });
+  const { line, tip } = coaching({ goal, session, streakDays: streak, leftToday, professional, turns, rates });
   const share = emphasis.share ? onTargetShare(session) : null;
   if (!line) return null;
   return (
@@ -481,8 +490,8 @@ function EarlierScores({ session, sessions }: { session: SessionSummary; session
   );
 }
 
-/** The athlete's note: editable by the athlete, read-only for a coach. */
-function NotePane({ session, ctx }: { session: SessionSummary; ctx: ConsoleContext }) {
+/** The athlete's note: editable by the athlete, read-only for a coach. `audience` names who reads it, for the athlete. */
+function NotePane({ session, ctx, audience }: { session: SessionSummary; ctx: ConsoleContext; audience: string }) {
   const backend = useBackend();
   const [note, setNote] = useState(session.note);
   const [draft, setDraft] = useState<string | null>(null);
@@ -505,7 +514,7 @@ function NotePane({ session, ctx }: { session: SessionSummary; ctx: ConsoleConte
     <section className="pane pane-pad" aria-label="Session note">
       <div className="pane-h">
         <h2>Session note</h2>
-        <span className="meta">{ctx.self ? "Visible to your coaches" : `${ctx.name.split(" ")[0]}'s note`}</span>
+        <span className="meta">{ctx.self ? `Visible to ${audience}` : `${ctx.name.split(" ")[0]}'s note`}</span>
       </div>
       {draft !== null ? (
         <form
@@ -636,11 +645,17 @@ function CommentsPane({
   ctx,
   viewerId,
   comments,
+  audience,
+  professionals,
 }: {
   session: SessionSummary;
   ctx: ConsoleContext;
   viewerId: string;
   comments: Loaded<SessionComment[]>;
+  /** For the athlete: who reads the thread ("your clinician"). */
+  audience: string;
+  /** The athlete's linked professionals, to tag each one's comments with their kind; empty for a coach. */
+  professionals: readonly UserProfile[];
 }) {
   const backend = useBackend();
   const [draft, setDraft] = useState("");
@@ -671,13 +686,18 @@ function CommentsPane({
   }
 
   const thread = comments.status === "ready" ? comments.data.filter((c) => c.kind === "comment") : [];
-  const other = ctx.self ? "your coach" : ctx.name.split(" ")[0];
+  const other = ctx.self ? audience : ctx.name.split(" ")[0];
+  // " · clinician" beside a professional's comment, in their own kind's word.
+  const tagOf = (c: SessionComment) => {
+    const word = commentAuthorWord(c, professionals);
+    return word ? ` · ${word}` : null;
+  };
 
   return (
     <section className="pane pane-pad" aria-labelledby="comments-h" id="comments">
       <div className="pane-h">
         <h2 id="comments-h">Comments</h2>
-        <span className="meta">{ctx.self ? "Between you and your coaches" : `Visible to ${other}`}</span>
+        <span className="meta">{ctx.self ? `Between you and ${audience}` : `Visible to ${other}`}</span>
       </div>
       {comments.status === "loading" ? (
         <Skeleton lines={2} />
@@ -695,7 +715,7 @@ function CommentsPane({
               <div className="bubble">
                 <span className="label">
                   <b>{c.authorId === viewerId ? "You" : c.authorName}</b>
-                  {c.authorRole === "coach" && c.authorId !== viewerId && " · coach"} · {timeAgo(c.createdAt, now)}
+                  {c.authorId !== viewerId && tagOf(c)} · {timeAgo(c.createdAt, now)}
                 </span>
                 <p>{c.text}</p>
                 {c.authorId === viewerId && (
@@ -715,7 +735,7 @@ function CommentsPane({
             rows={2}
             maxLength={1000}
             value={draft}
-            placeholder={ctx.self ? "Reply to your coach…" : `Write to ${other}…`}
+            placeholder={`${ctx.self ? "Reply" : "Write"} to ${other}…`}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) send(e);

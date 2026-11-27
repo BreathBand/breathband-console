@@ -2,20 +2,26 @@ import { describe, expect, it } from "vitest";
 import type { SessionSummary } from "@/lib/domain/types";
 import { ringOf } from "@/lib/domain/habit";
 import { DEFAULT_SETUP, type SessionSetup } from "@/lib/prefs";
+import { defaultProProfile } from "@/lib/domain/pro-profile";
+import type { ProKind } from "@/lib/domain/types";
 import {
   calmLine,
+  commentAuthorWord,
   homeLayout,
   homeStart,
   leadsWithProfessional,
   minutesLeftToday,
   moreToday,
   practiceQuery,
+  professionalFrom,
   professionalOf,
+  proWordFor,
   sidePractice,
   startLabel,
   trainWeek,
   trendPeriod,
   withPractice,
+  yourProfessionals,
   type Professional,
 } from "./tailor";
 
@@ -311,6 +317,88 @@ describe("sidePractice: the side pane's practice block", () => {
     expect(sidePractice("train", null)).toEqual({ word: "coach", empty: "Share with a coach in Settings and their practice shows up here." });
     expect(sidePractice(null, null)?.word).toBe("coach");
     expect(sidePractice("focus", null)).toEqual({ word: "teacher", empty: "Share with a teacher or counsellor in Settings and their practice shows up here." });
+  });
+});
+
+// T-0148: the person's own screens name their professional as Home does.
+
+const profile = (uid: string, displayName: string, kind?: ProKind, via: "proKind" | "proProfile" = "proKind") => ({
+  uid,
+  displayName,
+  ...(kind && via === "proKind" ? { proKind: kind } : {}),
+  ...(kind && via === "proProfile" ? { proProfile: defaultProProfile(kind) } : {}),
+});
+
+describe("professionalFrom: a linked professional's profile, as Home names them", () => {
+  it("reads the kind from proKind, then proProfile, and an older account as a coach", () => {
+    expect(professionalFrom(profile("demo-ana", "Ana Ruiz", "clinician"))).toEqual({ name: "Ana Ruiz", kind: "clinician" });
+    expect(professionalFrom(profile("demo-chris", "Chris Park", "educator", "proProfile"))).toEqual({ name: "Chris Park", kind: "educator" });
+    expect(professionalFrom(profile("demo-coach", "Lena Vos"))).toEqual(coach);
+  });
+
+  it("is null with nobody linked", () => {
+    expect(professionalFrom(undefined)).toBeNull();
+    expect(professionalFrom(null)).toBeNull();
+  });
+});
+
+describe("proWordFor: the word on the person's own tabs, the same as Home's side pane", () => {
+  it("uses the linked professional's word", () => {
+    expect(proWordFor("calm", clinician)).toBe("clinician");
+    expect(proWordFor("focus", coach)).toBe("coach");
+    expect(proWordFor("train", { name: "Chris Park", kind: "educator" })).toBe("teacher");
+  });
+
+  it("with nobody linked, Focus says teacher and the rest coach", () => {
+    expect(proWordFor("focus", null)).toBe("teacher");
+    expect(proWordFor("train", null)).toBe("coach");
+    expect(proWordFor("calm", null)).toBe("coach");
+    expect(proWordFor(null, null)).toBe("coach");
+  });
+
+  it("agrees with the side pane wherever the side pane has a block", () => {
+    const goals = ["train", "focus", "calm", null] as const;
+    for (const goal of goals) {
+      for (const pro of [null, coach, clinician, { name: "Chris Park", kind: "educator" as const }]) {
+        const side = sidePractice(goal, pro);
+        if (side) expect(proWordFor(goal, pro)).toBe(side.word);
+      }
+    }
+  });
+});
+
+describe("yourProfessionals: who reads the person's note and comments", () => {
+  it("names one professional by their kind, and nobody by the goal's word", () => {
+    expect(yourProfessionals("calm", [clinician])).toBe("your clinician");
+    expect(yourProfessionals("train", [coach])).toBe("your coach");
+    expect(yourProfessionals("focus", [])).toBe("your teacher");
+    expect(yourProfessionals("calm", [])).toBe("your coach");
+  });
+
+  it("several of one kind in the plural; mixed kinds without a kind", () => {
+    expect(yourProfessionals("train", [coach, { name: "Sam Hill", kind: "coach" }])).toBe("your coaches");
+    expect(yourProfessionals("calm", [clinician, { name: "Ana Ruiz", kind: "clinician" }])).toBe("your clinicians");
+    expect(yourProfessionals("focus", [{ name: "Chris Park", kind: "educator" }, { name: "Jo Lane", kind: "educator" }])).toBe("your teachers");
+    expect(yourProfessionals("train", [coach, clinician])).toBe("the people you share with");
+  });
+});
+
+describe("commentAuthorWord: the tag beside a professional's comment", () => {
+  const linked = [profile("demo-ana", "Ana Ruiz", "clinician"), profile("demo-chris", "Chris Park", "educator", "proProfile"), profile("demo-coach", "Lena Vos")];
+
+  it("names the author by their kind", () => {
+    expect(commentAuthorWord({ authorId: "demo-ana", authorRole: "coach" }, linked)).toBe("clinician");
+    expect(commentAuthorWord({ authorId: "demo-chris", authorRole: "coach" }, linked)).toBe("teacher");
+    expect(commentAuthorWord({ authorId: "demo-coach", authorRole: "coach" }, linked)).toBe("coach");
+  });
+
+  it("has no tag for the person's own comments", () => {
+    expect(commentAuthorWord({ authorId: "demo-jordan", authorRole: "athlete" }, linked)).toBeNull();
+  });
+
+  it("reads an author it can't look up (no longer linked, or a professional reading) as a coach", () => {
+    expect(commentAuthorWord({ authorId: "someone-else", authorRole: "coach" }, linked)).toBe("coach");
+    expect(commentAuthorWord({ authorId: "demo-ana", authorRole: "coach" }, [])).toBe("coach");
   });
 });
 

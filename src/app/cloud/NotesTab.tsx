@@ -5,8 +5,12 @@ import { Icon } from "@/components/Icon";
 import { ErrorState, Skeleton } from "@/components/States";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { formatLongDay } from "@/lib/domain/format";
+import { PRIVATE_NOTES_HINT } from "@/lib/domain/pro-terms";
 import { useLoad } from "@/lib/useLoad";
 import type { Workspace } from "./AthleteWorkspace";
+
+/** The notes box's prompt: practice, not health detail (02 §4.3 and the hint above it). */
+export const NOTES_PLACEHOLDER = "Goals, what works for them, what to try next…";
 
 /** The coach's private notes on one athlete, and what the athlete shares with them. */
 export function NotesTab({ ws }: { ws: Workspace }) {
@@ -23,6 +27,9 @@ export function NotesTab({ ws }: { ws: Workspace }) {
             <Icon name="lock" size={14} /> Only you can see these
           </span>
         </div>
+        <p className="label" id="notes-hint">
+          {PRIVATE_NOTES_HINT}
+        </p>
         {note.status === "loading" ? (
           <Skeleton lines={4} />
         ) : note.status === "error" ? (
@@ -92,7 +99,8 @@ function NoteEditor({ initial, ws }: { initial: string; ws: Workspace }) {
           rows={10}
           maxLength={5000}
           value={text}
-          placeholder="Goals, injuries, what works for them…"
+          aria-describedby="notes-hint"
+          placeholder={NOTES_PLACEHOLDER}
           onChange={(e) => {
             setText(e.target.value);
             if (status === "saved") setStatus("idle");
