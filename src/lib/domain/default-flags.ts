@@ -25,13 +25,11 @@ export function defaultFlags(kind: ProKind | null | undefined): AlertRules {
   return { ...(kind ? BY_KIND[kind] : DEFAULT_ALERTS) };
 }
 
-const KEYS = Object.keys(DEFAULT_ALERTS) as (keyof AlertRules)[];
-
 /**
- * The rules in force. `getAlertRules` answers `DEFAULT_ALERTS` when nothing
- * was saved, so rules equal to it are read as "never changed" and the kind's
- * defaults apply instead.
+ * The rules in force: what the professional saved, or their kind's defaults if
+ * `getAlertRules` says they never saved any (null). Saved rules are never
+ * replaced, even when they happen to equal another kind's defaults.
  */
-export function rulesInForce(saved: AlertRules, kind: ProKind | null | undefined): AlertRules {
-  return KEYS.every((k) => saved[k] === DEFAULT_ALERTS[k]) ? defaultFlags(kind) : saved;
+export function rulesInForce(saved: AlertRules | null, kind: ProKind | null | undefined): AlertRules {
+  return saved ?? defaultFlags(kind);
 }

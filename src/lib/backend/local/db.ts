@@ -60,7 +60,7 @@ export interface LocalDb {
   coachNotes: Record<string, string>;
   /** By coach id. */
   squads: Record<string, Squad[]>;
-  /** By coach id; missing → DEFAULT_ALERTS. */
+  /** By coach id; missing → never saved (getAlertRules answers null). */
   alertRules: Record<string, AlertRules>;
   /** Newest first. */
   coachInvites: CoachInvite[];

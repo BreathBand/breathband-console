@@ -337,9 +337,9 @@ describe("coach tools", () => {
     expect(await backend.data.listSquads(DEMO_COACH.uid)).toHaveLength(2);
   });
 
-  it("stores alert rules per coach, with defaults until changed", async () => {
+  it("stores alert rules per coach, with none (null) until changed", async () => {
     await backend.auth.signIn(DEMO_COACH.email, DEMO_PASSWORD);
-    expect(await backend.data.getAlertRules(DEMO_COACH.uid)).toEqual(DEFAULT_ALERTS);
+    expect(await backend.data.getAlertRules(DEMO_COACH.uid)).toBeNull();
     const rules = { ...DEFAULT_ALERTS, missedDays: 5, trendingDown: false };
     await backend.data.saveAlertRules(DEMO_COACH.uid, rules);
     expect(await backend.data.getAlertRules(DEMO_COACH.uid)).toEqual(rules);

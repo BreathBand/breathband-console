@@ -60,6 +60,24 @@ test("Jordan (Ana's client): the From Ana card with her assigned practice", asyn
   await snap(page, info, "demo-jordan");
 });
 
+// Neither has saved "Needs a look" rules, so each starts from their kind's (T-0141).
+const flagBoxes = (page: Page) => page.getByRole("region", { name: "What needs a look" }).getByRole("checkbox");
+
+test("Ana (clinician) starts with the missed-days flag only", async ({ page }) => {
+  await signInAsClinician(page);
+  await page.goto("/cloud/account/#alerts");
+  await expect(page.getByRole("checkbox", { name: /No session for 3 days/ })).toBeChecked({ timeout: 30_000 });
+  await expect(flagBoxes(page)).toHaveCount(6);
+  for (const box of (await flagBoxes(page).all()).slice(1)) await expect(box).not.toBeChecked();
+});
+
+test("Chris (educator) starts with every flag off", async ({ page }) => {
+  await signInAsEducator(page);
+  await page.goto("/cloud/account/#alerts");
+  await expect(flagBoxes(page)).toHaveCount(6, { timeout: 30_000 });
+  for (const box of await flagBoxes(page).all()) await expect(box).not.toBeChecked();
+});
+
 test("Chris (educator): his class of six students", async ({ page }, info) => {
   await signInAsEducator(page);
   await expect(page.getByRole("heading", { level: 2, name: "From your students" })).toBeVisible({ timeout: 30_000 });
