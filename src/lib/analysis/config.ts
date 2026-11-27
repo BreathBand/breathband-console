@@ -42,6 +42,8 @@ export const FIXED_CONSTANTS = {
   lowPassFilter: { cutoffHz: 1, order: 4, kind: "butterworth", zeroPhase: true },
   artifactLimitPctOfMax: 100,
   normalRateBpm: { min: 12, max: 16 } satisfies Range,
+  /** Outside this, a rate is more likely the band than the breathing (D-K, 2026-11-27): flagged, not scored differently. */
+  plausibleRateBpm: { min: 3, max: 40 } satisfies Range,
   normalIeRatio: { inhale: 1, exhale: 2 },
   maxEventMarkersPerOpenSession: 2,
   deviationHistogram: { minSd: -1, maxSd: 1, stepSd: 0.25, missedOrDoubleBin: true },

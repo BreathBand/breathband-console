@@ -16,6 +16,7 @@ import { formatScore, isLegacyScores, isTransitionScores, legacyBand, scoreWord 
 import type { BreathGoal, SessionComment, SessionSummary, UserProfile } from "@/lib/domain/types";
 import { breathDeviations, waveFrame } from "@/lib/domain/waveform";
 import { analyzePacedRecording } from "@/lib/analysis/session";
+import { isPlausibleRate } from "@/lib/analysis/open";
 import { SCORING_VERSIONS } from "@/lib/domain/types";
 import { MethodCScores, OpenScores, TurnTable, turnsAsBreaths } from "./MethodC";
 import { useLoad, type Loaded } from "@/lib/useLoad";
@@ -23,6 +24,7 @@ import type { ConsoleContext } from "../AthleteConsole";
 import { streakDays } from "../AthleteHome";
 import { commentAuthorWord, minutesLeftToday, professionalFrom, yourProfessionals, type Professional } from "../home/tailor";
 import { coaching, onTargetShare, rateChange, resultsEmphasis, type ResultsEmphasis, type TurnPoints } from "../results/tone";
+import { ImplausibleRate } from "./ImplausibleRate";
 import { BreathTable, DeviationStrip, SessionScrubber, WaveChart } from "./Waveform";
 
 const ZOOMS = [
@@ -476,6 +478,7 @@ function EarlierScores({ session, sessions }: { session: SessionSummary; session
         <span className="n">{session.respirationRateBpm ?? "–"}</span>
         <span className="w">breaths per minute</span>
         <span className="d">{session.respirationRateBpm === null ? "Too few breaths to measure" : "Typical at rest: 12–16"}</span>
+        {session.respirationRateBpm !== null && !isPlausibleRate(session.respirationRateBpm) && <ImplausibleRate />}
       </section>
       <section className="pane pane-pad how" aria-label="About open sessions">
         <div className="pane-h">

@@ -82,6 +82,12 @@ export function normalDepthRangePct(): { readonly min: number; readonly max: num
   return { min: centrePctOfMax - spread, max: centrePctOfMax + spread };
 }
 
+/** False for a rate no person breathes at for a whole session: the strap slipped or the signal is noise (D-K). */
+export function isPlausibleRate(rateBpm: number): boolean {
+  const { min, max } = FIXED_CONSTANTS.plausibleRateBpm;
+  return insideBand(rateBpm, min, max);
+}
+
 export function isNormalRate(rateBpm: number): boolean {
   const { min, max } = FIXED_CONSTANTS.normalRateBpm;
   return insideBand(rateBpm, min, max);

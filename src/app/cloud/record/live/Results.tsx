@@ -2,12 +2,14 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { Icon } from "@/components/Icon";
+import { isPlausibleRate } from "@/lib/analysis/open";
 import { SAMPLE_RATE_HZ } from "@/lib/device/config";
 import { formatScore, scoreWord } from "@/lib/domain/scores";
 import type { BreathGoal, MoodScore } from "@/lib/domain/types";
 import type { BuiltSession } from "@/lib/recording";
 import type { Professional } from "../../home/tailor";
 import { coaching, onTargetShare, rateChange, rateWord, resultsEmphasis } from "../../results/tone";
+import { ImplausibleRate } from "../../session/ImplausibleRate";
 import { MoodFaces } from "./MoodFaces";
 
 /** "0.4 s early", "0.2 s late", "on time". */
@@ -236,6 +238,7 @@ export function Results({
             </p>
           </>
         )}
+        {rate !== undefined && !isPlausibleRate(rate) && <ImplausibleRate />}
         {share !== null && (
           <p className="res-share">
             <b className="display">{share}%</b> of the session on target
