@@ -3,8 +3,9 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { createDb } from "./db/client";
-import { createApp, SECURITY_HEADERS } from "./index";
-import { IMMUTABLE } from "./static";
+import { createHash } from "node:crypto";
+import { API_POLICY, createApp, HSTS, SECURITY_HEADERS } from "./index";
+import { IMMUTABLE, pagePolicy } from "./static";
 
 // A small static export, shaped like `next build` with trailingSlash: true.
 const root = mkdtempSync(join(tmpdir(), "breathband-out-"));
@@ -118,5 +119,31 @@ describe("static export", () => {
     const unknown = await app.request("/api/nope");
     expect(unknown.status).toBe(404);
     expect(await unknown.json()).toEqual({ error: { code: "not-found", message: "Not found" } });
+  });
+});
+
+describe("Content-Security-Policy and HSTS", () => {
+  const sha = (text: string) => `'sha256-${createHash("sha256").update(text).digest("base64")}'`;
+
+  it("allows exactly a page's own inline scripts by hash, and scripts from this origin", () => {
+    const html = '<script>self.theme="dark"</script><script src="/_next/static/chunks/a.js" async=""></script><script id="_R_">self.__next_f.push([1])</script>';
+    const policy = pagePolicy(html);
+    expect(policy).toContain(`script-src 'self' ${sha('self.theme="dark"')} ${sha("self.__next_f.push([1])")};`);
+    expect(policy).not.toMatch(/script-src[^;]*unsafe-inline/);
+    expect(policy).toContain("frame-ancestors 'none'");
+    expect(policy).toContain("object-src 'none'");
+  });
+
+  it("sends a page its own policy, everything else the API's, and HSTS in production", async () => {
+    const page = await app.request("/cloud/login/");
+    expect(page.headers.get("Content-Security-Policy")).toBe(pagePolicy(files["cloud/login/index.html"]));
+    expect(page.headers.get("Strict-Transport-Security")).toBe(HSTS);
+    const chunk = await app.request("/_next/static/chunks/app-3f2a.js");
+    expect(chunk.headers.get("Content-Security-Policy")).toBe(API_POLICY);
+    const health = await app.request("/api/health");
+    expect(health.headers.get("Content-Security-Policy")).toBe(API_POLICY);
+
+    const dev = createApp({ db, mode: "development", appUrl: "http://localhost:3000" });
+    expect((await dev.request("/api/health")).headers.get("Strict-Transport-Security")).toBeNull();
   });
 });

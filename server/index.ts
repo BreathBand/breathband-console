@@ -40,6 +40,16 @@ export const SECURITY_HEADERS = {
   "X-Frame-Options": "DENY",
 } as const;
 
+/**
+ * Every response that didn't set its own policy (the API's JSON and its small
+ * HTML answers, like unsubscribe): nothing loads, inline styles aside, and no
+ * framing. Exported pages set theirs per page (server/static.ts).
+ */
+export const API_POLICY = "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'";
+
+/** Production only, where the site is served over HTTPS: a year, subdomains included. */
+export const HSTS = "max-age=31536000; includeSubDomains";
+
 const HEALTH_TIMEOUT_MS = 2000;
 
 const ERROR_CODES: Partial<Record<number, string>> = {
@@ -57,6 +67,8 @@ export function createApp(deps: AppDeps) {
   app.use(async (c, next) => {
     await next();
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) c.res.headers.set(name, value);
+    if (!c.res.headers.has("Content-Security-Policy")) c.res.headers.set("Content-Security-Policy", API_POLICY);
+    if (deps.mode === "production") c.res.headers.set("Strict-Transport-Security", HSTS);
   });
 
   if (deps.mode === "development") {

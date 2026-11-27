@@ -3,8 +3,11 @@
 //   try_files $uri $uri/ $uri.html =404;   error_page 404 /404.html;
 //
 // plus immutable caching for /_next/static/ (hashed file names). The security
-// headers come from the app-wide middleware, so they are on these responses too.
+// headers come from the app-wide middleware, so they are on these responses too;
+// an HTML page also gets its own Content-Security-Policy, which allows exactly
+// the inline scripts in that page (Next's payload and the theme script) by hash.
 
+import { createHash } from "node:crypto";
 import type { Stats } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
@@ -14,6 +17,42 @@ import { getMimeType } from "hono/utils/mime";
 export const IMMUTABLE = "public, max-age=31536000, immutable";
 
 type Found = { path: string; stats: Stats };
+
+const INLINE_SCRIPT = /<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g;
+
+/**
+ * The policy for one exported page: scripts from this origin plus the page's own
+ * inline scripts by sha256, nothing else; styles allow inline (React style
+ * attributes); images also data: and blob: (QR codes, downloads); no framing.
+ */
+export function pagePolicy(html: string): string {
+  const hashes = [...html.matchAll(INLINE_SCRIPT)].map((m) => `'sha256-${createHash("sha256").update(m[1]).digest("base64")}'`);
+  return [
+    "default-src 'self'",
+    `script-src 'self' ${[...new Set(hashes)].join(" ")}`.trim(),
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob:",
+    "font-src 'self'",
+    "connect-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+  ].join("; ");
+}
+
+/** By path and mtime: a page's policy is worked out once per build. */
+const policies = new Map<string, string>();
+
+async function policyFor(file: Found): Promise<string> {
+  const key = `${file.path}|${file.stats.mtimeMs}`;
+  let policy = policies.get(key);
+  if (!policy) {
+    policy = pagePolicy(await readFile(file.path, "utf8"));
+    policies.set(key, policy);
+  }
+  return policy;
+}
 
 export function serveExport(root: string) {
   const base = resolve(root);
@@ -69,6 +108,7 @@ async function send(c: Context, file: Found, status: 200 | 404, cacheControl?: s
   const headers: Record<string, string> = {
     "Content-Type": getMimeType(file.path) ?? "application/octet-stream",
   };
+  if (file.path.endsWith(".html")) headers["Content-Security-Policy"] = await policyFor(file);
   if (status === 200) {
     headers.ETag = etag;
     headers["Last-Modified"] = lastModified;
