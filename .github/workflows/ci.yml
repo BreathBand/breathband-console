@@ -54,3 +54,41 @@ jobs:
         run: node build/server/migrate.mjs
         env:
           TURSO_DATABASE_URL: file:${{ runner.temp }}/ci-migrate-bundle.db
+
+  # The browser suites, beside the checks above. Each Playwright config starts
+  # its own servers (next dev, and for http the API on a fresh seeded file DB
+  # under data/), so nothing is built first and no secret is needed.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      # playwright.config.ts pins NEXT_PUBLIC_BACKEND=local: the demo people,
+      # data in the browser. Includes the axe checks (e2e/a11y.spec.ts).
+      - name: E2E on the local backend, with axe
+        run: npm run e2e
+      # playwright.http.config.ts: the demo specs against the real API.
+      - name: E2E on the http backend
+        if: ${{ !cancelled() }}
+        run: npm run e2e:http
+
+      # playwright-report/ (local) and playwright-report/http/, with traces of failed tests.
+      - name: Upload the Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

@@ -157,6 +157,10 @@ Use these and no others in new CSS: **1280** (dense grids drop a column), **1100
 
 ## Accessibility
 
+**Target: WCAG 2.2 level AA** on every console screen, in the light and the dark theme.
+
+**How it's checked:** `e2e/a11y.spec.ts` runs axe (the WCAG 2.0, 2.1 and 2.2 A and AA rules) on the main routes, signed out (landing, sign in, sign up, reset, an invite) and as each demo person (home, sessions, a review, trends, settings, the band, record setup; a professional's dashboard, roster, one person's workspace and Compare), in both themes, at desktop width (1280 px). A serious or critical violation fails it, and CI runs it on every pull request (the `e2e` job). A violation that can only be fixed by a redesign is excluded by its one rule and selector, with the parked line that tracks it; never a whole rule. axe doesn't cover keyboard paths, screen-reader announcements or the 375 px layouts; those are checked separately (launch checklist O2, O3, O5).
+
 - Contrast: body and labels ≥ 4.5:1 on their ground in both themes; the breath colours carry a shape or position cue, never colour alone.
 - Every chart has an `aria-label` and the trend charts a "Show values as a table" toggle; live canvases are labelled images, and the numbers they show are also stated in text.
 - Focus is always visible (2 px exhale-blue ring). Touch targets ≥ 44 px.

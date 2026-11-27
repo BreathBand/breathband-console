@@ -48,7 +48,8 @@ export default defineConfig({
   // One worker: the API allows 5 sign-ins a minute per client, shared by every test.
   workers: 1,
   forbidOnly: !!process.env.CI,
-  reporter: process.env.CI ? "list" : [["list"], ["html", { open: "never", outputFolder: "playwright-report/http" }]],
+  // The HTML report in CI too: the e2e job uploads it when a run fails.
+  reporter: [["list"], ["html", { open: "never", outputFolder: "playwright-report/http" }]],
   use: {
     baseURL,
     trace: "retain-on-failure",
