@@ -1,6 +1,3 @@
-import { registerHooks } from "node:module";
-import path from "node:path";
-import { pathToFileURL } from "node:url";
 import { defineConfig, devices } from "@playwright/test";
 
 // The demo e2e on the http backend (I-14, T-0136): `npm run e2e:http`.
@@ -20,26 +17,11 @@ const apiURL = `http://localhost:${apiPort}`;
 const DB_FILE = "data/e2e-http.db";
 const BLOB_DIR = "data/e2e-http-blobs";
 
-// e2e/auth.ts signs in through the local backend's demo buttons and its
-// localStorage. The specs import it as "./auth"; in this run that import
-// resolves to e2e/helpers/auth-http.ts (same exports, the sign-in form), so the
-// specs stay as they are. The config is loaded in the runner and in every
-// worker, so the hook is in place wherever a spec is loaded.
-const fileUrl = (file: string) => pathToFileURL(path.resolve(__dirname, file)).href;
-const localAuth = fileUrl("e2e/auth.ts").toLowerCase(); // Windows paths differ in case only by the drive letter
-const httpAuth = fileUrl("e2e/helpers/auth-http.ts");
-registerHooks({
-  resolve(specifier, context, nextResolve) {
-    const resolved = nextResolve(specifier, context);
-    return resolved.url.toLowerCase() === localAuth ? { ...resolved, url: httpAuth } : resolved;
-  },
-});
-
 const freshData = `node -e "const fs=require('node:fs');fs.rmSync('${BLOB_DIR}',{recursive:true,force:true});fs.mkdirSync('data',{recursive:true})"`;
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: ["demo-path.spec.ts", "demo-people.spec.ts", "smoke.spec.ts"],
+  testMatch: ["demo-path.spec.ts", "demo-people.spec.ts", "signup-consents.spec.ts", "smoke.spec.ts"],
   // The demo buttons are the local backend's; on http the login page has the form only.
   grepInvert: /offers a demo button/,
   outputDir: "test-results/http",
@@ -53,7 +35,8 @@ export default defineConfig({
     baseURL,
     trace: "retain-on-failure",
   },
-  projects: [{ name: "chromium-http", use: { ...devices["Desktop Chrome"] } }],
+  // e2e/auth.ts reads metadata.backend: on http it signs in through the form, not the demo buttons (T-0139).
+  projects: [{ name: "chromium-http", metadata: { backend: "http" }, use: { ...devices["Desktop Chrome"] } }],
   webServer: [
     {
       command: `${freshData} && npm run db:reset && npm run db:seed && npm run api:start`,

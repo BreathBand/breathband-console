@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useRef, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useRef, useState, type FormEvent } from "react";
 import { Icon } from "@/components/Icon";
-import { BackendError } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
 // The one screen allowed to import from an adapter: demo sign-in for the local build.
 import {
@@ -18,7 +17,9 @@ import {
   DEMO_TEAM,
 } from "@/lib/backend/local/seed";
 import { AuthFrame } from "../auth/AuthFrame";
+import { CheckEmail } from "../auth/CheckEmail";
 import { EMAIL_SHAPE, FormError, PasswordField, SubmitButton, TextField } from "../auth/fields";
+import { signInProblem } from "../auth/messages";
 import { noNext, useNext, type WithNext } from "../auth/useNext";
 
 export default function LoginPage() {
@@ -59,9 +60,18 @@ function LoginForm({ withNext }: { withNext: WithNext }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [problem, setProblem] = useState<Problem | null>(null);
+  // The address whose sign-in was refused because it isn't confirmed yet (http, T-0139).
+  const [unconfirmed, setUnconfirmed] = useState<string | null>(null);
   // Which sign-in is running: "form", or the email of a demo account.
   const [busy, setBusy] = useState<string | null>(null);
   const fieldsRef = useRef<HTMLDivElement>(null);
+  const wasUnconfirmed = useRef(false);
+
+  // Back from "Check your email": focus returns to the form it came from.
+  useEffect(() => {
+    if (!unconfirmed && wasUnconfirmed.current) fieldsRef.current?.querySelector<HTMLInputElement>("#email")?.focus();
+    wasUnconfirmed.current = !!unconfirmed;
+  }, [unconfirmed]);
 
   async function signIn(address: string, secret: string, source: string) {
     if (busy) return;
@@ -71,14 +81,9 @@ function LoginForm({ withNext }: { withNext: WithNext }) {
       await backend.auth.signIn(address, secret);
       // CloudShell redirects to ?next= once the auth state changes; stay busy until then.
     } catch (e) {
-      const code = e instanceof BackendError ? e.code : null;
-      setProblem(
-        code === "invalid-credentials"
-          ? { message: "Email or password is incorrect." }
-          : code === "invalid-email"
-            ? { field: "email", message: "That email address doesn't look right." }
-            : { message: "Couldn't sign in. Check your connection and try again." },
-      );
+      const why = signInProblem(e);
+      if (why === "unverified") setUnconfirmed(address.trim());
+      else setProblem(why);
       setBusy(null);
     }
   }
@@ -103,6 +108,24 @@ function LoginForm({ withNext }: { withNext: WithNext }) {
   }
 
   const formError = problem && !problem.field ? problem.message : "";
+
+  if (unconfirmed) {
+    return (
+      <CheckEmail
+        address={unconfirmed}
+        actions={
+          <button type="button" className="button bc-ghost" onClick={() => setUnconfirmed(null)}>
+            Back to sign in
+          </button>
+        }
+      >
+        <p className="bc-lede">
+          You need to confirm your email address before you can sign in. We&apos;ve sent a new link to{" "}
+          <strong className="bc-break">{unconfirmed}</strong>: follow it and you&apos;re signed in to BreathCloud.
+        </p>
+      </CheckEmail>
+    );
+  }
 
   return (
     <div className="bc-auth-stack">

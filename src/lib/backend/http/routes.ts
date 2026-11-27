@@ -24,6 +24,7 @@ export const HTTP_ROUTES: HttpRoutes = {
     signIn: { method: "POST", path: "/api/auth/sign-in/email" },
     signUp: { method: "POST", path: "/api/auth/sign-up/email" },
     sendPasswordReset: { method: "POST", path: "/api/auth/request-password-reset" },
+    sendVerificationEmail: { method: "POST", path: "/api/auth/send-verification-email" },
     signOut: { method: "POST", path: "/api/auth/sign-out" },
   },
   // Under /api on the API: every method is served (I-08, I-09, I-10). watchGroupLive polls until a realtime channel arrives.

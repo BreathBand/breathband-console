@@ -158,10 +158,32 @@ describe("http adapter against the API", () => {
 
     const error = await backend.auth.signIn(address, PASSWORD).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(BackendError);
-    expect(error).toMatchObject({ code: "permission-denied", message: expect.stringMatching(/confirm your email/i) });
+    expect(error).toMatchObject({ code: "email-not-verified", message: expect.stringMatching(/confirm your email/i) });
 
     const confirmed = await fetch(linkIn(lastEmailTo(address, /confirm your email/i)), { redirect: "manual" });
     expect(confirmed.headers.get("Location")).toBe(`${APP}/cloud/`);
+  });
+
+  it("sends a fresh confirmation link on request, which lands on /cloud/ and lets the person sign in", async () => {
+    const backend = open(browser());
+    const address = email();
+    await backend.auth.signUp(input(address));
+    outbox.length = 0;
+
+    await backend.auth.sendVerificationEmail(` ${address.toUpperCase()} `);
+    const fresh = outbox.filter((mail) => mail.to === address && /confirm your email/i.test(mail.subject));
+    expect(fresh).toHaveLength(1);
+    const confirmed = await fetch(linkIn(fresh[0]), { redirect: "manual" });
+    expect(confirmed.headers.get("Location")).toBe(`${APP}/cloud/`);
+    expect(await backend.auth.signIn(address, PASSWORD)).toMatchObject({ email: address, emailVerified: true });
+  });
+
+  it("sends nothing for an address with no account, and answers the same", async () => {
+    const backend = open(browser());
+    const address = email();
+    outbox.length = 0;
+    await expect(backend.auth.sendVerificationEmail(address)).resolves.toBeUndefined();
+    expect(outbox.filter((mail) => mail.to === address)).toEqual([]);
   });
 
   it("emails a reset link that lands on the app's /cloud/reset/ with a token", async () => {

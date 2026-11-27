@@ -204,6 +204,11 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       await delay();
     },
 
+    async sendVerificationEmail() {
+      // Local accounts are confirmed from the start, and there's no email to send.
+      await delay();
+    },
+
     async signOut() {
       mutate((db) => {
         db.currentUid = null;

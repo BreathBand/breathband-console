@@ -15,6 +15,7 @@ import { join, resolve } from "node:path";
 import { serve, type ServerType } from "@hono/node-server";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { currentConsents } from "@/lib/domain/consent";
 import { authSecret, createAuth } from "./auth";
 import { createDb } from "./db/client";
 import { MIGRATIONS_DIR } from "./db/env";
@@ -101,6 +102,8 @@ describe.skipIf(!process.env.MAILPIT_E2E)("auth with Mailpit", () => {
       email,
       password: PASSWORD,
       role: "coach",
+      birthYear: 1990,
+      consents: currentConsents(),
       callbackURL: `${APP}/cloud/`,
     });
     expect(signUp.status).toBe(200);

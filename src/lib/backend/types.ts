@@ -58,10 +58,17 @@ export interface AuthService {
   currentUser(): AuthUser | null;
   /** Calls back immediately with the current state, then on every change. Returns an unsubscribe function. */
   onAuthStateChanged(callback: (user: AuthUser | null) => void): () => void;
+  /** Refused with BackendError("email-not-verified") until the emailed link is followed (http). */
   signIn(email: string, password: string): Promise<AuthUser>;
-  /** Creates the account and its UserProfile, with its consent records and birth year. */
+  /**
+   * Creates the account and its UserProfile, with its consent records and birth year.
+   * Where the address must be confirmed first (http), the answer has `emailVerified: false`
+   * and nobody is signed in until the emailed link is followed.
+   */
   signUp(input: SignUpInput): Promise<AuthUser>;
   sendPasswordReset(email: string): Promise<void>;
+  /** Emails a fresh confirmation link. Answers the same whether or not the address has an unconfirmed account. */
+  sendVerificationEmail(email: string): Promise<void>;
   signOut(): Promise<void>;
 }
 
@@ -310,7 +317,17 @@ export type BackendErrorCode =
   | "invite-invalid"
   | "invalid-input"
   | "under-age"
+  /** Sign-in before the emailed confirmation link was followed. */
+  | "email-not-verified"
   | "unavailable";
+
+/** The message of an "unavailable" error that means "slow down" (http: the API answered 429), not "can't reach". */
+export const RATE_LIMITED_MESSAGE = "Too many attempts. Wait a minute and try again.";
+
+/** True for a refusal because of too many attempts; screens show its message as it is. */
+export function isRateLimited(error: unknown): error is BackendError {
+  return error instanceof BackendError && error.code === "unavailable" && error.message === RATE_LIMITED_MESSAGE;
+}
 
 export class BackendError extends Error {
   constructor(

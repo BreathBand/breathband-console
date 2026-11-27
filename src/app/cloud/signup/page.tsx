@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useRef, useState, type FormEvent } from "react";
+import { Suspense, useEffect, useRef, useState, type FormEvent } from "react";
 import { Icon, type IconName } from "@/components/Icon";
 import { BackendError, type BackendErrorCode } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { ageGateProblem, currentConsents, UNDER_AGE_MESSAGE } from "@/lib/domain/consent";
 import type { Role } from "@/lib/domain/types";
 import { AuthFrame } from "../auth/AuthFrame";
+import { CheckEmail } from "../auth/CheckEmail";
 import { EMAIL_SHAPE, FormError, PasswordField, SubmitButton, TextField } from "../auth/fields";
+import { failureMessage } from "../auth/messages";
 import { noNext, useNext, type WithNext } from "../auth/useNext";
 
 export default function SignupPage() {
@@ -67,7 +69,16 @@ function SignupForm({ withNext, invited = false }: { withNext: WithNext; invited
   const [dataOk, setDataOk] = useState(false);
   const [problem, setProblem] = useState<Problem | null>(null);
   const [busy, setBusy] = useState(false);
+  // Where the confirmation link went, on a backend that confirms addresses first (http, T-0139).
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const fieldsRef = useRef<HTMLDivElement>(null);
+  const wasSent = useRef(false);
+
+  // Back from "Check your email" with "Use a different email": focus goes to the email field.
+  useEffect(() => {
+    if (!sentTo && wasSent.current) fieldsRef.current?.querySelector<HTMLInputElement>("#email")?.focus();
+    wasSent.current = !!sentTo;
+  }, [sentTo]);
 
   function show(p: Problem) {
     setProblem(p);
@@ -103,7 +114,7 @@ function SignupForm({ withNext, invited = false }: { withNext: WithNext; invited
     setBusy(true);
     setProblem(null);
     try {
-      await backend.auth.signUp({
+      const created = await backend.auth.signUp({
         email: address,
         password,
         displayName: name,
@@ -111,12 +122,17 @@ function SignupForm({ withNext, invited = false }: { withNext: WithNext; invited
         birthYear: year,
         consents: currentConsents(),
       });
-      // CloudShell redirects once the new account is signed in; stay busy until then.
+      if (!created.emailVerified) {
+        // No session until the emailed link is followed: say where it went.
+        setBusy(false);
+        setSentTo(address);
+      }
+      // Otherwise CloudShell redirects once the new account is signed in; stay busy until then.
     } catch (e) {
       setBusy(false);
       show(
         (e instanceof BackendError && ERRORS[e.code]) || {
-          message: "Couldn't create the account. Check your connection and try again.",
+          message: failureMessage(e, "Couldn't create the account. Check your connection and try again."),
         },
       );
     }
@@ -126,6 +142,38 @@ function SignupForm({ withNext, invited = false }: { withNext: WithNext; invited
     if (problem?.field !== field) return undefined;
     return problem.message;
   };
+
+  if (sentTo) {
+    return (
+      <CheckEmail
+        address={sentTo}
+        actions={
+          <button
+            type="button"
+            className="button bc-ghost"
+            onClick={() => {
+              setSentTo(null);
+              setEmail("");
+            }}
+          >
+            Use a different email
+          </button>
+        }
+      >
+        <p className="bc-lede">
+          We&apos;ve sent a link to <strong className="bc-break">{sentTo}</strong>. Follow it to confirm your address
+          and finish creating your account; it signs you in to BreathCloud.
+        </p>
+        <p className="bc-lede">
+          Already have an account with this address?{" "}
+          <Link href={withNext("/cloud/login/")} className="bc-inline-link">
+            Sign in
+          </Link>{" "}
+          instead.
+        </p>
+      </CheckEmail>
+    );
+  }
 
   return (
     <div className="bc-auth-stack">
