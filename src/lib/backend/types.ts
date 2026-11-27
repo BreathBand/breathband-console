@@ -233,8 +233,12 @@ export interface DataService {
   saveSquad(coachId: string, squad: Pick<Squad, "name" | "athleteIds"> & { id?: string }): Promise<Squad>;
   deleteSquad(coachId: string, squadId: string): Promise<void>;
 
-  /** The coach's "Needs a look" rules; DEFAULT_ALERTS until they change them. */
-  getAlertRules(coachId: string): Promise<AlertRules>;
+  /**
+   * The coach's "Needs a look" rules as they saved them, or null if they never
+   * have. Callers read null as "use the defaults for their kind of work"
+   * (`rulesInForce` in lib/domain/default-flags.ts).
+   */
+  getAlertRules(coachId: string): Promise<AlertRules | null>;
   saveAlertRules(coachId: string, rules: AlertRules): Promise<void>;
 
   /**

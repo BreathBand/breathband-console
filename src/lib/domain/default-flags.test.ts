@@ -45,10 +45,17 @@ describe("default flags per kind", () => {
 });
 
 describe("rules in force", () => {
-  it("nothing saved (the backend's DEFAULT_ALERTS): the kind's defaults apply", () => {
-    expect(rulesInForce(DEFAULT_ALERTS, "clinician")).toEqual(defaultFlags("clinician"));
-    expect(rulesInForce({ ...DEFAULT_ALERTS }, "educator")).toEqual(defaultFlags("educator"));
-    expect(rulesInForce(DEFAULT_ALERTS, "coach")).toEqual(DEFAULT_ALERTS);
+  it("nothing saved (getAlertRules answers null): the kind's defaults apply", () => {
+    expect(rulesInForce(null, "clinician")).toEqual(defaultFlags("clinician"));
+    expect(rulesInForce(null, "educator")).toEqual(defaultFlags("educator"));
+    expect(rulesInForce(null, "coach")).toEqual(DEFAULT_ALERTS);
+    expect(rulesInForce(null, undefined)).toEqual(DEFAULT_ALERTS);
+  });
+
+  it("saved rules equal to the coach's full set stay saved for a clinician or educator (T-0116's defect)", () => {
+    const saved: AlertRules = { ...DEFAULT_ALERTS };
+    expect(rulesInForce(saved, "clinician")).toBe(saved);
+    expect(rulesInForce(saved, "educator")).toBe(saved);
   });
 
   it("saved rules win over the kind's defaults", () => {
@@ -78,7 +85,9 @@ describe("rules in force", () => {
     // Latest well below the five before it, and four days ago.
     const sessions = [at(4, 3), at(5, 8), at(6, 8), at(7, 8), at(8, 8), at(9, 8)];
     const kinds = (rules: AlertRules) => activity(sessions, now, rules).flags.map((f) => f.kind);
-    expect(kinds(rulesInForce(DEFAULT_ALERTS, "clinician"))).toEqual(["missed"]);
-    expect(kinds(rulesInForce(DEFAULT_ALERTS, "educator"))).toEqual([]);
+    expect(kinds(rulesInForce(null, "clinician"))).toEqual(["missed"]);
+    expect(kinds(rulesInForce(null, "educator"))).toEqual([]);
+    // A clinician who saved the full set gets the score-drop flag too.
+    expect(kinds(rulesInForce({ ...DEFAULT_ALERTS }, "clinician"))).toContain("down");
   });
 });

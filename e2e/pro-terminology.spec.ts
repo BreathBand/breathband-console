@@ -2,8 +2,9 @@ import { expect, test, type Page } from "@playwright/test";
 import { signInAsCoach } from "./auth";
 
 // T-0116: the coach UI uses the professional's own word for the people they
-// work with (planning/v1/02 §5.2). "Needs a look" defaults are the same for
-// every kind until the backend can say whether rules were ever saved.
+// work with (planning/v1/02 §5.2). T-0141: "Needs a look" starts from the
+// kind's default flags (a clinician missed days only), and rules a
+// professional has saved are kept whatever their kind.
 
 const DB_KEY = "breathband-console:local-db";
 
@@ -32,7 +33,7 @@ const nav = (page: Page) => page.getByRole("navigation", { name: "Main" });
 const scoreDropRule = (page: Page) => page.getByRole("checkbox", { name: /below their recent average/ });
 const missedDaysRule = (page: Page) => page.getByRole("checkbox", { name: /No session for/ });
 
-test("a clinician sees clients across the dashboard, roster and invite; flags are unchanged", async ({ page }) => {
+test("a clinician sees clients across the dashboard, roster and invite, and starts with the missed-days flag only", async ({ page }) => {
   await signInAsCoach(page);
   await becomeClinician(page);
 
@@ -56,8 +57,26 @@ test("a clinician sees clients across the dashboard, roster and invite; flags ar
 
   await page.goto("/cloud/account/#alerts");
   await expect(missedDaysRule(page)).toBeChecked();
-  await expect(scoreDropRule(page)).toBeChecked();
+  await expect(scoreDropRule(page)).not.toBeChecked();
   await expect(page.getByText("Each client's targets are on their Trends tab.", { exact: false })).toBeVisible();
+});
+
+test("rules a professional saved are kept when they become a clinician, and Back to defaults gives the clinician's", async ({ page }) => {
+  await signInAsCoach(page);
+  await page.goto("/cloud/account/#alerts");
+  await expect(scoreDropRule(page)).toBeChecked();
+  await missedDaysRule(page).uncheck();
+  const alerts = page.getByRole("region", { name: "What needs a look" });
+  await alerts.getByRole("button", { name: "Save" }).click();
+  await expect(alerts.getByRole("status")).toHaveText(/Saved/);
+
+  await becomeClinician(page);
+  await expect(missedDaysRule(page)).not.toBeChecked();
+  await expect(scoreDropRule(page)).toBeChecked();
+
+  await alerts.getByRole("button", { name: "Back to defaults" }).click();
+  await expect(missedDaysRule(page)).toBeChecked();
+  await expect(scoreDropRule(page)).not.toBeChecked();
 });
 
 test("the demo coach still sees athletes, worded as before, and the full set of flags", async ({ page }) => {
@@ -114,4 +133,8 @@ test("a new clinician who signs up lands on a dashboard waiting for their first 
   await expect(page.getByRole("heading", { name: "No clients yet" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Add a client" })).toBeVisible();
   await expect(nav(page).getByRole("link", { name: "Clients" })).toBeVisible();
+
+  await page.goto("/cloud/account/#alerts");
+  await expect(missedDaysRule(page)).toBeChecked();
+  await expect(scoreDropRule(page)).not.toBeChecked();
 });

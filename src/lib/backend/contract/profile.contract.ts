@@ -137,6 +137,28 @@ export function describeProfileContract(adapter: string, setup: () => DataContra
         expect(await cara.backend.data.getProfile(cara.uid)).toMatchObject({ proKind: "clinician" });
       });
 
+      it("keeps the whole practice through a round trip: a coach's sports, other sport and level, then a clinician's country", async () => {
+        const cara = await h.person("coach");
+        const coach: ProProfile = withProDefaults({
+          ...defaultProProfile("coach"),
+          organisation: "Riverside Rowing Club",
+          sports: ["running", "other"],
+          sportOther: "Rowing",
+          level: "collegiate",
+          useCases: ["recovery", "team-warm-ups"],
+        });
+        expect((await cara.backend.data.updateProfile(cara.uid, { proKind: "coach", proProfile: coach })).proProfile).toEqual(coach);
+        expect((await cara.backend.data.getProfile(cara.uid))?.proProfile).toEqual(coach);
+
+        // A change of kind leaves nothing of the coach's practice behind.
+        const practice = withProDefaults(clinician);
+        await cara.backend.data.updateProfile(cara.uid, { proKind: "clinician", proProfile: practice });
+        const back = (await cara.backend.data.getProfile(cara.uid))?.proProfile;
+        expect(back).toEqual(practice);
+        expect(back).toMatchObject({ sports: [], level: null, country: "Ireland" });
+        expect(back).not.toHaveProperty("sportOther");
+      });
+
       it("records the professional terms after sign-up's consents, once, with the kind's defaults", async () => {
         const cara = await h.person("coach");
         const practice = withProDefaults(clinician);

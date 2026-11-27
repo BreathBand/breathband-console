@@ -7,6 +7,7 @@ import { ErrorState, Skeleton } from "@/components/States";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { activity } from "@/lib/domain/activity";
 import { assignmentProgress, isOpen, type AssignmentProgress } from "@/lib/domain/coaching";
+import { rulesInForce } from "@/lib/domain/default-flags";
 import { sessionsCsv } from "@/lib/domain/csv";
 import { formatLongDay, initials } from "@/lib/domain/format";
 import { targetsFor } from "@/lib/domain/targets";
@@ -22,7 +23,7 @@ import { NotesTab } from "./NotesTab";
 import { PlanTab } from "./PlanTab";
 import { SessionsTab } from "./SessionsTab";
 import { reportHref, TrendsTab } from "./TrendsTab";
-import { termsOf } from "./useTerms";
+import { proKindOf, termsOf } from "./useTerms";
 
 /** Everything one athlete's workspace shows, loaded once and shared by the tabs. */
 export interface Workspace extends ConsoleContext {
@@ -58,8 +59,9 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
   const [now] = useState(() => new Date());
   const viewerId = auth.status === "signed-in" ? auth.user.uid : "";
   const self = viewerId === athleteId;
+  const viewerKind = proKindOf(auth);
 
-  const data = useLoad(`workspace:${athleteId}`, async () => {
+  const data = useLoad(`workspace:${athleteId}:${viewerKind ?? ""}`, async () => {
     const firstCoach = async () => {
       const [coach] = await backend.data.listCoaches(athleteId);
       return coach
@@ -72,7 +74,7 @@ export function AthleteWorkspace({ athleteId, tab, assign }: { athleteId: string
       backend.data.listAssignments(athleteId),
       backend.data.listComments(athleteId),
       self ? null : backend.data.getCoachLink(viewerId, athleteId),
-      self ? DEFAULT_ALERTS : backend.data.getAlertRules(viewerId),
+      self ? DEFAULT_ALERTS : backend.data.getAlertRules(viewerId).then((saved) => rulesInForce(saved, viewerKind)),
       self ? firstCoach() : null,
     ]);
     return { sessions, profile, assignments, comments, link, rules, coach };

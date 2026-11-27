@@ -80,8 +80,8 @@ export function describeCoachToolsContract(adapter: string, setup: () => DataCon
     });
 
     describe("alert rules", () => {
-      it("answers the defaults until the coach saves their own, per coach", async () => {
-        expect(await cara.backend.data.getAlertRules(cara.uid)).toEqual(DEFAULT_ALERTS);
+      it("answers null until the coach saves their own, per coach", async () => {
+        expect(await cara.backend.data.getAlertRules(cara.uid)).toBeNull();
         const rules: AlertRules = { ...DEFAULT_ALERTS, missedDays: 5, scoreDrop: 1.5, trendingDown: false };
         await cara.backend.data.saveAlertRules(cara.uid, rules);
         expect(await cara.backend.data.getAlertRules(cara.uid)).toEqual(rules);
@@ -91,7 +91,20 @@ export function describeCoachToolsContract(adapter: string, setup: () => DataCon
         expect(await cara.backend.data.getAlertRules(cara.uid)).toEqual(off);
 
         const other = await h.person("coach");
-        expect(await other.backend.data.getAlertRules(other.uid)).toEqual(DEFAULT_ALERTS);
+        expect(await other.backend.data.getAlertRules(other.uid)).toBeNull();
+      });
+
+      it("keeps saved rules that equal the coach's full set, for a professional of any kind (never read back as unsaved)", async () => {
+        await cara.backend.data.updateProfile(cara.uid, { proKind: "clinician", proProfile: physio });
+        await cara.backend.data.saveAlertRules(cara.uid, DEFAULT_ALERTS);
+        expect(await cara.backend.data.getAlertRules(cara.uid)).toEqual(DEFAULT_ALERTS);
+      });
+
+      it("keeps a professional's saved rules when their profile changes", async () => {
+        const rules: AlertRules = { ...DEFAULT_ALERTS, scoreDrop: null, missedDays: 4 };
+        await cara.backend.data.saveAlertRules(cara.uid, rules);
+        await cara.backend.data.updateProfile(cara.uid, { proKind: "clinician", proProfile: physio });
+        expect(await cara.backend.data.getAlertRules(cara.uid)).toEqual(rules);
       });
 
       it.each<[string, Partial<AlertRules>]>([

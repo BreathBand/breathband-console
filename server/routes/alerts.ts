@@ -1,8 +1,9 @@
-// A coach's "Needs a look" rules: one row per coach, DEFAULT_ALERTS until they save their own.
+// A coach's "Needs a look" rules: one row per coach, once they save their own.
+// Until then GET answers null, and the web applies their kind's defaults.
 
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { DEFAULT_ALERTS, type AlertRules } from "@/lib/domain/types";
+import type { AlertRules } from "@/lib/domain/types";
 import { canUseCoachData } from "../authz";
 import { alertRules } from "../db/schema";
 import { fail, jsonObject, type DataApp, type DataDeps } from "./data";
@@ -24,7 +25,7 @@ export function alertRoutes(routes: DataApp, { db }: DataDeps) {
     const coachId = c.req.param("coachId");
     if (!canUseCoachData(c.get("uid"), coachId)) fail("permission-denied");
     const [row] = await db.select().from(alertRules).where(eq(alertRules.coachId, coachId));
-    if (!row) return c.json(DEFAULT_ALERTS);
+    if (!row) return c.json(null);
     const { missedDays, scoreDrop, belowTarget, trendingDown, rateOutOfRange, practiceBehind } = row;
     const rules: AlertRules = { missedDays, scoreDrop, belowTarget, trendingDown, rateOutOfRange, practiceBehind };
     return c.json(rules);

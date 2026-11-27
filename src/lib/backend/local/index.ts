@@ -10,7 +10,6 @@ import { proProblem } from "@/lib/domain/pro-profile";
 import { proTermsProblem } from "@/lib/domain/pro-terms";
 import { preferencesProblem } from "@/lib/domain/preferences";
 import {
-  DEFAULT_ALERTS,
   type Assignment,
   type CoachInvite,
   type CoachLink,
@@ -667,7 +666,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
     async getAlertRules(coachId) {
       await delay();
       assertIsSelf(coachId);
-      return store.read().alertRules[coachId] ?? DEFAULT_ALERTS;
+      return store.read().alertRules[coachId] ?? null;
     },
 
     async saveAlertRules(coachId, rules) {

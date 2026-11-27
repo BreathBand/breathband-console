@@ -197,7 +197,7 @@ export const squadMembers = sqliteTable(
   (t) => [primaryKey({ columns: [t.squadId, t.athleteId] }), index("squad_members_athlete_idx").on(t.athleteId)],
 );
 
-/** `AlertRules`, one row per coach; no row means `DEFAULT_ALERTS`. Null or false switches a rule off. */
+/** `AlertRules`, one row per coach; no row means never saved (the kind's defaults apply). Null or false switches a rule off. */
 export const alertRules = sqliteTable("alert_rules", {
   coachId: text("coach_id")
     .primaryKey()
