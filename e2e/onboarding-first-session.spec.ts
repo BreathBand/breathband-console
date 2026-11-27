@@ -85,7 +85,8 @@ test("Train on the simulated band: onboarding → fit → calibrate → first se
   const calibrating = Date.now();
   await page.getByRole("heading", { name: "Calibrated" }).waitFor({ timeout: 60_000 });
   const seconds = (Date.now() - calibrating) / 1000;
-  expect(seconds).toBeGreaterThanOrEqual(20);
+  // The stopwatch starts when the heading is seen, a poll after calibration began, so allow half a second.
+  expect(seconds).toBeGreaterThanOrEqual(19.5);
   expect(seconds).toBeLessThanOrEqual(22);
 
   // The first session, then its score.
