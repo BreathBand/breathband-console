@@ -15,6 +15,7 @@ import type {
   Waveform,
 } from "@/lib/domain/types";
 import { defaultPreferences } from "@/lib/domain/preferences";
+import type { ProductEvent } from "@/lib/domain/events";
 import type { CalibrationRecord } from "../types";
 import {
   DEMO_ATHLETE,
@@ -78,6 +79,8 @@ export interface LocalDb {
   accessLog?: { viewerId: string; athleteId: string; sessionId: string | null; at: string }[];
   /** By uid, oldest first (F8). Missing in older databases. */
   calibrations?: Record<string, CalibrationRecord[]>;
+  /** Oldest first, the newest 1000 (D15). Missing in older databases. */
+  events?: (ProductEvent & { uid: string })[];
   currentUid: string | null;
 }
 

@@ -1,3 +1,4 @@
+import type { ProductEvent } from "@/lib/domain/events";
 import type {
   AlertRules,
   Assignment,
@@ -321,6 +322,9 @@ export interface DataService {
   saveCalibration(uid: string, calibration: NewCalibration): Promise<CalibrationRecord>;
   /** Own only: the newest calibration, or null before the first. */
   getLatestCalibration(uid: string): Promise<CalibrationRecord | null>;
+
+  /** The signed-in person's product events (D15, R1); `eventsProblem` says what's refused. Never breathing data. */
+  trackEvents(events: ProductEvent[]): Promise<void>;
 }
 
 /** A calibration as the record screen takes it: the scale, and which band. */

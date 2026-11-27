@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState, useSyncExternalStore } from "react";
+import { Suspense, useEffect, useState, useSyncExternalStore } from "react";
 import { Icon, Mark, type IconName } from "@/components/Icon";
 import { LiveTrace } from "@/components/LiveTrace";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
+import { track } from "@/lib/track";
 import { useDevice } from "@/lib/device/DeviceProvider";
 import { currentSupport, supportAdvice, UNKNOWN_SUPPORT, type BandSupport } from "@/lib/device/support";
 import { firstSession, firstSessionHref, suggestedFirstSession } from "@/lib/domain/first-session";
@@ -183,7 +184,19 @@ function Welcome({ profile, invited }: { profile: UserProfile; invited: Invited 
   const setPro = (next: ProProfile) => setProAnswers((a) => ({ ...a, [next.kind]: next }));
   const nouns = peopleNouns(pro ? { proKind: pro.kind, proProfile: pro } : profile);
 
-  const go = (delta: number) => setStep(steps[Math.max(0, Math.min(steps.length - 1, index + delta))]);
+  const funnel = coach ? "pro" : prefs.goal;
+  const go = (delta: number) => {
+    if (delta > 0) track(backend, "onboarding_step_completed", { track: funnel, step });
+    setStep(steps[Math.max(0, Math.min(steps.length - 1, index + delta))]);
+  };
+  // The onboarding funnel (D15): each step as it's shown, and once if the browser can't record.
+  useEffect(() => {
+    track(backend, "onboarding_step_viewed", { track: coach ? "pro" : "athlete", step });
+  }, [backend, coach, step]);
+  useEffect(() => {
+    // UNKNOWN_SUPPORT is hydration's stand-in, not this browser.
+    if (step === "band" && support !== UNKNOWN_SUPPORT && support.bluetooth === "unsupported") track(backend, "browser_unsupported", { browser: support.browser });
+  }, [backend, step, support]);
   const pickGoal = (goal: BreathGoal) => {
     const g = goalOf(goal);
     setPrefs((p) => ({ ...p, goal, session: { ...g.session }, sessionsPerWeek: g.sessionsPerWeek }));

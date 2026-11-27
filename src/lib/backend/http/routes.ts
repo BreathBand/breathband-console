@@ -101,5 +101,7 @@ export const HTTP_ROUTES: HttpRoutes = {
 
     saveCalibration: { method: "POST", path: "/v1/users/{uid}/calibrations" },
     getLatestCalibration: { method: "GET", path: "/v1/users/{uid}/calibrations/latest" },
+
+    trackEvents: { method: "POST", path: "/v1/events" },
   },
 };

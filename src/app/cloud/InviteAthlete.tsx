@@ -5,6 +5,7 @@ import { Icon } from "@/components/Icon";
 import { ErrorState, Skeleton } from "@/components/States";
 import { BackendError } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
+import { track } from "@/lib/track";
 import { formatDay } from "@/lib/domain/format";
 import { invitePracticeChoices } from "@/lib/domain/invite-context";
 import { templateLine, type ProTemplateId } from "@/lib/domain/pro-templates";
@@ -212,6 +213,7 @@ export function InviteForm({
         contact,
         ...(practice ? { practice } : {}),
       });
+      track(backend, "invite_sent", { by: contact.includes("@") ? "email" : "phone", practice: Boolean(practice) });
       setName("");
       setContact("");
       setPractice("");

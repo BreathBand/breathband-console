@@ -34,6 +34,7 @@ import { browserStore, type DbStore, type LocalDb } from "./db";
 import { joinOffset, LIVE_HZ, liveProfile, liveSample, presenceAt, recordGroupSession } from "./live";
 import { generateWaveform } from "./seed";
 import { calibrationProblem, checkSessionContract } from "./validate";
+import { eventsProblem } from "@/lib/domain/events";
 
 // Local adapter: behaves like the Firebase setup will — including the access
 // rules in firebase/firestore.rules — so screens hit the same permission and
@@ -44,6 +45,8 @@ const INVITE_TTL_MS = 7 * 86_400_000;
 const COACH_INVITE_TTL_MS = 14 * 86_400_000;
 /** As server/jobs/deletion.ts: an account is deleted 24 hours after the request. */
 const DELETION_DELAY_MS = 86_400_000;
+/** The browser keeps the newest product events only: they're for looking at in development. */
+const MAX_LOCAL_EVENTS = 1000;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface LocalBackendOptions {
@@ -108,6 +111,7 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
     delete db.moodCheckins[uid];
     delete db.accountDeletions?.[uid];
     delete db.calibrations?.[uid];
+    db.events = (db.events ?? []).filter((e) => e.uid !== uid);
     db.coachLinks = db.coachLinks.filter((l) => l.coachId !== uid && l.athleteId !== uid);
     db.invites = db.invites.filter((i) => i.athleteId !== uid);
     db.coachInvites = db.coachInvites.filter((i) => i.coachId !== uid);
@@ -1101,6 +1105,16 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       await delay();
       assertIsSelf(uid);
       return store.read().calibrations?.[uid]?.at(-1) ?? null;
+    },
+
+    async trackEvents(events) {
+      await delay();
+      const uid = requireUser().uid;
+      const problem = eventsProblem(events);
+      if (problem) throw new BackendError("invalid-input", problem);
+      mutate((db) => {
+        db.events = [...(db.events ?? []), ...events.map((e) => ({ ...e, uid }))].slice(-MAX_LOCAL_EVENTS);
+      });
     },
 
     async listAccessLog() {

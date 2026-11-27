@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { shareCardOf } from "./shareCard";
 
-const base = { startedAt: "2026-11-24T08:00:00.000Z", durationSec: 300, pacerHalfCycleSec: 5 };
+const base = { startedAt: "2026-11-24T08:00:00.000Z", durationSec: 300, pacerHalfCycleSec: 5 as const };
 
 describe("shareCardOf", () => {
   it("shows a paced session's Total Breath Score and its word, nothing more", () => {

@@ -7,6 +7,7 @@ import { Icon, type IconName } from "@/components/Icon";
 import { ErrorState, Skeleton } from "@/components/States";
 import { BackendError, type CoachInviteLookup } from "@/lib/backend";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
+import { track } from "@/lib/track";
 import { formatLongDay, initials } from "@/lib/domain/format";
 import { inviteHeadline, invitePractice, inviteScope, proTitle } from "@/lib/domain/invite-context";
 import { templateLine } from "@/lib/domain/pro-templates";
@@ -381,6 +382,7 @@ function Consent({
           invite.code,
           { accept: true, scope },
         );
+        track(backend, "invite_accepted", { scope });
         onAnswered({ kind: "accepted", link: result, scope });
       } else {
         await backend.data.respondToCoachInvite(athleteId, invite.code, {

@@ -17,6 +17,7 @@ import type { MoodScore } from "@/lib/domain/types";
 import { parseSetup } from "@/lib/prefs";
 import { buildSession, MIN_RECORDING_S, type BuiltSession } from "@/lib/recording";
 import { useLoad } from "@/lib/useLoad";
+import { track } from "@/lib/track";
 import { useWakeLock } from "@/lib/useWakeLock";
 import { streakDays } from "../../AthleteHome";
 import { minutesLeftToday, professionalFrom } from "../../home/tailor";
@@ -166,10 +167,12 @@ function Instrument() {
           const calibration = { a100: result.a100, midline: result.midline, source: device.kind, bandName: device.status.deviceName ?? null };
           backend.data.saveCalibration(auth.user.uid, calibration).catch(() => undefined);
         }
+        track(backend, "calibration_result", { ok: true, source: device.kind, breaths });
         setPhase("ready");
         return;
       }
       if (failed) {
+        track(backend, "calibration_result", { ok: false, source: device.kind, breaths });
         setCalError("We couldn't see three full breaths in the 20 seconds. Check the strap is snug, then try again, breathing slowly all the way in and out.");
         setPhase("strap");
         setGoodFor(0);
@@ -216,13 +219,14 @@ function Instrument() {
       markers.current = [];
       startedAt.current = new Date();
       device.follow(half ? { inhaleS: half, exhaleS: half, startN: startN.current } : null);
+      if (firstSession) track(backend, "first_session_started", { mode: half ? "paced" : "open", source: device.kind });
       setPhase("live");
     }, 3000);
     return () => {
       ticks.forEach(clearTimeout);
       clearTimeout(go);
     };
-  }, [phase, device, half]);
+  }, [phase, device, half, backend, firstSession]);
 
   const finish = useCallback(() => {
     device.follow(null);
@@ -327,6 +331,7 @@ function Instrument() {
   const save = async (note: string, moodAfter: MoodScore | null) => {
     if (!built || !uid) return;
     const saved = await backend.data.saveSession(uid, { ...built.session, note }, built.waveform);
+    track(backend, "session_saved", { mode: built.session.mode, minutes: Math.round(built.session.durationSec / 60), first: Boolean(firstSession) });
     if (askMood && (moodBefore !== null || moodAfter !== null)) {
       // The session is already safe: a check-in that can't be stored (http, until I-08) never holds it up.
       await backend.data.saveMoodCheckins(uid, saved.id, { before: moodBefore, after: moodAfter }).catch(() => undefined);

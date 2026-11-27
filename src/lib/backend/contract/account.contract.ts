@@ -72,6 +72,15 @@ export function describeAccountContract(adapter: string, setup: () => DataContra
       await refusal(cara.backend.data.saveCalibration(ana.uid, { a100: 100, midline: 0, source: "bluetooth", bandName: null }), "permission-denied");
     });
 
+    it("takes product events from the list, with flat properties only", async () => {
+      const at = new Date().toISOString();
+      await ana.backend.data.trackEvents([{ name: "onboarding_step_viewed", props: { track: "calm", step: "goal" }, at }]);
+      await refusal(ana.backend.data.trackEvents([{ name: "breath_samples" as never, at }]), "invalid-input");
+      await refusal(ana.backend.data.trackEvents([{ name: "session_saved", props: { samples: [1, 2, 3] as never }, at }]), "invalid-input");
+      await refusal(ana.backend.data.trackEvents([]), "invalid-input");
+      await refusal(h.signedOut().data.trackEvents([{ name: "session_saved", at }]), "not-signed-in");
+    });
+
     it("logs a professional opening a session, never the person's own, newest first", async () => {
       const cara = await h.person("coach");
       await h.link(cara.uid, ana.uid, "scores");

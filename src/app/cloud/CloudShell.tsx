@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useEffect, ViewTransition, type ReactNode } from "react";
+import { Suspense, useEffect, useRef, ViewTransition, type ReactNode } from "react";
 import { Icon, Mark, type IconName } from "@/components/Icon";
 import type { Backend } from "@/lib/backend";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { resetBrowserDb } from "@/lib/backend/local/db";
 import { initials } from "@/lib/domain/format";
+import { useDevice } from "@/lib/device/DeviceProvider";
+import { track } from "@/lib/track";
 import { useLoad } from "@/lib/useLoad";
 import type { PeopleNouns } from "@/lib/domain/terminology";
 import { PendingDeletion } from "./account/YourData";
@@ -168,7 +170,27 @@ function DeletionGate({ uid, children }: { uid: string; children: ReactNode }) {
   const backend = useBackend();
   const deletion = useLoad(`deletion:${uid}`, () => backend.data.getAccountDeletion());
   if (deletion.status === "ready" && deletion.data) return <PendingDeletion deletion={deletion.data} onKept={() => window.location.reload()} />;
-  return <>{children}</>;
+  return (
+    <>
+      <ConnectEvents />
+      {children}
+    </>
+  );
+}
+
+/** One band_connect_result (D15) for each attempt to connect, wherever it started: connected, or why not. */
+function ConnectEvents() {
+  const backend = useBackend();
+  const { kind, status } = useDevice();
+  const attempting = useRef(false);
+  useEffect(() => {
+    if (status.state === "requesting" || status.state === "connecting") attempting.current = true;
+    else if (attempting.current && (status.state === "connected" || status.state === "error" || status.state === "disconnected")) {
+      attempting.current = false;
+      track(backend, "band_connect_result", { ok: status.state === "connected", source: kind });
+    }
+  }, [backend, kind, status.state]);
+  return null;
 }
 
 function SignedInShell({ pathname, children }: { pathname: string; children: ReactNode }) {

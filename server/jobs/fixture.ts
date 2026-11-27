@@ -127,6 +127,7 @@ export async function seedEverything(db: Db, storage: StorageService, me: string
     db.insert(schema.milestones).values({ id: `${me}-ms`, userId: me, kind: "first-session", achievedAt: now }),
     db.insert(schema.enrollments).values({ id: `${me}-en`, userId: me, programId: program, startedAt: now }),
     db.insert(schema.emailLog).values({ userId: me, kind: "reminder", day: "2026-11-24" }),
+    db.insert(schema.productEvents).values({ id: `${me}-ev`, userId: me, name: "session_saved", props: { mode: "open" }, at: now }),
   ]);
   return { mySessions: [s1, s2], otherSession, secrets };
 }

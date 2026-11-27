@@ -173,6 +173,9 @@ export function createHttpData(api: ApiClient): DataService {
     listAccessLog: () => call(R.listAccessLog, {}),
 
     saveCalibration: (uid, calibration) => call(R.saveCalibration, { uid }, calibration),
+    trackEvents: async (events) => {
+      await call(R.trackEvents, {}, { events });
+    },
     getLatestCalibration: async (uid) => (await call<{ calibration: CalibrationRecord | null }>(R.getLatestCalibration, { uid })).calibration,
   };
 }

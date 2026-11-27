@@ -137,6 +137,7 @@ The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}
 | `listAccessLog` | `GET` | `/v1/account/access-log` |
 | `saveCalibration` | `POST` | `/v1/users/{uid}/calibrations` |
 | `getLatestCalibration` | `GET` | `/v1/users/{uid}/calibrations/latest` |
+| `trackEvents` | `POST` | `/v1/events` |
 
 Data methods that are not a single request:
 

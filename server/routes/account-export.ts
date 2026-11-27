@@ -25,6 +25,7 @@ import {
   consents,
   devices,
   emailLog,
+  productEvents,
   enrollments,
   groupParticipants,
   groupSessions,
@@ -112,6 +113,7 @@ export async function exportAccount(db: Db, storage: StorageService, uid: string
     milestones: rows(milestones, eq(milestones.userId, uid)),
     enrollments: rows(enrollments, eq(enrollments.userId, uid)),
     email_log: rows(emailLog, eq(emailLog.userId, uid)),
+    product_events: rows(productEvents, eq(productEvents.userId, uid)),
   };
 
   const tables: AccountExport["tables"] = {};
