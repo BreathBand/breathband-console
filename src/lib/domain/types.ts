@@ -127,12 +127,24 @@ export interface UserPreferences {
   goalDetails?: GoalDetails;
   /** Minutes a day that fill the daily ring. Absent on older profiles: the goal's default applies. */
   dailyMinutes?: number;
-  /** When to remind. Stored only for now: nothing sends reminders yet. */
+  /** When to remind: the API emails at most one reminder a day at this time (server/jobs/email.ts). */
   reminders?: ReminderPreferences;
   /** What the person chose at onboarding's band step. Absent until chosen (skipped, or older profiles). */
   onboarding?: OnboardingChoices;
   /** The habit mechanics: which are on, and the milestones already shown. Absent on older profiles: the goal's defaults apply. */
   gamification?: GamificationPreferences;
+  /** Which emails the person gets. Absent on older profiles: every kind is on. */
+  emails?: EmailPreferences;
+}
+
+/** One switch per kind of optional email; account emails (confirm, reset, deletion) always go. */
+export interface EmailPreferences {
+  /** Practice set, an invite answered. */
+  practice: boolean;
+  /** The daily reminder (its time and days are `reminders`). */
+  reminders: boolean;
+  /** Professionals: the Monday summary of the people they work with. */
+  digest: boolean;
 }
 
 /** Milestones (planning/v1/01 §3.8), each shown once. */

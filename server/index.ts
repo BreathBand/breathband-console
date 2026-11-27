@@ -13,6 +13,7 @@ import type { Mode } from "./env";
 import { authRoutes } from "./routes/auth";
 import { DATA_BASE_PATH, dataRoutes } from "./routes/data";
 import { serveExport } from "./static";
+import { silentNotifier, type Notifier } from "./notify";
 import type { StorageService } from "./storage";
 
 export type AppDeps = {
@@ -28,6 +29,8 @@ export type AppDeps = {
   auth?: Auth;
   /** Where waveforms live (server/storage). With `auth`, mounts the data routes at /api/v1. */
   storage?: StorageService;
+  /** The product's emails (server/notify.ts). Without it nothing is sent, as in most tests. */
+  notify?: Notifier;
 };
 
 /** nginx.conf's `add_header ... always` set, now on every response including /_next/static/. */
@@ -67,7 +70,7 @@ export function createApp(deps: AppDeps) {
 
   if (deps.auth) app.route(AUTH_BASE_PATH, authRoutes(deps.auth));
   if (deps.auth && deps.storage) {
-    app.route(DATA_BASE_PATH, dataRoutes({ db: deps.db, auth: deps.auth, storage: deps.storage }));
+    app.route(DATA_BASE_PATH, dataRoutes({ db: deps.db, auth: deps.auth, storage: deps.storage, notify: deps.notify ?? silentNotifier }));
   }
 
   if (deps.staticDir) {

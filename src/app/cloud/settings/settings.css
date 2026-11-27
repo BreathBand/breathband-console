@@ -231,3 +231,17 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.email-switches {
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--s-5);
+}
+
+.email-switches legend {
+  padding: 0;
+}
+
+.email-switch {
+  min-height: 44px;
+}

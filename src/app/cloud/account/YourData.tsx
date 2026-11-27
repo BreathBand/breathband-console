@@ -7,6 +7,8 @@ import { ErrorState } from "@/components/States";
 import { BackendError } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import type { AccountDeletion } from "@/lib/backend/types";
+import { emailOn, type EmailKind } from "@/lib/domain/preferences";
+import type { EmailPreferences, UserPreferences } from "@/lib/domain/types";
 import { downloadText } from "@/lib/download";
 import { formatLongDay, formatTime } from "@/lib/domain/format";
 import { useLoad } from "@/lib/useLoad";
@@ -14,6 +16,30 @@ import { leaveAfterDeletion, signOutToLanding } from "../CloudShell";
 
 // Settings → Your data: download everything, see who opened your sessions
 // (C10), and delete the account, with 24 hours to change your mind (C6, C7).
+
+/** The optional emails' switches (L3); account emails always go. Professionals also get the Monday summary. */
+export function EmailSwitches({ prefs, professional, onChange }: { prefs: UserPreferences; professional: boolean; onChange: (emails: EmailPreferences) => void }) {
+  const emails: EmailPreferences = { practice: emailOn(prefs, "practice"), reminders: emailOn(prefs, "reminders"), digest: emailOn(prefs, "digest") };
+  const options: { kind: EmailKind; label: string }[] = [
+    { kind: "practice", label: professional ? "When someone accepts your invite" : "When someone sets you practice" },
+    { kind: "reminders", label: "A daily reminder, at the time in your plan" },
+    ...(professional ? [{ kind: "digest" as const, label: "A Monday summary of the people you work with" }] : []),
+  ];
+  return (
+    <fieldset className="data-block email-switches">
+      <legend>
+        <h3>Emails</h3>
+      </legend>
+      {options.map(({ kind, label }) => (
+        <label key={kind} className="rule-toggle email-switch">
+          <input type="checkbox" checked={emails[kind]} onChange={(e) => onChange({ ...emails, [kind]: e.target.checked })} />
+          {label}
+        </label>
+      ))}
+      <small className="settings-hint">Emails about your account, like confirming it or deleting it, always come.</small>
+    </fieldset>
+  );
+}
 
 export function YourData({ uid }: { uid: string }) {
   return (

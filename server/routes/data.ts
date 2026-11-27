@@ -14,6 +14,7 @@ import type { LinkScope } from "../authz";
 import type { Db } from "../db/client";
 import { accountDeletions, coachLinks } from "../db/schema";
 import { pendingDeletions } from "../jobs/deletion";
+import type { Notifier } from "../notify";
 import type { StorageService } from "../storage";
 import { accountRoutes } from "./account";
 import { alertRoutes } from "./alerts";
@@ -26,6 +27,7 @@ import { moodRoutes } from "./mood";
 import { profileRoutes } from "./profile";
 import { sessionRoutes } from "./sessions";
 import { squadRoutes } from "./squads";
+import { unsubscribeRoutes } from "./unsubscribe";
 import { waitlistRoutes } from "./waitlist";
 import { waveformRoutes } from "./waveforms";
 
@@ -33,7 +35,7 @@ export const DATA_BASE_PATH = "/api/v1";
 
 const MAX_BODY_BYTES = 256 * 1024;
 
-export type DataDeps = { db: Db; auth: Auth; storage: StorageService };
+export type DataDeps = { db: Db; auth: Auth; storage: StorageService; notify: Notifier };
 
 /** Hono's environment for the data routes: the signed-in person's id. */
 export type DataEnv = { Variables: { uid: string } };
@@ -50,6 +52,7 @@ export function dataRoutes(deps: DataDeps) {
   // Public: registered before the session check below, so they answer without one.
   waitlistRoutes(routes, deps);
   publicCoachInviteRoutes(routes, deps);
+  unsubscribeRoutes(routes, deps);
 
   routes.use(async (c, next) => {
     const session = await deps.auth.api.getSession({ headers: c.req.raw.headers });

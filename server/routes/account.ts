@@ -30,7 +30,7 @@ async function deletionStatus(db: Db, uid: string): Promise<DeletionStatus> {
   return row ? { requestedAt: row.requestedAt.toISOString(), deleteAfter: deleteAfter(row.requestedAt).toISOString() } : null;
 }
 
-export function accountRoutes(routes: DataApp, { db, auth, storage }: DataDeps) {
+export function accountRoutes(routes: DataApp, { db, auth, storage, notify }: DataDeps) {
   routes.get("/account/delete", async (c) => c.json({ deletion: await deletionStatus(db, c.get("uid")) }));
 
   routes.post("/account/delete", async (c) => {
@@ -46,8 +46,9 @@ export function accountRoutes(routes: DataApp, { db, auth, storage }: DataDeps) 
       fail("invalid-credentials", "That password isn't right.");
     }
 
-    // Asking twice keeps the first request's clock.
-    await db.insert(accountDeletions).values({ userId: uid, requestedAt: new Date() }).onConflictDoNothing();
+    // Asking twice keeps the first request's clock, and emails once.
+    const asked = await db.insert(accountDeletions).values({ userId: uid, requestedAt: new Date() }).onConflictDoNothing().returning();
+    if (asked[0]) await notify.deletionRequested(uid, deleteAfter(asked[0].requestedAt));
 
     // Clear this browser's cookies the way sign-out does, then end every other session too.
     const { headers } = await auth.api.signOut({ headers: c.req.raw.headers, returnHeaders: true });

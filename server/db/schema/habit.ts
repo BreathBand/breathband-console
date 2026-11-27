@@ -1,7 +1,7 @@
 // Created now, filled by later cards (programs, milestones, mood check-in).
 // Shapes with no domain type yet are loose JSON until those cards define them.
 
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 import type { BreathGoal } from "@/lib/domain/types";
 import { user } from "./auth";
 import { id, timestamps } from "./columns";
@@ -72,4 +72,19 @@ export const enrollments = sqliteTable(
     ...timestamps,
   },
   (t) => [index("enrollments_user_idx").on(t.userId)],
+);
+
+/** One row per optional email sent: a reminder or digest goes at most once per person and day. */
+export const emailLog = sqliteTable(
+  "email_log",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: text("kind", { enum: ["reminder", "digest"] }).notNull(),
+    /** The person's own date, YYYY-MM-DD, in their time zone. */
+    day: text("day").notNull(),
+    ...timestamps,
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind, t.day] })],
 );

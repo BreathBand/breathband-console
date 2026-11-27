@@ -7,6 +7,7 @@
 import { and, eq, exists, inArray, lte, notExists, or } from "drizzle-orm";
 import type { Db } from "../db/client";
 import { accountDeletions, breathSessions, user, verification, waitlist } from "../db/schema";
+import type { Notifier } from "../notify";
 import type { StorageService } from "../storage";
 
 /** How long a person has to change their mind. */
@@ -15,7 +16,8 @@ export const DELETION_DELAY_MS = 24 * 60 * 60 * 1000;
 /** How often main.ts looks for accounts whose 24 h are up. */
 const DELETION_JOB_INTERVAL_MS = 10 * 60 * 1000;
 
-export type DeletionDeps = { db: Db; storage: StorageService };
+/** `notify`: says goodbye by email once the account is gone (optional, as in tests). */
+export type DeletionDeps = { db: Db; storage: StorageService; notify?: Notifier };
 
 /** When the account may be deleted: 24 h after it was asked for. */
 export function deleteAfter(requestedAt: Date): Date {
@@ -69,7 +71,7 @@ const CLAIMED = new Date(0);
  * is idempotent, so a run that fails there leaves the claimed request for the next run.
  * Then one batch, which deletes nothing unless the claimed request is still there.
  */
-export async function deleteAccount({ db, storage }: DeletionDeps, uid: string, now: Date = new Date()): Promise<boolean> {
+export async function deleteAccount({ db, storage, notify }: DeletionDeps, uid: string, now: Date = new Date()): Promise<boolean> {
   const claimed = await db
     .update(accountDeletions)
     .set({ requestedAt: CLAIMED })
@@ -77,7 +79,7 @@ export async function deleteAccount({ db, storage }: DeletionDeps, uid: string, 
     .returning({ userId: accountDeletions.userId });
   if (claimed.length !== 1) return false;
 
-  const [person] = await db.select({ email: user.email }).from(user).where(eq(user.id, uid));
+  const [person] = await db.select({ email: user.email, name: user.name }).from(user).where(eq(user.id, uid));
   const blobs = await db.select({ path: breathSessions.waveformPath }).from(breathSessions).where(eq(breathSessions.athleteId, uid));
   for (const { path } of blobs) await storage.delete(path);
 
@@ -97,6 +99,7 @@ export async function deleteAccount({ db, storage }: DeletionDeps, uid: string, 
     db.delete(verification).where(and(theirs, userGone)),
     ...(email ? [db.delete(waitlist).where(and(eq(waitlist.email, email), userGone))] : []),
   ]);
+  if (person) await notify?.accountDeleted({ email: person.email, name: person.name });
   return true;
 }
 

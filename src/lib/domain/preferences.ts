@@ -1,5 +1,5 @@
 import { OPEN_CONSTANTS, type SkillLevel } from "@/lib/analysis/config";
-import type { BreathGoal, SessionPreferences, UserPreferences } from "./types";
+import type { BreathGoal, EmailPreferences, SessionPreferences, UserPreferences } from "./types";
 
 /** The three reasons to breathe with Breathband, as the site presents them. Each sets defaults, never scoring. */
 export const GOALS: { id: BreathGoal; label: string; who: string; detail: string; session: SessionPreferences; sessionsPerWeek: number }[] = [
@@ -65,5 +65,17 @@ export function preferencesProblem(p: UserPreferences): string | null {
   if (typeof s.sound !== "boolean") return "session.sound: true or false";
   if (!Number.isInteger(p.sessionsPerWeek) || p.sessionsPerWeek < 1 || p.sessionsPerWeek > 14) return "sessionsPerWeek: 1 to 14";
   if (p.onboardedAt !== null && Number.isNaN(Date.parse(p.onboardedAt))) return "onboardedAt: an ISO date or null";
+  if (p.emails !== undefined) {
+    const e = p.emails;
+    if (!e || EMAIL_KINDS.some((k) => typeof e[k] !== "boolean")) return `emails: ${EMAIL_KINDS.join(", ")}, each true or false`;
+  }
   return null;
+}
+
+export const EMAIL_KINDS = ["practice", "reminders", "digest"] as const satisfies readonly (keyof EmailPreferences)[];
+export type EmailKind = (typeof EMAIL_KINDS)[number];
+
+/** Whether the person gets this kind of email: on unless they turned it off. */
+export function emailOn(p: Pick<UserPreferences, "emails"> | null | undefined, kind: EmailKind): boolean {
+  return p?.emails?.[kind] ?? true;
 }

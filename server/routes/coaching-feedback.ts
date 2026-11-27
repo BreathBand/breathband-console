@@ -25,7 +25,7 @@ const newAssignmentSchema = z.object({
 
 type AssignmentRow = typeof assignments.$inferSelect;
 
-export function feedbackRoutes(routes: DataApp, { db }: DataDeps) {
+export function feedbackRoutes(routes: DataApp, { db, notify }: DataDeps) {
   /** The viewer's link to the athlete (none for the athlete themselves). */
   const scopeOf = (viewer: string, athleteId: string) => (viewer === athleteId ? null : linkScope(db, viewer, athleteId));
 
@@ -68,6 +68,7 @@ export function feedbackRoutes(routes: DataApp, { db }: DataDeps) {
       .insert(assignments)
       .values({ ...input, coachId, dueAt, note: input.note.trim().slice(0, MAX_ASSIGNMENT_NOTE), cancelled: false })
       .returning();
+    await notify.practiceSet(coachId, input.athleteId, input);
     return c.json(toAssignment(row));
   });
 

@@ -13,7 +13,9 @@ import { createDb } from "./db/client";
 import { readEnv } from "./env";
 import { createApp } from "./index";
 import { startDeletionJob } from "./jobs/deletion";
+import { startEmailJob } from "./jobs/email";
 import { createMailer } from "./mailer";
+import { createNotifier } from "./notify";
 import { createFsStorage } from "./storage";
 
 const STATIC_DIR = "out";
@@ -27,14 +29,21 @@ if (production && !existsSync(STATIC_DIR)) {
   console.warn(`${STATIC_DIR}/ is missing: run \`npm run build\` to serve the web app from the API.`);
 }
 
+const mailer = createMailer(env.mode, env.smtp);
+const secret = authSecret(env.mode, env.authSecret);
+const apiUrl = authBaseUrl(env);
+
 const auth = createAuth({
   db,
   mode: env.mode,
-  secret: authSecret(env.mode, env.authSecret),
-  baseUrl: authBaseUrl(env),
+  secret,
+  baseUrl: apiUrl,
   appUrl: env.appUrl,
-  mailer: createMailer(env.mode, env.smtp),
+  mailer,
 });
+
+// The product's emails (server/notify.ts), and the reminders and Monday summaries (server/jobs/email.ts).
+const notify = createNotifier({ db, mailer, appUrl: env.appUrl, apiUrl, secret });
 
 const storage = createFsStorage(env.storageDir);
 
@@ -46,10 +55,12 @@ const app = createApp({
   log: env.mode !== "test",
   auth,
   storage,
+  notify,
 });
 
 // Accounts whose 24 h are up (server/jobs/deletion.ts). Cloud Scheduler takes this over later.
-const stopDeletionJob = startDeletionJob({ db, storage });
+const stopDeletionJob = startDeletionJob({ db, storage, notify });
+const stopEmailJob = startEmailJob({ db, mailer, appUrl: env.appUrl, apiUrl, secret });
 
 const server = serve({ fetch: app.fetch, port: env.port }, (info) => {
   console.log(`API (${env.mode}) listening on http://localhost:${info.port}`);
@@ -61,6 +72,7 @@ function shutdown(signal: NodeJS.Signals): void {
   if (stopping) return;
   stopping = true;
   stopDeletionJob();
+  stopEmailJob();
   console.log(`${signal}: closing the server`);
   const force = setTimeout(() => {
     console.error("Open connections did not close in time; exiting.");

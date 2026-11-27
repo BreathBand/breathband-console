@@ -86,7 +86,7 @@ export function publicCoachInviteRoutes(routes: DataApp, { db }: DataDeps) {
   );
 }
 
-export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
+export function coachInviteRoutes(routes: DataApp, { db, auth, notify }: DataDeps) {
   // One budget per person for everything that takes a code from them: the lookup and the answer (T-0133).
   const byCode = createRateLimiter(SIGNED_IN_LOOKUP_LIMIT);
   const perPerson = rateLimit<DataEnv>(byCode, (c) => c.get("uid"));
@@ -127,7 +127,9 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
       };
       return (await db.insert(coachInvites).values(values).returning())[0];
     });
-    return c.json(toInvite(row, codeOf(coachId, row.createdAt)));
+    const code = codeOf(coachId, row.createdAt);
+    await notify.coachInvite({ contact, athleteName, coachName: coach.displayName, code });
+    return c.json(toInvite(row, code));
   });
 
   routes.get("/coaches/:coachId/coach-invites", async (c) => {
@@ -213,6 +215,7 @@ export function coachInviteRoutes(routes: DataApp, { db, auth }: DataDeps) {
       const set = practiceAssignment(template, new Date());
       await db.insert(assignments).values({ ...set, dueAt: new Date(set.dueAt), coachId: claimed.coachId, athleteId, cancelled: false });
     }
+    await notify.inviteAccepted(claimed.coachId, athleteId);
     const result: CoachLink = {
       coachId: link.coachId,
       athleteId: link.athleteId,

@@ -24,6 +24,7 @@ import {
   comments,
   consents,
   devices,
+  emailLog,
   enrollments,
   groupParticipants,
   groupSessions,
@@ -110,6 +111,7 @@ export async function exportAccount(db: Db, storage: StorageService, uid: string
     mood_checkins: rows(moodCheckins, eq(moodCheckins.userId, uid)),
     milestones: rows(milestones, eq(milestones.userId, uid)),
     enrollments: rows(enrollments, eq(enrollments.userId, uid)),
+    email_log: rows(emailLog, eq(emailLog.userId, uid)),
   };
 
   const tables: AccountExport["tables"] = {};

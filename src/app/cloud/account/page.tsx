@@ -18,7 +18,7 @@ import { SharingPanel } from "../settings/SharingPanel";
 import { AlertRulesSection } from "./AlertRulesForm";
 import { withChanges } from "./merge-preferences";
 import { AppearanceSection } from "./Preferences";
-import { YourData } from "./YourData";
+import { EmailSwitches, YourData } from "./YourData";
 
 // /cloud/account/ — Settings: who you are, what you're working towards, how
 // your sessions start, who sees them, and how BreathCloud looks.
@@ -202,6 +202,7 @@ function Settings({ profile }: { profile: UserProfile }) {
           </div>
 
           <Section id="data" title="Your data">
+            <EmailSwitches prefs={prefs} professional={coach} onChange={(emails) => save({ ...prefs, emails })} />
             <YourData uid={profile.uid} />
           </Section>
 
