@@ -38,6 +38,15 @@ export const HEALTH = { path: "/api/health", json: { ok: true, db: "up" } };
 export const PAGES = [
   { path: "/", html: ['<meta http-equiv="refresh" content="0; url=/cloud/"/>'], scripts: [] },
   { path: "/cloud/login/", html: ["<title>BreathCloud"], scripts: ["Sign in to BreathCloud"] },
+  // The help and legal pages (T-0151) are readable signed out, with their text in the exported HTML.
+  { path: "/cloud/help/", html: ["<title>Help · BreathCloud", "Guide for professionals"], scripts: [] },
+  { path: "/cloud/privacy/", html: ["<title>Privacy policy · BreathCloud", "Draft: pending legal review"], scripts: [] },
+  { path: "/cloud/terms/", html: ["<title>Terms of use · BreathCloud", "Draft: pending legal review"], scripts: [] },
+  {
+    path: "/cloud/accessibility/",
+    html: ["<title>Accessibility statement · BreathCloud", "Draft: pending legal review"],
+    scripts: [],
+  },
 ];
 
 export const ROUTES = [HEALTH, ...PAGES];

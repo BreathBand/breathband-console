@@ -11,6 +11,7 @@ import { peopleNouns } from "@/lib/domain/terminology";
 import type { UserPreferences, UserProfile } from "@/lib/domain/types";
 import { LENGTHS } from "@/lib/prefs";
 import { signOutToLanding } from "../CloudShell";
+import { DOC_LINKS } from "../docs/doc-links";
 import { changePreferences } from "../profile-writes";
 import { stateWords } from "../device/words";
 import { SharingPanel } from "../settings/SharingPanel";
@@ -53,6 +54,7 @@ function Settings({ profile }: { profile: UserProfile }) {
         { id: "profile", label: "Profile" },
         { id: "alerts", label: "Needs a look" },
         { id: "appearance", label: "Appearance" },
+        { id: "help", label: "Help and legal" },
       ]
     : [
         { id: "profile", label: "Profile" },
@@ -61,6 +63,7 @@ function Settings({ profile }: { profile: UserProfile }) {
         { id: "coaches", label: "Coaches and sharing" },
         { id: "band", label: "Band" },
         { id: "appearance", label: "Appearance" },
+        { id: "help", label: "Help and legal" },
       ];
 
   return (
@@ -194,6 +197,16 @@ function Settings({ profile }: { profile: UserProfile }) {
           <div id="appearance" className="settings-anchor">
             <AppearanceSection />
           </div>
+
+          <Section id="help" title="Help and legal">
+            <ul className="settings-docs">
+              {DOC_LINKS.map((d) => (
+                <li key={d.href}>
+                  <Link href={d.href}>{d.title}</Link>
+                </li>
+              ))}
+            </ul>
+          </Section>
 
           <section className="settings-end" aria-label="Setup and sign out">
             <Link href="/cloud/welcome/" className="button" data-variant="ghost">

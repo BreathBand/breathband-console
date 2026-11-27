@@ -1,0 +1,221 @@
+/*
+ * The help and legal pages (T-0151): the signed-out console's bar and footer
+ * (auth.css) around a reading column, with a list of the page's sections
+ * beside it on wide screens. Prefixed `bc-doc` beside auth.css's `bc-`.
+ */
+
+.bc-doc-main {
+  flex: 1;
+  padding: var(--s-8) 0 var(--s-9);
+}
+
+.bc-doc {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+}
+
+/* ---------------------------------------------------------------- head */
+
+.bc-doc-head {
+  max-width: 62ch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.bc-doc-head h1 {
+  font-size: var(--t-40);
+  text-wrap: balance;
+}
+
+.bc-doc-lede {
+  font-size: var(--t-17);
+  color: var(--c-ink-2);
+}
+
+.bc-doc-updated {
+  font-size: var(--t-13);
+  color: var(--c-ink-2);
+}
+
+.bc-doc-draft {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  margin-top: var(--s-2);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-2);
+  background: var(--c-notice);
+  color: var(--c-notice-ink);
+  font: 400 var(--t-13) / 1.45 var(--f-sans);
+}
+
+.bc-doc-draft svg {
+  margin-top: 1px;
+}
+
+/* ---------------------------------------------------------------- layout */
+
+.bc-doc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-7);
+}
+
+.bc-doc-toc {
+  padding: var(--s-5);
+  border: 1px solid var(--c-rule);
+  border-radius: var(--r-sheet);
+  background: var(--c-pane);
+}
+
+.bc-doc-toc-h {
+  margin-bottom: var(--s-2);
+  font: 600 var(--t-13) / 1.3 var(--f-sans);
+  color: var(--c-ink-2);
+}
+
+.bc-doc-toc ol {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.bc-doc-toc a {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  color: var(--c-ink);
+  text-decoration: none;
+  font-size: var(--t-15);
+}
+
+.bc-doc-toc a:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 1100px) {
+  .bc-doc-grid {
+    grid-template-columns: 240px minmax(0, 1fr);
+    align-items: start;
+    gap: var(--s-9);
+  }
+  .bc-doc-toc {
+    position: sticky;
+    top: var(--s-6);
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+  .bc-doc-toc a {
+    font-size: var(--t-13);
+    color: var(--c-ink-2);
+  }
+  .bc-doc-toc a:hover {
+    color: var(--c-ink);
+  }
+}
+
+/* ---------------------------------------------------------------- body */
+
+.bc-doc-body {
+  max-width: 70ch;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+}
+
+.bc-doc-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  scroll-margin-top: var(--s-6);
+}
+
+.bc-doc-section h2 {
+  font: 500 var(--t-24) / 1.2 var(--f-display);
+  letter-spacing: -0.02em;
+}
+
+.bc-doc-section h3 {
+  margin-top: var(--s-3);
+  font: 600 var(--t-17) / 1.3 var(--f-sans);
+  scroll-margin-top: var(--s-6);
+}
+
+.bc-doc-section ul,
+.bc-doc-section ol {
+  padding-left: var(--s-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.bc-doc-defs {
+  display: flex;
+  flex-direction: column;
+}
+
+.bc-doc-defs dt {
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--c-rule-soft);
+  font-weight: 600;
+}
+
+.bc-doc-defs dt:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.bc-doc-defs dd {
+  padding: var(--s-1) 0 var(--s-4);
+  color: var(--c-ink-2);
+}
+
+.bc-doc-note {
+  font-size: var(--t-15);
+}
+
+.bc-doc-tbc {
+  padding: 0 var(--s-1);
+  border-radius: var(--r-1);
+  background: var(--c-notice);
+  color: var(--c-notice-ink);
+}
+
+.bc-doc-quote {
+  padding: var(--s-3) var(--s-5);
+  border-left: 3px solid var(--c-rule);
+  color: var(--c-ink);
+  font-style: italic;
+}
+
+.bc-doc-table td {
+  height: auto;
+  padding-top: var(--s-3);
+  padding-bottom: var(--s-3);
+  white-space: normal;
+  line-height: 1.4;
+}
+
+/* ---------------------------------------------------------------- small screens */
+
+@media (max-width: 640px) {
+  .bc-doc-main {
+    padding: var(--s-7) 0 var(--s-8);
+  }
+  .bc-doc-head h1 {
+    font-size: var(--t-28);
+  }
+  .bc-doc-section h2 {
+    font-size: var(--t-20);
+  }
+}
+
+@media (max-width: 480px) {
+  .bc-docs-cta {
+    display: none;
+  }
+}

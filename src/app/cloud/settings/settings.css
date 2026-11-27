@@ -116,6 +116,20 @@
   font-size: var(--t-13);
 }
 
+.settings-docs {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-5);
+}
+
+.settings-docs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
 .settings-end {
   display: flex;
   gap: var(--s-3);

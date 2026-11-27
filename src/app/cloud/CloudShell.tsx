@@ -12,6 +12,7 @@ import type { PeopleNouns } from "@/lib/domain/terminology";
 import { AthletePicker } from "./AthletePicker";
 import { CloudLanding } from "./CloudLanding";
 import { DeviceStatus } from "./device/DeviceStatus";
+import { DOC_PATHS, HELP_HREF } from "./docs/doc-links";
 import { termsOf } from "./useTerms";
 
 /** Pages for signed-out visitors. They render without the app chrome and bring their own header. */
@@ -23,6 +24,9 @@ const PUBLIC_PATHS = ["/cloud/login/", "/cloud/signup/", "/cloud/reset/"];
  * sign-up.
  */
 const OPEN_PATHS = ["/cloud/join/"];
+// Help and legal pages (DOC_PATHS, T-0151): anyone may read them, signed in or
+// out, before setup too, and they always bring their own frame (DocFrame), even
+// while auth loads, so their text is in the exported HTML.
 const LANDING = "/cloud/";
 /** Full-screen pages: the recording instrument brings its own frame. */
 const BARE_PATHS = ["/cloud/record/live/", "/cloud/record/duo/", "/cloud/welcome/"];
@@ -97,11 +101,12 @@ export function CloudShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const isPublic = PUBLIC_PATHS.includes(pathname);
   const isOpen = OPEN_PATHS.includes(pathname);
+  const isDoc = DOC_PATHS.includes(pathname);
   const isLanding = pathname === LANDING;
 
   useEffect(() => {
     // An open page stays put for a visitor, but signing out from it still lands on /cloud/.
-    if (auth.status === "signed-out" && !isPublic && !isLanding && (!isOpen || exit.toLanding)) {
+    if (auth.status === "signed-out" && !isPublic && !isLanding && !isDoc && (!isOpen || exit.toLanding)) {
       const here = window.location.pathname + window.location.search;
       router.replace(exit.toLanding ? LANDING : `/cloud/login/?next=${encodeURIComponent(here)}`);
     }
@@ -114,8 +119,10 @@ export function CloudShell({ children }: { children: ReactNode }) {
     }
     // New accounts set up their goal, level and sessions before anything else.
     const needsSetup = auth.status === "signed-in" && auth.profile !== null && !auth.profile.preferences?.onboardedAt && !setup.finished;
-    if (needsSetup && !isPublic && !BEFORE_SETUP.includes(pathname)) router.replace("/cloud/welcome/");
-  }, [auth, isPublic, isOpen, isLanding, pathname, router]);
+    if (needsSetup && !isPublic && !isDoc && !BEFORE_SETUP.includes(pathname)) router.replace("/cloud/welcome/");
+  }, [auth, isPublic, isOpen, isDoc, isLanding, pathname, router]);
+
+  if (isDoc) return <>{children}</>;
 
   if (auth.status === "loading") {
     return (
@@ -151,6 +158,10 @@ export function CloudShell({ children }: { children: ReactNode }) {
               </span>
               <span className="brand-sub">BreathCloud</span>
             </span>
+          </Link>
+          <Link href={HELP_HREF} className="mbar-help" title="Help">
+            <Icon name="help" size={22} />
+            <span className="sr-only">Help</span>
           </Link>
           <Link href="/cloud/account/" className="mbar-account">
             <span className="avatar sm" aria-hidden="true">
@@ -203,6 +214,10 @@ export function CloudShell({ children }: { children: ReactNode }) {
               </button>
             </div>
           )}
+          <Link href={HELP_HREF} className="side-help">
+            <Icon name="help" size={18} />
+            <span>Help</span>
+          </Link>
           <div className="side-who">
             <Link
               href="/cloud/account/"
