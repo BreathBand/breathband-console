@@ -32,16 +32,13 @@ makes them 16 or over.
 
 On the demo laptop, in this order, the day before and again on the morning.
 
-1. **Build and serve the demo build, on the local backend.** In the repo: `npm ci`, then
-   `NEXT_PUBLIC_BACKEND=local npm run build` (in PowerShell: `$env:NEXT_PUBLIC_BACKEND="local"; npm run build`), then
-   `npm run preview` (serves `out/` at <http://localhost:3000/>). Name the backend on the command: a value there wins
-   over `.env.local`, which now defaults to `http` and would build a console that needs the API. To check, the login
-   page must show **Try a demo account**; without it, the build is on `http`. `preview` fetches `serve@14.2.4` through
-   npx the first time, so run it once while online. Leave it running.
-   *Not built: one command that does all of this, offline (U3).*
+1. **Build and serve the demo build, on the local backend: `npm ci`, then `npm run demo`.** It builds on the local
+   backend whatever `.env.local` says, then serves `out/` at <http://localhost:3000/> with production's headers, all
+   offline. To check, the login page shows **Try a demo account**. Leave it running. `npm run demo -- --no-build`
+   serves the last build again.
 2. **Run the e2e against it.** In a second terminal:
    `npx playwright test e2e/demo-script.spec.ts e2e/demo-path.spec.ts e2e/demo-people.spec.ts e2e/smoke.spec.ts`.
-   With the preview on port 3000, Playwright uses it, so this tests the build you'll show. All must pass. They run in
+   With the demo on port 3000, Playwright uses it, so this tests the build you'll show. All must pass. They run in
    their own browser and don't touch your demo windows.
 3. **Clear site data in every demo window,** after the last rehearsal: DevTools → Application → Storage → **Clear site
    data** (or, signed in, **Reset** at the bottom of the sidebar). The demo data is made the first time a browser opens

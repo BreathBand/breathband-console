@@ -34,7 +34,7 @@ The `local` backend needs nothing but the web app: accounts and data live in the
 
 ```bash
 NEXT_PUBLIC_BACKEND=local npm run dev     # or set it in .env.local
-NEXT_PUBLIC_BACKEND=local npm run build   # the demo build; npm run preview serves it
+npm run demo                              # the demo: builds on the local backend and serves it offline on :3000
 ```
 
 A value in the environment wins over `.env.local`. The local adapter enforces the same access rules as the API (the shared contract tests run on both), so most screen work can be done on either.
@@ -119,6 +119,7 @@ Ports: 1025 (SMTP), 8025 (Mailpit UI), 8081 (sqld, only with its profile). Port 
 | `npm run dev`       | Dev server with hot reload                              |
 | `npm run build`     | Static export to `out/`                                 |
 | `npm run preview`   | Serves `out/` the way a static host would               |
+| `npm run demo`      | Builds on the local backend and serves it offline (U3)   |
 | `npm test`          | Vitest: backend behaviour tests                         |
 | `npm run typecheck` | Generates route types, then runs `tsc`                  |
 | `npm run lint`      | ESLint                                                  |
