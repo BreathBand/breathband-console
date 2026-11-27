@@ -63,6 +63,17 @@ export function describeProfileContract(adapter: string, setup: () => DataContra
         await h.link(cara.uid, ana.uid, null);
         await refusal(cara.backend.data.getProfile(ana.uid), "permission-denied");
       });
+
+      it("never shows the other side of a link their birth year or consents", async () => {
+        const [ana, cara] = await Promise.all([h.person(), h.person("coach")]);
+        await h.link(cara.uid, ana.uid, "curves");
+        const seenByCoach = await cara.backend.data.getProfile(ana.uid);
+        const seenByAthlete = await ana.backend.data.getProfile(cara.uid);
+        for (const profile of [seenByCoach, seenByAthlete]) {
+          expect(profile).not.toHaveProperty("birthYear");
+          expect(profile).not.toHaveProperty("consents");
+        }
+      });
     });
 
     describe("updateProfile", () => {

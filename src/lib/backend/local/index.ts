@@ -224,7 +224,12 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       if (uid !== self.uid && !isLinked(db, self.uid, uid) && !isLinked(db, uid, self.uid)) {
         throw new BackendError("permission-denied");
       }
-      return db.accounts[uid]?.profile ?? null;
+      const profile = db.accounts[uid]?.profile ?? null;
+      if (!profile || uid === self.uid) return profile;
+      // As the API does: the other side of a link never sees birth year or consents.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { birthYear, consents, ...shared } = profile;
+      return shared;
     },
 
     async updateProfile(uid, { displayName, preferences, proKind, proProfile, proConsents }) {
