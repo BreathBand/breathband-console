@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useRef, useState, type FormEvent } from "react";
+import { Suspense, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Icon, type IconName } from "@/components/Icon";
 import { BackendError, type BackendErrorCode } from "@/lib/backend";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { ageGateProblem, currentConsents, UNDER_AGE_MESSAGE } from "@/lib/domain/consent";
 import type { Role } from "@/lib/domain/types";
 import { AuthFrame } from "../auth/AuthFrame";
+import { PRIVACY_HREF, TERMS_HREF } from "../docs/doc-links";
 import { EMAIL_SHAPE, FormError, PasswordField, SubmitButton, TextField } from "../auth/fields";
 import { noNext, useNext, type WithNext } from "../auth/useNext";
 
@@ -40,9 +41,24 @@ const ERRORS: Partial<Record<BackendErrorCode, Problem>> = {
 };
 
 // DRAFT consent wording, for counsel to review before launch. The versions it
-// records are in lib/domain/consent.ts; change both together.
-const CONSENT_TERMS = "I agree to the terms of use and the privacy notice.";
+// records are in lib/domain/consent.ts; change both together. The documents
+// open in a new tab so the form keeps what's been typed.
+const CONSENT_TERMS = (
+  <>
+    I agree to the <DocLink href={TERMS_HREF}>terms of use</DocLink> and the{" "}
+    <DocLink href={PRIVACY_HREF}>privacy notice</DocLink>.
+  </>
+);
 const CONSENT_DATA = "Process my breathing data to give me scores.";
+
+function DocLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a href={href} target="_blank" rel="noopener" className="bc-inline-link">
+      {children}
+      <span className="sr-only"> (opens in a new tab)</span>
+    </a>
+  );
+}
 
 const ROLES: { value: Role; title: string; line: string; icon: IconName }[] = [
   { value: "athlete", title: "Athlete", line: "I use a Breathband", icon: "lungs" },
@@ -283,7 +299,7 @@ function ConsentBox({
   error,
 }: {
   id: Field;
-  label: string;
+  label: ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
   disabled: boolean;

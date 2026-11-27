@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Icon } from "@/components/Icon";
+import { DOC_LINKS } from "../docs/doc-links";
 import { Brand } from "./Brand";
 import { BreathTrace } from "./BreathTrace";
 import "../auth.css";
@@ -51,6 +52,15 @@ export function AuthFrame({ children }: { children: ReactNode }) {
                 </li>
               ))}
             </ul>
+            <nav aria-label="Help and legal" className="bc-auth-docs">
+              <ul>
+                {DOC_LINKS.map((d) => (
+                  <li key={d.href}>
+                    <Link href={d.href}>{d.label}</Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </aside>
       </div>

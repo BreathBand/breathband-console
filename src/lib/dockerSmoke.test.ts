@@ -69,8 +69,16 @@ describe("docker smoke config", () => {
     expect(containerName(42, 1000)).toBe("breathband-smoke-42-1000");
   });
 
-  it("checks the API's health, that the root sends people to BreathCloud, and the console sign-in page", () => {
-    expect(ROUTES.map((route) => route.path)).toEqual(["/api/health", "/", "/cloud/login/"]);
+  it("checks the API's health, that the root sends people to BreathCloud, the console sign-in page, and the help and legal pages", () => {
+    expect(ROUTES.map((route) => route.path)).toEqual([
+      "/api/health",
+      "/",
+      "/cloud/login/",
+      "/cloud/help/",
+      "/cloud/privacy/",
+      "/cloud/terms/",
+      "/cloud/accessibility/",
+    ]);
     expect(HEALTH.json).toEqual({ ok: true, db: "up" });
     expect(login.scripts).toContain("Sign in to BreathCloud");
   });

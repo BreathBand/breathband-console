@@ -221,6 +221,33 @@
   margin-top: 1px;
 }
 
+/* Help and legal links under the points (T-0151). */
+.bc-auth-docs ul {
+  list-style: none;
+  padding: var(--s-4) 0 0;
+  border-top: 1px solid var(--c-rule-soft);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-2);
+  font-size: var(--t-13);
+}
+
+.bc-auth-docs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--s-2);
+  color: var(--c-ink-2);
+}
+
+.bc-auth-docs li:first-child a {
+  padding-left: 0;
+}
+
+.bc-auth-docs a:hover {
+  color: var(--c-ink);
+}
+
 @media (min-width: 1024px) {
   .bc-auth-body {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);

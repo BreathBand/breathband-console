@@ -116,7 +116,8 @@
   color: var(--c-chrome-ink-2);
 }
 
-.mbar-account {
+.mbar-account,
+.mbar-help {
   display: none;
 }
 
@@ -356,6 +357,24 @@
   cursor: pointer;
 }
 
+/* Help (T-0151): a quiet link above the account; on phones it moves to the top bar. */
+.side-help {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: 40px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-2);
+  color: var(--c-chrome-ink-2);
+  font: 600 var(--t-13) / 1 var(--f-sans);
+  text-decoration: none;
+}
+
+.side-help:hover {
+  background: var(--c-chrome-2);
+  color: var(--c-chrome-ink);
+}
+
 .side-who {
   display: flex;
   align-items: center;
@@ -444,6 +463,18 @@
   .mbar-account {
     display: block;
     border-radius: 50%;
+  }
+  .mbar-help {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin-left: auto;
+    border-radius: 50%;
+    color: var(--c-chrome-ink-2);
+  }
+  .mbar-help:hover {
+    color: var(--c-chrome-ink);
   }
   .side-cta,
   .side-foot,

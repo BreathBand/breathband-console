@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Icon, type IconName } from "@/components/Icon";
 import { useBackend } from "@/lib/backend/BackendProvider";
 import { Brand } from "./auth/Brand";
+import { DOC_LINKS } from "./docs/doc-links";
 import { SITE_HOME } from "./links";
 import "./auth.css";
 
@@ -281,6 +282,11 @@ export function CloudLanding() {
               <li>
                 <Link href="/cloud/reset/">Reset password</Link>
               </li>
+              {DOC_LINKS.map((d) => (
+                <li key={d.href}>
+                  <Link href={d.href}>{d.label}</Link>
+                </li>
+              ))}
             </ul>
           </nav>
         </div>
