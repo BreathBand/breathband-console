@@ -27,4 +27,9 @@ describe("consentsProblem", () => {
   it("names the missing kind", () => {
     expect(consentsProblem(currentConsents(["terms", "breathing-data"]))).toMatch(/privacy/);
   });
+
+  it("treats a null entry as missing, not as a crash", () => {
+    const withNull = [null, ...currentConsents(["terms", "breathing-data"])] as unknown as ReturnType<typeof currentConsents>;
+    expect(consentsProblem(withNull)).toMatch(/privacy/);
+  });
 });

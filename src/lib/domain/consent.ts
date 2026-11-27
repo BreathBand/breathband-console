@@ -26,7 +26,7 @@ export function currentConsents(kinds: readonly ConsentKind[] = CONSENT_KINDS): 
 /** Why these consents can't open an account, or null when every sign-up kind is there at its current version. */
 export function consentsProblem(consents: readonly Pick<ConsentRecord, "kind" | "version">[]): string | null {
   for (const kind of CONSENT_KINDS) {
-    const given = consents.find((c) => c.kind === kind);
+    const given = consents.find((c) => c?.kind === kind);
     if (!given) return `consents: ${kind} is required`;
     if (given.version !== CONSENT_VERSIONS[kind]) return `consents: ${kind} version "${given.version}" is not current`;
   }
