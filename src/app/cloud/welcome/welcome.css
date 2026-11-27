@@ -33,14 +33,6 @@
   font-size: 0.5em;
 }
 
-.welcome-brand .mark path:first-child {
-  stroke: var(--c-chrome-in);
-}
-
-.welcome-brand .mark path:nth-child(2) {
-  stroke: var(--c-chrome-out);
-}
-
 /* The mark breathing: an in-breath ring that fills and empties at a slow 5-5 pace. */
 .welcome-breath {
   width: 140px;

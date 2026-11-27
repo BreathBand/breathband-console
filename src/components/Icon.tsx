@@ -205,22 +205,16 @@ export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
 }
 
 /**
- * The Breathband mark, shared with the public site until the client's logo
- * arrives: the pacer ring, red on the way in (right half) and blue on the way
- * out (left half), with the breath inside it.
+ * The Breathband BB monogram, drawn in currentColor through the logo's alpha
+ * mask (`public/brand/bb-mark.png`, cut from the owner's 1024 px logo), so it
+ * follows the theme on every surface. `size` is the box; the mark fits its width.
  */
 export function Mark({ size = 26, label = "Breathband" }: { size?: number; label?: string }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
+    <span
       className="mark"
-      {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true, focusable: false })}
-    >
-      <path d="M12 2.5a9.5 9.5 0 0 1 0 19" fill="none" stroke="var(--c-in)" strokeWidth="2.2" />
-      <path d="M12 21.5a9.5 9.5 0 0 1 0-19" fill="none" stroke="var(--c-out)" strokeWidth="2.2" />
-      <circle cx="12" cy="12" r="5" fill="currentColor" />
-    </svg>
+      style={{ width: size, height: size }}
+      {...(label ? { role: "img", "aria-label": label } : { "aria-hidden": true })}
+    />
   );
 }

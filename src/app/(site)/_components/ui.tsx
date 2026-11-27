@@ -1,18 +1,11 @@
 import type { ReactNode } from "react";
 
 /**
- * Placeholder mark until the client's logo arrives: the pacer ring, red on the
- * way in (right half) and blue on the way out (left half), with the breath
- * inside it.
+ * The Breathband BB monogram, drawn in currentColor through the logo's alpha
+ * mask (`public/brand/bb-mark.png`). Decorative: the wordmark beside it names it.
  */
 export function Mark({ size = 24 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" className="s-mark">
-      <path d="M12 2.5a9.5 9.5 0 0 1 0 19" fill="none" stroke="var(--in)" strokeWidth="2" />
-      <path d="M12 21.5a9.5 9.5 0 0 1 0-19" fill="none" stroke="var(--out)" strokeWidth="2" />
-      <circle cx="12" cy="12" r="5" fill="currentColor" />
-    </svg>
-  );
+  return <span aria-hidden="true" className="s-mark" style={{ width: size, height: size }} />;
 }
 
 export function Wordmark() {

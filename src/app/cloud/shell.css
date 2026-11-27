@@ -76,16 +76,6 @@
   outline-color: var(--c-chrome-out);
 }
 
-.side .mark path:first-child,
-.bc-brand .mark path:first-child {
-  stroke: var(--c-chrome-in);
-}
-
-.side .mark path:nth-child(2),
-.bc-brand .mark path:nth-child(2) {
-  stroke: var(--c-chrome-out);
-}
-
 .side-top {
   display: flex;
   align-items: center;

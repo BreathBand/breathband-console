@@ -331,6 +331,15 @@ code {
   font-size: 0.9em;
 }
 
+/* The BB monogram (components/Icon.tsx Mark): the logo's alpha mask filled with currentColor. */
+.mark {
+  display: inline-block;
+  flex: none;
+  background-color: currentColor;
+  -webkit-mask: url("/brand/bb-mark.png") center / contain no-repeat;
+  mask: url("/brand/bb-mark.png") center / contain no-repeat;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

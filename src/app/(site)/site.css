@@ -307,8 +307,12 @@
 }
 
 .site .s-mark {
+  display: inline-block;
   flex: none;
   color: var(--bone);
+  background-color: currentColor;
+  -webkit-mask: url("/brand/bb-mark.png") center / contain no-repeat;
+  mask: url("/brand/bb-mark.png") center / contain no-repeat;
 }
 
 .site .s-wordmark {
