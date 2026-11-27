@@ -72,7 +72,7 @@ function RecordSetup() {
         </div>
         <Link href="/cloud/record/duo/" className="button" data-variant="ghost" data-size="small">
           <Icon name="users" size={16} />
-          Two-person session
+          Multi-person session
         </Link>
       </header>
 

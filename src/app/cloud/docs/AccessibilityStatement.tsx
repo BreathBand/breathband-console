@@ -53,7 +53,7 @@ const SECTIONS: DocSection[] = [
             tones. Being checked.
           </li>
           <li>
-            <strong>Live group and two-person sessions:</strong> several moving traces on one screen. Being checked.
+            <strong>Live group and multi-person sessions:</strong> several moving traces on one screen. Being checked.
           </li>
           <li>
             <strong>Printed progress reports</strong> and their reading order. Being checked.

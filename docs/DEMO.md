@@ -177,7 +177,7 @@ first practice), which `e2e/invited-path.spec.ts` walks.
    range).
 2. **Compare**: five athletes week by week on one chart, and the side-by-side table. **Pick a squad** narrows it
    (Juniors, Sprint squad). *Not built: the plan's squad "Rowing 1st VIII" (U2); the seed has Juniors and Sprint squad.*
-3. **Two-person**: **Connect both bands** → **Calibrate both** → **Both calibrated** → **Begin**. One pacer, two people
+3. **Multi-person** (up to six people; the demo uses two): **Connect all bands** → **Calibrate everyone** → **Everyone calibrated** → **Begin**. One pacer, two people
    in two lanes. After about 40 seconds, **Stop**: **Side by side**, User 1 (steady) scores higher than User 2
    (rushed). **Done**.
 

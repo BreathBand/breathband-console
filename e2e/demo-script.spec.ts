@@ -175,7 +175,7 @@ test("4. A clinician: onboarding to an invite; Jordan's From Ana; Ana's review, 
   await expect(page.getByRole("button", { name: "Print or save as PDF" })).toBeVisible();
 });
 
-test("5. A coach: Lena's dashboard, compare, and the two-person session", async ({ page }) => {
+test("5. A coach: Lena's dashboard, compare, and the multi-person session", async ({ page }) => {
   test.setTimeout(180_000);
   await signInAsCoach(page);
   await expect(page.getByRole("heading", { level: 2, name: "Needs a look" })).toBeVisible({ timeout: 30_000 });
@@ -184,11 +184,11 @@ test("5. A coach: Lena's dashboard, compare, and the two-person session", async 
   await expect(page.getByRole("heading", { level: 1, name: "Compare athletes" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Sprint squad" })).toBeVisible();
 
-  await nav.getByRole("link", { name: "Two-person" }).click();
+  await nav.getByRole("link", { name: "Multi-person" }).click();
   await expect(page.getByRole("heading", { name: "Breathe together" })).toBeVisible();
-  await page.getByRole("button", { name: "Connect both bands" }).click();
-  await page.getByRole("button", { name: "Calibrate both" }).click();
-  await expect(page.getByRole("heading", { name: "Both calibrated" })).toBeVisible({ timeout: 60_000 });
+  await page.getByRole("button", { name: "Connect all bands" }).click();
+  await page.getByRole("button", { name: "Calibrate everyone" }).click();
+  await expect(page.getByRole("heading", { name: "Everyone calibrated" })).toBeVisible({ timeout: 60_000 });
   await page.getByRole("button", { name: "Begin" }).click();
   await expect(page.getByRole("button", { name: "Stop" })).toBeVisible({ timeout: 15_000 });
   await page.waitForTimeout(40_000);

@@ -151,7 +151,7 @@ export function CloudLanding() {
                       "Group sessions",
                       "Several athletes breathe to one pacer live, lined up in time on your screen.",
                     ],
-                    ["users", "Two-person sessions", "Two bands on one pacer, side by side, for coaching in the room."],
+                    ["users", "Multi-person sessions", "Up to six bands on one pacer, side by side, for coaching in the room."],
                   ]}
                 />
                 <Link href="/cloud/signup/" className="bc-inline-link bc-more">

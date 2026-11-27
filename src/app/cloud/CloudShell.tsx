@@ -99,7 +99,7 @@ const coachNav = (t: PeopleNouns): NavItem[] => [
   { href: "/cloud/athletes/", label: t.Many, icon: "athletes", match: ["/cloud/athletes/", "/cloud/sessions/", "/cloud/session/"] },
   { href: "/cloud/trends/", label: "Compare", icon: "compare", match: ["/cloud/trends/"] },
   { href: "/cloud/group/", label: "Live group", icon: "group", match: ["/cloud/group/", "/cloud/group/live/"] },
-  { href: "/cloud/record/duo/", label: "Two-person", icon: "users", match: ["/cloud/record/duo/"] },
+  { href: "/cloud/record/duo/", label: "Multi-person", icon: "users", match: ["/cloud/record/duo/"] },
 ];
 
 /**

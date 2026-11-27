@@ -166,7 +166,7 @@ const SECTIONS: DocSection[] = [
             country that apply to you.
           </li>
           <li>
-            In live group and two-person sessions, make sure everyone taking part has agreed to be recorded.
+            In live group and multi-person sessions, make sure everyone taking part has agreed to be recorded.
           </li>
           <li>When someone stops sharing with you, your access to their sessions ends at once.</li>
         </ul>

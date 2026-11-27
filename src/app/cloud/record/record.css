@@ -936,10 +936,10 @@
   }
 }
 
-/* ================================================================ two-person session */
+/* ================================================================ multi-person session (2 to 6) */
 
 .duo-setup {
-  width: min(900px, 100%);
+  width: min(1200px, 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -968,7 +968,7 @@
 .duo-people {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--s-4);
   text-align: left;
 }
@@ -983,16 +983,11 @@
   background: var(--c-pane);
 }
 
-.duo-person::before,
-.duo-tag::before,
-.duo-card h2::before {
-  content: attr(data-user);
-}
-
-.duo-person::before {
-  content: "User " attr(data-user);
-  font: 600 var(--t-12) / 1 var(--f-sans);
-  color: var(--c-ink-2);
+.duo-person-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
 }
 
 .duo-person .seg {
@@ -1022,6 +1017,8 @@
   padding: 0;
   list-style: none;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--s-4);
 }
 
@@ -1051,16 +1048,40 @@
   width: 100%;
   height: 100%;
   display: grid;
-  grid-template-rows: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(var(--rows, 2), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
   gap: var(--s-4);
+}
+
+/* Up to three in a column; four to six in two columns of up to three. */
+.duo-live[data-count="3"] {
+  --rows: 3;
+}
+
+.duo-live[data-count="4"] {
+  --rows: 2;
+  --cols: 2;
+}
+
+.duo-live[data-count="5"],
+.duo-live[data-count="6"] {
+  --rows: 3;
+  --cols: 2;
 }
 
 .duo-lane {
   position: relative;
-  min-height: 200px;
+  min-height: 140px;
+  min-width: 0;
   border: 1px solid var(--c-rule);
   border-radius: var(--r-sheet);
   overflow: hidden;
+}
+
+/* Out of flow, so the canvas's own size never grows its row: six rows still fit the screen. */
+.duo-lane .breath-line {
+  position: absolute;
+  inset: 0;
 }
 
 .duo-tag {
@@ -1077,8 +1098,8 @@
   border: 1px solid var(--c-rule);
 }
 
-.duo-tag::before,
-.duo-card h2::before {
+.duo-num {
+  flex: none;
   display: grid;
   place-items: center;
   width: 24px;
@@ -1089,20 +1110,12 @@
   font: 600 var(--t-12) / 1 var(--f-sans);
 }
 
-.duo-lane[data-user="1"] .duo-tag::before {
-  content: "1";
-}
-
-.duo-lane[data-user="2"] .duo-tag::before {
-  content: "2";
-}
-
 .duo-tag small {
   color: var(--c-low);
 }
 
 .duo-results {
-  width: min(900px, 100%);
+  width: min(1200px, 100%);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1112,7 +1125,7 @@
 .duo-cards {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: var(--s-4);
 }
 
@@ -1131,14 +1144,6 @@
   align-items: center;
   gap: var(--s-3);
   font: 600 var(--t-17) / 1.2 var(--f-sans);
-}
-
-.duo-card[data-user="1"] h2::before {
-  content: "1";
-}
-
-.duo-card[data-user="2"] h2::before {
-  content: "2";
 }
 
 .duo-card .res-total {
@@ -1169,6 +1174,12 @@
   }
   .duo-cal {
     flex-direction: column;
+  }
+  .duo-live {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-auto-rows: minmax(140px, 1fr);
+    overflow-y: auto;
   }
 }
 
