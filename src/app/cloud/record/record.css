@@ -1203,3 +1203,18 @@
 .strap-cards span {
   color: var(--c-ink-2);
 }
+
+/* A length of your own beside the presets (D-M). */
+.custom-length {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-2);
+  color: var(--c-ink-2);
+  font-size: var(--t-13);
+}
+
+.custom-length input {
+  width: 5rem;
+  min-height: 44px;
+}

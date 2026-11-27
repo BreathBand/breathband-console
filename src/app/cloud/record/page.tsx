@@ -13,6 +13,9 @@ import { useLoad } from "@/lib/useLoad";
 import { PERSONAS, stateWords } from "../device/words";
 import { PRO_WORD, withPractice } from "../home/tailor";
 
+/** A custom length (D-M), in whole minutes. */
+const MAX_CUSTOM_MIN = 60;
+
 export default function RecordSetupPage() {
   return (
     <Suspense fallback={null}>
@@ -190,6 +193,23 @@ function RecordSetup() {
                 </button>
               ))}
             </div>
+            <label className="custom-length">
+              Or your own length
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={MAX_CUSTOM_MIN}
+                step={1}
+                value={LENGTHS.some((l) => l.sec === setup.lengthSec) ? "" : Math.round(setup.lengthSec / 60)}
+                placeholder="min"
+                onChange={(e) => {
+                  const minutes = Math.round(Number(e.target.value));
+                  if (minutes >= 1 && minutes <= MAX_CUSTOM_MIN) set({ lengthSec: minutes * 60 });
+                }}
+              />
+              <span aria-hidden="true">min</span>
+            </label>
           </fieldset>
 
           <div className="choice-row">
