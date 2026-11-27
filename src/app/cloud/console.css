@@ -1389,7 +1389,12 @@ a.plain {
   white-space: nowrap;
 }
 
+/* At least 24 px square, the WCAG 2.2 target size, in a grid of 20 px cells. */
 .days tbody th a {
+  display: inline-flex;
+  align-items: center;
+  min-width: 24px;
+  min-height: 24px;
   color: var(--c-ink);
   text-decoration: none;
 }
@@ -1782,13 +1787,16 @@ a.plain {
   margin-left: auto;
 }
 
+/* Sent: a red border and a filled red heart. The word stays ink: red text on
+   the red tint is under 4.5:1 in the light theme. */
 .kudos[aria-pressed="true"] {
   border-color: var(--c-in);
-  color: var(--c-in);
+  color: var(--c-ink);
   background: var(--c-in-tint);
 }
 
 .kudos[aria-pressed="true"] svg {
+  color: var(--c-in);
   fill: currentColor;
 }
 
