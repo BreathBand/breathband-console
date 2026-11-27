@@ -11,7 +11,7 @@
 # Nothing secret goes into the image: AUTH_SECRET, SMTP and database settings
 # come from the environment at run time (.env* is in .dockerignore).
 
-FROM node:22-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -27,7 +27,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # libSQL binding (build/server/; scripts/build-server.mjs). No tsx at run time.
 RUN npm run build && npm run build:server
 
-FROM node:22-alpine
+FROM node:26-alpine
 WORKDIR /app
 ENV NODE_ENV=production \
     PORT=8080 \
