@@ -57,12 +57,14 @@ On the demo laptop, in this order, the day before and again on the morning.
 
 ## 1. The product (1 min)
 
-1. Window A: open <http://localhost:3000/>. "The band that scores your breathing.": a band worn on the belly, follow the
-   pacer, a score from 1 to 10.
+1. Window A: open the site. It's the breathband-site repo: in its checkout run
+   `NEXT_PUBLIC_CONSOLE_URL=http://localhost:3000/cloud/ npm run dev -- --port 3001` and open <http://localhost:3001/>.
+   "The band that scores your breathing.": a band worn on the belly, follow the pacer, a score from 1 to 10.
 2. Scroll to "One number, and exactly what's behind it." (the score), then "One band, set up for why you breathe."
    (Train, Focus, Calm: who it's for).
-3. Click **try BreathCloud with a demo account** (in the hero). The login page lists the demo people and says every demo
-   account's password is `breathband`.
+3. Click **try BreathCloud with a demo account** (in the hero). The console's login page lists the demo people and says
+   every demo account's password is `breathband`. Without the site, open <http://localhost:3000/> (it goes to
+   BreathCloud) and click **Sign in**.
 
 **Say:** one band, one score, and the product sets itself up around why you breathe.
 

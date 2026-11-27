@@ -1,10 +1,10 @@
 # Breathband web: development plan
 
-This repo will serve two things from one domain:
+Breathband on the web is two things, which can share one domain:
 
 | Path      | What                                                                 | Audience                         |
 | --------- | -------------------------------------------------------------------- | -------------------------------- |
-| `/`       | **Public site**: presents Breathband and collects sign-ups (the call to action) | Prospects, investors, press      |
+| `/`       | **Public site**: presents Breathband and collects sign-ups (the call to action). Its own repo, [breathband-site](https://github.com/BreathBand/breathband-site), since decision 10 | Prospects, investors, press      |
 | `/cloud/` | **BreathCloud console**: sign in and see your breathing data         | Athletes with a band, coaches    |
 
 This plan covers what has to happen, in order, to take the scaffold that exists today to a launched public site and a working console login, where new and returning users can see their data.
@@ -57,12 +57,13 @@ Made by the owner on 2026-11-23. Where older text in this plan disagrees with on
 | 8 | 2026-11-24 | **PROVISIONAL, pending Harm. Open-session metrics locate each transition on the raw signal.** The Appendix says "Low-pass the signal (~1 Hz, 4th-order Butterworth, zero-phase)." (l.15) and "Find peaks and troughs with prominence ≥ 1% of max and spacing ≥ 0.5 s." (l.16). It does not say whether a transition's time and level come from the filtered or the raw signal, so two readings fit: (a) the extrema are located on the filtered signal; (b) they are detected on the filtered signal, then located on the raw signal at the extremum of the same type within 0.25 s. The filter moves the extrema of asymmetric breaths: on the noise-free normal pattern (1.5 s in, 3.0 s out), reading (a) gives I:E 1.81 and reading (b) gives 2.0. Open metrics use reading (b) for now (`analyzeOpen` in `src/lib/analysis/open.ts`). Paced scoring (method C) still uses the filtered locations until Harm confirms, so open and paced locate transitions differently until then. |
 | 9 | 2026-11-24 | **BreathCloud is a self-standing product, built to take the real band.** Athletes record in the browser: the band over Web Bluetooth (the app's protocol; UUIDs assumed, see `src/lib/device/config.ts`) or the simulated band behind the same `SignalSource` interface. Sessions are scored on save with the analysis library and stored with `DataService.saveSession`. The site and the console share one design system, Carbon & Breath (`DESIGN.md`), which replaces the Coach Console direction (D2). |
 | 10 | 2026-11-26 | **The backend is our own API, not Firebase** (`planning/v1/04-infrastructure.md`, its decisions 1, 5 and 6, with the libSQL override at its top). A Hono API on Node 22 lives in `server/` in the same repo and `package.json`, behind the existing `http` adapter, so screens don't change. Data is in libSQL through Drizzle: a file database locally, Turso when shared. Accounts use Better Auth, self-hosted on the API. **One Cloud Run image** serves `/api/*` and the static export from the same origin, so cookies need no CORS; the API took over nginx's security headers. This replaces decision 1's nginx serving, decision 2's `http` stub, and the [Phase 4](#phase-4-move-to-firebase) Firebase plan (Firebase Auth, Firestore, Storage, Functions). The web stays a static export. The `firebase` adapter stays a stub, `firebase/` and `firebase.json` stay as they are, and no cloud SDK is installed. Deploying is described in [docs/deploy.md](deploy.md) and hasn't been done. |
+| 11 | 2026-11-26 | **The public site is its own repo, breathband-site.** It was the `(site)` route group here; its history moved with it. The two are built and deployed separately. One domain can still serve both, with `/cloud/*` routed to the console. The site links to the console through `NEXT_PUBLIC_CONSOLE_URL`, and the console links back through `NEXT_PUBLIC_SITE_URL`. The waitlist moved with the site; the Firestore rules for `waitlist/` stay here with the rest of the Firebase project. Each repo keeps a copy of `DESIGN.md` and the tokens. |
 
 ## Decisions already made
 
 | Decision | Why |
 | --- | --- |
-| One web project for the site and the console | One deploy, one domain, `/cloud` is just a folder of routes |
+| **Superseded (2026-11-26) by [decision 10](#decisions).** ~~One web project for the site and the console~~ | ~~One deploy, one domain, `/cloud` is just a folder of routes~~ |
 | React (Next.js) for the console, not Flutter web | Faster to load, better for dashboards, and the web-design tooling applies directly |
 | Static export with the browser talking to the backend directly | No server to run or pay for. ~~Firebase rules handle authorization.~~ Superseded (2026-11-26) by [decision 10](#decisions): the browser talks to the API in `server/`, which enforces the access rules (`server/authz.ts`). |
 | **Superseded (2026-11-23) by [decisions 1 and 2](#decisions).** ~~Firebase as the target backend (Auth, Firestore, Storage, Functions)~~ | ~~Managed, has Flutter and JavaScript SDKs, free tier for early use. Cloud Run is added only for heavy jobs.~~ |
@@ -119,6 +120,8 @@ The goal is a small shared visual system, so the site and console look like one 
 ---
 
 ## Phase 2: Public site (the call to action)
+
+The site's code is in [breathband-site](https://github.com/BreathBand/breathband-site) (decision 10). This plan still tracks it.
 
 The goal is a page that explains Breathband in under a minute and converts visitors to waitlist sign-ups (later, pre-orders).
 

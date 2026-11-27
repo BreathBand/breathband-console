@@ -36,7 +36,7 @@ export const IMMUTABLE = "public, max-age=31536000, immutable";
 export const HEALTH = { path: "/api/health", json: { ok: true, db: "up" } };
 
 export const PAGES = [
-  { path: "/", html: ['<h1 id="hero-h"', "breathing."], scripts: [] },
+  { path: "/", html: ['<meta http-equiv="refresh" content="0; url=/cloud/"/>'], scripts: [] },
   { path: "/cloud/login/", html: ["<title>BreathCloud"], scripts: ["Sign in to BreathCloud"] },
 ];
 

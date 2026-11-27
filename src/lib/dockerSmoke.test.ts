@@ -69,7 +69,7 @@ describe("docker smoke config", () => {
     expect(containerName(42, 1000)).toBe("breathband-smoke-42-1000");
   });
 
-  it("checks the API's health, the home page and the console sign-in page", () => {
+  it("checks the API's health, that the root sends people to BreathCloud, and the console sign-in page", () => {
     expect(ROUTES.map((route) => route.path)).toEqual(["/api/health", "/", "/cloud/login/"]);
     expect(HEALTH.json).toEqual({ ok: true, db: "up" });
     expect(login.scripts).toContain("Sign in to BreathCloud");
@@ -144,7 +144,11 @@ describe("headers", () => {
 });
 
 describe("checkResponse", () => {
-  const ok = { status: 200, contentType: "text/html", body: '<h1 id="hero-h" class="h-h1"><span>breathing.</span></h1>' };
+  const ok = {
+    status: 200,
+    contentType: "text/html",
+    body: '<head><meta http-equiv="refresh" content="0; url=/cloud/"/></head>',
+  };
 
   it("passes a 200 HTML page with the expected text", () => {
     expect(checkResponse(ok, home)).toBeNull();

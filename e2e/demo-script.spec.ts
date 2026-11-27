@@ -9,12 +9,13 @@ import { calibrateAndBegin, connectSimulatedBand, emailFor, next, pick, professi
 
 const scoreIn = (text: string) => (text.match(/(\d+(?:\.\d)?)\s*\/\s*10/) ?? [])[1] ?? "";
 
-test("1. The product: the site, and the way into the demo accounts", async ({ page }) => {
+// The site's half of part 1 runs in the breathband-site repo; here the console's
+// root sends people to BreathCloud, and Sign in reaches the demo accounts.
+test("1. The product: the way into the demo accounts", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: "The band that scores your breathing." })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "One number, and exactly what's behind it." })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "One band, set up for why you breathe." })).toBeVisible();
-  await page.getByRole("link", { name: "try BreathCloud with a demo account" }).click();
+  await page.waitForURL(/\/cloud\/$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Your Breathband sessions, on a bigger screen." })).toBeVisible();
+  await page.getByRole("link", { name: "Sign in", exact: true }).first().click();
   await page.waitForURL(/\/cloud\/login\/$/);
   await expect(page.getByText("Every demo account's password is breathband.")).toBeVisible();
   for (const name of ["Lena Vos", "Alex Morgan", "Maya Brooks", "Ana Ruiz", "Jordan Lee"]) {
