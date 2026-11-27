@@ -1,5 +1,5 @@
 import type { GroupSession } from "@/lib/domain/types";
-import { BackendError, type DataService, type Presence } from "../types";
+import { BackendError, type AccountDeletion, type DataService, type Presence } from "../types";
 import type { ApiClient } from "./client";
 import { HTTP_ROUTES } from "./routes";
 
@@ -163,5 +163,13 @@ export function createHttpData(api: ApiClient): DataService {
     joinWaitlist: async ({ email, source }) => {
       await call(R.joinWaitlist, {}, { email, source });
     },
+
+    getAccountDeletion: async () => (await call<{ deletion: AccountDeletion | null }>(R.getAccountDeletion, {})).deletion,
+    requestAccountDeletion: async (password) => (await call<{ deletion: AccountDeletion }>(R.requestAccountDeletion, {}, { password })).deletion,
+    cancelAccountDeletion: async () => {
+      await call(R.cancelAccountDeletion, {}, {});
+    },
+    exportMyData: () => call(R.exportMyData, {}),
+    listAccessLog: () => call(R.listAccessLog, {}),
   };
 }

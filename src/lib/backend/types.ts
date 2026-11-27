@@ -301,6 +301,37 @@ export interface DataService {
   watchGroupLive(id: string, handlers: GroupLiveHandlers): () => void;
 
   joinWaitlist(entry: WaitlistEntry): Promise<void>;
+
+  /** Own account: the deletion waiting its 24 hours, or null with none. */
+  getAccountDeletion(): Promise<AccountDeletion | null>;
+  /**
+   * Own account, confirmed with its password: everything is deleted 24 hours
+   * later, and every session is signed out now. Until then the person can sign
+   * in only to cancel. A wrong password is "invalid-credentials".
+   */
+  requestAccountDeletion(password: string): Promise<AccountDeletion>;
+  /** Inside the 24 hours: everything back as it was. "not-found" with none waiting. */
+  cancelAccountDeletion(): Promise<void>;
+  /** "Download my data": everything held about the signed-in person, as JSON. */
+  exportMyData(): Promise<Record<string, unknown>>;
+  /** Who else opened the signed-in person's sessions, newest first (C10). */
+  listAccessLog(): Promise<AccessLogEntry[]>;
+}
+
+/** A deletion waiting its 24 hours. ISO 8601 times. */
+export interface AccountDeletion {
+  requestedAt: string;
+  deleteAfter: string;
+}
+
+/** One time someone else opened one of the person's sessions. */
+export interface AccessLogEntry {
+  viewerId: string;
+  viewerName: string;
+  /** Null once the person deleted the session; the entry stays. */
+  sessionId: string | null;
+  /** ISO 8601 */
+  at: string;
 }
 
 export interface Backend {

@@ -10,7 +10,7 @@ import type { NewSession } from "@/lib/backend/types";
 import { isTransitionScores } from "@/lib/domain/scores";
 import type { SessionSummary, Waveform } from "@/lib/domain/types";
 import { canReadAthlete, canWriteOwn } from "../authz";
-import { breathSessions } from "../db/schema";
+import { accessLog, breathSessions } from "../db/schema";
 import { waveformKey } from "../storage";
 import { fail, jsonObject, linkScope, type DataApp, type DataDeps } from "./data";
 
@@ -96,6 +96,9 @@ export function sessionRoutes(routes: DataApp, { db, storage }: DataDeps) {
     await assertCanRead(c.get("uid"), athleteId);
     const row = await findSession(athleteId, sessionId);
     if (!row) fail("not-found");
+    // Someone else opening a session is logged for its owner to read (GET /account/access-log).
+    const viewerId = c.get("uid");
+    if (viewerId !== athleteId) await db.insert(accessLog).values({ viewerId, athleteId, sessionId });
     return c.json(toSummary(row));
   });
 

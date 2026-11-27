@@ -8,7 +8,9 @@ import type { Backend } from "@/lib/backend";
 import { useAuth, useBackend } from "@/lib/backend/BackendProvider";
 import { resetBrowserDb } from "@/lib/backend/local/db";
 import { initials } from "@/lib/domain/format";
+import { useLoad } from "@/lib/useLoad";
 import type { PeopleNouns } from "@/lib/domain/terminology";
+import { PendingDeletion } from "./account/YourData";
 import { AthletePicker } from "./AthletePicker";
 import { CloudLanding } from "./CloudLanding";
 import { DeviceStatus } from "./device/DeviceStatus";
@@ -47,6 +49,22 @@ export function markSetupFinished(): void {
 }
 
 /** Signs out and lands on /cloud/ (rather than bouncing to the login page). */
+/**
+ * Asking for deletion signs the person out (the local adapter at once, the API
+ * by ending every session): where that sign-out lands is the landing page.
+ */
+export async function leaveAfterDeletion(backend: Backend, request: () => Promise<unknown>): Promise<void> {
+  exit.toLanding = true;
+  try {
+    await request();
+  } catch (error) {
+    exit.toLanding = false;
+    throw error;
+  }
+  // The API has already ended the session; this clears the browser's side, and its own error doesn't matter.
+  await backend.auth.signOut().catch(() => undefined);
+}
+
 export async function signOutToLanding(backend: Backend, reset = false): Promise<void> {
   exit.toLanding = true;
   await backend.auth.signOut();
@@ -95,7 +113,6 @@ const coachNav = (t: PeopleNouns): NavItem[] => [
  * bottom of the screen as a tab bar.
  */
 export function CloudShell({ children }: { children: ReactNode }) {
-  const backend = useBackend();
   const auth = useAuth();
   const pathname = usePathname();
   const router = useRouter();
@@ -139,7 +156,25 @@ export function CloudShell({ children }: { children: ReactNode }) {
     return isPublic || isOpen ? <>{children}</> : null;
   }
   if (isPublic) return null;
-  if (BARE_PATHS.includes(pathname)) return <>{children}</>;
+  return (
+    <DeletionGate uid={auth.user.uid}>
+      {BARE_PATHS.includes(pathname) ? children : <SignedInShell pathname={pathname}>{children}</SignedInShell>}
+    </DeletionGate>
+  );
+}
+
+/** While a deletion waits its 24 hours, the account opens only to keep it or sign out. */
+function DeletionGate({ uid, children }: { uid: string; children: ReactNode }) {
+  const backend = useBackend();
+  const deletion = useLoad(`deletion:${uid}`, () => backend.data.getAccountDeletion());
+  if (deletion.status === "ready" && deletion.data) return <PendingDeletion deletion={deletion.data} onKept={() => window.location.reload()} />;
+  return <>{children}</>;
+}
+
+function SignedInShell({ pathname, children }: { pathname: string; children: ReactNode }) {
+  const backend = useBackend();
+  const auth = useAuth();
+  if (auth.status !== "signed-in") return null;
 
   const role = auth.profile?.role ?? "athlete";
   const name = auth.profile?.displayName ?? auth.user.email ?? "You";

@@ -63,7 +63,7 @@ A direct API sign-up needs `birthYear` and `consents`, like the adapter (T-0139)
 
 ## Data routes
 
-The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}` (`DATA_PREFIX` in `data.ts`). I-08 serves profile and preferences (`getProfile`, `updateProfile`) and sessions and waveforms (`listSessions` … `deleteSession`); I-09 serves coaching (`listAthletes` … `setTargets`); I-10 the rest (`saveMoodCheckins`, `listMoodCheckins`, and `listSquads` … `joinWaitlist`). They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments (URL-encoded); everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
+The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}` (`DATA_PREFIX` in `data.ts`). I-08 serves profile and preferences (`getProfile`, `updateProfile`) and sessions and waveforms (`listSessions` … `deleteSession`); I-09 serves coaching (`listAthletes` … `setTargets`); I-10 the rest (`saveMoodCheckins`, `listMoodCheckins`, and `listSquads` … `joinWaitlist`); the own-account routes (`getAccountDeletion` … `listAccessLog`) are in `server/routes/account.ts`. They are copied from `HTTP_ROUTES` in `routes.ts`; if the two disagree, `routes.ts` is right and this table is out of date. `{name}` is a path parameter taken from the method's arguments (URL-encoded); everything else (options, inputs, answers) goes in the query string for `GET` and in a JSON body otherwise.
 
 - Errors are `{ error: { code, message } }` with this adapter's codes. `not-found` from `getProfile` and `getSession` becomes `null`. A 401 means the session is gone: the adapter counts the person as signed out and tells `onAuthStateChanged` listeners. A 409 from a data route is `invalid-input`, never `email-in-use`.
 - `saveSession` posts `{ session, waveform }` in one request (under 6 MB; the signal under 5 MB). The API stores the signal gzipped through its `StorageService` at `waveforms/{athleteId}/{id}.json.gz` and the summary in `breath_sessions`.
@@ -130,6 +130,11 @@ The API serves these under `/api`: `/v1/users/{uid}` is `GET /api/v1/users/{uid}
 | `cancelGroupSession` | `POST` | `/v1/group-sessions/{id}/cancel` |
 | `watchGroupLive` | `GET` | `/v1/group-sessions/{id}/live` |
 | `joinWaitlist` | `POST` | `/v1/waitlist` |
+| `getAccountDeletion` | `GET` | `/v1/account/delete` |
+| `requestAccountDeletion` | `POST` | `/v1/account/delete` |
+| `cancelAccountDeletion` | `POST` | `/v1/account/delete/cancel` |
+| `exportMyData` | `GET` | `/v1/account/export` |
+| `listAccessLog` | `GET` | `/v1/account/access-log` |
 
 Data methods that are not a single request:
 

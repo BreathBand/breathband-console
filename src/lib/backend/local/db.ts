@@ -71,6 +71,10 @@ export interface LocalDb {
   /** Signals saved by group sessions, by waveformPath. Other sessions' signals are generated from the seed. */
   recordedWaveforms: Record<string, Waveform>;
   waitlist: (WaitlistEntry & { createdAt: string })[];
+  /** By uid: when the person asked for deletion. Missing in older databases. */
+  accountDeletions?: Record<string, string>;
+  /** Newest last: who opened whose session (C10). Missing in older databases. */
+  accessLog?: { viewerId: string; athleteId: string; sessionId: string | null; at: string }[];
   currentUid: string | null;
 }
 

@@ -130,6 +130,51 @@
   min-height: 44px;
 }
 
+/* Your data: download, the access log, deletion */
+.data-block + .data-block {
+  margin-top: var(--s-5);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--c-rule-soft);
+}
+
+.data-block h3 {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-15);
+}
+
+.data-block .settings-hint {
+  display: block;
+  margin: 0 0 var(--s-3);
+}
+
+.access-log {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 16rem;
+  overflow-y: auto;
+}
+
+.access-log li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-2);
+  align-items: baseline;
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--c-rule-soft);
+}
+
+.access-log .meta {
+  margin-left: auto;
+  color: var(--c-ink-2);
+  font-size: var(--t-13);
+}
+
+.pending-deletion {
+  max-width: 36rem;
+  padding-top: var(--s-7);
+}
+
 .settings-end {
   display: flex;
   gap: var(--s-3);

@@ -92,5 +92,11 @@ export const HTTP_ROUTES: HttpRoutes = {
     watchGroupLive: { method: "GET", path: "/v1/group-sessions/{id}/live" },
 
     joinWaitlist: { method: "POST", path: "/v1/waitlist" },
+
+    getAccountDeletion: { method: "GET", path: "/v1/account/delete" },
+    requestAccountDeletion: { method: "POST", path: "/v1/account/delete" },
+    cancelAccountDeletion: { method: "POST", path: "/v1/account/delete/cancel" },
+    exportMyData: { method: "GET", path: "/v1/account/export" },
+    listAccessLog: { method: "GET", path: "/v1/account/access-log" },
   },
 };

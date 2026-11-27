@@ -21,6 +21,7 @@ import { createApp } from "../../../../server/index";
 import { hashCode } from "../../../../server/routes/codes";
 import type { Email, Mailer } from "../../../../server/mailer";
 import { createFsStorage } from "../../../../server/storage";
+import { describeAccountContract } from "../contract/account.contract";
 import { describeCoachToolsContract } from "../contract/coach-tools.contract";
 import { describeCoachingContract } from "../contract/coaching.contract";
 import type { DataContractHarness, Person } from "../contract/data.harness";
@@ -158,6 +159,7 @@ describeCoachingContract("http", harness);
 describeCoachToolsContract("http", harness);
 describeGroupContract("http", harness);
 describeWaitlistContract("http", harness);
+describeAccountContract("http", harness);
 
 describe("the API behind the http DataService", () => {
   const post = (path: string, body: unknown) =>

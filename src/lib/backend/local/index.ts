@@ -24,6 +24,7 @@ import {
 } from "@/lib/domain/types";
 import {
   BackendError,
+  type AccountDeletion,
   type AuthService,
   type AuthUser,
   type Backend,
@@ -41,6 +42,8 @@ import { checkSessionContract } from "./validate";
 const LATENCY_MS = 150;
 const INVITE_TTL_MS = 7 * 86_400_000;
 const COACH_INVITE_TTL_MS = 14 * 86_400_000;
+/** As server/jobs/deletion.ts: an account is deleted 24 hours after the request. */
+const DELETION_DELAY_MS = 86_400_000;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export interface LocalBackendOptions {
@@ -86,6 +89,29 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
     const user = currentUser();
     if (!user) throw new BackendError("not-signed-in");
     return user;
+  };
+
+  const deletionOf = (db: LocalDb, uid: string): AccountDeletion | null => {
+    const requestedAt = db.accountDeletions?.[uid];
+    return requestedAt ? { requestedAt, deleteAfter: new Date(Date.parse(requestedAt) + DELETION_DELAY_MS).toISOString() } : null;
+  };
+
+  /** What server/jobs/deletion.ts does 24 hours after the request: the account and everything it owns go. */
+  const purge = (db: LocalDb, uid: string) => {
+    delete db.accounts[uid];
+    delete db.sessions[uid];
+    delete db.assignments[uid];
+    delete db.comments[uid];
+    delete db.seen[uid];
+    delete db.squads[uid];
+    delete db.alertRules[uid];
+    delete db.moodCheckins[uid];
+    delete db.accountDeletions?.[uid];
+    db.coachLinks = db.coachLinks.filter((l) => l.coachId !== uid && l.athleteId !== uid);
+    db.invites = db.invites.filter((i) => i.athleteId !== uid);
+    db.coachInvites = db.coachInvites.filter((i) => i.coachId !== uid);
+    db.accessLog = (db.accessLog ?? []).filter((e) => e.athleteId !== uid && e.viewerId !== uid);
+    for (const key of Object.keys(db.coachNotes)) if (key.split("_").includes(uid)) delete db.coachNotes[key];
   };
 
   const findLink = (db: LocalDb, coachId: string, athleteId: string) =>
@@ -150,6 +176,11 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
       const account = Object.values(store.read().accounts).find(
         (a) => a.profile.email.toLowerCase() === email.trim().toLowerCase(),
       );
+      const due = account && deletionOf(store.read(), account.profile.uid);
+      if (account && due && Date.parse(due.deleteAfter) <= now().getTime()) {
+        mutate((db) => purge(db, account.profile.uid));
+        throw new BackendError("invalid-credentials");
+      }
       if (!account || account.password !== password) {
         throw new BackendError("invalid-credentials");
       }
@@ -289,7 +320,14 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
     async getSession(athleteId, sessionId) {
       await delay();
       assertCanRead(athleteId);
-      return (store.read().sessions[athleteId] ?? []).find((s) => s.id === sessionId) ?? null;
+      const session = (store.read().sessions[athleteId] ?? []).find((s) => s.id === sessionId) ?? null;
+      const viewerId = requireUser().uid;
+      if (session && viewerId !== athleteId) {
+        mutate((db) => {
+          db.accessLog = [...(db.accessLog ?? []), { viewerId, athleteId, sessionId, at: now().toISOString() }];
+        });
+      }
+      return session;
     },
 
     // Mirrors storage.rules: coaches need the "curves" scope for the signal.
@@ -993,6 +1031,64 @@ export function createLocalBackend(options: LocalBackendOptions = {}): Backend {
           db.waitlist.push({ email: normalized, source, createdAt: now().toISOString() });
         }
       });
+    },
+
+    async getAccountDeletion() {
+      await delay();
+      return deletionOf(store.read(), requireUser().uid);
+    },
+
+    async requestAccountDeletion(password) {
+      await delay();
+      const uid = requireUser().uid;
+      if (store.read().accounts[uid]?.password !== password) throw new BackendError("invalid-credentials", "That password isn't right.");
+      mutate((db) => {
+        // Asking twice keeps the first request's clock, as on the API.
+        db.accountDeletions = { [uid]: now().toISOString(), ...db.accountDeletions };
+        db.currentUid = null;
+      });
+      emit();
+      return deletionOf(store.read(), uid)!;
+    },
+
+    async cancelAccountDeletion() {
+      await delay();
+      const uid = requireUser().uid;
+      if (!deletionOf(store.read(), uid)) throw new BackendError("not-found", "No deletion is waiting.");
+      mutate((db) => {
+        delete db.accountDeletions?.[uid];
+      });
+    },
+
+    async exportMyData() {
+      await delay();
+      const uid = requireUser().uid;
+      const db = store.read();
+      const mine = <T extends { coachId?: string; athleteId?: string }>(rows: T[]) => rows.filter((r) => r.coachId === uid || r.athleteId === uid);
+      return {
+        exportedAt: now().toISOString(),
+        profile: db.accounts[uid]?.profile ?? null,
+        sessions: db.sessions[uid] ?? [],
+        assignments: db.assignments[uid] ?? [],
+        comments: db.comments[uid] ?? [],
+        mood_checkins: db.moodCheckins[uid] ?? [],
+        coach_links: mine(db.coachLinks),
+        invites: db.invites.filter((i) => i.athleteId === uid),
+        coach_invites: db.coachInvites.filter((i) => i.coachId === uid),
+        squads: db.squads[uid] ?? [],
+        alert_rules: db.alertRules[uid] ?? null,
+        access_log: (db.accessLog ?? []).filter((e) => e.athleteId === uid || e.viewerId === uid),
+      };
+    },
+
+    async listAccessLog() {
+      await delay();
+      const uid = requireUser().uid;
+      const db = store.read();
+      return (db.accessLog ?? [])
+        .filter((e) => e.athleteId === uid)
+        .reverse()
+        .map(({ viewerId, sessionId, at }) => ({ viewerId, viewerName: db.accounts[viewerId]?.profile.displayName ?? "Someone", sessionId, at }));
     },
   };
 

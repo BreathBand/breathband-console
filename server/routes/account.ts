@@ -6,15 +6,19 @@
 //                                 24 h later by server/jobs/deletion.ts
 //   POST /account/delete/cancel   inside those 24 h: everything back as it was
 //   GET  /account/export          "download my data" (account-export.ts)
+//   GET  /account/access-log      who else opened the person's sessions, newest first
 //
 // While a deletion waits, these are the only data routes the person can use.
 
-import { and, eq, gt } from "drizzle-orm";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
 import type { Db } from "../db/client";
-import { account, accountDeletions, session } from "../db/schema";
+import { accessLog, account, accountDeletions, profiles, session } from "../db/schema";
 import { DELETION_DELAY_MS, deleteAfter } from "../jobs/deletion";
 import { exportAccount } from "./account-export";
 import { fail, jsonObject, type DataApp, type DataDeps } from "./data";
+
+/** The newest entries the access log answers with. */
+const ACCESS_LOG_LIMIT = 200;
 
 /** Better Auth's id for email-and-password accounts. */
 const CREDENTIAL_PROVIDER = "credential";
@@ -76,5 +80,16 @@ export function accountRoutes(routes: DataApp, { db, auth, storage }: DataDeps) 
       "Content-Disposition": `attachment; filename="breathband-data-${day}.json"`,
       "Cache-Control": "no-store",
     });
+  });
+
+  routes.get("/account/access-log", async (c) => {
+    const rows = await db
+      .select({ viewerId: accessLog.viewerId, viewerName: profiles.displayName, sessionId: accessLog.sessionId, at: accessLog.createdAt })
+      .from(accessLog)
+      .leftJoin(profiles, eq(profiles.userId, accessLog.viewerId))
+      .where(eq(accessLog.athleteId, c.get("uid")))
+      .orderBy(desc(accessLog.createdAt), desc(sql`${accessLog}.rowid`))
+      .limit(ACCESS_LOG_LIMIT);
+    return c.json(rows.map((r) => ({ ...r, viewerName: r.viewerName ?? "Someone", at: r.at.toISOString() })));
   });
 }

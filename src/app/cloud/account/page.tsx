@@ -18,6 +18,7 @@ import { SharingPanel } from "../settings/SharingPanel";
 import { AlertRulesSection } from "./AlertRulesForm";
 import { withChanges } from "./merge-preferences";
 import { AppearanceSection } from "./Preferences";
+import { YourData } from "./YourData";
 
 // /cloud/account/ — Settings: who you are, what you're working towards, how
 // your sessions start, who sees them, and how BreathCloud looks.
@@ -54,6 +55,7 @@ function Settings({ profile }: { profile: UserProfile }) {
         { id: "profile", label: "Profile" },
         { id: "alerts", label: "Needs a look" },
         { id: "appearance", label: "Appearance" },
+        { id: "data", label: "Your data" },
         { id: "help", label: "Help and legal" },
       ]
     : [
@@ -63,6 +65,7 @@ function Settings({ profile }: { profile: UserProfile }) {
         { id: "coaches", label: "Coaches and sharing" },
         { id: "band", label: "Band" },
         { id: "appearance", label: "Appearance" },
+        { id: "data", label: "Your data" },
         { id: "help", label: "Help and legal" },
       ];
 
@@ -197,6 +200,10 @@ function Settings({ profile }: { profile: UserProfile }) {
           <div id="appearance" className="settings-anchor">
             <AppearanceSection />
           </div>
+
+          <Section id="data" title="Your data">
+            <YourData uid={profile.uid} />
+          </Section>
 
           <Section id="help" title="Help and legal">
             <ul className="settings-docs">

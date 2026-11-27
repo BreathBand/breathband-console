@@ -1,5 +1,6 @@
 import { createLocalBackend } from "../local";
 import { createSeededDb, type DbStore, type LocalDb } from "../local/db";
+import { describeAccountContract } from "./account.contract";
 import { describeCoachToolsContract } from "./coach-tools.contract";
 import { describeCoachingContract } from "./coaching.contract";
 import type { DataContractHarness, Person } from "./data.harness";
@@ -52,3 +53,4 @@ describeCoachingContract("local", localHarness);
 describeCoachToolsContract("local", localHarness);
 describeGroupContract("local", localHarness);
 describeWaitlistContract("local", localHarness);
+describeAccountContract("local", localHarness);
